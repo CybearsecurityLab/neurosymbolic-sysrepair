@@ -1,0 +1,16 @@
+{
+  "objects": {},
+  "predicates": [],
+  "relationships": {},
+  "statistics": {
+    "user_count": 12,
+    "group_count": 16,
+    "process_count": 228,
+    "port_count": 24,
+    "service_count": 99,
+    "package_count": 37,
+    "configuration_file_count": 2,
+    "predicate_count": 739,
+    "action_count": 35
+  }
+}

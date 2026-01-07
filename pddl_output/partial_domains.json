@@ -1,0 +1,630 @@
+[
+  {
+    "worker_name": "service_agent",
+    "group_name": "service",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "list_units",
+        "parameters": [
+          [
+            "units",
+            "list_of_services"
+          ]
+        ],
+        "preconditions": [
+          "(active_service systemd)"
+        ],
+        "effects": [
+          "(forall (?s in ?units) (active_service ?s))",
+          ")()((active_service systemd_journal)",
+          ")((forall (?e in ?entries) (journal_entry ?e))",
+          ")()((active_service systemd_journal)",
+          ")((forall (?e in ?filtered_entries) (matched_journal_entry ?e))",
+          ")()((active_service systemd)",
+          ")((= kernel_time (time_spent_in_kernel))",
+          "(= initrd_time (time_spent_in_initrd))",
+          "(= userspace_time (time_spent_in_userspace))"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 10.127894639968872
+  },
+  {
+    "worker_name": "filesystem_agent",
+    "group_name": "filesystem",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "copy_file",
+        "parameters": [
+          [
+            "source_file",
+            "file"
+          ],
+          [
+            "destination_file",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(is_file ?source_file)",
+          "(is_file ?destination_file)",
+          "(not (at_location ?destination_file))"
+        ],
+        "effects": [
+          "(at_location ?source_file)",
+          "(not (at_location ?destination_file))",
+          "(at_location ?destination_file)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "move_file",
+        "parameters": [
+          [
+            "source_file",
+            "file"
+          ],
+          [
+            "destination_directory",
+            "directory"
+          ]
+        ],
+        "preconditions": [
+          "(is_file ?source_file)",
+          "(is_directory ?destination_directory)",
+          "(not (at_location ?destination_directory))"
+        ],
+        "effects": [
+          "(not (at_location ?source_file))",
+          "(at_location ?destination_directory)",
+          "(at_location (concat ?destination_directory \"/\" (name ?source_file)))",
+          "(not (at_location (concat ?destination_directory \"/\" (name ?source_file))))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "change_file_owner",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ],
+          [
+            "new_owner",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "change_file_group",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ],
+          [
+            "new_group",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "change_file_permissions",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ],
+          [
+            "permissions",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "create_directory",
+        "parameters": [
+          [
+            "directory",
+            "directory"
+          ]
+        ],
+        "preconditions": [
+          "(at_location ?directory)"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "remove_directory",
+        "parameters": [
+          [
+            "directory",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(at_location ?directory)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "create_configuration_file",
+        "parameters": [
+          [
+            "configuration_file",
+            "configuration_file"
+          ],
+          [
+            "content",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(at_location ?configuration_file)"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "modify_configuration_file",
+        "parameters": [
+          [
+            "configuration_file",
+            "configuration_file"
+          ],
+          [
+            "new_content",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      }
+    ],
+    "generation_time": 16.93631339073181
+  },
+  {
+    "worker_name": "network_agent",
+    "group_name": "network",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "add_rule",
+        "parameters": [],
+        "preconditions": [
+          "(connected_to ?i ?p)",
+          "(not (has_rule ?r ?p))"
+        ],
+        "effects": [
+          "(has_rule ?r ?p)",
+          "(allowed ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "block_rule",
+        "parameters": [],
+        "preconditions": [
+          "(connected_to ?i ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "effects": [
+          "(not (allowed ?p))",
+          "(blocked ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "iptables_add_rule",
+        "parameters": [],
+        "preconditions": [
+          "(equal ?chain \"filter\")",
+          "(equal ?rule \"ACCEPT\")"
+        ],
+        "effects": [
+          "(allowed ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "iptables_block_rule",
+        "parameters": [],
+        "preconditions": [
+          "(equal ?chain \"filter\")",
+          "(equal ?rule \"DROP\")"
+        ],
+        "effects": [
+          "(blocked ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "nft_add_rule",
+        "parameters": [],
+        "preconditions": [
+          "(equal ?chain \"filter\")",
+          "(equal ?rule \"accept\")"
+        ],
+        "effects": [
+          "(allowed ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "nft_block_rule",
+        "parameters": [],
+        "preconditions": [
+          "(equal ?chain \"filter\")",
+          "(equal ?rule \"reject\")"
+        ],
+        "effects": [
+          "(blocked ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "ufw_allow",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(allowed ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "ufw_block",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(blocked ?p)",
+          "(has_rule ?r ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "configure_interface",
+        "parameters": [],
+        "preconditions": [
+          "(connected_to ?i ?p)"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "disconnect_interface",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(connected_to ?i ?p)"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 17.465262174606323
+  },
+  {
+    "worker_name": "package_agent",
+    "group_name": "package",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "install_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ],
+          [
+            "r",
+            "repository"
+          ]
+        ],
+        "preconditions": [
+          "(in_repository ?p ?r)",
+          "(not (installed ?p))"
+        ],
+        "effects": [
+          "(installed ?p)",
+          "(in_repository ?p ?r)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(installed ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "update_package_list",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(available ?p)",
+          "(in_repository ?p system_repository)",
+          "(?p :exists (in_repository ?p system_repository))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "upgrade_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(installed ?p)",
+          "(available ?p)"
+        ],
+        "effects": [
+          "(not (installed ?p))",
+          "(installed (find_newest_version ?p))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "find_newest_version",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(and (available (package ?newest_version)) (depends_on ?p ?newest_version) (not (exists ?v :exists (and (available (package ?v)) (depends_on ?p ?v) (> (version_number ?v) (version_number ?newest_version))))))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "search_package",
+        "parameters": [
+          [
+            "name",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(and (available ?p) (name ?name))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "add_repository",
+        "parameters": [
+          [
+            "r",
+            "repository"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(?p :exists (available ?p))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_repository",
+        "parameters": [
+          [
+            "r",
+            "repository"
+          ]
+        ],
+        "preconditions": [
+          "(?p :exists (available ?p))"
+        ],
+        "effects": [
+          "(in_repository ?p ?r)",
+          "(?p :exists (available ?p))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "check_dependencies",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(?d - dependency :exists (and (depends_on ?p ?d) (available ?d)))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "install_dependencies",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(?d - dependency :exists (and (depends_on ?p ?d) (not (installed ?d)) (install_package ?d system_repository)))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_dependencies",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(?d - dependency :exists (and (depends_on ?p ?d) (installed ?d) (remove_package ?d)))"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 19.554884433746338
+  },
+  {
+    "worker_name": "user_agent",
+    "group_name": "user",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 15.75179934501648
+  },
+  {
+    "worker_name": "privilege_agent",
+    "group_name": "privilege",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "execute_command",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(user_is_authenticated ?user)",
+          "(user_has_privilege ?user :execute_command)"
+        ],
+        "effects": [
+          "(process_is_root (create_process ?command))",
+          "(process_is_authenticated (create_process ?command))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "su",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(user_is_authenticated ?user)",
+          "(user_has_privilege ?user :su)"
+        ],
+        "effects": [
+          "(process_is_root (create_process (strcat \"su - \" ?user \" \" ?command)))",
+          "(process_is_authenticated (create_process (strcat \"su - \" ?user \" \" ?command)))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "sudo",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(user_is_authenticated ?user)",
+          "(user_has_privilege ?user :sudo)"
+        ],
+        "effects": [
+          "(process_is_root (create_process (strcat \"sudo \" ?command)))",
+          "(process_is_authenticated (create_process (strcat \"sudo \" ?command)))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "pkexec",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(user_is_authenticated ?user)",
+          "(user_has_privilege ?user :pkexec)"
+        ],
+        "effects": [
+          "(process_is_root (create_process (strcat \"pkexec \" ?user \" \" ?command)))",
+          "(process_is_authenticated (create_process (strcat \"pkexec \" ?user \" \" ?command)))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "create_process",
+        "parameters": [
+          [
+            "process",
+            "process"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(process_id ?process)"
+        ],
+        "effects": [
+          "(process_id ?process)",
+          "(process_is_root ?process)",
+          "(not (process_is_authenticated ?process))"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 12.387625455856323
+  }
+]

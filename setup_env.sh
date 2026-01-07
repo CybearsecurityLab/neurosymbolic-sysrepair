@@ -68,7 +68,7 @@ else
     esac
 fi
 
-# Ensure service is running (always good to check)
+# Ensure service is running
 if ! systemctl is-active --quiet osqueryd; then
     echo -e "${YELLOW}Starting osqueryd service...${NC}"
     systemctl enable osqueryd
@@ -78,12 +78,13 @@ else
 fi
 
 # --- 4. VAL (Validate) Check & Install ---
-if command -v validate &> /dev/null || command -v Validate &> /dev/null; then
-    echo -e "${GREEN}✔ VAL (Validate) is already installed.${NC}"
+# Force check: look for both binary AND library. If lib missing, force reinstall.
+if command -v validate &> /dev/null && ldconfig -p | grep -q libVAL.so; then
+    echo -e "${GREEN}✔ VAL (Validate) and libraries are installed.${NC}"
 else
-    echo -e "${YELLOW}VAL not found. Installing dependencies and building...${NC}"
+    echo -e "${YELLOW}VAL or libVAL.so not found. Installing dependencies and building...${NC}"
 
-    # Install Build Dependencies first
+    # Install Build Dependencies
     case $DISTRO_ID in
         ubuntu|debian|kali|pop|linuxmint)
             apt-get install -y git cmake make g++ flex bison
@@ -105,21 +106,34 @@ else
     echo "Compiling VAL..."
     cd "$BUILD_DIR/VAL"
     mkdir build && cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release
+    # Ensure shared libs are built
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
     make -j$(nproc)
 
     if [ -f "bin/Validate" ]; then
         echo "Installing binary..."
         cp bin/Validate /usr/local/bin/Validate
-
-        echo "Installing shared library..."
-        find . -name "libVAL.so" -exec cp {} /usr/local/lib/ \;
-        chmod 755 /usr/local/lib/libVAL.so
-        ldconfig
-
         chmod +x /usr/local/bin/Validate
         ln -sf /usr/local/bin/Validate /usr/local/bin/validate
-        echo -e "${GREEN}Success! VAL installed.${NC}"
+
+        # --- CRITICAL FIX: Install Shared Library ---
+        echo "Installing shared library..."
+        # Find libVAL.so (location varies by cmake version/layout)
+        LIB_PATH=$(find . -name "libVAL.so" -print -quit)
+
+        if [ -n "$LIB_PATH" ]; then
+            cp "$LIB_PATH" /usr/local/lib/
+            chmod 755 /usr/local/lib/libVAL.so
+
+            # Update linker cache so the system finds the library
+            echo "/usr/local/lib" > /etc/ld.so.conf.d/val-parser.conf
+            ldconfig
+            echo -e "${GREEN}Success! VAL binary and shared library installed.${NC}"
+        else
+            echo -e "${RED}Error: libVAL.so not found in build artifacts.${NC}"
+            exit 1
+        fi
+        # ---------------------------------------------
     else
         echo -e "${RED}Error: VAL binary build failed.${NC}"
         exit 1
