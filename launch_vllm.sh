@@ -9,17 +9,34 @@ set -e
 MODEL="${MODEL:-mistralai/Mistral-7B-Instruct-v0.3}"
 PORT="${PORT:-8000}"
 HOST="${HOST:-0.0.0.0}"
-GPU_MEMORY_UTILIZATION="${GPU_MEM:-0.90}"
+# Slightly reduced utilization to leave room for KV cache on full utilization
+GPU_MEMORY_UTILIZATION="${GPU_MEM:-0.95}"
 
 # Model presets for 2x L40S (96GB total VRAM)
 declare -A MODEL_CONFIGS=(
     # [model_name]="tensor_parallel_size max_model_len"
-    ["mistralai/Mistral-7B-Instruct-v0.3"]="1 8192"
-    ["codellama/CodeLlama-13b-Instruct-hf"]="1 8192"
-    ["meta-llama/Llama-3.1-70B-Instruct"]="2 4096"
-    ["Qwen/Qwen2.5-72B-Instruct"]="2 4096"
-    ["deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct"]="1 8192"
-    ["microsoft/Phi-3-medium-128k-instruct"]="1 16384"
+
+    # --- Standard Models ---
+    ["mistralai/Mistral-7B-Instruct-v0.3"]="1 32768"
+    ["codellama/CodeLlama-13b-Instruct-hf"]="1 16384"
+    ["meta-llama/Llama-3.1-70B-Instruct"]="2 8192"
+    ["Qwen/Qwen2.5-72B-Instruct"]="2 8192"
+
+    # --- FIXED: NVIDIA Nemotron 3 Nano ---
+    # Correct HF ID: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16
+    # Weights ~60GB (BF16). Requires TP=2 on L40S.
+    ["nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"]="2 16384"
+
+    # --- NEW: Qwen 3 Coder ---
+    # Qwen 3 Coder 30B (A3B MoE). Weights ~62GB.
+    ["Qwen/Qwen3-Coder-30B-A3B-Instruct"]="2 32768"
+
+    # --- NEW: Google Gemma 3 ---
+    # Gemma 3 27B. Weights ~54GB. Fits comfortably on 2 GPUs.
+    ["google/gemma-3-27b-it"]="2 65536"
+
+    # --- Legacy/Specialty ---
+    ["openai/gpt-oss-120b"]="2 8192"
 )
 
 # Parse arguments
@@ -33,6 +50,24 @@ while [[ $# -gt 0 ]]; do
             PORT="$2"
             shift 2
             ;;
+        # Shortcuts
+        --nemotron)
+            # Fixed identifier
+            MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
+            shift
+            ;;
+        --qwen-coder)
+            MODEL="Qwen/Qwen3-Coder-30B-A3B-Instruct"
+            shift
+            ;;
+        --gemma)
+            MODEL="google/gemma-3-27b-it"
+            shift
+            ;;
+        --gpt-oss)
+            MODEL="openai/gpt-oss-120b"
+            shift
+            ;;
         --70b)
             MODEL="meta-llama/Llama-3.1-70B-Instruct"
             shift
@@ -41,29 +76,15 @@ while [[ $# -gt 0 ]]; do
             MODEL="mistralai/Mistral-7B-Instruct-v0.3"
             shift
             ;;
-        --codellama)
-            MODEL="codellama/CodeLlama-13b-Instruct-hf"
-            shift
-            ;;
-        --qwen)
-            MODEL="Qwen/Qwen2.5-72B-Instruct"
-            shift
-            ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
-            echo ""
             echo "Options:"
-            echo "  --model, -m MODEL   Model to serve (default: Mistral-7B)"
-            echo "  --port, -p PORT     Port to serve on (default: 8000)"
-            echo "  --70b               Use Llama-3.1-70B (requires both GPUs)"
-            echo "  --mistral           Use Mistral-7B-Instruct"
-            echo "  --codellama         Use CodeLlama-13B"
-            echo "  --qwen              Use Qwen2.5-72B"
-            echo ""
-            echo "Supported models for 2x L40S:"
-            for model in "${!MODEL_CONFIGS[@]}"; do
-                echo "  - $model"
-            done
+            echo "  --model, -m MODEL    Model to serve"
+            echo "  --port, -p PORT      Port to serve on (default: 8000)"
+            echo "  --nemotron           Use NVIDIA Nemotron 3 Nano 30B (Fixed ID)"
+            echo "  --qwen-coder         Use Qwen 3 Coder 30B"
+            echo "  --gemma              Use Gemma 3 27B"
+            echo "  --70b                Use Llama 3.1 70B"
             exit 0
             ;;
         *)
@@ -77,9 +98,9 @@ done
 if [[ -v MODEL_CONFIGS[$MODEL] ]]; then
     read -r TP_SIZE MAX_LEN <<< "${MODEL_CONFIGS[$MODEL]}"
 else
-    echo "Warning: Unknown model, using defaults"
+    echo "Warning: Unknown model '$MODEL', using defaults (TP=1)"
     TP_SIZE=1
-    MAX_LEN=8192
+    MAX_LEN=4096
 fi
 
 echo "=============================================="
@@ -88,25 +109,18 @@ echo "=============================================="
 echo "Model: $MODEL"
 echo "Tensor Parallel Size: $TP_SIZE"
 echo "Max Model Length: $MAX_LEN"
-echo "GPU Memory Utilization: $GPU_MEMORY_UTILIZATION"
-echo "Port: $PORT"
 echo "=============================================="
 
 # Check CUDA availability
 if ! command -v nvidia-smi &> /dev/null; then
-    echo "Error: nvidia-smi not found. CUDA drivers not installed?"
+    echo "Error: nvidia-smi not found."
     exit 1
 fi
 
-echo ""
-echo "GPU Status:"
-nvidia-smi --query-gpu=index,name,memory.total,memory.free --format=csv
-echo ""
-
-# Set CUDA visible devices
 export CUDA_VISIBLE_DEVICES=0,1
 
-# Launch vLLM with optimized settings
+# Launch vLLM
+# Note: trust-remote-code is crucial for newer models like Nemotron/Qwen3
 echo "Starting vLLM server..."
 uv run python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
@@ -117,42 +131,30 @@ uv run python -m vllm.entrypoints.openai.api_server \
     --port "$PORT" \
     --dtype auto \
     --max-num-seqs 256 \
-    --max-num-batched-tokens 8192 \
     --disable-log-requests \
     --trust-remote-code \
+    --enforce-eager \
     2>&1 | tee vllm_server.log &
 
 VLLM_PID=$!
 echo "vLLM PID: $VLLM_PID"
 
-# Wait for server to be ready
+# Wait for server
 echo "Waiting for server to be ready..."
-for i in {1..120}; do
+for i in {1..300}; do
     if curl -s "http://localhost:$PORT/health" > /dev/null 2>&1; then
         echo ""
         echo "✓ vLLM server is ready at http://localhost:$PORT"
-        echo ""
-        echo "API Endpoints:"
-        echo "  - Health: http://localhost:$PORT/health"
-        echo "  - Models: http://localhost:$PORT/v1/models"
-        echo "  - Completions: http://localhost:$PORT/v1/chat/completions"
-        echo ""
-        echo "To stop: kill $VLLM_PID"
-        echo ""
-
-        # Save PID for later
+        echo "Using model: $MODEL"
+        echo "PID: $VLLM_PID"
         echo "$VLLM_PID" > /tmp/vllm_server.pid
-
-        # Wait for server process
         wait $VLLM_PID
         exit 0
     fi
     echo -n "."
-    sleep 1
+    sleep 2
 done
 
-echo ""
-echo "Error: Server failed to start within 120 seconds"
-echo "Check vllm_server.log for details"
+echo "\nError: Server failed to start. Check vllm_server.log"
 kill $VLLM_PID 2>/dev/null
 exit 1

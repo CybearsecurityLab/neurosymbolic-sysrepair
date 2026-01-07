@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-01-07T08:51:16.272365",
-  "elapsed_time_seconds": 33.88784599304199,
+  "timestamp": "2026-01-07T09:39:13.991406",
+  "elapsed_time_seconds": 126.23165106773376,
   "phase1": {
     "success": true,
     "statistics": {
       "user_count": 12,
       "group_count": 16,
-      "process_count": 228,
-      "port_count": 24,
+      "process_count": 244,
+      "port_count": 45,
       "service_count": 99,
       "package_count": 37,
       "configuration_file_count": 2,
-      "predicate_count": 739,
+      "predicate_count": 776,
       "action_count": 35
     }
   },
@@ -20,9 +20,9 @@
     "statistics": {
       "workers_total": 6,
       "workers_successful": 6,
-      "total_types": 0,
-      "total_predicates": 0,
-      "total_actions": 36
+      "total_types": 4,
+      "total_predicates": 7,
+      "total_actions": 3
     },
     "validation_passed": true
   },

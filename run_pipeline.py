@@ -236,7 +236,7 @@ def run_phase2(
 
     # Import Phase 2 module
     try:
-        from phase2 import (
+        from phase2_test import (
             Phase2Orchestrator,
             HardwareConfig,
             LLMConfig

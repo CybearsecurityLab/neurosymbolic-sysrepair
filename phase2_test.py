@@ -1094,13 +1094,6 @@ class MergerAgent:
         "firewall_rule": "object",
     }
     
-    def __init__(self, llm: Optional[LLMInterface] = None):
-        self.llm = llm
-        self.unified_types: dict[str, PDDLType] = {}
-        self.unified_predicates: dict[str, PDDLPredicate] = {}
-        self.unified_actions: list[PDDLAction] = []
-        self.merge_log: list[str] = []
-    
     def merge(self, partial_domains: list[PartialPDDLDomain]) -> str:
         """
         Execute the Reduce phase: merge partial domains.

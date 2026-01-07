@@ -5,12 +5,12 @@
   "statistics": {
     "user_count": 12,
     "group_count": 16,
-    "process_count": 228,
-    "port_count": 24,
+    "process_count": 244,
+    "port_count": 45,
     "service_count": 99,
     "package_count": 37,
     "configuration_file_count": 2,
-    "predicate_count": 739,
+    "predicate_count": 776,
     "action_count": 35
   }
 }

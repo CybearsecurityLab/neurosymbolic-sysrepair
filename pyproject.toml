@@ -2,7 +2,33 @@
 name = "auto-sysrepair"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
+    "accelerate>=1.12.0",
     "osquery>=3.1.1",
+    "vllm>=0.13.0",
+]
+
+[tool.uv]
+preview = true
+no-build-isolation-package = ["vllm"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/test/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+torchvision = [{ index = "pytorch-cu128" }]
+torchaudio = [{ index = "pytorch-cu128" }]
+xformers = [{ index = "pytorch-cu128" }]
+
+[tool.uv.extra-build-dependencies]
+vllm = [
+    "setuptools",
+    "wheel",
+    "torch",
+    "ninja",
+    "packaging",
 ]
