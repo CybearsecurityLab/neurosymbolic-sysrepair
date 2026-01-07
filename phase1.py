@@ -1454,13 +1454,13 @@ Skip read-only or query commands.
                 text="apt-get install - Install packages. Requires network access. Must be run as root.",
                 extractions=[
                     lx.data.Extraction(
-                        extraction_class="system_action",
-                        extraction_text="apt-get install",
+                        extraction_class="action",
+                        extraction_text="install packages",
                         attributes={
                             "action_name": "install_package",
                             "parameters": "pkg:package",
-                            "preconditions": "not (package_installed ?pkg), network_available",
-                            "effects": "package_installed ?pkg",
+                            "preconditions": "(not (package_installed ?pkg)), (network_available)",
+                            "effects": "(package_installed ?pkg)",
                             "command_template": "apt-get install -y {pkg}",
                             "requires_root": "true"
                         }
@@ -1471,15 +1471,32 @@ Skip read-only or query commands.
                 text="systemctl start <service> - Start a systemd service. Service must exist.",
                 extractions=[
                     lx.data.Extraction(
-                        extraction_class="system_action",
-                        extraction_text="systemctl start",
+                        extraction_class="action",
+                        extraction_text="start service",
                         attributes={
                             "action_name": "start_service",
                             "parameters": "svc:service",
-                            "preconditions": "service_exists ?svc, not (service_running ?svc)",
-                            "effects": "service_running ?svc",
+                            "preconditions": "(service_exists ?svc), (not (service_running ?svc))",
+                            "effects": "(service_running ?svc)",
                             "command_template": "systemctl start {svc}",
                             "requires_root": "true"
+                        }
+                    )
+                ]
+            ),
+            lx.data.ExampleData(
+                text="chmod 755 file.sh - Change file permissions to make it executable.",
+                extractions=[
+                    lx.data.Extraction(
+                        extraction_class="action",
+                        extraction_text="change permissions",
+                        attributes={
+                            "action_name": "change_permissions",
+                            "parameters": "f:file",
+                            "preconditions": "(file_exists ?f)",
+                            "effects": "(file_executable ?f)",
+                            "command_template": "chmod {mode} {f}",
+                            "requires_root": "false"
                         }
                     )
                 ]
@@ -1487,7 +1504,7 @@ Skip read-only or query commands.
         ]
 
     def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
-        """Extract actions using langextract with Ollama (Robust JSON Mode)."""
+        """Extract actions using langextract with Ollama (Fixed for proper API usage)."""
         if not self._llm_available: return []
 
         try:
@@ -1495,50 +1512,49 @@ Skip read-only or query commands.
             from langextract.providers import ollama
 
             # 1. TRUNCATE AGGRESSIVELY
-            # Llama3 standard context is 8k. We reserve 2k for output/prompt, leaving 6k for text.
-            # 6k tokens ~= 24,000 chars. Let's be safe with 15,000 chars.
+            # Most Ollama models have 8k context. Reserve space for prompt/output (~2k),
+            # leaving ~6k tokens for input (~24k chars). Be conservative with 15k chars.
             max_chars = 15000
             if len(text) > max_chars:
                 text = text[:max_chars // 2] + "\n...[content truncated]...\n" + text[-max_chars // 2:]
 
             log(f"    [DEBUG] {utility}: Sending {len(text)} chars to LLM...")
 
-            prompt = (
-                "You are a PDDL extractor. Output ONLY valid JSON matching the schema. "
-                "Do not include markdown formatting or explanations.\n"
-                "Schema requirements:\n"
-                "1. action_name: snake_case string\n"
-                "2. parameters: string format 'name:type' (e.g. 'pkg:package')\n"
-                "3. preconditions: string (PDDL predicates)\n"
-                "4. effects: string (PDDL predicates)\n"
-                "5. command_template: string\n"
-                "6. requires_root: boolean"
-            )
+            # 2. BUILD PROMPT - Match the example structure
+            prompt = """Extract system administration actions from this documentation.
 
-            # 2. CONFIGURE OLLAMA SPECIFICS
-            # We pass 'format': 'json' to force structured output
-            # We pass 'num_ctx': 8192 to prevent context overflow truncation
-            ollama_params = {
-                "format_handler": ollama.OLLAMA_FORMAT_HANDLER,
-                "format": "json",
-                "options": {
-                    "num_ctx": 8192,
-                    "temperature": 0.1
-                }
+    For each action, extract in order of appearance:
+    1. extraction_class: "action"
+    2. extraction_text: brief description (e.g., "install package", "start service")
+    3. attributes with these exact keys:
+       - action_name: snake_case identifier (e.g., install_package)
+       - parameters: format "name:type" where type is one of: package, service, user, group, file, directory, port, interface, firewall_rule, process
+       - preconditions: PDDL predicates in parentheses, comma-separated (e.g., "(not (package_installed ?pkg)), (network_available)")
+       - effects: PDDL predicates in parentheses, comma-separated (e.g., "(package_installed ?pkg)")
+       - command_template: shell command with {param} placeholders
+       - requires_root: "true" or "false"
+
+    Focus on actions that modify system state. Skip read-only queries."""
+
+            # 3. CONFIGURE RESOLVER - ONLY format_handler, nothing else!
+            # The OLLAMA_FORMAT_HANDLER takes care of JSON formatting internally
+            resolver_params = {
+                "format_handler": ollama.OLLAMA_FORMAT_HANDLER
             }
 
-            # 3. EXECUTE
+            # 4. EXECUTE EXTRACTION
             result = lx.extract(
                 text_or_documents=text,
                 prompt_description=prompt,
                 examples=self.examples,
                 model_id=self.llm_config.model_id,
                 model_url=self.llm_config.model_url,
-                resolver_params=ollama_params,
-                show_progress=False
+                resolver_params=resolver_params,
+                show_progress=False  # Disable for cleaner logs
             )
 
-            # 4. PARSE
+            print(result)
+            # 5. PARSE RESULTS
             return self._parse_llm_result(result, utility)
 
         except Exception as e:
