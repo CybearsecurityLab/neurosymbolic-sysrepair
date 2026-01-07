@@ -1334,7 +1334,7 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "llama3:70b"
+    model_id: str = "gpt-oss:20b"
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
@@ -1487,43 +1487,64 @@ Skip read-only or query commands.
         ]
 
     def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
-        """Extract actions using langextract with Ollama."""
+        """Extract actions using langextract with Ollama (Robust JSON Mode)."""
         if not self._llm_available: return []
 
         try:
             import langextract as lx
             from langextract.providers import ollama
 
-            # Truncate text if too long
-            max_chars = 6000
+            # 1. TRUNCATE AGGRESSIVELY
+            # Llama3 standard context is 8k. We reserve 2k for output/prompt, leaving 6k for text.
+            # 6k tokens ~= 24,000 chars. Let's be safe with 15,000 chars.
+            max_chars = 15000
             if len(text) > max_chars:
-                text = text[:max_chars // 2] + "\n...\n" + text[-max_chars // 2:]
+                text = text[:max_chars // 2] + "\n...[content truncated]...\n" + text[-max_chars // 2:]
+
+            log(f"    [DEBUG] {utility}: Sending {len(text)} chars to LLM...")
 
             prompt = (
-                "Extract system administration actions. For attributes:\n"
-                "1. action_name: snake_case name\n"
-                "2. parameters: list as name:type (e.g. pkg:package)\n"
-                "3. preconditions: comma separated PDDL-like strings\n"
-                "4. effects: comma separated PDDL-like strings\n"
-                "5. command_template: shell command\n"
-                "6. requires_root: 'true' or 'false'"
+                "You are a PDDL extractor. Output ONLY valid JSON matching the schema. "
+                "Do not include markdown formatting or explanations.\n"
+                "Schema requirements:\n"
+                "1. action_name: snake_case string\n"
+                "2. parameters: string format 'name:type' (e.g. 'pkg:package')\n"
+                "3. preconditions: string (PDDL predicates)\n"
+                "4. effects: string (PDDL predicates)\n"
+                "5. command_template: string\n"
+                "6. requires_root: boolean"
             )
 
-            # CORRECTED: Use format_handler and ExampleData objects
+            # 2. CONFIGURE OLLAMA SPECIFICS
+            # We pass 'format': 'json' to force structured output
+            # We pass 'num_ctx': 8192 to prevent context overflow truncation
+            ollama_params = {
+                "format_handler": ollama.OLLAMA_FORMAT_HANDLER,
+                "format": "json",
+                "options": {
+                    "num_ctx": 8192,
+                    "temperature": 0.1
+                }
+            }
+
+            # 3. EXECUTE
             result = lx.extract(
                 text_or_documents=text,
                 prompt_description=prompt,
                 examples=self.examples,
                 model_id=self.llm_config.model_id,
                 model_url=self.llm_config.model_url,
-                resolver_params={"format_handler": ollama.OLLAMA_FORMAT_HANDLER},
+                resolver_params=ollama_params,
                 show_progress=False
             )
 
+            # 4. PARSE
             return self._parse_llm_result(result, utility)
 
         except Exception as e:
-            log(f"    LLM extraction failed for {utility}: {e}")
+            # Clean up the error message for the log
+            err_msg = str(e).replace('\n', ' ')[:200]
+            log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}...")
             return []
 
     def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
@@ -2204,7 +2225,7 @@ Skip read-only or query commands.
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-        model_id: str = "llama3:70b",
+        model_id: str = "gpt-oss:20b",
         model_url: str = "http://localhost:11434",
         enable_llm: bool = True
 ) -> ManPageParser:
@@ -2562,7 +2583,7 @@ class Phase1Orchestrator:
                  osquery_socket: Optional[str] = None,
                  validate: bool = False,
                  scoping_mode: str = "dynamic",
-                 llm_model: str = "llama3:70b",
+                 llm_model: str = "gpt-oss:20b",
                  llm_url: str = "http://localhost:11434",
                  enable_llm: bool = True
                  ):
