@@ -111,6 +111,12 @@ else
     if [ -f "bin/Validate" ]; then
         echo "Installing binary..."
         cp bin/Validate /usr/local/bin/Validate
+
+        echo "Installing shared library..."
+        find . -name "libVAL.so" -exec cp {} /usr/local/lib/ \;
+        chmod 755 /usr/local/lib/libVAL.so
+        ldconfig
+
         chmod +x /usr/local/bin/Validate
         ln -sf /usr/local/bin/Validate /usr/local/bin/validate
         echo -e "${GREEN}Success! VAL installed.${NC}"
