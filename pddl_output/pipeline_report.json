@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-01-07T09:39:13.991406",
-  "elapsed_time_seconds": 126.23165106773376,
+  "timestamp": "2026-01-07T09:43:48.586602",
+  "elapsed_time_seconds": 124.88986539840698,
   "phase1": {
     "success": true,
     "statistics": {
       "user_count": 12,
       "group_count": 16,
-      "process_count": 244,
-      "port_count": 45,
-      "service_count": 99,
-      "package_count": 37,
+      "process_count": 228,
+      "port_count": 15,
+      "service_count": 97,
+      "package_count": 36,
       "configuration_file_count": 2,
-      "predicate_count": 776,
+      "predicate_count": 721,
       "action_count": 35
     }
   },
