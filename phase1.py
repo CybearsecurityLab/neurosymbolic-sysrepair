@@ -1334,7 +1334,7 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "gemma2:2b"
+    model_id: str = "llama3:8b"
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
@@ -1440,7 +1440,7 @@ Skip read-only or query commands.
     @dataclass
     class LLMExtractionConfig:
         """Configuration for LLM-based extraction."""
-        model_id: str = "gemma2:2b"  # CHANGED from "gpt-oss:20b"
+        model_id: str = "llama3:8b"  # CHANGED from "gpt-oss:20b"
         model_url: str = "http://localhost:11434"
         enabled: bool = True
         timeout: int = 120
@@ -2301,7 +2301,7 @@ Skip read-only or query commands.
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-        model_id: str = "gemma2:2b",
+        model_id: str = "llama3:8b",
         model_url: str = "http://localhost:11434",
         enable_llm: bool = True
 ) -> ManPageParser:
@@ -2659,7 +2659,7 @@ class Phase1Orchestrator:
                  osquery_socket: Optional[str] = None,
                  validate: bool = False,
                  scoping_mode: str = "dynamic",
-                 llm_model: str = "gemma2:2b",
+                 llm_model: str = "llama3:8b",
                  llm_url: str = "http://localhost:11434",
                  enable_llm: bool = True
                  ):
