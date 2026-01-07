@@ -236,7 +236,7 @@ def run_phase2(
 
     # Import Phase 2 module
     try:
-        from phase2_test import (
+        from phase2 import (
             Phase2Orchestrator,
             HardwareConfig,
             LLMConfig
@@ -407,8 +407,9 @@ Examples:
         if not args.mock and not args.no_vllm and deps["vllm"] and deps["cuda"]:
             vllm_process = start_vllm_server(args.model, args.vllm_port)
             if not vllm_process:
-                print("[!] Falling back to mock LLM")
-                args.mock = True
+                # CHANGED: Abort if server start fails instead of fallback
+                print("\n[!] Error: vLLM server failed to start. Aborting.")
+                sys.exit(1)
 
         # Phase 1
         if args.skip_phase1 and args.phase1_state:
