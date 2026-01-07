@@ -1334,12 +1334,11 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "llama3:70b"  # Default large model
+    model_id: str = "llama3:70b"
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
     max_retries: int = 2
-    temperature: float = 0.1  # Low temp for consistent extraction
 
 
 class ManPageParser:
@@ -1431,25 +1430,154 @@ Skip read-only or query commands.
         self.detected_variants: dict[str, str] = {}
         self.llm_config = llm_config or LLMExtractionConfig()
         self._llm_available = self._check_llm_availability()
-        self._action_cache: dict[str, ActionSchema] = {}  # For deduplication
+        self.examples = self._build_examples()  # Build LangExtract objects
 
     def _check_llm_availability(self) -> bool:
-        """Check if langextract and Ollama are available."""
-        if not self.llm_config.enabled:
-            return False
+        if not self.llm_config.enabled: return False
         try:
             import langextract
-            # Quick check if Ollama is responding
             import urllib.request
-            req = urllib.request.Request(
-                f"{self.llm_config.model_url}/api/tags",
-                method='GET'
-            )
+            req = urllib.request.Request(f"{self.llm_config.model_url}/api/tags", method='GET')
             with urllib.request.urlopen(req, timeout=5) as resp:
                 return resp.status == 200
         except Exception as e:
             log(f"  LLM extraction disabled: {e}")
             return False
+
+    def _build_examples(self):
+        """Constructs lx.data.ExampleData objects for the LLM."""
+        if not self._llm_available: return []
+        import langextract as lx
+
+        return [
+            lx.data.ExampleData(
+                text="apt-get install - Install packages. Requires network access. Must be run as root.",
+                extractions=[
+                    lx.data.Extraction(
+                        extraction_class="system_action",
+                        extraction_text="apt-get install",
+                        attributes={
+                            "action_name": "install_package",
+                            "parameters": "pkg:package",
+                            "preconditions": "not (package_installed ?pkg), network_available",
+                            "effects": "package_installed ?pkg",
+                            "command_template": "apt-get install -y {pkg}",
+                            "requires_root": "true"
+                        }
+                    )
+                ]
+            ),
+            lx.data.ExampleData(
+                text="systemctl start <service> - Start a systemd service. Service must exist.",
+                extractions=[
+                    lx.data.Extraction(
+                        extraction_class="system_action",
+                        extraction_text="systemctl start",
+                        attributes={
+                            "action_name": "start_service",
+                            "parameters": "svc:service",
+                            "preconditions": "service_exists ?svc, not (service_running ?svc)",
+                            "effects": "service_running ?svc",
+                            "command_template": "systemctl start {svc}",
+                            "requires_root": "true"
+                        }
+                    )
+                ]
+            )
+        ]
+
+    def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
+        """Extract actions using langextract with Ollama."""
+        if not self._llm_available: return []
+
+        try:
+            import langextract as lx
+            from langextract.providers import ollama
+
+            # Truncate text if too long
+            max_chars = 6000
+            if len(text) > max_chars:
+                text = text[:max_chars // 2] + "\n...\n" + text[-max_chars // 2:]
+
+            prompt = (
+                "Extract system administration actions. For attributes:\n"
+                "1. action_name: snake_case name\n"
+                "2. parameters: list as name:type (e.g. pkg:package)\n"
+                "3. preconditions: comma separated PDDL-like strings\n"
+                "4. effects: comma separated PDDL-like strings\n"
+                "5. command_template: shell command\n"
+                "6. requires_root: 'true' or 'false'"
+            )
+
+            # CORRECTED: Use format_handler and ExampleData objects
+            result = lx.extract(
+                text_or_documents=text,
+                prompt_description=prompt,
+                examples=self.examples,
+                model_id=self.llm_config.model_id,
+                model_url=self.llm_config.model_url,
+                resolver_params={"format_handler": ollama.OLLAMA_FORMAT_HANDLER},
+                show_progress=False
+            )
+
+            return self._parse_llm_result(result, utility)
+
+        except Exception as e:
+            log(f"    LLM extraction failed for {utility}: {e}")
+            return []
+
+    def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
+        """Convert AnnotatedDocument to ActionSchema."""
+        actions = []
+        if not result or not hasattr(result, 'extractions'):
+            return []
+
+        for ext in result.extractions:
+            try:
+                attrs = ext.attributes or {}
+
+                # Parse Name
+                name = attrs.get("action_name", "unknown_action").strip().replace(" ", "_").lower()
+
+                # Parse Parameters (expected format: "name:type")
+                params = []
+                param_str = attrs.get("parameters", "")
+                if param_str:
+                    # Handle comma separation if multiple
+                    for p in param_str.split(','):
+                        parts = p.strip().split(':')
+                        if len(parts) == 2:
+                            p_name, p_type = parts[0].strip(), parts[1].strip().lower()
+                            # Map string type to Enum
+                            pddl_type = getattr(PDDLType, p_type.upper(), PDDLType.FILE)
+                            params.append(ActionParameter(p_name, pddl_type))
+
+                if not params:
+                    params = [ActionParameter("obj", PDDLType.FILE)]
+
+                # Parse Preconditions/Effects (comma separated strings)
+                preconditions = [x.strip() for x in attrs.get("preconditions", "").split(',') if x.strip()]
+                effects = [x.strip() for x in attrs.get("effects", "").split(',') if x.strip()]
+
+                # Root requirement
+                requires_root = str(attrs.get("requires_root", "false")).lower() == "true"
+                command = attrs.get("command_template", f"{utility} {{args}}")
+
+                actions.append(ActionSchema(
+                    name=name,
+                    parameters=params,
+                    preconditions=preconditions,
+                    effects=effects,
+                    command_template=command,
+                    requires_root=requires_root,
+                    source_utility=utility,
+                    extraction_method="llm"
+                ))
+            except Exception as e:
+                log(f"    Failed to convert extraction: {e}")
+                continue
+
+        return actions
 
     def _compute_action_hash(self, action: ActionSchema) -> str:
         """Compute a hash for action deduplication based on semantic content."""
@@ -1461,123 +1589,6 @@ Skip read-only or query commands.
 
         content = f"{norm_name}|{norm_params}|{norm_preconds}|{norm_effects}"
         return hashlib.md5(content.encode()).hexdigest()
-
-    def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
-        """Remove duplicate actions, preferring regex-extracted ones."""
-        seen_hashes: dict[str, ActionSchema] = {}
-        seen_names: dict[str, ActionSchema] = {}
-
-        # First pass: group by hash and name
-        for action in actions:
-            action_hash = self._compute_action_hash(action)
-
-            # Check by hash (semantic duplicate)
-            if action_hash in seen_hashes:
-                existing = seen_hashes[action_hash]
-                # Prefer regex extraction (more reliable)
-                if existing.extraction_method == "regex":
-                    continue
-                elif action.extraction_method == "regex":
-                    seen_hashes[action_hash] = action
-                    seen_names[action.name] = action
-                continue
-
-            # Check by name (potential conflict)
-            if action.name in seen_names:
-                existing = seen_names[action.name]
-                # Keep the one with more detail
-                existing_detail = len(existing.preconditions) + len(existing.effects)
-                new_detail = len(action.preconditions) + len(action.effects)
-
-                if new_detail > existing_detail:
-                    # Remove old hash entry
-                    old_hash = self._compute_action_hash(existing)
-                    seen_hashes.pop(old_hash, None)
-                    seen_hashes[action_hash] = action
-                    seen_names[action.name] = action
-                continue
-
-            seen_hashes[action_hash] = action
-            seen_names[action.name] = action
-
-        result = list(seen_hashes.values())
-        log(f"    Deduplication: {len(actions)} -> {len(result)} actions")
-        return result
-
-    def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
-        """Extract actions using langextract with Ollama."""
-        if not self._llm_available:
-            return []
-
-        try:
-            import langextract as lx
-
-            # Prepare input text (truncate if too long)
-            max_chars = 8000
-            if len(text) > max_chars:
-                # Keep beginning and end (most relevant sections)
-                text = text[:max_chars // 2] + "\n...\n" + text[-max_chars // 2:]
-
-            input_text = f"Utility: {utility}\n\nDocumentation:\n{text}"
-
-            # Run extraction
-            result = lx.extract(
-                text_or_documents=input_text,
-                prompt_description=self.LLM_EXTRACTION_PROMPT,
-                examples=self.LLM_EXTRACTION_EXAMPLES,
-                model_id=self.llm_config.model_id,
-                model_url=self.llm_config.model_url,
-                fence_output=False,
-                use_schema_constraints=False
-            )
-
-            # Parse result
-            return self._parse_llm_result(result, utility)
-
-        except Exception as e:
-            log(f"    LLM extraction failed for {utility}: {e}")
-            return []
-
-    def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
-        """Parse langextract result into ActionSchema objects."""
-        actions = []
-
-        try:
-            # Handle different result formats
-            if isinstance(result, str):
-                # Try to parse as JSON
-                try:
-                    data = json.loads(result)
-                except json.JSONDecodeError:
-                    # Try to extract JSON from the string
-                    json_match = re.search(r'\{.*}', result, re.DOTALL)
-                    if json_match:
-                        data = json.loads(json_match.group())
-                    else:
-                        return []
-            elif isinstance(result, dict):
-                data = result
-            else:
-                return []
-
-            # Extract actions from the parsed data
-            raw_actions = data.get("actions", [])
-            if not isinstance(raw_actions, list):
-                raw_actions = [raw_actions]
-
-            for raw_action in raw_actions:
-                try:
-                    action = self._convert_llm_action(raw_action, utility)
-                    if action:
-                        actions.append(action)
-                except Exception as e:
-                    log(f"    Failed to convert LLM action: {e}")
-                    continue
-
-        except Exception as e:
-            log(f"    Failed to parse LLM result: {e}")
-
-        return actions
 
     def _convert_llm_action(self, raw: dict, utility: str) -> Optional[ActionSchema]:
         """Convert raw LLM output to ActionSchema."""
@@ -1704,99 +1715,81 @@ Skip read-only or query commands.
             return f"({param_type}_ready {param_var})"
 
     def fetch_manpage(self, utility: str) -> Optional[str]:
-        """Fetch and clean man page content."""
-        if utility in self.cached_manpages:
-            return self.cached_manpages[utility]
-
+        if utility in self.cached_manpages: return self.cached_manpages[utility]
         try:
-            process = subprocess.Popen(
-                f"man {utility} 2>/dev/null | col -b",
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+            process = subprocess.Popen(f"man {utility} 2>/dev/null | col -b", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, _ = process.communicate(timeout=30)
-
             if process.returncode == 0 and stdout:
                 content = stdout.decode('utf-8', errors='replace')
                 self.cached_manpages[utility] = content
                 self._detect_variants(utility, content)
                 return content
-        except (subprocess.TimeoutExpired, Exception) as e:
-            log(f"Warning: Failed to fetch man page for {utility}: {e}")
-
+        except Exception: pass
         return None
 
     def _detect_variants(self, utility: str, content: str):
-        """Detect sudo-rs and uutils variants."""
-        if utility == "sudo":
-            sudo_rs_indicators = ["sudo-rs", "memorysafe", "trifecta tech", "prossimo"]
-            if any(ind in content.lower() for ind in sudo_rs_indicators):
-                self.detected_variants["sudo"] = "sudo-rs"
-
-        UUTILS_COMMANDS = {
-            "cp", "mv", "rm", "ls", "chmod", "chown", "mkdir", "touch",
-            "cat", "head", "tail", "wc", "sort", "uniq", "cut", "paste"
-        }
-        if utility in UUTILS_COMMANDS:
-            uutils_indicators = ["uutils", "coreutils-rust"]
-            if any(ind in content.lower() for ind in uutils_indicators):
-                self.detected_variants[utility] = "uutils"
+        if utility == "sudo" and "sudo-rs" in content.lower(): self.detected_variants["sudo"] = "sudo-rs"
+        if utility in ["cp", "mv", "rm", "ls"] and "uutils" in content.lower(): self.detected_variants[utility] = "uutils"
 
     def fetch_help_output(self, utility: str) -> Optional[str]:
-        """Fetch --help output as fallback."""
         try:
-            result = subprocess.run(
-                [utility, "--help"],
-                capture_output=True, text=True, timeout=10
-            )
-            return result.stdout or result.stderr
-        except Exception:
-            return None
+            res = subprocess.run([utility, "--help"], capture_output=True, text=True, timeout=10)
+            return res.stdout or res.stderr
+        except Exception: return None
 
     def extract_actions_from_utility(self, utility: str) -> list[ActionSchema]:
-        """
-        Extract actions using hybrid approach: regex + LLM.
-        Results are deduplicated with preference for regex extractions.
-        """
         all_actions = []
-
         manpage = self.fetch_manpage(utility)
         help_text = self.fetch_help_output(utility)
+        combined_text = (manpage or "") + "\n" + (help_text or "")
 
-        combined_text = ""
-        if manpage:
-            combined_text += manpage
-        if help_text:
-            combined_text += "\n" + help_text
+        if not combined_text.strip(): return []
 
-        if not combined_text:
-            return all_actions
+        requires_root = any(re.search(p, combined_text, re.IGNORECASE) for p in self.PATTERNS["requires_root"])
 
-        requires_root = any(
-            re.search(pattern, combined_text, re.IGNORECASE)
-            for pattern in self.PATTERNS["requires_root"]
-        )
-
-        # Phase 1: Regex-based extraction
+        # Regex Phase
         regex_actions = self._extract_with_regex(utility, combined_text, requires_root)
-        for action in regex_actions:
-            action.extraction_method = "regex"
+        for a in regex_actions: a.extraction_method = "regex"
         all_actions.extend(regex_actions)
-        log(f"    Regex extracted: {len(regex_actions)} actions")
 
-        # Phase 2: LLM-based extraction
+        # LLM Phase
         if self._llm_available:
             llm_actions = self._extract_with_llm(utility, combined_text)
-            for action in llm_actions:
-                action.extraction_method = "llm"
             all_actions.extend(llm_actions)
-            log(f"    LLM extracted: {len(llm_actions)} actions")
 
-        # Phase 3: Deduplicate
-        deduplicated = self._deduplicate_actions(all_actions)
+        return self._deduplicate_actions(all_actions)
 
-        return deduplicated
+    def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
+        """Simple deduplication preferring regex."""
+        final = {}
+        # 1. Add Regex (High Confidence)
+        for a in actions:
+            if a.extraction_method == "regex":
+                final[a.name] = a
+        # 2. Add LLM (Discovery) if not exists
+        for a in actions:
+            if a.extraction_method == "llm" and a.name not in final:
+                final[a.name] = a
+        return list(final.values())
+
+    def extract_all_actions(self) -> list[ActionSchema]:
+        """Main entry point for extraction."""
+        all_actions = []
+        log(f"  LLM extraction: {'enabled' if self._llm_available else 'disabled'}")
+
+        for category, utilities in self.TARGET_UTILITIES.items():
+            log(f"\n  Processing {category}...")
+            for utility in utilities:
+                try:
+                    actions = self.extract_actions_from_utility(utility)
+                    all_actions.extend(actions)
+                    regex_c = sum(1 for a in actions if a.extraction_method == "regex")
+                    llm_c = sum(1 for a in actions if a.extraction_method == "llm")
+                    log(f"    {utility}: {len(actions)} actions (regex:{regex_c}, llm:{llm_c})")
+                except Exception as e:
+                    log(f"    {utility}: FAILED - {e}")
+
+        return self._deduplicate_actions(all_actions)
 
     def _extract_with_regex(self, utility: str, text: str,
                             requires_root: bool) -> list[ActionSchema]:
@@ -2207,35 +2200,6 @@ Skip read-only or query commands.
             requires_root=True,
             source_utility="groupadd"
         )]
-
-    def extract_all_actions(self) -> list[ActionSchema]:
-        """Extract actions from all target utilities using hybrid approach."""
-        all_actions = []
-
-        log(f"  LLM extraction: {'enabled' if self._llm_available else 'disabled'}")
-        if self._llm_available:
-            log(f"  LLM model: {self.llm_config.model_id}")
-
-        for category, utilities in self.TARGET_UTILITIES.items():
-            log(f"\n  Processing {category}...")
-            for utility in utilities:
-                try:
-                    actions = self.extract_actions_from_utility(utility)
-                    all_actions.extend(actions)
-                    log(f"    {utility}: {len(actions)} actions")
-                except Exception as e:
-                    log(f"    {utility}: FAILED - {e}")
-
-        # Final global deduplication
-        log(f"\n  Final deduplication...")
-        final_actions = self._deduplicate_actions(all_actions)
-
-        # Statistics
-        regex_count = sum(1 for a in final_actions if a.extraction_method == "regex")
-        llm_count = sum(1 for a in final_actions if a.extraction_method == "llm")
-        log(f"  Total: {len(final_actions)} actions (regex: {regex_count}, llm: {llm_count})")
-
-        return final_actions
 
 
 # Factory function to create the hybrid parser with configuration
