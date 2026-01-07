@@ -1489,6 +1489,28 @@ class PDDLRepairer:
         "system_user", "human_user"
     }
 
+    # Map hallucinated types to valid ones
+    TYPE_MAPPINGS = {
+        "FirewallRule": "firewall_rule",
+        "Interface": "interface",
+        "Port": "port",
+        "Repository": "repository",
+        "Package": "package",
+        "Service": "service",
+        "User": "user",
+        "Group": "group",
+        "File": "file",
+        "Directory": "directory",
+        "Timestamp": "object",  # Simplify complex types to object
+        "Permission": "object",
+        "Owner": "user",
+        "ACL": "object",
+        "boolean": "object",
+        "string": "object",
+        "_user": "user",
+        "_group": "group"
+    }
+
     def __init__(self):
         self.repairs_made: list[str] = []
 
@@ -1498,7 +1520,7 @@ class PDDLRepairer:
 
         # Apply repairs in order
         pddl = self._fix_invalid_types(pddl)
-        pddl = self._fix_unbound_parameters(pddl)
+        pddl = self._fix_unbound_variables(pddl)  # Renamed for clarity
         pddl = self._fix_invalid_quantifiers(pddl)
         pddl = self._fix_string_literals(pddl)
         pddl = self._fix_function_calls(pddl)
@@ -1509,18 +1531,70 @@ class PDDLRepairer:
         return pddl
 
     def _fix_invalid_types(self, pddl: str) -> str:
-        """Replace invalid types like 'string', 'list' with 'object'."""
-        invalid_types = ["string", "list", "command", "list_of_services",
-                         "dependency", "entries", "filtered_entries",
-                         "Timestamp", "Permission", "Owner", "Group", "Interface", "Port", "FirewallRule", "ACL"]
+        """Replace invalid types like 'string', 'FirewallRule' with valid ones."""
 
-        for inv_type in invalid_types:
-            pattern = rf'\?\w+\s*-\s*{inv_type}\b'
+        # 1. Apply explicit mappings
+        for bad_type, good_type in self.TYPE_MAPPINGS.items():
+            # Regex matches "?param - BadType"
+            pattern = rf'(\?[\w-]+\s*-\s*){bad_type}\b'
             if re.search(pattern, pddl):
-                pddl = re.sub(pattern, lambda m: m.group().replace(inv_type, "object"), pddl)
-                self.repairs_made.append(f"Replaced invalid type '{inv_type}' with 'object'")
+                pddl = re.sub(pattern, rf'\1{good_type}', pddl)
+                self.repairs_made.append(f"Mapped type '{bad_type}' -> '{good_type}'")
 
+        # 2. Catch-all: Replace unknown types with 'object'
+        # This prevents the domain from crashing due to any other hallucinations
+        def replace_unknown(match):
+            prefix = match.group(1)
+            t = match.group(2)
+            if t not in self.VALID_TYPES:
+                self.repairs_made.append(f"Replaced unknown type '{t}' with 'object'")
+                return f"{prefix}object"
+            return match.group(0)
+
+        pddl = re.sub(r'(\?[\w-]+\s*-\s*)([\w-]+)', replace_unknown, pddl)
         return pddl
+
+    def _fix_unbound_variables(self, pddl: str) -> str:
+        """Fix actions where variables are used in effects but not parameters."""
+        # Find actions
+        action_pattern = r'\(:action\s+(\w+)\s*(:parameters\s*\((.*?)\))?(.*?)(?=\(:action|\Z)'
+
+        def fix_action_params(match):
+            action_name = match.group(1)
+            existing_params_str = match.group(3) or ""
+            body = match.group(4)
+
+            # Parse existing parameters
+            existing_vars = set()
+            if existing_params_str:
+                existing_vars = set(re.findall(r'\?(\w+)', existing_params_str))
+
+            # Find all variables used in body
+            used_vars = set(re.findall(r'\?(\w+)', body))
+
+            # Identify missing variables
+            missing_vars = used_vars - existing_vars
+
+            if missing_vars:
+                new_params = []
+                for var in sorted(missing_vars):
+                    inferred_type = self._infer_type_from_context(var, body)
+                    new_params.append(f"?{var} - {inferred_type}")
+                    self.repairs_made.append(f"Added unbound var '?{var}' to action '{action_name}'")
+
+                # Reconstruct parameters string
+                current_params = existing_params_str.strip()
+                added_params = " ".join(new_params)
+                if current_params:
+                    final_params = f"{current_params} {added_params}"
+                else:
+                    final_params = added_params
+
+                return f"(:action {action_name}\n    :parameters ({final_params}){body}"
+
+            return match.group(0)
+
+        return re.sub(action_pattern, fix_action_params, pddl, flags=re.DOTALL)
 
     def _fix_unbound_parameters(self, pddl: str) -> str:
         """Fix actions with empty parameters but used variables."""
