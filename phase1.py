@@ -1334,7 +1334,7 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "gpt-oss:20b"
+    model_id: str = "gemma2:2b"
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
@@ -1432,30 +1432,78 @@ Skip read-only or query commands.
         self._llm_available = self._check_llm_availability()
         self.examples = self._build_examples()  # Build LangExtract objects
 
+    # =============================================================================
+    # COMPLETE FIX: Replace these sections in your ManPageParser class
+    # =============================================================================
+
+    # 1. UPDATE THE CONFIG CLASS (around line 130)
+    @dataclass
+    class LLMExtractionConfig:
+        """Configuration for LLM-based extraction."""
+        model_id: str = "gemma2:2b"  # CHANGED from "gpt-oss:20b"
+        model_url: str = "http://localhost:11434"
+        enabled: bool = True
+        timeout: int = 120
+        max_retries: int = 2
+
+    # 2. REPLACE _check_llm_availability method
     def _check_llm_availability(self) -> bool:
-        if not self.llm_config.enabled: return False
+        """Check if LLM is available and the model exists."""
+        if not self.llm_config.enabled:
+            return False
+
         try:
             import langextract
             import urllib.request
+            import json
+
+            # Check if Ollama server is running
             req = urllib.request.Request(f"{self.llm_config.model_url}/api/tags", method='GET')
             with urllib.request.urlopen(req, timeout=5) as resp:
-                return resp.status == 200
+                if resp.status != 200:
+                    log(f"  LLM: Ollama server not responding")
+                    return False
+
+                # Parse available models
+                data = json.loads(resp.read().decode())
+                available_models = [m.get('name', '') for m in data.get('models', [])]
+
+                # Check if our model exists
+                model_name = self.llm_config.model_id
+                model_exists = any(model_name in m for m in available_models)
+
+                if not model_exists:
+                    log(f"  LLM: Model '{model_name}' not found")
+                    log(f"  Available models: {', '.join(available_models[:5])}")
+                    log(f"  Suggestion: ollama pull gemma2:2b")
+                    return False
+
+                log(f"  LLM: Using model '{model_name}'")
+                return True
+
+        except ImportError:
+            log(f"  LLM: langextract not installed (pip install langextract)")
+            return False
         except Exception as e:
             log(f"  LLM extraction disabled: {e}")
             return False
 
+    # 3. REPLACE _build_examples method
     def _build_examples(self):
-        """Constructs lx.data.ExampleData objects for the LLM."""
+        """Constructs lx.data.ExampleData objects for the LLM.
+
+        CRITICAL: extraction_text MUST be an exact substring of text for proper alignment.
+        """
         if not self._llm_available: return []
         import langextract as lx
 
         return [
             lx.data.ExampleData(
-                text="apt-get install - Install packages. Requires network access. Must be run as root.",
+                text="apt-get install packages. Requires network access. Must be run as root.",
                 extractions=[
                     lx.data.Extraction(
                         extraction_class="action",
-                        extraction_text="install packages",
+                        extraction_text="install packages",  # Exact substring match
                         attributes={
                             "action_name": "install_package",
                             "parameters": "pkg:package",
@@ -1468,11 +1516,11 @@ Skip read-only or query commands.
                 ]
             ),
             lx.data.ExampleData(
-                text="systemctl start <service> - Start a systemd service. Service must exist.",
+                text="systemctl start service. Start a systemd service. Service must exist.",
                 extractions=[
                     lx.data.Extraction(
                         extraction_class="action",
-                        extraction_text="start service",
+                        extraction_text="start service",  # Exact substring match
                         attributes={
                             "action_name": "start_service",
                             "parameters": "svc:service",
@@ -1485,11 +1533,11 @@ Skip read-only or query commands.
                 ]
             ),
             lx.data.ExampleData(
-                text="chmod 755 file.sh - Change file permissions to make it executable.",
+                text="chmod changes file permissions to make it executable.",
                 extractions=[
                     lx.data.Extraction(
                         extraction_class="action",
-                        extraction_text="change permissions",
+                        extraction_text="changes file permissions",  # Exact substring match
                         attributes={
                             "action_name": "change_permissions",
                             "parameters": "f:file",
@@ -1503,6 +1551,7 @@ Skip read-only or query commands.
             )
         ]
 
+    # 4. REPLACE _extract_with_llm method
     def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
         """Extract actions using langextract with Ollama (Fixed for proper API usage)."""
         if not self._llm_available: return []
@@ -1520,24 +1569,22 @@ Skip read-only or query commands.
 
             log(f"    [DEBUG] {utility}: Sending {len(text)} chars to LLM...")
 
-            # 2. BUILD PROMPT - Match the example structure
-            prompt = """Extract system administration actions from this documentation.
+            # 2. BUILD PROMPT - Simpler, more explicit guidance
+            prompt = """Extract system administration actions. For each action found:
 
-    For each action, extract in order of appearance:
     1. extraction_class: "action"
-    2. extraction_text: brief description (e.g., "install package", "start service")
-    3. attributes with these exact keys:
-       - action_name: snake_case identifier (e.g., install_package)
-       - parameters: format "name:type" where type is one of: package, service, user, group, file, directory, port, interface, firewall_rule, process
-       - preconditions: PDDL predicates in parentheses, comma-separated (e.g., "(not (package_installed ?pkg)), (network_available)")
-       - effects: PDDL predicates in parentheses, comma-separated (e.g., "(package_installed ?pkg)")
-       - command_template: shell command with {param} placeholders
+    2. extraction_text: exact phrase from the text describing the action
+    3. attributes:
+       - action_name: snake_case (e.g., "install_package", "start_service")
+       - parameters: "name:type" (types: package, service, user, group, file, directory, port, interface, firewall_rule, process)
+       - preconditions: PDDL format with parentheses and commas: "(pred1 ?x), (pred2 ?y)"
+       - effects: PDDL format with parentheses and commas: "(pred3 ?x)"
+       - command_template: shell command with {var} placeholders
        - requires_root: "true" or "false"
 
-    Focus on actions that modify system state. Skip read-only queries."""
+    Extract only actions that modify system state."""
 
-            # 3. CONFIGURE RESOLVER - ONLY format_handler, nothing else!
-            # The OLLAMA_FORMAT_HANDLER takes care of JSON formatting internally
+            # 3. CONFIGURE RESOLVER - ONLY format_handler
             resolver_params = {
                 "format_handler": ollama.OLLAMA_FORMAT_HANDLER
             }
@@ -1550,17 +1597,30 @@ Skip read-only or query commands.
                 model_id=self.llm_config.model_id,
                 model_url=self.llm_config.model_url,
                 resolver_params=resolver_params,
-                show_progress=False  # Disable for cleaner logs
+                show_progress=False
             )
 
-            print(result)
-            # 5. PARSE RESULTS
+            # 5. DEBUG: Check what we got back
+            if not result or not hasattr(result, 'extractions'):
+                log(f"    [DEBUG] {utility}: No result or no extractions attribute")
+                return []
+
+            if not result.extractions:
+                log(f"    [DEBUG] {utility}: Result has empty extractions list")
+                return []
+
+            log(f"    [DEBUG] {utility}: Got {len(result.extractions)} raw extractions")
+
+            # 6. PARSE RESULTS
             return self._parse_llm_result(result, utility)
 
         except Exception as e:
-            # Clean up the error message for the log
-            err_msg = str(e).replace('\n', ' ')[:200]
-            log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}...")
+            # More detailed error logging
+            err_msg = str(e).replace('\n', ' ')[:300]
+            log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}")
+            if "JSON" in str(e) or "parse" in str(e).lower():
+                log(f"    [HINT] LLM may be returning non-JSON. Check model: {self.llm_config.model_id}")
+                log(f"    [HINT] Try: ollama pull gemma2:2b")
             return []
 
     def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
@@ -2241,7 +2301,7 @@ Skip read-only or query commands.
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-        model_id: str = "gpt-oss:20b",
+        model_id: str = "gemma2:2b",
         model_url: str = "http://localhost:11434",
         enable_llm: bool = True
 ) -> ManPageParser:
@@ -2599,7 +2659,7 @@ class Phase1Orchestrator:
                  osquery_socket: Optional[str] = None,
                  validate: bool = False,
                  scoping_mode: str = "dynamic",
-                 llm_model: str = "gpt-oss:20b",
+                 llm_model: str = "gemma2:2b",
                  llm_url: str = "http://localhost:11434",
                  enable_llm: bool = True
                  ):
