@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-01-07T09:43:48.586602",
-  "elapsed_time_seconds": 124.88986539840698,
+  "timestamp": "2026-01-07T10:12:03.209366",
+  "elapsed_time_seconds": 128.54586625099182,
   "phase1": {
-    "success": true,
+    "success": false,
     "statistics": {
       "user_count": 12,
       "group_count": 16,
@@ -20,9 +20,9 @@
     "statistics": {
       "workers_total": 6,
       "workers_successful": 6,
-      "total_types": 4,
-      "total_predicates": 7,
-      "total_actions": 3
+      "total_types": 0,
+      "total_predicates": 0,
+      "total_actions": 115
     },
     "validation_passed": true
   },

@@ -550,6 +550,11 @@ ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
 
 8. VARIABLE SCOPE:
    Any variable (e.g., ?r, ?c) used in preconditions or effects MUST be defined in :parameters.
+   
+9. USE ONLY DEFINED TYPES:
+   You may ONLY use these types: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository.
+   - DO NOT use: "string", "integer", "Timestamp", "Permission", "Owner", "ACL".
+   - If you need a permission, use a string or abstract object, or simplify.
 
 OUTPUT FORMAT - exactly this structure:
 (:types
@@ -1506,7 +1511,8 @@ class PDDLRepairer:
     def _fix_invalid_types(self, pddl: str) -> str:
         """Replace invalid types like 'string', 'list' with 'object'."""
         invalid_types = ["string", "list", "command", "list_of_services",
-                        "dependency", "entries", "filtered_entries"]
+                         "dependency", "entries", "filtered_entries",
+                         "Timestamp", "Permission", "Owner", "Group", "Interface", "Port", "FirewallRule", "ACL"]
 
         for inv_type in invalid_types:
             pattern = rf'\?\w+\s*-\s*{inv_type}\b'

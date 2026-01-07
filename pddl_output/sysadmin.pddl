@@ -15,73 +15,202 @@
     human_user system_user - user
   )
 
-  ;; Predicates (extracted from action bodies and explicit declarations)
+  ;; Predicates
   (:predicates
-    (directory_exists ?d - directory)
-    (file_exists ?src - service)
-    (file_owned_by ?f - file ?u - user)
-    (firewall_rule_active ?r - repository)
-    (group_exists ?g - group)
-    (installed ?p - package)
-    (member_of ?u - user ?g - group)
     (network_available)
-    (package_available ?p - package)
-    (package_installed ?p - package)
-    (port_allowed ?p - package)
-    (repo_enabled ?r - repository)
-    (service_enabled ?s - service)
-    (service_exists ?s - service)
-    (service_running ?s - service)
-    (traffic_blocked ?r - repository)
-    (user_exists ?u - user)
     (can_escalate ?u - user)
   )
 
   ;; Action: add_firewall_rule
   (:action add_firewall_rule
-    :parameters (?r - firewall_rule)
+    :parameters (?fr - FirewallRule ?p - Port)
     :precondition (and
-      (not (firewall_rule_active ?r))
+      (firewall_rule_exists ?fr)
+      (at_port ?p)
     )
     :effect (and
-      (firewall_rule_active ?r)
-      (traffic_blocked ?r)
+      (firewall_rule_matches ?fr ?p)
     )
   )
 
-  ;; Action: add_user_to_group
-  (:action add_user_to_group
-    :parameters (?u - user ?g - group)
+  ;; Action: add_firewall_rule_on_interface
+  (:action add_firewall_rule_on_interface
+    :parameters (?fr - FirewallRule ?i - Interface)
+    :precondition (and)
+    :effect (and
+      (on_interface ?i)
+      (firewall_rule_matches ?fr ?p)
+    )
+  )
+
+  ;; Action: add_repository
+  (:action add_repository
+    :parameters (?r - repository)
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: add_route
+  (:action add_route
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (route ?destination ?gateway)
+    )
+  )
+
+  ;; Action: allow_incoming
+  (:action allow_incoming
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: allow_outgoing
+  (:action allow_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: allow_routed
+  (:action allow_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: change_file_content
+  (:action change_file_content
+    :parameters (?f - file ?c - string)
     :precondition (and
-      (user_exists ?u)
-      (group_exists ?g)
-      (not (member_of ?u ?g))
+      (file_exists ?f)
+      (not (file_is_directory ?f))
     )
     :effect (and
-      (member_of ?u ?g)
+      (file_content ?f ?c)
+    )
+  )
+
+  ;; Action: change_file_group
+  (:action change_file_group
+    :parameters (?f - file ?g - string)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_is_directory ?f))
+    )
+    :effect (and
+      (file_has_group ?f ?g)
     )
   )
 
   ;; Action: change_file_owner
   (:action change_file_owner
-    :parameters (?f - file ?u - user)
+    :parameters (?f - file ?o - string)
     :precondition (and
       (file_exists ?f)
-      (user_exists ?u)
+      (not (file_is_directory ?f))
     )
     :effect (and
-      (file_owned_by ?f ?u)
+      (file_has_owner ?f ?o)
     )
   )
 
-  ;; Action: close_port
-  (:action close_port
-    :parameters (?p - port)
+  ;; Action: change_file_permissions
+  (:action change_file_permissions
+    :parameters (?f - file ?x - boolean)
     :precondition (and
-      (port_allowed ?p)
+      (file_exists ?f)
+      (not (file_is_directory ?f))
     )
     :effect (and
-      (not (port_allowed ?p))
+      (file_has_permissions ?f ?r ?w ?x)
+    )
+  )
+
+  ;; Action: change_file_timestamp
+  (:action change_file_timestamp
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_is_directory ?f))
+    )
+    :effect (and
+      (file_has_timestamp ?f (current-time))
+    )
+  )
+
+  ;; Action: check_firewall_apps
+  (:action check_firewall_apps
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_default_policy
+  (:action check_firewall_default_policy
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_enabled
+  (:action check_firewall_enabled
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_enabled_on_boot
+  (:action check_firewall_enabled_on_boot
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_logging
+  (:action check_firewall_logging
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_logging_level
+  (:action check_firewall_logging_level
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_reloaded
+  (:action check_firewall_reloaded
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_rules
+  (:action check_firewall_rules
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: check_firewall_status
+  (:action check_firewall_status
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: copy_directory
+  (:action copy_directory
+    :parameters (?src - directory ?dst - directory)
+    :precondition (and)
+    :effect (and
+      (directory_exists ?dst)
+      (directory_has_subdirectory ?dst (directory_contents ?src))
+      (directory_has_file ?dst (directory_contents ?src))
     )
   )
 
@@ -94,6 +223,7 @@
     )
     :effect (and
       (file_exists ?dst)
+      (file_content ?dst (file_content ?src))
     )
   )
 
@@ -101,76 +231,312 @@
   (:action create_directory
     :parameters (?d - directory)
     :precondition (and
-      (not (directory_exists ?d))
+      (directory_exists ?d)
     )
     :effect (and
       (directory_exists ?d)
     )
   )
 
-  ;; Action: create_user
-  (:action create_user
-    :parameters (?u - user)
+  ;; Action: create_file
+  (:action create_file
+    :parameters (?f - file ?c - string)
     :precondition (and
-      (not (user_exists ?u))
+      (file_exists ?f)
     )
     :effect (and
-      (user_exists ?u)
+      (file_exists ?f)
+      (file_content ?f ?c)
+    )
+  )
+
+  ;; Action: create_symbolic_link
+  (:action create_symbolic_link
+    :parameters (?l - file ?t - string)
+    :precondition (and
+      (file_exists ?l)
+    )
+    :effect (and
+      (file_exists ?l)
+      (file_is_symbolic_link ?l)
+      (link_target ?l ?t)
+    )
+  )
+
+  ;; Action: delete_directory
+  (:action delete_directory
+    :parameters (?d - directory)
+    :precondition (and)
+    :effect (and
+      (directory_exists ?d)
     )
   )
 
   ;; Action: delete_file
   (:action delete_file
     :parameters (?f - file)
-    :precondition (and
+    :precondition (and)
+    :effect (and
       (file_exists ?f)
     )
+  )
+
+  ;; Action: delete_symbolic_link
+  (:action delete_symbolic_link
+    :parameters (?l - file)
+    :precondition (and)
     :effect (and
-      (not (file_exists ?f))
+      (file_exists ?l)
     )
   )
 
-  ;; Action: delete_user
-  (:action delete_user
-    :parameters (?u - user)
-    :precondition (and
-      (user_exists ?u)
-    )
+  ;; Action: deny_incoming
+  (:action deny_incoming
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: deny_outgoing
+  (:action deny_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: deny_routed
+  (:action deny_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: disable_firewall
+  (:action disable_firewall
+    :parameters ()
+    :precondition (and)
     :effect (and
-      (not (user_exists ?u))
+      (not (firewall_enabled))
+      (not (firewall_enabled_on_boot))
     )
   )
 
-  ;; Action: disable_service
-  (:action disable_service
-    :parameters (?s - service)
-    :precondition (and
-      (service_enabled ?s)
-    )
+  ;; Action: enable_firewall
+  (:action enable_firewall
+    :parameters ()
+    :precondition (and)
     :effect (and
-      (not (service_enabled ?s))
+      (firewall_enabled)
+      (firewall_enabled_on_boot)
     )
   )
 
-  ;; Action: enable_service
-  (:action enable_service
-    :parameters (?s - service)
+  ;; Action: execute_command
+  (:action execute_command
+    :parameters (?user - user ?command - string)
     :precondition (and
-      (service_exists ?s)
+      (user_is_root ?user)
+      (not (user_has_privilege ?user 'sudo-rs'))
     )
     :effect (and
-      (service_enabled ?s)
+      (not (process_running ?command))
+      (not (user_has_privilege ?user 'sudo-rs'))
+      (assert (process_running (create_process ?command)))
+      (assert (user_has_privilege ?user 'sudo-rs'))
+    )
+  )
+
+  ;; Action: find_dependencies
+  (:action find_dependencies
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (forall (?d - package) (iff (depends_on ?p ?d) (or (exists (?r - repository) (and (in_repository ?d ?r) (depends_on ?p ?d))) (exists (?r1 - repository) (exists (?p1 - package) (and (in_repository ?p1 ?r1) (depends_on ?p1 ?d)))))))
+    )
+  )
+
+  ;; Action: find_reverse_dependencies
+  (:action find_reverse_dependencies
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (forall (?d - package) (iff (reverse_depends_on ?p ?d) (or (exists (?r - repository) (and (in_repository ?d ?r) (reverse_depends_on ?d ?p))) (exists (?r1 - repository) (exists (?p1 - package) (and (in_repository ?p1 ?r1) (reverse_depends_on ?p1 ?d)))))))
+    )
+  )
+
+  ;; Action: group_add_user
+  (:action group_add_user
+    :parameters (?g - _group ?u - _user)
+    :precondition (and
+      (group_exists ?g)
+      (not (user_group ?u ?g))
+    )
+    :effect (and
+      (user_group ?u ?g)
+    )
+  )
+
+  ;; Action: group_create
+  (:action group_create
+    :parameters (?g - _group)
+    :precondition (and
+      (group_exists ?g)
+    )
+    :effect (and
+      (group_exists ?g)
+      (assert (group_members ?g ""))
+    )
+  )
+
+  ;; Action: group_delete
+  (:action group_delete
+    :parameters (?g - _group)
+    :precondition (and)
+    :effect (and
+      (group_exists ?g)
+    )
+  )
+
+  ;; Action: group_modify
+  (:action group_modify
+    :parameters (?g - _group)
+    :precondition (and)
+    :effect (and
+      (equal ?attr "members")
+      (assert (group_members ?g ?val))
+      (assert (not (group_members ?g "")))
+    )
+  )
+
+  ;; Action: group_remove_user
+  (:action group_remove_user
+    :parameters (?g - _group ?u - _user)
+    :precondition (and
+      (group_exists ?g)
+      (user_group ?u ?g)
+    )
+    :effect (and
+      (user_group ?u ?g)
     )
   )
 
   ;; Action: install_package
   (:action install_package
-    :parameters (?p - package)
+    :parameters (?p - package ?r - repository)
     :precondition (and
-      (not (package_installed ?p))
-      (package_available ?p)
+      (in_repository ?p ?r)
+      (available ?p)
     )
+    :effect (and
+      (not (installed ?p))
+      (at_package ?p)
+      (installed ?p)
+    )
+  )
+
+  ;; Action: limit_incoming
+  (:action limit_incoming
+    :parameters ()
+    :precondition (and)
     :effect (and)
+  )
+
+  ;; Action: limit_outgoing
+  (:action limit_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: limit_routed
+  (:action limit_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: list_firewall_apps
+  (:action list_firewall_apps
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: list_firewall_rules
+  (:action list_firewall_rules
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: list_units
+  (:action list_units
+    :parameters (?units - service)
+    :precondition (and
+      (active_service systemd)
+    )
+    :effect (and
+      (forall (?s ?u - service) (implies (member ?s ?units) (loaded_service ?s)))
+      )()((active_service systemd)
+      )((running_process ?j)
+      )()((active_service systemd)
+      )(()
+      (running_process time)
+    )
+  )
+
+  ;; Action: log_all_incoming
+  (:action log_all_incoming
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: log_all_outgoing
+  (:action log_all_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: log_all_routed
+  (:action log_all_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: log_incoming
+  (:action log_incoming
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: log_outgoing
+  (:action log_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: log_routed
+  (:action log_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: move_directory
+  (:action move_directory
+    :parameters (?src - directory ?dst - directory)
+    :precondition (and)
+    :effect (and
+      (not (directory_exists ?src))
+      (directory_exists ?dst)
+      (directory_has_subdirectory ?dst (directory_contents ?src))
+      (directory_has_file ?dst (directory_contents ?src))
+    )
   )
 
   ;; Action: move_file
@@ -178,87 +544,501 @@
     :parameters (?src - file ?dst - file)
     :precondition (and
       (file_exists ?src)
+      (not (file_exists ?dst))
     )
     :effect (and
       (not (file_exists ?src))
       (file_exists ?dst)
+      (file_content ?dst (file_content ?src))
     )
   )
 
-  ;; Action: open_port
-  (:action open_port
-    :parameters (?p - port)
-    :precondition (and
-      (not (port_allowed ?p))
-    )
+  ;; Action: pkexec_command
+  (:action pkexec_command
+    :parameters (?user - user ?command - string)
+    :precondition (and)
     :effect (and
-      (port_allowed ?p)
+      (not (process_running ?command))
+      (assert (process_running (create_process ?command)))
+      (assert (not (user_has_privilege ?user 'pkexec')))
     )
+  )
+
+  ;; Action: read_configuration_file
+  (:action read_configuration_file
+    :parameters (?cf - configuration_file ?k - string)
+    :precondition (and)
+    :effect (and
+      (configuration_file_value ?cf ?k)
+    )
+  )
+
+  ;; Action: reject_incoming
+  (:action reject_incoming
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: reject_outgoing
+  (:action reject_outgoing
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: reject_routed
+  (:action reject_routed
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: reload_firewall
+  (:action reload_firewall
+    :parameters ()
+    :precondition (and)
+    :effect (and)
   )
 
   ;; Action: remove_firewall_rule
   (:action remove_firewall_rule
-    :parameters (?r - firewall_rule)
+    :parameters (?fr - FirewallRule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_matches ?fr ?p)
+    )
+  )
+
+  ;; Action: remove_firewall_rule_on_interface
+  (:action remove_firewall_rule_on_interface
+    :parameters (?fr - FirewallRule ?i - Interface)
     :precondition (and
-      (firewall_rule_active ?r)
+      (on_interface ?i)
+      (firewall_rule_matches ?fr ?p)
     )
     :effect (and
-      (not (firewall_rule_active ?r))
-      (not (traffic_blocked ?r))
+      (on_interface ?i)
     )
   )
 
   ;; Action: remove_package
   (:action remove_package
     :parameters (?p - package)
-    :precondition (and
-      (installed ?p)
-    )
+    :precondition (and)
     :effect (and
+      (not (at_package ?p))
       (not (installed ?p))
     )
   )
 
-  ;; Action: restart_service
-  (:action restart_service
-    :parameters (?s - service)
-    :precondition (and
-      (service_exists ?s)
-    )
+  ;; Action: remove_repository
+  (:action remove_repository
+    :parameters (?r - repository)
+    :precondition (and)
     :effect (and
-      (service_running ?s)
+      (at_repository ?r)
     )
   )
 
-  ;; Action: start_service
-  (:action start_service
-    :parameters (?s - service)
+  ;; Action: remove_route
+  (:action remove_route
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (route_exists ?route)
+    )
+  )
+
+  ;; Action: search_package
+  (:action search_package
+    :parameters (?name - string)
+    :precondition (and)
+    :effect (and
+      (forall (?p - package) (iff (available ?p) (or (at_package ?p) (and (exists (?r - repository) (in_repository ?p ?r)) (str_match (name ?p) ?name)))))
+    )
+  )
+
+  ;; Action: set_ah_spi
+  (:action set_ah_spi
+    :parameters ()
     :precondition (and)
     :effect (and)
   )
 
-  ;; Action: stop_service
-  (:action stop_service
-    :parameters (?s - service)
+  ;; Action: set_default_policy
+  (:action set_default_policy
+    :parameters ()
     :precondition (and
-      (service_running ?s)
+      (policy "allow" "deny" "reject")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_default_route
+  (:action set_default_route
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_destination
+  (:action set_destination
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_destination_port
+  (:action set_destination_port
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_dscp
+  (:action set_dscp
+    :parameters ()
+    :precondition (and
+      (dscp "EF" "AF41" "AF42" "AF43" "AF31" "AF32" "AF33"
+                          "AF21" "AF22" "AF23" "AF11" "AF12" "AF13" "CS0" "CS1"
+                          "CS2" "CS3" "CS4" "CS5" "CS6" "CS7")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_esp_spi
+  (:action set_esp_spi
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_firewall_app_comment
+  (:action set_firewall_app_comment
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_firewall_logging
+  (:action set_firewall_logging
+    :parameters ()
+    :precondition (and
+      (level "on" "off" "LOW" "MEDIUM" "HIGH")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_firewall_logging_level
+  (:action set_firewall_logging_level
+    :parameters ()
+    :precondition (and
+      (level "LOW" "MEDIUM" "HIGH")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_firewall_rule_comment
+  (:action set_firewall_rule_comment
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_icmp_code
+  (:action set_icmp_code
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_icmp_type
+  (:action set_icmp_type
+    :parameters ()
+    :precondition (and
+      (icmp_type "echo-reply" "echo-request" "destination-unreachable"
+                          "source-quench" "redirect" "time-exceeded" "parameter-problem"
+                          "timestamp-reply" "timestamp-request" "information-reply"
+                          "information-request")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_ipsec_spi
+  (:action set_ipsec_spi
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_metric
+  (:action set_metric
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_protocol
+  (:action set_protocol
+    :parameters ()
+    :precondition (and
+      (protocol "tcp" "udp" "icmp" "igmp" "esp" "ah" "gre"
+                          "sctp" "raw")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_initiator_cookie
+  (:action set_sctp_initiator_cookie
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_burst_size
+  (:action set_sctp_maximum_initiate_burst_size
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_echo_retransmit_count
+  (:action set_sctp_maximum_initiate_echo_retransmit_count
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_echo_retransmit_interval
+  (:action set_sctp_maximum_initiate_echo_retransmit_interval
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_echo_retransmit_timeout
+  (:action set_sctp_maximum_initiate_echo_retransmit_timeout
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_retransmit_time
+  (:action set_sctp_maximum_initiate_retransmit_time
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_retransmit_timeout
+  (:action set_sctp_maximum_initiate_retransmit_timeout
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_time
+  (:action set_sctp_maximum_initiate_time
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_initiate_timeout
+  (:action set_sctp_maximum_initiate_timeout
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_instream_data_stream_size
+  (:action set_sctp_maximum_instream_data_stream_size
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_outstream_data_stream_size
+  (:action set_sctp_maximum_outstream_data_stream_size
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_receive_burst_size
+  (:action set_sctp_maximum_receive_burst_size
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_retransmit_time
+  (:action set_sctp_maximum_retransmit_time
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_maximum_retransmit_timeout
+  (:action set_sctp_maximum_retransmit_timeout
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_number_of_streams
+  (:action set_sctp_number_of_streams
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_sctp_responder_cookie
+  (:action set_sctp_responder_cookie
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_source
+  (:action set_source
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_source_port
+  (:action set_source_port
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: set_tos
+  (:action set_tos
+    :parameters ()
+    :precondition (and
+      (tos "low-delay" "throughput" "reliability")
+    )
+    :effect (and)
+  )
+
+  ;; Action: set_ttl
+  (:action set_ttl
+    :parameters ()
+    :precondition (and)
+    :effect (and)
+  )
+
+  ;; Action: su_command
+  (:action su_command
+    :parameters (?user - user)
+    :precondition (and
+      (equal ?user 'root')
+      (user_has_privilege ?user 'su')
     )
     :effect (and
-      (not (service_running ?s))
+      (not (process_running (create_process 'su')))
+      (assert (process_running (create_process 'su' ?user)))
     )
   )
 
-  ;; Action: update_package
-  (:action update_package
+  ;; Action: sudo_command
+  (:action sudo_command
+    :parameters (?user - user ?command - string)
+    :precondition (and)
+    :effect (and
+      (not (process_running ?command))
+      (assert (process_running (create_process ?command)))
+      (assert (not (user_has_privilege ?user 'sudo-rs')))
+    )
+  )
+
+  ;; Action: update_package_list
+  (:action update_package_list
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (forall (?p - package) (iff (available ?p) (or (at_package ?p) (exists (?r - repository) (in_repository ?p ?r)))))
+    )
+  )
+
+  ;; Action: upgrade_package
+  (:action upgrade_package
     :parameters (?p - package)
     :precondition (and
       (installed ?p)
-      (network_available)
+      (upgradable ?p)
     )
     :effect (and
-      (not (outdated ?p))
-      (not (vulnerable ?p))
+      (not (available ?p))
+      (available ?p)
     )
+  )
+
+  ;; Action: user_add_to_group
+  (:action user_add_to_group
+    :parameters (?u - _user ?g - _group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+    )
+    :effect (and
+      (user_group ?u ?g)
+    )
+  )
+
+  ;; Action: user_create
+  (:action user_create
+    :parameters (?u - _user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_exists ?u)
+      (assert (user_home ?u ""))
+    )
+  )
+
+  ;; Action: user_delete
+  (:action user_delete
+    :parameters (?u - _user)
+    :precondition (and)
+    :effect (and
+      (user_exists ?u)
+    )
+  )
+
+  ;; Action: user_modify
+  (:action user_modify
+    :parameters (?u - _user)
+    :precondition (and)
+    :effect (and
+      (equal ?attr "home")
+      (assert (user_home ?u ?val))
+      (assert (not (user_home ?u "")))
+    )
+  )
+
+  ;; Action: user_remove_from_group
+  (:action user_remove_from_group
+    :parameters (?u - _user ?g - _group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+      (user_group ?u ?g)
+    )
+    :effect (and
+      (user_group ?u ?g)
+    )
+  )
+
+  ;; Action: write_configuration_file
+  (:action write_configuration_file
+    :parameters (?cf - configuration_file ?k - string ?v - string)
+    :precondition (and)
+    :effect (and)
   )
 
 )

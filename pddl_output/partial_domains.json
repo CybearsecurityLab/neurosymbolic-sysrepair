@@ -2,159 +2,38 @@
   {
     "worker_name": "service_agent",
     "group_name": "service",
-    "types": [
-      {
-        "name": "service",
-        "parent": "object"
-      }
-    ],
-    "predicates": [
-      {
-        "name": "service_running",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ]
-      },
-      {
-        "name": "service_enabled",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ]
-      }
-    ],
+    "types": [],
+    "predicates": [],
     "actions": [
       {
-        "name": "start_service",
+        "name": "list_units",
         "parameters": [
           [
-            "s",
+            "units",
             "service"
           ]
         ],
-        "preconditions": [],
-        "effects": [],
-        "command": ""
-      }
-    ],
-    "generation_time": 0.010092496871948242
-  },
-  {
-    "worker_name": "user_agent",
-    "group_name": "user",
-    "types": [],
-    "predicates": [],
-    "actions": [],
-    "generation_time": 0.015048027038574219
-  },
-  {
-    "worker_name": "filesystem_agent",
-    "group_name": "filesystem",
-    "types": [],
-    "predicates": [],
-    "actions": [],
-    "generation_time": 0.029778242111206055
-  },
-  {
-    "worker_name": "privilege_agent",
-    "group_name": "privilege",
-    "types": [],
-    "predicates": [],
-    "actions": [],
-    "generation_time": 0.00795125961303711
-  },
-  {
-    "worker_name": "network_agent",
-    "group_name": "network",
-    "types": [
-      {
-        "name": "service",
-        "parent": "object"
-      }
-    ],
-    "predicates": [
-      {
-        "name": "service_running",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ]
-      },
-      {
-        "name": "service_enabled",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "name": "start_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
+        "preconditions": [
+          "(active_service systemd)"
         ],
-        "preconditions": [],
-        "effects": [],
+        "effects": [
+          "(forall (?s ?u - service) (implies (member ?s ?units) (loaded_service ?s)))",
+          ")()((active_service systemd)",
+          ")((running_process ?j)",
+          ")()((active_service systemd)",
+          ")(()",
+          "(running_process time)"
+        ],
         "command": ""
       }
     ],
-    "generation_time": 0.05861711502075195
+    "generation_time": 6.676529407501221
   },
   {
     "worker_name": "package_agent",
     "group_name": "package",
-    "types": [
-      {
-        "name": "package",
-        "parent": "object"
-      },
-      {
-        "name": "repository",
-        "parent": "object"
-      }
-    ],
-    "predicates": [
-      {
-        "name": "package_installed",
-        "parameters": [
-          [
-            "p",
-            "package"
-          ]
-        ]
-      },
-      {
-        "name": "package_available",
-        "parameters": [
-          [
-            "p",
-            "package"
-          ]
-        ]
-      },
-      {
-        "name": "repo_enabled",
-        "parameters": [
-          [
-            "r",
-            "repository"
-          ]
-        ]
-      }
-    ],
+    "types": [],
+    "predicates": [],
     "actions": [
       {
         "name": "install_package",
@@ -162,16 +41,1346 @@
           [
             "p",
             "package"
+          ],
+          [
+            "r",
+            "repository"
           ]
         ],
         "preconditions": [
-          "(not (package_installed ?p))",
-          "(package_available ?p)"
+          "(in_repository ?p ?r)",
+          "(available ?p)"
         ],
+        "effects": [
+          "(not (installed ?p))",
+          "(at_package ?p)",
+          "(installed ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "upgrade_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(installed ?p)",
+          "(upgradable ?p)"
+        ],
+        "effects": [
+          "(not (available ?p))",
+          "(available ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (at_package ?p))",
+          "(not (installed ?p))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "add_repository",
+        "parameters": [
+          [
+            "r",
+            "repository"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "remove_repository",
+        "parameters": [
+          [
+            "r",
+            "repository"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(at_repository ?r)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "update_package_list",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(forall (?p - package) (iff (available ?p) (or (at_package ?p) (exists (?r - repository) (in_repository ?p ?r)))))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "search_package",
+        "parameters": [
+          [
+            "name",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(forall (?p - package) (iff (available ?p) (or (at_package ?p) (and (exists (?r - repository) (in_repository ?p ?r)) (str_match (name ?p) ?name)))))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "find_dependencies",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(forall (?d - package) (iff (depends_on ?p ?d) (or (exists (?r - repository) (and (in_repository ?d ?r) (depends_on ?p ?d))) (exists (?r1 - repository) (exists (?p1 - package) (and (in_repository ?p1 ?r1) (depends_on ?p1 ?d)))))))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "find_reverse_dependencies",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(forall (?d - package) (iff (reverse_depends_on ?p ?d) (or (exists (?r - repository) (and (in_repository ?d ?r) (reverse_depends_on ?d ?p))) (exists (?r1 - repository) (exists (?p1 - package) (and (in_repository ?p1 ?r1) (reverse_depends_on ?p1 ?d)))))))"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 18.69741439819336
+  },
+  {
+    "worker_name": "user_agent",
+    "group_name": "user",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "user_create",
+        "parameters": [
+          [
+            "u",
+            "_user"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)"
+        ],
+        "effects": [
+          "(user_exists ?u)",
+          "(assert (user_home ?u \"\"))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "user_delete",
+        "parameters": [
+          [
+            "u",
+            "_user"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(user_exists ?u)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "user_modify",
+        "parameters": [
+          [
+            "u",
+            "_user"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(equal ?attr \"home\")",
+          "(assert (user_home ?u ?val))",
+          "(assert (not (user_home ?u \"\")))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "group_create",
+        "parameters": [
+          [
+            "g",
+            "_group"
+          ]
+        ],
+        "preconditions": [
+          "(group_exists ?g)"
+        ],
+        "effects": [
+          "(group_exists ?g)",
+          "(assert (group_members ?g \"\"))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "group_delete",
+        "parameters": [
+          [
+            "g",
+            "_group"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(group_exists ?g)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "group_modify",
+        "parameters": [
+          [
+            "g",
+            "_group"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(equal ?attr \"members\")",
+          "(assert (group_members ?g ?val))",
+          "(assert (not (group_members ?g \"\")))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "user_add_to_group",
+        "parameters": [
+          [
+            "u",
+            "_user"
+          ],
+          [
+            "g",
+            "_group"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)",
+          "(group_exists ?g)"
+        ],
+        "effects": [
+          "(user_group ?u ?g)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "user_remove_from_group",
+        "parameters": [
+          [
+            "u",
+            "_user"
+          ],
+          [
+            "g",
+            "_group"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)",
+          "(group_exists ?g)",
+          "(user_group ?u ?g)"
+        ],
+        "effects": [
+          "(user_group ?u ?g)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "group_add_user",
+        "parameters": [
+          [
+            "g",
+            "_group"
+          ],
+          [
+            "u",
+            "_user"
+          ]
+        ],
+        "preconditions": [
+          "(group_exists ?g)",
+          "(not (user_group ?u ?g))"
+        ],
+        "effects": [
+          "(user_group ?u ?g)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "group_remove_user",
+        "parameters": [
+          [
+            "g",
+            "_group"
+          ],
+          [
+            "u",
+            "_user"
+          ]
+        ],
+        "preconditions": [
+          "(group_exists ?g)",
+          "(user_group ?u ?g)"
+        ],
+        "effects": [
+          "(user_group ?u ?g)"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 16.01333260536194
+  },
+  {
+    "worker_name": "privilege_agent",
+    "group_name": "privilege",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "execute_command",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(user_is_root ?user)",
+          "(not (user_has_privilege ?user 'sudo-rs'))"
+        ],
+        "effects": [
+          "(not (process_running ?command))",
+          "(not (user_has_privilege ?user 'sudo-rs'))",
+          "(assert (process_running (create_process ?command)))",
+          "(assert (user_has_privilege ?user 'sudo-rs'))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "sudo_command",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (process_running ?command))",
+          "(assert (process_running (create_process ?command)))",
+          "(assert (not (user_has_privilege ?user 'sudo-rs')))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "pkexec_command",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ],
+          [
+            "command",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (process_running ?command))",
+          "(assert (process_running (create_process ?command)))",
+          "(assert (not (user_has_privilege ?user 'pkexec')))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "su_command",
+        "parameters": [
+          [
+            "user",
+            "user"
+          ]
+        ],
+        "preconditions": [
+          "(equal ?user 'root')",
+          "(user_has_privilege ?user 'su')"
+        ],
+        "effects": [
+          "(not (process_running (create_process 'su')))",
+          "(assert (process_running (create_process 'su' ?user)))"
+        ],
+        "command": ""
+      }
+    ],
+    "generation_time": 10.65072751045227
+  },
+  {
+    "worker_name": "filesystem_agent",
+    "group_name": "filesystem",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "change_file_permissions",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "x",
+            "boolean"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_is_directory ?f))"
+        ],
+        "effects": [
+          "(file_has_permissions ?f ?r ?w ?x)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "change_file_owner",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "o",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_is_directory ?f))"
+        ],
+        "effects": [
+          "(file_has_owner ?f ?o)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "change_file_group",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "g",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_is_directory ?f))"
+        ],
+        "effects": [
+          "(file_has_group ?f ?g)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "change_file_timestamp",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_is_directory ?f))"
+        ],
+        "effects": [
+          "(file_has_timestamp ?f (current-time))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "change_file_content",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "c",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_is_directory ?f))"
+        ],
+        "effects": [
+          "(file_content ?f ?c)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "create_file",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "c",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)"
+        ],
+        "effects": [
+          "(file_exists ?f)",
+          "(file_content ?f ?c)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "delete_file",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(file_exists ?f)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "create_directory",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "preconditions": [
+          "(directory_exists ?d)"
+        ],
+        "effects": [
+          "(directory_exists ?d)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "delete_directory",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(directory_exists ?d)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "create_symbolic_link",
+        "parameters": [
+          [
+            "l",
+            "file"
+          ],
+          [
+            "t",
+            "string"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?l)"
+        ],
+        "effects": [
+          "(file_exists ?l)",
+          "(file_is_symbolic_link ?l)",
+          "(link_target ?l ?t)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "delete_symbolic_link",
+        "parameters": [
+          [
+            "l",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(file_exists ?l)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "copy_file",
+        "parameters": [
+          [
+            "src",
+            "file"
+          ],
+          [
+            "dst",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?src)",
+          "(not (file_exists ?dst))"
+        ],
+        "effects": [
+          "(file_exists ?dst)",
+          "(file_content ?dst (file_content ?src))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "move_file",
+        "parameters": [
+          [
+            "src",
+            "file"
+          ],
+          [
+            "dst",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?src)",
+          "(not (file_exists ?dst))"
+        ],
+        "effects": [
+          "(not (file_exists ?src))",
+          "(file_exists ?dst)",
+          "(file_content ?dst (file_content ?src))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "copy_directory",
+        "parameters": [
+          [
+            "src",
+            "directory"
+          ],
+          [
+            "dst",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(directory_exists ?dst)",
+          "(directory_has_subdirectory ?dst (directory_contents ?src))",
+          "(directory_has_file ?dst (directory_contents ?src))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "move_directory",
+        "parameters": [
+          [
+            "src",
+            "directory"
+          ],
+          [
+            "dst",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (directory_exists ?src))",
+          "(directory_exists ?dst)",
+          "(directory_has_subdirectory ?dst (directory_contents ?src))",
+          "(directory_has_file ?dst (directory_contents ?src))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "read_configuration_file",
+        "parameters": [
+          [
+            "cf",
+            "configuration_file"
+          ],
+          [
+            "k",
+            "string"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(configuration_file_value ?cf ?k)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "write_configuration_file",
+        "parameters": [
+          [
+            "cf",
+            "configuration_file"
+          ],
+          [
+            "k",
+            "string"
+          ],
+          [
+            "v",
+            "string"
+          ]
+        ],
+        "preconditions": [],
         "effects": [],
         "command": ""
       }
     ],
-    "generation_time": 0.11420989036560059
+    "generation_time": 32.16958737373352
+  },
+  {
+    "worker_name": "network_agent",
+    "group_name": "network",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "add_firewall_rule",
+        "parameters": [
+          [
+            "fr",
+            "FirewallRule"
+          ],
+          [
+            "p",
+            "Port"
+          ]
+        ],
+        "preconditions": [
+          "(firewall_rule_exists ?fr)",
+          "(at_port ?p)"
+        ],
+        "effects": [
+          "(firewall_rule_matches ?fr ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_firewall_rule",
+        "parameters": [
+          [
+            "fr",
+            "FirewallRule"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(firewall_rule_matches ?fr ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "enable_firewall",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(firewall_enabled)",
+          "(firewall_enabled_on_boot)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "disable_firewall",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(not (firewall_enabled))",
+          "(not (firewall_enabled_on_boot))"
+        ],
+        "command": ""
+      },
+      {
+        "name": "reload_firewall",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_default_policy",
+        "parameters": [],
+        "preconditions": [
+          "(policy \"allow\" \"deny\" \"reject\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "list_firewall_rules",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "list_firewall_apps",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_status",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_rules",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_apps",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_default_policy",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_reloaded",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_enabled",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_enabled_on_boot",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_logging",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "check_firewall_logging_level",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_firewall_logging",
+        "parameters": [],
+        "preconditions": [
+          "(level \"on\" \"off\" \"LOW\" \"MEDIUM\" \"HIGH\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_firewall_logging_level",
+        "parameters": [],
+        "preconditions": [
+          "(level \"LOW\" \"MEDIUM\" \"HIGH\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "allow_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "allow_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "allow_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "deny_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "deny_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "deny_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "reject_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "reject_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "reject_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "limit_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "limit_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "limit_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_all_incoming",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_all_outgoing",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "log_all_routed",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_firewall_rule_comment",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_firewall_app_comment",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "add_firewall_rule_on_interface",
+        "parameters": [
+          [
+            "fr",
+            "FirewallRule"
+          ],
+          [
+            "i",
+            "Interface"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(on_interface ?i)",
+          "(firewall_rule_matches ?fr ?p)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_firewall_rule_on_interface",
+        "parameters": [
+          [
+            "fr",
+            "FirewallRule"
+          ],
+          [
+            "i",
+            "Interface"
+          ]
+        ],
+        "preconditions": [
+          "(on_interface ?i)",
+          "(firewall_rule_matches ?fr ?p)"
+        ],
+        "effects": [
+          "(on_interface ?i)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "add_route",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(route ?destination ?gateway)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "remove_route",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [
+          "(route_exists ?route)"
+        ],
+        "command": ""
+      },
+      {
+        "name": "set_default_route",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_metric",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_tos",
+        "parameters": [],
+        "preconditions": [
+          "(tos \"low-delay\" \"throughput\" \"reliability\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_ttl",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_dscp",
+        "parameters": [],
+        "preconditions": [
+          "(dscp \"EF\" \"AF41\" \"AF42\" \"AF43\" \"AF31\" \"AF32\" \"AF33\"\n                          \"AF21\" \"AF22\" \"AF23\" \"AF11\" \"AF12\" \"AF13\" \"CS0\" \"CS1\"\n                          \"CS2\" \"CS3\" \"CS4\" \"CS5\" \"CS6\" \"CS7\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_protocol",
+        "parameters": [],
+        "preconditions": [
+          "(protocol \"tcp\" \"udp\" \"icmp\" \"igmp\" \"esp\" \"ah\" \"gre\"\n                          \"sctp\" \"raw\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_source",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_destination",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_source_port",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_destination_port",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_icmp_type",
+        "parameters": [],
+        "preconditions": [
+          "(icmp_type \"echo-reply\" \"echo-request\" \"destination-unreachable\"\n                          \"source-quench\" \"redirect\" \"time-exceeded\" \"parameter-problem\"\n                          \"timestamp-reply\" \"timestamp-request\" \"information-reply\"\n                          \"information-request\")"
+        ],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_icmp_code",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_ipsec_spi",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_esp_spi",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_ah_spi",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_initiator_cookie",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_responder_cookie",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_number_of_streams",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_instream_data_stream_size",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_outstream_data_stream_size",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_burst_size",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_receive_burst_size",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_retransmit_time",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_time",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_retransmit_time",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_retransmit_timeout",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_timeout",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_retransmit_timeout",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_echo_retransmit_timeout",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_echo_retransmit_interval",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      },
+      {
+        "name": "set_sctp_maximum_initiate_echo_retransmit_count",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command": ""
+      }
+    ],
+    "generation_time": 86.2400107383728
   }
 ]
