@@ -1857,16 +1857,31 @@ Skip read-only or query commands.
         return self._deduplicate_actions(all_actions)
 
     def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
-        """Simple deduplication preferring regex."""
+        """Deduplicate and filter read-only/noise actions."""
         final = {}
-        # 1. Add Regex (High Confidence)
+
+        # Keywords that indicate an action is likely read-only/useless for remediation
+        READ_ONLY_KEYWORDS = {
+            "show", "list", "display", "print", "search", "query",
+            "check", "verify", "help", "version", "info", "man_page",
+            "debug", "verbose"
+        }
+
         for a in actions:
-            if a.extraction_method == "regex":
+            # 1. Filter: Check if name starts with read-only keyword
+            if any(a.name.startswith(kw + "_") for kw in READ_ONLY_KEYWORDS):
+                continue
+
+            # 2. Filter: Actions with no effects (or only trivial effects)
+            if not a.effects:
+                continue
+
+            # 3. Deduplicate: Prefer regex over LLM
+            if a.name not in final:
                 final[a.name] = a
-        # 2. Add LLM (Discovery) if not exists
-        for a in actions:
-            if a.extraction_method == "llm" and a.name not in final:
-                final[a.name] = a
+            elif a.extraction_method == "regex":
+                final[a.name] = a  # Overwrite LLM with reliable Regex
+
         return list(final.values())
 
     def extract_all_actions(self) -> list[ActionSchema]:
