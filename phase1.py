@@ -14,10 +14,9 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Iterator, TextIO
+from typing import Optional, Iterator, TextIO, Any
 
-_log_stream: TextIO = sys.stdout
-
+_log_stream: Any = sys.stdout
 
 def log(msg: str):
     """Print to log stream (stdout or stderr depending on output mode)."""
@@ -33,7 +32,6 @@ def set_log_stream(stream: TextIO):
 # =============================================================================
 # SECTION 1: Data Models & Configuration
 # =============================================================================
-
 class PDDLType(Enum):
     """Base PDDL types mapped from OS concepts."""
     PACKAGE = "package"
@@ -144,7 +142,7 @@ class ExtractedObject:
 
 @dataclass
 class ExtractedPredicate:
-    """Represents a grounded predicate from system state."""
+    """Represents a grounded predicate from the system state."""
     name: str
     arguments: list
     value: bool = True
@@ -344,7 +342,7 @@ class OSQueryThriftInterface(OSQueryInterface):
                 self.instance.open()
                 self.client = self.instance.client
 
-            # Verify connection with test query
+            # Verify connection with the test query
             test_result = self.client.query("SELECT version() as v")
             if test_result.status.code == 0:
                 self._available = True
@@ -704,8 +702,7 @@ class ScopeAnalyzer:
             results = self.osquery.execute_query(
                 """SELECT path, filename, uid, gid FROM file 
                    WHERE path LIKE '/etc/%' AND type = 'regular'
-                   AND (path LIKE '%.conf' OR path LIKE '%.cfg')
-                   LIMIT 500"""
+                   AND (path LIKE '%.conf' OR path LIKE '%.cfg')"""
             )
             for row in results:
                 path = row.get("path", "")
@@ -847,7 +844,7 @@ class ScopeAnalyzer:
             EntityType.CONFIG_FILE: "configuration_file",
         }
 
-# 1. Update the loop that creates OBJECTS
+        # 1. Update the loop that creates OBJECTS
         for entity in self.graph.get_reachable():
             pddl_type = type_map.get(entity.entity_type, "object")
 
@@ -856,12 +853,15 @@ class ScopeAnalyzer:
 
             obj = {
                 "name": clean_name,
-                # ... (keep rest of object dict)
+                "original_name": entity.name,
+                "type": pddl_type,
+                "properties": entity.original_data
             }
+
             state["objects"][pddl_type].append(obj)
 
             # Generate predicates (Pass the NEW name)
-            self._add_predicates(entity, state["predicates"], clean_name) # Update function call below
+            self._add_predicates(entity, state["predicates"], clean_name)
 
         # 2. Update the loop that creates RELATIONSHIPS
         reachable_ids = {e.id for e in self.graph.get_reachable()}
@@ -966,7 +966,7 @@ class ScopeAnalyzer:
 
 
 # =============================================================================
-# SECTION 4: System State Extractor (Updated to use ScopeAnalyzer)
+# SECTION 4: System State Extractor
 # =============================================================================
 
 class SystemStateExtractor:
