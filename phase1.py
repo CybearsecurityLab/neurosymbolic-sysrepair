@@ -946,7 +946,7 @@ class ScopeAnalyzer:
             if sanitized and not sanitized[0].isalpha():
                 sanitized = "obj_" + sanitized.lstrip('_')
 
-            return sanitized[:64].lower()
+            return sanitized.lower()
 
     def get_statistics(self) -> dict:
         """Return scoping statistics."""
@@ -1178,7 +1178,6 @@ class SystemStateExtractor:
                 FROM file 
                 WHERE path LIKE '{base_path}%' 
                 AND type IN ('regular', 'directory')
-                LIMIT 1000
             """
             try:
                 results = self.osquery.execute_query(query)
@@ -1304,7 +1303,7 @@ class SystemStateExtractor:
         if sanitized and sanitized[0].isdigit():
             sanitized = "obj_" + sanitized
         # Truncate if too long
-        return sanitized[:64].lower()
+        return sanitized.lower()
 
     def _evaluate_condition(self, row: dict, condition: str) -> bool:
         """Evaluate a simple condition string against a row."""
@@ -2456,7 +2455,7 @@ class PDDLGenerator:
 
         # Add relationships (also filtered)
         for rel_type, relations in state.get("relationships", {}).items():
-            for rel in relations[:100]:  # Reasonable limit for relationships
+            for rel in relations:  # Reasonable limit for relationships
                 if rel_type == "depends_on":
                     svc, pkg = rel.get('service'), rel.get('package')
                     if svc in included_objects and pkg in included_objects:
