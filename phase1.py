@@ -1433,7 +1433,7 @@ Skip read-only or query commands.
         model_id: str = MODEL
         model_url: str = "http://localhost:11434"
         enabled: bool = True
-        timeout: int = 120
+        timeout: int = 600
         max_retries: int = 2
 
     # 2. REPLACE _check_llm_availability method
@@ -1585,7 +1585,6 @@ Skip read-only or query commands.
                 model_url=self.llm_config.model_url,
                 resolver_params=resolver_params,
                 show_progress=True,
-                timeout=self.llm_config.timeout
             )
 
             # 5. DEBUG: Check what we got back
