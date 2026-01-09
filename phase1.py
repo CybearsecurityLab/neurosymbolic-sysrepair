@@ -1585,6 +1585,7 @@ Skip read-only or query commands.
             )
 
             # 5. EXECUTE EXTRACTION
+            # When passing model instance, only include compatible parameters
             result = lx.extract(
                 text_or_documents=text,
                 prompt_description=prompt,
@@ -1592,6 +1593,7 @@ Skip read-only or query commands.
                 model=model_instance,  # Pass model instance directly
                 resolver_params=resolver_params,
                 show_progress=True,
+                use_schema_constraints=False,  # Explicitly disable since model is pre-configured
             )
 
             # 5. DEBUG: Check what we got back
