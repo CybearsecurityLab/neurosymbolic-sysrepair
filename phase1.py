@@ -1560,7 +1560,7 @@ Skip read-only or query commands.
 
     1. extraction_class: "action"
     2. extraction_text: exact phrase from the text describing the action
-    3. attributes:
+    3. attributes: MUST be a dictionary/object (NOT a list) with these keys:
        - action_name: snake_case (e.g., "install_package", "start_service")
        - parameters: "name:type" (types: package, service, user, group, file, directory, port, interface, firewall_rule, process)
        - preconditions: PDDL format with parentheses and commas: "(pred1 ?x), (pred2 ?y)"
@@ -1568,6 +1568,7 @@ Skip read-only or query commands.
        - command_template: shell command with {var} placeholders
        - requires_root: "true" or "false"
 
+    IMPORTANT: The 'attributes' field must be an object/dict with key-value pairs, NOT an array/list.
     Extract only actions that modify system state."""
 
             # 3. CONFIGURE RESOLVER - ONLY format_handler
@@ -1583,7 +1584,8 @@ Skip read-only or query commands.
                 model_id=self.llm_config.model_id,
                 model_url=self.llm_config.model_url,
                 resolver_params=resolver_params,
-                show_progress=False
+                show_progress=True,
+                timeout=self.llm_config.timeout
             )
 
             # 5. DEBUG: Check what we got back
@@ -1616,7 +1618,14 @@ Skip read-only or query commands.
 
         for ext in result.extractions:
             try:
-                attrs = ext.attributes or {}
+                # Validate attributes is a dict (LLM sometimes returns a list despite instructions)
+                if not hasattr(ext, 'attributes') or ext.attributes is None:
+                    continue
+                if not isinstance(ext.attributes, dict):
+                    log(f"    [WARNING] Skipping extraction with non-dict attributes: {type(ext.attributes)}")
+                    continue
+
+                attrs = ext.attributes
 
                 # Parse Name
                 name = attrs.get("action_name", "unknown_action").strip().replace(" ", "_").lower()
@@ -1754,7 +1763,7 @@ Skip read-only or query commands.
         # 1. Clean wrappers
         clean_text = text.strip("() ").lower()
         # 2. Handle {VAR} templates
-        clean_text = re.sub(r'\{([^}]+)\}', r'?\1', clean_text)
+        clean_text = re.sub(r'\{([^}]+)}', r'?\1', clean_text)
 
         parts = clean_text.split()
         if not parts: return None
@@ -2500,7 +2509,7 @@ class PDDLGenerator:
         for action in actions:
             # Helper to extract name from "(pred_name ?arg)"
             for condition in action.preconditions + action.effects:
-                match = re.match(r'\(\s*([^\s\)]+)', condition)
+                match = re.match(r'\(\s*([^\s)]+)', condition)
                 if match:
                     name = match.group(1)
                     if name != "not" and name != "and": # Skip logical operators
