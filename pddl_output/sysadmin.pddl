@@ -78,339 +78,314 @@
     (requires_env_preservation ?pr - process)
   )
     ; Dynamically Discovered Predicates
-    (snap_channel_switched ?x - object ?y - object)
-    (user_no_longer_has_subgids ?x - object ?y - object)
-    (alias_created ?x - object ?y - object)
-    (group_not_created ?x - object ?y - object)
-    (defs_not_set ?x - object ?y - object)
-    (unit_enabled ?x - object ?y - object)
-    (self_terminated ?x - object ?y - object)
-    (package_cleaned ?x - object ?y - object)
-    (journal_files_removed ?x - object ?y - object)
-    (unavailable_packages_forgetten ?x - object ?y - object)
-    (jobs_canceled ?x - object ?y - object)
-    (snap_config_unset ?x - object ?y - object)
-    (new_directory_exists ?x - object ?y - object)
-    (SYS_GID_MAX ?x - object ?y - object)
-    (package_selections_cleared ?x - object ?y - object)
-    (file_downloaded ?x - object ?y - object)
-    (network_link_configured ?x - object ?y - object)
-    (nis_config_modified ?x - object ?y - object)
-    (alias_removed ?x - object ?y - object)
-    (process_running ?x - object ?y - object)
-    (directory_preserves_permissions ?x - object ?y - object)
-    (root_not_preserved ?x - object ?y - object)
-    (minimum_password_change_interval_set ?x - object ?y - object)
-    (user_allocated_subordinate_uids ?x - object ?y - object)
-    (pending_change ?x - object ?y - object)
-    (logging_stopped ?x - object ?y - object)
-    (cron_jobs_removed ?x - object ?y - object)
-    (file_copied ?x - object ?y - object)
-    (new_package_versions_available ?x - object ?y - object)
-    (overwrite_not_prompted ?x - object ?y - object)
-    (socket_exists ?x - object ?y - object)
-    (file_followed ?x - object ?y - object)
-    (port_valid ?x - object ?y - object)
-    (group_allocated_system_gid ?x - object ?y - object)
-    (directory_restricted_deletion ?x - object ?y - object)
-    (home_directory_created ?x - object ?y - object)
-    (user_account_modified_or_deleted ?x - object ?y - object)
-    (firmware_setup ?x - object ?y - object)
-    (file_moved ?x - object ?y - object)
-    (home_dir_exists ?x - object ?y - object)
-    (package_held ?x - object ?y - object)
-    (subuids_assigned ?x - object ?y - object)
-    (boot_loader_entry ?x - object ?y - object)
-    (recursive_operation_failed ?x - object ?y - object)
-    (file_removed ?x - object ?y - object)
-    (system_powered_off ?x - object ?y - object)
-    (set_of_snaps ?x - object ?y - object)
-    (package_recorded ?x - object ?y - object)
-    (package_autoremoved ?x - object ?y - object)
-    (config_options_unset ?x - object ?y - object)
-    (interface_exists ?x - object ?y - object)
-    (proper_permissions ?x - object ?y - object)
-    (rlimit_rtprio ?x - object ?y - object)
-    (host_syntax_modified ?x - object ?y - object)
-    (dir_empty ?x - object ?y - object)
-    (journal_directory_changed ?x - object ?y - object)
-    (package_downloaded ?x - object ?y - object)
-    (package_autocleaned ?x - object ?y - object)
-    (sources_list_valid ?x - object ?y - object)
-    (journal_access_granted ?x - object ?y - object)
-    (uid_valid ?x - object ?y - object)
-    (image_exists ?x - object ?y - object)
-    (unit_file_modified ?x - object ?y - object)
-    (new_group_set ?x - object ?y - object)
-    (package_list_updated ?x - object ?y - object)
-    (subuser_ids_set ?x - object ?y - object)
-    (unit_edited ?x - object ?y - object)
-    (file_sticky_bit ?x - object ?y - object)
-    (child_terminated ?x - object ?y - object)
-    (unique_names_not_required ?x - object ?y - object)
-    (snap_in_development_mode ?x - object ?y - object)
-    (file_writable ?x - object ?y - object)
-    (secure_user_info_modified ?x - object ?y - object)
-    (verbose_mode_set ?x - object ?y - object)
-    (available_packages_info_updated ?x - object ?y - object)
-    (journal_messages_synced ?x - object ?y - object)
-    (repository_added ?x - object ?y - object)
-    (connection_established ?x - object ?y - object)
-    (lastlog_entries_updated ?x - object ?y - object)
-    (subgroup_ids_set ?x - object ?y - object)
-    (disk_usage_reduced ?x - object ?y - object)
-    (mail_spool_removed ?x - object ?y - object)
+    (json_output_enabled ?x - object ?y - object)
+    (package_selected_for_install ?x - object ?y - object)
     (subgid_range_valid ?x - object ?y - object)
-    (network_link_exists ?x - object ?y - object)
-    (port_allowed ?x - object ?y - object)
-    (usergroups_enabled ?x - object ?y - object)
-    (user_modified ?x - object ?y - object)
-    (file_accessed ?x - object ?y - object)
-    (file_owned_by ?x - object ?y - object)
-    (file_attribute_set ?x - object ?y - object)
-    (user_not_executing_processes ?x - object ?y - object)
-    (package_removed ?x - object ?y - object)
-    (system_rebooted ?x - object ?y - object)
-    (file_modification_time_updated ?x - object ?y - object)
-    (system_user ?x - object ?y - object)
-    (user_account_expired ?x - object ?y - object)
-    (group_member ?x - object ?y - object)
-    (package_upgraded ?x - object ?y - object)
-    (file_executable ?x - object ?y - object)
-    (password_policy_respected ?x - object ?y - object)
-    (file_linked ?x - object ?y - object)
-    (shell_passes_cmd ?x - object ?y - object)
-    (proper_selinux_context ?x - object ?y - object)
-    (output_format_set ?x - object ?y - object)
-    (at_jobs_removed ?x - object ?y - object)
-    (unicode_enabled ?x - object ?y - object)
-    (user_changed ?x - object ?y - object)
-    (match ?x - object ?y - object)
-    (home_directory_not_created ?x - object ?y - object)
-    (file ?x - object ?y - object)
-    (manager_reloaded ?x - object ?y - object)
-    (rlimit_nice ?x - object ?y - object)
-    (package_version_set ?x - object ?y - object)
-    (system_suspended ?x - object ?y - object)
-    (GID_MIN ?x - object ?y - object)
-    (interface_up ?x - object ?y - object)
-    (sparse_files_inhibited ?x - object ?y - object)
-    (option_exists ?x - object ?y - object)
-    (file_renamed ?x - object ?y - object)
-    (user_exists ?x - object ?y - object)
-    (pseudo_terminal_enabled ?x - object ?y - object)
-    (password_expiration_limit_set ?x - object ?y - object)
-    (file_system_matches ?x - object ?y - object)
-    (state_allocated ?x - object ?y - object)
-    (user_has_subgids ?x - object ?y - object)
-    (group_password_set ?x - object ?y - object)
-    (unit_exists ?x - object ?y - object)
-    (files_to_update ?x - object ?y - object)
-    (journal_output_modified ?x - object ?y - object)
-    (unit_running ?x - object ?y - object)
-    (reflink_option_specified ?x - object ?y - object)
-    (protocol_family_set ?x - object ?y - object)
-    (member_of ?x - object ?y - object)
-    (dir_exists ?x - object ?y - object)
-    (file_persisted ?x - object ?y - object)
-    (package_configured ?x - object ?y - object)
-    (package_exists ?x - object ?y - object)
-    (socket_closed ?x - object ?y - object)
-    (subgid_updated ?x - object ?y - object)
-    (log_level_set ?x - object ?y - object)
-    (crontab_files_present ?x - object ?y - object)
-    (eq ?x - object ?y - object)
-    (user_removed ?x - object ?y - object)
-    (max_members_per_group ?x - object ?y - object)
-    (user_info_modified ?x - object ?y - object)
-    (option_set ?x - object ?y - object)
-    (process_exited ?x - object ?y - object)
-    (configuration_variables_set ?x - object ?y - object)
-    (subids_added ?x - object ?y - object)
-    (dependency_exists ?x - object ?y - object)
-    (symbolic_link ?x - object ?y - object)
-    (rlimit_nofile ?x - object ?y - object)
-    (filesystem_mounted ?x - object ?y - object)
-    (cohort_keys_created ?x - object ?y - object)
-    (system_hibernated_and_suspended ?x - object ?y - object)
-    (single_line_output ?x - object ?y - object)
-    (group_entry_split ?x - object ?y - object)
-    (time_valid ?x - object ?y - object)
-    (fast_mode ?x - object ?y - object)
-    (file_not_overwritten ?x - object ?y - object)
-    (wide_output_enabled ?x - object ?y - object)
-    (numeric_host_addresses_enabled ?x - object ?y - object)
-    (unit_file_exists ?x - object ?y - object)
-    (systemd_running ?x - object ?y - object)
-    (subuid_updated ?x - object ?y - object)
-    (files_updated ?x - object ?y - object)
-    (snap_running ?x - object ?y - object)
-    (channel_available ?x - object ?y - object)
-    (repository_configured ?x - object ?y - object)
-    (package_installed ?x - object ?y - object)
-    (file_updated ?x - object ?y - object)
-    (unique_names_required ?x - object ?y - object)
-    (shell_set ?x - object ?y - object)
-    (default_target ?x - object ?y - object)
-    (no_password_defined ?x - object ?y - object)
-    (snap_config_valid ?x - object ?y - object)
-    (backup_suffix_set ?x - object ?y - object)
-    (no ?x - object ?y - object)
-    (group_exists ?x - object ?y - object)
-    (session_running ?x - object ?y - object)
-    (user_allocated_system_uids ?x - object ?y - object)
-    (system_hibernated ?x - object ?y - object)
-    (assertion_added ?x - object ?y - object)
-    (new_owner_set ?x - object ?y - object)
-    (units_loaded ?x - object ?y - object)
-    (operation_specified ?x - object ?y - object)
-    (plug_exists ?x - object ?y - object)
-    (journal_flushed ?x - object ?y - object)
-    (mail_dir_updated ?x - object ?y - object)
-    (file_attributes_equal ?x - object ?y - object)
-    (file_sparse ?x - object ?y - object)
-    (file_contents_equal ?x - object ?y - object)
-    (executed_as_root ?x - object ?y - object)
-    (image_policy_set ?x - object ?y - object)
-    (journal_source_modified ?x - object ?y - object)
-    (setting_changed ?x - object ?y - object)
-    (is_source_archive ?x - object ?y - object)
-    (files_unpacked ?x - object ?y - object)
-    (user_account_inactive ?x - object ?y - object)
-    (directory_created ?x - object ?y - object)
-    (read_only_bind_mount_created ?x - object ?y - object)
-    (service_enabled ?x - object ?y - object)
-    (nis_server_present ?x - object ?y - object)
-    (file_access_time_updated ?x - object ?y - object)
-    (umask_set ?x - object ?y - object)
-    (slot_exists ?x - object ?y - object)
-    (account_created ?x - object ?y - object)
-    (root_filesystem_changed ?x - object ?y - object)
-    (user_in_group ?x - object ?y - object)
-    (user_mapped_to_seuser ?x - object ?y - object)
-    (change_aborted ?x - object ?y - object)
-    (config_read ?x - object ?y - object)
-    (snap_removed ?x - object ?y - object)
-    (service_running ?x - object ?y - object)
-    (consistent_with_database ?x - object ?y - object)
-    (system_units_edited ?x - object ?y - object)
-    (session_exists ?x - object ?y - object)
-    (family_supported ?x - object ?y - object)
-    (rlimit_fsize ?x - object ?y - object)
-    (GID_MAX ?x - object ?y - object)
-    (primary_group_set ?x - object ?y - object)
-    (selinux_user_mapping_exists ?x - object ?y - object)
-    (LASTLOG_UID_MAX_set ?x - object ?y - object)
-    (user_locked ?x - object ?y - object)
-    (package_selections_set ?x - object ?y - object)
+    (package_selections_cleared ?x - object ?y - object)
+    (operation_recursive ?x - object ?y - object)
+    (watchdog_state_set ?x - object ?y - object)
+    (package_build_deps_installed ?x - object ?y - object)
+    (journal_files_operated ?x - object ?y - object)
     (variable_set ?x - object ?y - object)
-    (user_supplementary_groups ?x - object ?y - object)
-    (file_used ?x - object ?y - object)
-    (group_non_unique ?x - object ?y - object)
-    (file_modified ?x - object ?y - object)
-    (path_initialized ?x - object ?y - object)
+    (user_modified ?x - object ?y - object)
+    (scripts_run ?x - object ?y - object)
+    (log_init_not_performed ?x - object ?y - object)
+    (unit_file_modified ?x - object ?y - object)
+    (rate_units_IEC ?x - object ?y - object)
+    (config_read ?x - object ?y - object)
+    (log_to_temporary_file_system ?x - object ?y - object)
+    (package_selections_set ?x - object ?y - object)
+    (file_executable ?x - object ?y - object)
+    (package_list_updated ?x - object ?y - object)
+    (file_unpacked ?x - object ?y - object)
     (marked_units_restarted ?x - object ?y - object)
-    (group_line_length_limit ?x - object ?y - object)
-    (package_triggers-pending ?x - object ?y - object)
-    (operation_performed_recursively ?x - object ?y - object)
-    (pager_options_modified ?x - object ?y - object)
-    (user_login ?x - object ?y - object)
-    (available_packages_info_merged ?x - object ?y - object)
-    (no_clobber_mode ?x - object ?y - object)
-    (new_account ?x - object ?y - object)
-    (traffic_blocked ?x - object ?y - object)
-    (supplementary_groups_set ?x - object ?y - object)
-    (source_package_fetched ?x - object ?y - object)
-    (network_namespace_switched ?x - object ?y - object)
-    (journal_namespace_set ?x - object ?y - object)
-    (package_index_outdated ?x - object ?y - object)
-    (secure_group_info_modified ?x - object ?y - object)
-    (directory_exists ?x - object ?y - object)
+    (child_terminated ?x - object ?y - object)
+    (user_password_unlocked ?x - object ?y - object)
     (socket_established ?x - object ?y - object)
-    (numeric_output ?x - object ?y - object)
-    (package_manually_installed ?x - object ?y - object)
-    (pager_enabled ?x - object ?y - object)
-    (configures ?x - object ?y - object)
-    (timestamp_format_changed ?x - object ?y - object)
-    (file_directory ?x - object ?y - object)
-    (dependency_added ?x - object ?y - object)
-    (print_jobs_removed ?x - object ?y - object)
-    (defs_set_to_yes ?x - object ?y - object)
-    (can_escalate ?x - object ?y - object)
-    (assertion_valid ?x - object ?y - object)
-    (file_not_copied ?x - object ?y - object)
-    (system_upgraded ?x - object ?y - object)
-    (file_readable ?x - object ?y - object)
-    (user_password_locked ?x - object ?y - object)
-    (available_packages_info_cleared ?x - object ?y - object)
-    (child_running ?x - object ?y - object)
-    (firewall_rule_exists ?x - object ?y - object)
-    (password_warning_enabled ?x - object ?y - object)
-    (numeric_addresses_enabled ?x - object ?y - object)
-    (service_exists ?x - object ?y - object)
-    (dir_removed ?x - object ?y - object)
-    (file_grouped_by ?x - object ?y - object)
-    (mnt_point_available ?x - object ?y - object)
-    (security_context_set ?x - object ?y - object)
-    (SYS_GID_MIN ?x - object ?y - object)
-    (journal_files_operated_on ?x - object ?y - object)
-    (snap_exists ?x - object ?y - object)
-    (package_index_up_to_date ?x - object ?y - object)
-    (user_home_directory ?x - object ?y - object)
-    (journal_rotated ?x - object ?y - object)
-    (boot_loader_menu ?x - object ?y - object)
-    (snap_installed ?x - object ?y - object)
-    (filesystem_root_changed ?x - object ?y - object)
-    (log_directory_on_root_mount ?x - object ?y - object)
-    (system_state_modified ?x - object ?y - object)
-    (snap_aliases_disabled ?x - object ?y - object)
-    (userspace_rebooted ?x - object ?y - object)
-    (rlimit_as ?x - object ?y - object)
-    (environment_updated ?x - object ?y - object)
-    (package_build_dep ?x - object ?y - object)
-    (network_available ?x - object ?y - object)
-    (flag_set ?x - object ?y - object)
-    (service_watchdog_set ?x - object ?y - object)
-    (log_target_set ?x - object ?y - object)
-    (backup_created ?x - object ?y - object)
-    (address_valid ?x - object ?y - object)
-    (package_distribution_set ?x - object ?y - object)
-    (file_preserved ?x - object ?y - object)
-    (config_applied ?x - object ?y - object)
-    (state_free ?x - object ?y - object)
-    (MAIL_DIR_set ?x - object ?y - object)
-    (file_exists ?x - object ?y - object)
-    (mail_spool_created_or_moved_or_deleted ?x - object ?y - object)
-    (snap_no_longer_started_on_boot ?x - object ?y - object)
-    (default_account_creation_values_modified ?x - object ?y - object)
-    (account_locked ?x - object ?y - object)
-    (crontab_files_owned_by ?x - object ?y - object)
-    (verbose_enabled ?x - object ?y - object)
-    (numeric_port_numbers_enabled ?x - object ?y - object)
-    (no_header ?x - object ?y - object)
-    (run_part_files_executed ?x - object ?y - object)
-    (package_half_configured ?x - object ?y - object)
-    (package_triggers-awaited ?x - object ?y - object)
-    (manager_reexecuted ?x - object ?y - object)
-    (fs_type_exists ?x - object ?y - object)
-    (account_unlocked ?x - object ?y - object)
-    (system_halted ?x - object ?y - object)
-    (configuration_variables_missing ?x - object ?y - object)
-    (journal_files_vacuumed ?x - object ?y - object)
-    (fss_sealing_key_changed ?x - object ?y - object)
-    (uid_neq_home_dir_uid ?x - object ?y - object)
+    (boot_start_enabled ?x - object ?y - object)
+    (release_info_changed ?x - object ?y - object)
+    (read_only_bind_mount_created ?x - object ?y - object)
+    (user_shell_set ?x - object ?y - object)
+    (empty_dir ?x - object ?y - object)
     (home_directory_exists ?x - object ?y - object)
-    (group_info_modified ?x - object ?y - object)
-    (signature_verified ?x - object ?y - object)
-    (version_control_set ?x - object ?y - object)
+    (slot_exists ?x - object ?y - object)
+    (port_allowed ?x - object ?y - object)
+    (since_version ?x - object ?y - object)
+    (apt_sources_list_valid ?x - object ?y - object)
+    (symlink_overridden ?x - object ?y - object)
+    (traffic_blocked ?x - object ?y - object)
+    (session_created ?x - object ?y - object)
+    (new_owner_set ?x - object ?y - object)
+    (socket_exists ?x - object ?y - object)
+    (subuids_assigned ?x - object ?y - object)
+    (host_syntax_modified ?x - object ?y - object)
+    (cron_jobs_removed ?x - object ?y - object)
+    (package_cleaned ?x - object ?y - object)
+    (file_removed ?x - object ?y - object)
+    (selinux_user_mapping_exists ?x - object ?y - object)
+    (snaps_exists ?x - object ?y - object)
+    (dependency_exists ?x - object ?y - object)
+    (architecture_removed ?x - object ?y - object)
+    (backup_created ?x - object ?y - object)
+    (configuration_variables_set ?x - object ?y - object)
+    (option_set ?x - object ?y - object)
+    (group_gid_set ?x - object ?y - object)
+    (journal_access_granted ?x - object ?y - object)
+    (cohort_keys_created ?x - object ?y - object)
+    (package_hold ?x - object ?y - object)
+    (file_access_time_updated ?x - object ?y - object)
+    (package_half_configured ?x - object ?y - object)
+    (directory_has_sticky_bit ?x - object ?y - object)
+    (supplementary_groups_set ?x - object ?y - object)
+    (subids_added ?x - object ?y - object)
+    (full_path_used ?x - object ?y - object)
+    (dir_exists ?x - object ?y - object)
+    (copy_performed ?x - object ?y - object)
+    (GID_MAX ?x - object ?y - object)
+    (package_index_up_to_date ?x - object ?y - object)
+    (executed_as_root ?x - object ?y - object)
+    (file_grouped_by ?x - object ?y - object)
+    (assert_consistent_with_database ?x - object ?y - object)
+    (proper_permissions ?x - object ?y - object)
+    (file_accessed ?x - object ?y - object)
+    (home_directory_not_created ?x - object ?y - object)
+    (group_members ?x - object ?y - object)
+    (file_owned_by ?x - object ?y - object)
+    (configures ?x - object ?y - object)
+    (password_expiration_warning ?x - object ?y - object)
+    (assert_signature_verified ?x - object ?y - object)
+    (file_grouped_as ?x - object ?y - object)
+    (home_directory_created ?x - object ?y - object)
+    (sys_gid_max ?x - object ?y - object)
+    (SYS_GID_MIN ?x - object ?y - object)
+    (refcnt_set ?x - object ?y - object)
+    (group_entry_split ?x - object ?y - object)
+    (pretty_json_output_enabled ?x - object ?y - object)
+    (shell_set ?x - object ?y - object)
+    (path_initialized ?x - object ?y - object)
+    (SYS_GID_MAX ?x - object ?y - object)
+    (system_unit_files_modified ?x - object ?y - object)
+    (sparse_files_disabled ?x - object ?y - object)
+    (file_writable ?x - object ?y - object)
+    (default_target ?x - object ?y - object)
+    (action_executed ?x - object ?y - object)
+    (network_namespace_set ?x - object ?y - object)
+    (address_valid ?x - object ?y - object)
+    (child_running ?x - object ?y - object)
+    (timer_set ?x - object ?y - object)
+    (rlimit_nofile ?x - object ?y - object)
+    (mail_dir_changed ?x - object ?y - object)
+    (file_copied ?x - object ?y - object)
+    (file_updated ?x - object ?y - object)
+    (all ?x - object ?y - object)
     (file_user_id_changed ?x - object ?y - object)
-    (type_set ?x - object ?y - object)
-    (su_version ?x - object ?y - object)
-    (package_lists_updated ?x - object ?y - object)
-    (port_available ?x - object ?y - object)
-    (snap_refreshed ?x - object ?y - object)
-    (time_format ?x - object ?y - object)
+    (packages_updated ?x - object ?y - object)
+    (user_prompted ?x - object ?y - object)
+    (new_group_set ?x - object ?y - object)
+    (protocol_set ?x - object ?y - object)
+    (at_jobs_removed ?x - object ?y - object)
+    (gid_valid ?x - object ?y - object)
+    (string_valid ?x - object ?y - object)
+    (protocol_family_set ?x - object ?y - object)
+    (system_user ?x - object ?y - object)
+    (file_downloaded ?x - object ?y - object)
+    (available_packages_info_cleared ?x - object ?y - object)
+    (available_packages_info_merged ?x - object ?y - object)
+    (user_primary_group ?x - object ?y - object)
+    (unit_edited ?x - object ?y - object)
+    (snap_exists ?x - object ?y - object)
+    (default_values_modified ?x - object ?y - object)
+    (non_negative ?x - object ?y - object)
+    (can_escalate ?x - object ?y - object)
+    (network_available ?x - object ?y - object)
+    (package_installed ?x - object ?y - object)
+    (service_running ?x - object ?y - object)
+    (package_configured ?x - object ?y - object)
+    (sys_gid_min ?x - object ?y - object)
+    (unique_names_not_required ?x - object ?y - object)
+    (same_file ?x - object ?y - object)
+    (problems_encountered ?x - object ?y - object)
+    (system_rebooted ?x - object ?y - object)
+    (package_index_outdated ?x - object ?y - object)
+    (interface_up ?x - object ?y - object)
+    (group_defaults_set ?x - object ?y - object)
+    (wide_output_enabled ?x - object ?y - object)
+    (account_locked ?x - object ?y - object)
+    (dir_removed ?x - object ?y - object)
+    (file_has_sticky_bit ?x - object ?y - object)
+    (user_in_group ?x - object ?y - object)
+    (package_reinstalled ?x - object ?y - object)
+    (journal_files_rotated ?x - object ?y - object)
+    (length(?n ?x - object ?y - object)
+    (system_powered_off ?x - object ?y - object)
+    (repository_valid ?x - object ?y - object)
+    (password_expiration_grace_period ?x - object ?y - object)
+    (system_suspended ?x - object ?y - object)
+    (file_attributes_equal ?x - object ?y - object)
+    (mail_spool_created_or_updated_or_deleted ?x - object ?y - object)
+    (proper_selinux_context ?x - object ?y - object)
+    (system_hibernated_and_suspended ?x - object ?y - object)
+    (preserved_attributes ?x - object ?y - object)
+    (numeric_addresses_enabled ?x - object ?y - object)
+    (directory_preserves_permissions ?x - object ?y - object)
+    (group_line_reached ?x - object ?y - object)
+    (user_expire_date_updated ?x - object ?y - object)
+    (umask_set ?x - object ?y - object)
+    (instance_exited ?x - object ?y - object)
+    (problems_overridden ?x - object ?y - object)
+    (file_exists ?x - object ?y - object)
+    (time_valid ?x - object ?y - object)
+    (defs_set ?x - object ?y - object)
+    (alias_not_exists ?x - object ?y - object)
+    (config_options_removed ?x - object ?y - object)
+    (account_unlocked ?x - object ?y - object)
+    (timestamp_format_changed ?x - object ?y - object)
+    (user_supplementary_groups ?x - object ?y - object)
+    (plug_exists ?x - object ?y - object)
+    (sys_uid_max ?x - object ?y - object)
+    (option_exists ?x - object ?y - object)
+    (channel_available ?x - object ?y - object)
+    (self_terminated ?x - object ?y - object)
+    (disk_image_operated ?x - object ?y - object)
+    (no_password_defined ?x - object ?y - object)
+    (system_upgraded ?x - object ?y - object)
+    (file_contents_equal ?x - object ?y - object)
+    (files_moved ?x - object ?y - object)
+    (print_jobs_removed ?x - object ?y - object)
+    (selinux_user_set ?x - object ?y - object)
+    (package_manually_installed ?x - object ?y - object)
+    (unit_file_exists ?x - object ?y - object)
+    (user_changed ?x - object ?y - object)
+    (initial_files_copied ?x - object ?y - object)
+    (password_policy_respected ?x - object ?y - object)
+    (package_upgraded ?x - object ?y - object)
+    (journal_source ?x - object ?y - object)
+    (package_cache_cleaned ?x - object ?y - object)
+    (system_halted ?x - object ?y - object)
+    (badname_enabled ?x - object ?y - object)
+    (architecture_added ?x - object ?y - object)
+    (package_compiled ?x - object ?y - object)
+    (pseudo_terminal_enabled ?x - object ?y - object)
+    (unit_enabled ?x - object ?y - object)
+    (configuration_variables_missing ?x - object ?y - object)
+    (service_exists ?x - object ?y - object)
+    (system_files_updated ?x - object ?y - object)
+    (group_exists ?x - object ?y - object)
+    (package_cache_autocleaned ?x - object ?y - object)
+    (journal_data_flushed ?x - object ?y - object)
     (signal_received ?x - object ?y - object)
+    (rlimit_rtprio ?x - object ?y - object)
+    (file_modification_time_updated ?x - object ?y - object)
+    (max_members_per_group ?x - object ?y - object)
+    (manager_reexecuted ?x - object ?y - object)
+    (dependencies_ignored ?x - object ?y - object)
+    (script_executed ?x - object ?y - object)
+    (root_filesystem_changed ?x - object ?y - object)
+    (file_renamed ?x - object ?y - object)
+    (user_account_expired ?x - object ?y - object)
+    (numeric_port_numbers_enabled ?x - object ?y - object)
+    (groupname_set ?x - object ?y - object)
+    (file_modified ?x - object ?y - object)
+    (snap_installed ?x - object ?y - object)
+    (output_format_single_line ?x - object ?y - object)
+    (config_applied ?x - object ?y - object)
+    (user_account_modified_or_deleted ?x - object ?y - object)
+    (user_password_locked ?x - object ?y - object)
+    (alias_created ?x - object ?y - object)
+    (base_directory_set ?x - object ?y - object)
+    (sys_uid_min ?x - object ?y - object)
+    (member_of ?x - object ?y - object)
+    (snap_updated ?x - object ?y - object)
+    (lastlog_uid_max_changed ?x - object ?y - object)
+    (file_linked_to ?x - object ?y - object)
+    (password_changed_recently ?x - object ?y - object)
+    (new_account ?x - object ?y - object)
+    (snap_refreshed ?x - object ?y - object)
+    (user_subgids_updated ?x - object ?y - object)
+    (assert_valid ?x - object ?y - object)
+    (link_created ?x - object ?y - object)
+    (problems_refused ?x - object ?y - object)
+    (file_has_default_SELinux_context ?x - object ?y - object)
+    (user_removed ?x - object ?y - object)
+    (symbolic_link ?x - object ?y - object)
+    (unavailable_packages_forgetten ?x - object ?y - object)
+    (no ?x - object ?y - object)
+    (sources_list_valid ?x - object ?y - object)
+    (package_triggers-awaited ?x - object ?y - object)
+    (unit_exists ?x - object ?y - object)
+    (package_triggers-pending ?x - object ?y - object)
+    (log_threshold_set ?x - object ?y - object)
+    (unique ?x - object ?y - object)
+    (package_exists ?x - object ?y - object)
+    (system_hibernated ?x - object ?y - object)
+    (package_removed ?x - object ?y - object)
+    (snap_in_development_mode ?x - object ?y - object)
+    (assert_added ?x - object ?y - object)
+    (file_attr_set ?x - object ?y - object)
+    (account_created ?x - object ?y - object)
+    (package_recorded ?x - object ?y - object)
+    (log_target_set ?x - object ?y - object)
+    (user_uid_set ?x - object ?y - object)
+    (filesystem_mounted ?x - object ?y - object)
+    (applied_config_sent ?x - object ?y - object)
+    (rlimit_as ?x - object ?y - object)
+    (password_expired ?x - object ?y - object)
+    (dependency_added ?x - object ?y - object)
+    (socket_closed ?x - object ?y - object)
+    (alias_removed ?x - object ?y - object)
+    (verbose_mode_enabled ?x - object ?y - object)
+    (directory_removed ?x - object ?y - object)
+    (family_supported ?x - object ?y - object)
+    (journal_namespace_set ?x - object ?y - object)
+    (directory_executable ?x - object ?y - object)
+    (new_package_versions_available ?x - object ?y - object)
+    (dpkg_b_available ?x - object ?y - object)
+    (unit_running ?x - object ?y - object)
+    (rlimit_fsize ?x - object ?y - object)
+    (last_change_of_type ?x - object ?y - object)
+    (firewall_rule_exists ?x - object ?y - object)
+    (directory_exists ?x - object ?y - object)
+    (file_replacement_controlled ?x - object ?y - object)
+    (group_account_modified ?x - object ?y - object)
+    (user_home_directory_changed ?x - object ?y - object)
+    (fss_sealing_key_changed ?x - object ?y - object)
+    (service_enabled ?x - object ?y - object)
+    (userspace_rebooted ?x - object ?y - object)
+    (user_comment_updated ?x - object ?y - object)
+    (manager_reloaded ?x - object ?y - object)
+    (image_policy_set ?x - object ?y - object)
+    (user_locked ?x - object ?y - object)
+    (GID_MIN ?x - object ?y - object)
+    (sources_list_edited ?x - object ?y - object)
+    (connection_exists ?x - object ?y - object)
+    (boot_start_disabled ?x - object ?y - object)
+    (directory_created ?x - object ?y - object)
+    (numeric_host_addresses_enabled ?x - object ?y - object)
+    (snap_channel_switched ?x - object ?y - object)
+    (log_directory_on_root_mount ?x - object ?y - object)
+    (group_key_set ?x - object ?y - object)
+    (files_copied ?x - object ?y - object)
+    (new_version_available ?x - object ?y - object)
+    (port_valid ?x - object ?y - object)
+    (backup_suffix_set ?x - object ?y - object)
+    (operation_stopped ?x - object ?y - object)
+    (user_deleted ?x - object ?y - object)
+    (interface_exists ?x - object ?y - object)
+    (presets_applied ?x - object ?y - object)
+    (primary_group_set ?x - object ?y - object)
+    (available_packages_info_updated ?x - object ?y - object)
+    (package_downloaded ?x - object ?y - object)
+    (repository_exists ?x - object ?y - object)
+    (user_exists ?x - object ?y - object)
+    (rlimit_nice ?x - object ?y - object)
+    (aliases_disabled ?x - object ?y - object)
+    (systemd_configured ?x - object ?y - object)
+    (netlink_socket_receive_buffer_size ?x - object ?y - object)
+    (usergroups_enabled ?x - object ?y - object)
+    (fss_sealing_key_exists ?x - object ?y - object)
+    (subgids_assigned ?x - object ?y - object)
+    (user_allocated_subordinate_uids ?x - object ?y - object)
+    (journal_entry ?x - object ?y - object)
   )
 
   (:action install_package
@@ -488,7 +463,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_build_dep ?pkg)
+      (package_build_deps_installed ?pkg)
     )
   )
 
@@ -498,7 +473,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_cleaned ?pkg)
+      (package_cache_cleaned)
     )
   )
 
@@ -508,7 +483,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_autocleaned ?pkg)
+      (package_cache_autocleaned)
     )
   )
 
@@ -518,15 +493,15 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_autoremoved ?pkg)
+      (package_removed ?pkg)
     )
   )
 
   (:action update_package_index
     :parameters (?actor - user ?obj - file)
     :precondition (and
+      (apt_sources_list_valid)
       (package_index_outdated)
-      (sources_list_valid)
       (can_escalate ?actor)
     )
     :effect (and
@@ -544,6 +519,19 @@
     :effect (and
       (package_installed ?pkg)
       (package_upgraded ?pkg)
+    )
+  )
+
+  (:action remove_packages
+    :parameters (?actor - user ?pkg - package)
+    :precondition (and
+      (package_installed ?pkg)
+      (file_exists /var/lib/dpkg/status)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_removed ?pkg)
+      (file_removed ?f)
     )
   )
 
@@ -578,7 +566,6 @@
     )
     :effect (and
       (package_installed ?pkg)
-      (package_version_set ?pkg ?ver)
     )
   )
 
@@ -591,7 +578,6 @@
     )
     :effect (and
       (package_installed ?pkg)
-      (package_distribution_set ?pkg ?dist)
     )
   )
 
@@ -617,47 +603,37 @@
     )
   )
 
-  (:action fetch_source_package
-    :parameters (?actor - user ?pkg - package ?src - file)
+  (:action download_source_package
+    :parameters (?actor - user ?pkg - file)
     :precondition (and
       (package_exists ?pkg)
-      (not (source_package_fetched ?src))
+      (sources_list_valid)
       (can_escalate ?actor)
     )
     :effect (and
-      (source_package_fetched ?src)
+      (package_downloaded ?pkg)
     )
   )
 
-  (:action add_repository_to_sources_list
-    :parameters (?actor - user ?obj - file)
+  (:action compile_package
+    :parameters (?actor - user ?pkg - package)
     :precondition (and
+      (package_exists ?pkg)
+      (dpkg_b_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (repository_added ?repo)
+      (package_compiled ?pkg)
     )
   )
 
   (:action download_file
     :parameters (?actor - user ?f - file)
     :precondition (and
-      (file_exists ?f)
-      (is_source_archive ?f)
       (can_escalate ?actor)
     )
     :effect (and
       (file_downloaded ?f)
-    )
-  )
-
-  (:action configure_option
-    :parameters (?actor - user ?opt - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (repository_configured ?repo)
     )
   )
 
@@ -667,17 +643,43 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_lists_updated)
+      (packages_updated)
+    )
+  )
+
+  (:action configure_repositories
+    :parameters (?actor - user ?repo - file)
+    :precondition (and
+      (repository_exists ?repo)
+      (not (repository_valid ?repo))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (repository_valid ?repo)
+    )
+  )
+
+  (:action configure_release_info_change
+    :parameters (?actor - user ?repo - file)
+    :precondition (and
+      (repository_exists ?repo)
+      (not (release_info_changed ?repo))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (release_info_changed ?repo)
     )
   )
 
   (:action reinstall_package
     :parameters (?actor - user ?pkg - package)
     :precondition (and
+      (package_installed ?pkg)
+      (not (package_reinstalled ?pkg))
       (can_escalate ?actor)
     )
     :effect (and
-      (package_installed ?pkg)
+      (package_reinstalled ?pkg)
     )
   )
 
@@ -717,6 +719,16 @@
     )
   )
 
+  (:action edit_sources_list
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (sources_list_edited)
+    )
+  )
+
   (:action full_upgrade_packages
     :parameters (?actor - user ?obj - file)
     :precondition (and
@@ -726,18 +738,6 @@
     )
     :effect (and
       (system_upgraded)
-    )
-  )
-
-  (:action install_package_with_version_from_release
-    :parameters (?actor - user ?pkg - package ?rel - file)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_installed ?pkg)
     )
   )
 
@@ -760,7 +760,7 @@
     )
     :effect (and
       (package_installed ?pkg)
-      (package_upgraded ?pkg)
+      (not (package_upgraded ?pkg))
     )
   )
 
@@ -771,8 +771,7 @@
     )
     :effect (and
       (package_installed ?pkg)
-      (package_removed ?pkg)
-      (package_upgraded ?pkg)
+      (not (package_upgraded ?pkg))
     )
   )
 
@@ -796,6 +795,19 @@
     )
     :effect (and
       (package_configured ?pkg)
+    )
+  )
+
+  (:action upgrade_package
+    :parameters (?actor - user ?pkg - package)
+    :precondition (and
+      (package_installed ?pkg)
+      (new_version_available ?pkg)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_installed ?pkg
+      new_version ?pkg)
     )
   )
 
@@ -838,37 +850,25 @@
   (:action hold_package_installation
     :parameters (?actor - user ?pkg - package)
     :precondition (and
-      (package_installed ?pkg)
-      (not (package_held ?pkg))
+      (package_selected_for_install ?pkg)
       (can_escalate ?actor)
     )
     :effect (and
-      (package_held ?pkg)
+      (package_hold ?pkg)
     )
   )
 
   (:action unpack_package
     :parameters (?actor - user ?pkg - package ?dir - directory)
     :precondition (and
-      (package_exists ?pkg)
-      (file_directory ?dir)
+      (file_exists ?pkg)
+      (dir_exists ?dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (files_unpacked ?pkg
-      ?dir)
-    )
-  )
-
-  (:action remove_packages
-    :parameters (?actor - user ?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (not (package_removed ?pkg))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_removed ?pkg)
+      (file_unpacked ?new_files)
+      (file_removed ?old_files)
+      (script_executed ?trigger_scripts)
     )
   )
 
@@ -878,7 +878,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_selections_set ?selections)
+      (package_selections_set ?p)
     )
   )
 
@@ -888,14 +888,13 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_selections_cleared)
+      (package_selections_cleared ?p)
     )
   )
 
   (:action record_availability
     :parameters (?actor - user ?pkg - package)
     :precondition (and
-      (file_exists ?deb_file)
       (not (package_recorded ?pkg))
       (can_escalate ?actor)
     )
@@ -976,6 +975,64 @@
     )
   )
 
+  (:action add_architecture
+    :parameters (?arch - file)
+    :precondition (and
+    )
+    :effect (and
+      (architecture_added ?arch)
+    )
+  )
+
+  (:action remove_architecture
+    :parameters (?arch - file)
+    :precondition (and
+    )
+    :effect (and
+      (architecture_removed ?arch)
+    )
+  )
+
+  (:action ignore_dependencies
+    :parameters (?actor - user ?pkg - package)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (dependencies_ignored ?pkg)
+    )
+  )
+
+  (:action force_override
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (problems_overridden)
+    )
+  )
+
+  (:action stop_on_problems
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (problems_encountered)
+    )
+  )
+
+  (:action refuse_continue
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (problems_refused)
+    )
+  )
+
   (:action install_snap
     :parameters (?actor - user ?pkg - package)
     :precondition (and
@@ -999,58 +1056,46 @@
     )
   )
 
-  (:action abort_change
-    :parameters (?actor - user ?change - file)
-    :precondition (and
-      (pending_change ?change)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (change_aborted ?change)
-    )
-  )
-
   (:action add_assertion
-    :parameters (?actor - user ?assertion - file)
+    :parameters (?actor - user ?assert - file)
     :precondition (and
-      (assertion_valid ?assertion)
-      (signature_verified ?assertion)
-      (consistent_with_database ?assertion)
+      (assert_valid ?assert)
+      (assert_signature_verified ?assert)
+      (assert_consistent_with_database ?assert)
       (can_escalate ?actor)
     )
     :effect (and
-      (assertion_added ?assertion)
+      (assert_added ?assert)
     )
   )
 
   (:action create_alias
-    :parameters (?app - package ?alias - file)
+    :parameters (?app - file ?alias - file)
     :precondition (and
+      (alias_not_exists ?alias)
     )
     :effect (and
       (alias_created ?app ?alias)
     )
   )
 
-  (:action connect_snap_interface
-    :parameters (?actor - user ?snap - interface ?plug - interface)
+  (:action connect_interface
+    :parameters (?snap - interface ?plug - interface)
     :precondition (and
       (snap_exists ?snap)
       (plug_exists ?plug)
       (slot_exists ?slot)
-      (match ?plug ?slot)
-      (can_escalate ?actor)
+      (not (connection_exists ?snap ?plug))
     )
     :effect (and
-      (connection_established ?snap ?plug ?slot)
+      (connection_exists ?snap ?plug)
     )
   )
 
   (:action create_cohort_keys
-    :parameters (?actor - user ?snaps - file)
+    :parameters (?snaps - package)
     :precondition (and
-      (set_of_snaps ?snaps)
-      (can_escalate ?actor)
+      (snaps_exists ?snaps)
     )
     :effect (and
       (cohort_keys_created ?snaps)
@@ -1077,14 +1122,25 @@
     )
   )
 
-  (:action stop_snap_boot_start
-    :parameters (?snap - file)
+  (:action disable_boot_start
+    :parameters (?actor - user ?snap - file)
     :precondition (and
       (snap_exists ?snap)
-      (snap_running ?snap)
+      (boot_start_enabled ?snap)
+      (can_escalate ?actor)
     )
     :effect (and
-      (snap_no_longer_started_on_boot ?snap)
+      (boot_start_disabled ?snap)
+    )
+  )
+
+  (:action select_last_change
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (last_change_of_type ?change)
     )
   )
 
@@ -1108,137 +1164,60 @@
     )
   )
 
-  (:action remove_snap_aliases
+  (:action remove_aliases
     :parameters (?actor - user ?snap - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (snap_aliases_disabled ?snap)
+      (aliases_disabled ?snap)
     )
   )
 
-  (:action unset_config_options
+  (:action unset_config
     :parameters (?actor - user ?snap - file ?option - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (config_options_unset ?snap ?option)
-    )
-  )
-
-  (:action unset_snap_config
-    :parameters (?actor - user ?snap - file ?user - user)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (snap_config_unset ?snap ?user)
-    )
-  )
-
-  (:action enforce_snap_validation
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (snap_config_valid ?snap)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (snap_config_valid ?snap)
-    )
-  )
-
-  (:action forget_snap_validation
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (snap_config_valid ?snap)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (snap_config_valid ?snap)
-    )
-  )
-
-  (:action refresh_snap_install
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (snap_config_valid ?snap)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (snap_config_valid ?snap)
-    )
-  )
-
-  (:action set_time_format
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (time_format ?format)
-    )
-  )
-
-  (:action set_unicode
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (unicode_enabled ?enabled)
-    )
-  )
-
-  (:action set_verbose
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (verbose_enabled ?enabled)
+      (config_options_removed ?snap
+      ?option)
     )
   )
 
   (:action install_snaps
     :parameters (?actor - user ?snaps - package)
     :precondition (and
-      (not (snap_installed ?snap))
-      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (snap_installed ?snap)
+      (snap_installed ?snaps)
     )
   )
 
   (:action remove_snaps
     :parameters (?actor - user ?snaps - package)
     :precondition (and
-      (snap_installed ?snap)
-      (not (snap_removed ?snap))
       (can_escalate ?actor)
     )
     :effect (and
-      (snap_removed ?snap)
+      (not (snap_installed ?snaps))
     )
   )
 
   (:action refresh_snaps
     :parameters (?actor - user ?snaps - package)
     :precondition (and
-      (snap_installed ?snap)
-      (not (snap_refreshed ?snap))
       (can_escalate ?actor)
     )
     :effect (and
-      (snap_refreshed ?snap)
+      (snap_updated ?snaps)
     )
   )
 
   (:action start_services
     :parameters (?actor - user ?svc - service)
     :precondition (and
-      (service_exists ?svc)
-      (not (service_running ?svc))
       (can_escalate ?actor)
     )
     :effect (and
@@ -1249,8 +1228,6 @@
   (:action stop_services
     :parameters (?actor - user ?svc - service)
     :precondition (and
-      (service_exists ?svc)
-      (service_running ?svc)
       (can_escalate ?actor)
     )
     :effect (and
@@ -1261,8 +1238,6 @@
   (:action restart_services
     :parameters (?actor - user ?svc - service)
     :precondition (and
-      (service_exists ?svc)
-      (not (service_running ?svc))
       (can_escalate ?actor)
     )
     :effect (and
@@ -1317,17 +1292,6 @@
     )
   )
 
-  (:action load_units
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (units_loaded)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (units_loaded)
-    )
-  )
-
   (:action add_dependency
     :parameters (?actor - user ?tgt - file ?unit - file)
     :precondition (and
@@ -1360,43 +1324,6 @@
     )
   )
 
-  (:action cancel_jobs
-    :parameters (?actor - user ?jobs - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (jobs_canceled)
-    )
-  )
-
-  (:action set_environment
-    :parameters (?var - file ?value - file)
-    :precondition (and
-    )
-    :effect (and
-      (environment_updated)
-    )
-  )
-
-  (:action unset_environment
-    :parameters (?var - file)
-    :precondition (and
-    )
-    :effect (and
-      (environment_updated)
-    )
-  )
-
-  (:action import_environment
-    :parameters (?var - file)
-    :precondition (and
-    )
-    :effect (and
-      (environment_updated)
-    )
-  )
-
   (:action reload_manager
     :parameters (?actor - user ?obj - file)
     :precondition (and
@@ -1423,7 +1350,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (log_level_set ?level)
+      (log_threshold_set ?level)
     )
   )
 
@@ -1437,13 +1364,13 @@
     )
   )
 
-  (:action set_service_watchdog
+  (:action set_watchdog_state
     :parameters (?actor - user ?state - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (service_watchdog_set ?state)
+      (watchdog_state_set ?state)
     )
   )
 
@@ -1497,12 +1424,12 @@
     )
   )
 
-  (:action exit_process
+  (:action exit_instance
     :parameters (?EXIT_CODE - file)
     :precondition (and
     )
     :effect (and
-      (process_exited)
+      (instance_exited)
     )
   )
 
@@ -1549,42 +1476,11 @@
   (:action configure_systemd
     :parameters (?actor - user ?obj - file)
     :precondition (and
-      (systemd_running)
+      (systemd_configured)
       (can_escalate ?actor)
     )
     :effect (and
-      (system_state_modified)
-    )
-  )
-
-  (:action start_process
-    :parameters (?actor - user ?p - process)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (process_running ?p)
-    )
-  )
-
-  (:action stop_process
-    :parameters (?actor - user ?p - process)
-    :precondition (and
-      (process_running ?p)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (process_running ?p))
-    )
-  )
-
-  (:action configure_system
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (system_state_modified)
+      (systemd_configured)
     )
   )
 
@@ -1618,7 +1514,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (system_units_edited ?)
+      (system_unit_files_modified)
     )
   )
 
@@ -1628,7 +1524,37 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (system_units_edited ?)
+      (system_unit_files_modified)
+    )
+  )
+
+  (:action override_symlinks
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (symlink_overridden)
+    )
+  )
+
+  (:action execute_immediately
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (action_executed)
+    )
+  )
+
+  (:action apply_presets
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (presets_applied)
     )
   )
 
@@ -1638,7 +1564,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (system_units_edited ?)
+      (system_unit_files_modified)
     )
   )
 
@@ -1648,37 +1574,17 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (system_units_edited ?)
+      (system_unit_files_modified)
     )
   )
 
-  (:action firmware_setup
+  (:action set_image_policy
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (firmware_setup ?x)
-    )
-  )
-
-  (:action boot_loader_menu
-    :parameters (?actor - user ?time - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (boot_loader_menu ?x)
-    )
-  )
-
-  (:action boot_loader_entry
-    :parameters (?actor - user ?name - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (boot_loader_entry ?x)
+      (image_policy_set)
     )
   )
 
@@ -1688,7 +1594,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (timestamp_format_changed ?x)
+      (timestamp_format_changed)
     )
   )
 
@@ -1698,7 +1604,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (read_only_bind_mount_created ?x)
+      (read_only_bind_mount_created)
     )
   )
 
@@ -1708,7 +1614,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (directory_created ?x)
+      (directory_created)
     )
   )
 
@@ -1718,11 +1624,11 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (marked_units_restarted ?x)
+      (marked_units_restarted)
     )
   )
 
-  (:action edit_unit_file
+  (:action edit_unit_files
     :parameters (?actor - user ?name - file ?time - file)
     :precondition (and
       (unit_file_exists ?name)
@@ -1730,8 +1636,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (unit_file_modified ?name
-      ?time)
+      (unit_file_modified ?name)
     )
   )
 
@@ -1748,100 +1653,60 @@
     )
   )
 
-  (:action set_pager_options
-    :parameters (?obj - file)
-    :precondition (and
-      (pager_enabled)
-    )
-    :effect (and
-      (pager_options_modified)
-    )
-  )
-
-  (:action set_journal_output
+  (:action write_to_journal
     :parameters (?obj - file)
     :precondition (and
     )
     :effect (and
-      (journal_output_modified)
+      (journal_entry ?entry)
     )
   )
 
   (:action set_journal_source
-    :parameters (?system - user)
+    :parameters (?actor - user ?obj - file)
     :precondition (and
+      (can_escalate ?actor)
     )
     :effect (and
-      (journal_source_modified)
-    )
-  )
-
-  (:action change_journal_directory
-    :parameters (?dir - file)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (journal_directory_changed ?dir)
+      (journal_source ?source)
     )
   )
 
   (:action operate_on_journal_files
-    :parameters (?actor - user ?files - file ?root - directory ?image - file)
+    :parameters (?actor - user ?jfiles - file)
     :precondition (and
-      (file_exists ?files)
-      (directory_exists ?root)
-      (image_exists ?image)
       (can_escalate ?actor)
     )
     :effect (and
-      (journal_files_operated_on ?files ?root ?image)
+      (journal_files_operated ?jfiles)
     )
   )
 
-  (:action set_image_policy
-    :parameters (?actor - user ?policy - file)
+  (:action operate_on_disk_image
+    :parameters (?actor - user ?img - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (image_policy_set ?policy)
+      (disk_image_operated ?img)
     )
   )
 
   (:action set_journal_namespace
-    :parameters (?actor - user ?namespace - file)
+    :parameters (?actor - user ?ns - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (journal_namespace_set ?namespace)
+      (journal_namespace_set ?ns)
     )
   )
 
-  (:action change_filesystem_root
-    :parameters (?actor - user ?root - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (filesystem_root_changed)
-    )
-  )
-
-  (:action change_filesystem_root_image
-    :parameters (?actor - user ?image - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (filesystem_root_changed)
-    )
-  )
-
-  (:action setup_fss_key
+  (:action change_fss_sealing_key
     :parameters (?actor - user ?obj - file)
     :precondition (and
+      (fss_sealing_key_exists)
+      (not (fss_sealing_key_changed))
       (can_escalate ?actor)
     )
     :effect (and
@@ -1849,64 +1714,24 @@
     )
   )
 
-  (:action vacuum_disk
-    :parameters (?actor - user ?size - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (disk_usage_reduced)
-    )
-  )
-
-  (:action vacuum_files
-    :parameters (?actor - user ?num - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_files_vacuumed)
-    )
-  )
-
-  (:action vacuum_time
-    :parameters (?actor - user ?time - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_files_removed)
-    )
-  )
-
-  (:action sync_journal
+  (:action relinquish_log
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (journal_messages_synced)
+      (log_to_temporary_file_system)
     )
   )
 
-  (:action relinquish_logging
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (logging_stopped)
-    )
-  )
-
-  (:action smart_relinquish_logging
+  (:action smart_relinquish_log
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (log_directory_on_root_mount)
       (can_escalate ?actor)
     )
     :effect (and
-      (logging_stopped)
+      (log_to_temporary_file_system)
     )
   )
 
@@ -1916,7 +1741,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (journal_flushed)
+      (journal_data_flushed)
     )
   )
 
@@ -1926,7 +1751,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (journal_rotated)
+      (journal_files_rotated)
     )
   )
 
@@ -1942,30 +1767,35 @@
   )
 
   (:action create_backup
-    :parameters (?file - file)
+    :parameters (?f - file ?b - file)
     :precondition (and
-      (file_exists ?file)
+      (file_exists ?f)
+      (file_exists ?b)
     )
     :effect (and
-      (backup_created ?file)
+      (file_exists ?b)
+      (file_contents_equal ?f ?b)
     )
   )
 
   (:action copy_special_file_contents
     :parameters (?src - file ?dst - file)
     :precondition (and
+      (file_exists ?src)
+      (file_exists ?dst)
     )
     :effect (and
       (file_contents_equal ?src ?dst)
     )
   )
 
-  (:action copy_file_attributes
-    :parameters (?src - file ?dst - file)
+  (:action copy_attributes_only
+    :parameters (?f - file)
     :precondition (and
+      (file_exists ?f)
     )
     :effect (and
-      (file_attributes_equal ?src ?dst)
+      (file_attributes_equal ?f)
     )
   )
 
@@ -1980,59 +1810,40 @@
   )
 
   (:action create_hard_link
-    :parameters (?s - file ?d - file)
+    :parameters (?obj - file)
     :precondition (and
-      (file_exists ?s)
-      (not (file_exists ?d))
+      (file_exists ?f)
+      (not (file_exists ?link))
     )
     :effect (and
-      (file_linked ?s ?d)
+      (file_exists ?link)
+      (file_linked_to ?f ?link)
     )
   )
 
-  (:action create_symbolic_link
-    :parameters (?s - file ?d - file)
+  (:action follow_symbolic_link
+    :parameters (?src - file)
     :precondition (and
-      (file_exists ?s)
-      (not (file_exists ?d))
+      (file_exists ?src)
+      (symbolic_link ?src)
     )
     :effect (and
-      (file_linked ?s ?d)
+      (not (symbolic_link ?src))
     )
   )
 
   (:action preserve_file_attributes
-    :parameters (?f - file ?attr_list - file)
+    :parameters (?f - file ?attr - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_preserved ?f ?attr_list)
+      (preserved_attributes ?f ?attr)
     )
   )
 
-  (:action follow_symbolic_links
-    :parameters (?s - file)
-    :precondition (and
-      (file_exists ?s)
-    )
-    :effect (and
-      (file_followed ?s)
-    )
-  )
-
-  (:action prompt_before_overwrite
-    :parameters (?obj - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_persisted ?f)
-    )
-  )
-
-  (:action do_not_overwrite_existing_file
-    :parameters (?obj - file)
+  (:action do_not_overwrite_file
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
     )
@@ -2041,48 +1852,39 @@
     )
   )
 
-  (:action update_file_attributes
-    :parameters (?f - file ?attr_list - file)
+  (:action prompt_before_overwrite
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_updated ?f ?attr_list)
+      (user_prompted ?f)
     )
   )
 
-  (:action do_not_follow_symbolic_links
-    :parameters (?obj - file)
-    :precondition (and
-      (file_exists ?s)
-    )
-    :effect (and
-      (not (file_followed ?s))
-    )
-  )
-
-  (:action preserve_file_mode_ownership_timestamps
-    :parameters (?obj - file)
+  (:action remove_existing_file_and_try_again
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
+      (not (file_overwritten ?f))
     )
     :effect (and
-      (file_preserved ?f ?mode ?ownership ?timestamps)
+      (file_removed ?f)
     )
   )
 
   (:action use_full_source_file_name_under_directory
-    :parameters (?s - file ?d - directory)
+    :parameters (?src - file ?dir - directory)
     :precondition (and
-      (file_exists ?s)
-      (directory_exists ?d)
+      (file_exists ?src)
+      (directory_exists ?dir)
     )
     :effect (and
-      (file_used ?s ?d)
+      (full_path_used ?src ?dir)
     )
   )
 
-  (:action copy_directory_recursive
+  (:action copy_directory
     :parameters (?src - directory ?dst - directory)
     :precondition (and
       (file_exists ?src)
@@ -2103,13 +1905,14 @@
     )
   )
 
-  (:action create_sparse_file
-    :parameters (?f - file ?when - file)
+  (:action create_symbolic_link
+    :parameters (?src - file ?dst - file)
     :precondition (and
-      (file_exists ?f)
+      (file_exists ?src)
+      (file_exists ?dst)
     )
     :effect (and
-      (file_sparse ?f ?when)
+      (link_created ?src ?dst)
     )
   )
 
@@ -2125,64 +1928,58 @@
   (:action copy_to_directory
     :parameters (?src - directory ?dst - directory)
     :precondition (and
-      (dir_exists ?src)
+      (file_exists ?src)
       (dir_exists ?dst)
     )
     :effect (and
-      (file_copied ?src ?dst)
+      (files_copied ?src ?dst)
     )
   )
 
-  (:action set_verbose_mode
+  (:action enable_verbose_mode
     :parameters (?obj - file)
     :precondition (and
     )
     :effect (and
-      (verbose_mode_set)
+      (verbose_mode_enabled)
     )
   )
 
-  (:action change_security_context
+  (:action set_security_context
     :parameters (?actor - user ?f - file)
     :precondition (and
       (file_exists ?f)
       (can_escalate ?actor)
     )
     :effect (and
-      (security_context_set ?f)
+      (file_has_default_SELinux_context ?f)
     )
   )
 
-  (:action set_sparse_option
-    :parameters (?opt - file)
-    :precondition (and
-    )
-    :effect (and
-      (sparse_files_inhibited ?opt)
-    )
-  )
-
-  (:action update_files
+  (:action set_sparse_creation
     :parameters (?obj - file)
     :precondition (and
-      (operation_specified ?op)
-      (files_to_update ?f)
     )
     :effect (and
-      (files_updated ?f
-      ?op)
+      (sparse_files_disabled)
     )
   )
 
-  (:action copy_file_lightweight
-    :parameters (?obj - file)
+  (:action set_file_replacement
+    :parameters (?op - file)
     :precondition (and
-      (file_exists ?f)
-      (reflink_option_specified ?opt)
     )
     :effect (and
-      (file_copied ?f
-      ?opt)
+      (file_replacement_controlled)
+    )
+  )
+
+  (:action set_copy_type
+    :parameters (?type - file)
+    :precondition (and
+    )
+    :effect (and
+      (copy_performed)
     )
   )
 
@@ -2217,29 +2014,7 @@
   )
 
   (:action dereference_link
-    :parameters (?src - file)
-    :precondition (and
-      (file_exists ?src)
-      (symbolic_link ?src)
-    )
-    :effect (and
-      (not (symbolic_link ?src))
-    )
-  )
-
-  (:action do_not_overwrite_file
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-      (not (no_clobber_mode))
-    )
-    :effect (and
-      (no_clobber_mode)
-    )
-  )
-
-  (:action follow_command_line_link
-    :parameters (?f - file)
+    :parameters (?obj - file)
     :precondition (and
       (file_exists ?f)
       (symbolic_link ?f)
@@ -2249,14 +2024,71 @@
     )
   )
 
-  (:action copy_directory_symbolic_link
-    :parameters (?src - file ?dst - file)
+  (:action preserve_permissions
+    :parameters (?actor - user ?d - directory)
     :precondition (and
-      (file_exists ?src)
-      (not (file_linked ?dst))
+      (directory_exists ?d)
+      (can_escalate ?actor)
     )
     :effect (and
-      (file_linked ?dst)
+      (directory_preserves_permissions ?d)
+    )
+  )
+
+  (:action remove_existing_file
+    :parameters (?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_exists ?dst))
+    )
+    :effect (and
+      (file_removed ?f)
+      (file_copied ?f ?dst)
+    )
+  )
+
+  (:action ignore_symbolic_links
+    :parameters (?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (symbolic_link ?f)
+    )
+    :effect (and
+      (not (symbolic_link ?f))
+    )
+  )
+
+  (:action follow_symbolic_links
+    :parameters (?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (symbolic_link ?f)
+    )
+    :effect (and
+      (not (symbolic_link ?f))
+    )
+  )
+
+  (:action create_hard_links
+    :parameters (?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_exists ?link))
+    )
+    :effect (and
+      (file_exists ?link)
+      (file_linked_to ?f ?link)
+    )
+  )
+
+  (:action always_dereference_links
+    :parameters (?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (symbolic_link ?f)
+    )
+    :effect (and
+      (not (symbolic_link ?f))
     )
   )
 
@@ -2267,38 +2099,38 @@
       (directory_exists ?dst)
     )
     :effect (and
-      (file_exists ?dst/?)
+      (file_exists ?dst/?.?src)
+    )
+  )
+
+  (:action update_files
+    :parameters (?all - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_updated ?f)
     )
   )
 
   (:action set_file_attributes
-    :parameters (?actor - user ?attr - file)
+    :parameters (?attr - file)
     :precondition (and
-      (can_escalate ?actor)
+      (file_exists ?f)
     )
     :effect (and
-      (file_attribute_set ?f ?attr)
-    )
-  )
-
-  (:action detect_sparse_files
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (file_sparse ?f)
+      (file_attr_set ?f ?attr)
     )
   )
 
   (:action make_backup
-    :parameters (?src - file ?dst - file)
+    :parameters (?src - file ?dest - file)
     :precondition (and
       (file_exists ?src)
-      (eq ?src ?dst)
-      (not (file_linked ?src ?dst))
+      (same_file ?src ?dest)
     )
     :effect (and
-      (file_linked ?src ?dst)
+      (backup_created ?src ?dest)
     )
   )
 
@@ -2322,107 +2154,32 @@
     )
   )
 
-  (:action move_file_to_directory
-    :parameters (?src - file ?dst - directory)
+  (:action move_files_to_directory
+    :parameters (?files - file ?dir - directory)
     :precondition (and
     )
     :effect (and
-      (file_moved ?src ?dst)
-    )
-  )
-
-  (:action no_prompt_before_overwrite
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (overwrite_not_prompted ?file)
-    )
-  )
-
-  (:action no_overwrite
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (file_not_overwritten ?file)
-    )
-  )
-
-  (:action no_copy_if_renaming_fails
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (file_not_copied ?file)
-    )
-  )
-
-  (:action strip_trailing_slashes
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (no file modifications)
-    )
-  )
-
-  (:action move_files
-    :parameters (?d - directory ?s - file)
-    :precondition (and
-    )
-    :effect (and
-      (file moved)
-    )
-  )
-
-  (:action set_file_type
-    :parameters (?d - directory ?s - file)
-    :precondition (and
-    )
-    :effect (and
-      (file type changed)
-    )
-  )
-
-  (:action set_security_context
-    :parameters (?actor - user ?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (security_context_set ?dir)
+      (files_moved ?files ?dir)
     )
   )
 
   (:action set_permissions
     :parameters (?f - file ?mode - file)
     :precondition (and
+      (file_exists ?f)
     )
     :effect (and
       (file_executable ?f)
-      (file_readable ?f)
-      (file_writable ?f)
     )
   )
 
-  (:action update_file
-    :parameters (?src - file ?dest - file)
+  (:action update_file_contents
+    :parameters (?f - file ?content - file)
     :precondition (and
+      (file_exists ?f)
     )
     :effect (and
-      (file_exists ?dest)
-      (file_contents_equal ?src ?dest)
-    )
-  )
-
-  (:action set_version_control
-    :parameters (?method - file)
-    :precondition (and
-    )
-    :effect (and
-      (version_control_set ?method)
+      (file_contents_equal ?f {content})
     )
   )
 
@@ -2434,6 +2191,17 @@
     )
     :effect (and
       (not (file_exists ?f))
+    )
+  )
+
+  (:action force_delete_file
+    :parameters (?file - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (is_directory ?f))
+    )
+    :effect (and
+      (file_removed ?f)
     )
   )
 
@@ -2449,50 +2217,75 @@
     )
   )
 
+  (:action prompt_before_removal
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_removed ?f))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (file_removed ?f)
+    )
+  )
+
+  (:action prompt_once_before_removal
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_removed ?f))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (file_removed ?f)
+    )
+  )
+
+  (:action prompt_always_before_removal
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_removed ?f))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (file_removed ?f)
+    )
+  )
+
+  (:action remove_directories_recursive
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (dir_exists ?d)
+      (not (dir_removed ?d))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (dir_removed ?d)
+    )
+  )
+
+  (:action remove_empty_directories
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (dir_exists ?d)
+      (empty_dir ?d)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (dir_removed ?d)
+    )
+  )
+
   (:action remove_directory
     :parameters (?actor - user ?dir - directory)
     :precondition (and
-      (file_system_matches ?dir)
-      (not (dir_empty ?dir))
+      (file_exists ?dir)
+      (not (is_directory_empty ?dir))
       (can_escalate ?actor)
     )
     :effect (and
-      (dir_removed ?dir)
-    )
-  )
-
-  (:action remove_directory_recursive
-    :parameters (?actor - user ?dir - directory)
-    :precondition (and
-      (file_system_matches ?dir)
-      (not (dir_empty ?dir))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (dir_removed ?dir)
-    )
-  )
-
-  (:action remove_empty_directory
-    :parameters (?actor - user ?dir - directory)
-    :precondition (and
-      (file_system_matches ?dir)
-      (dir_empty ?dir)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (dir_removed ?dir)
-    )
-  )
-
-  (:action preserve_permissions
-    :parameters (?actor - user ?d - directory)
-    :precondition (and
-      (directory_exists ?d)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_preserves_permissions ?d)
+      (directory_removed ?dir)
     )
   )
 
@@ -2504,8 +2297,8 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (file_sticky_bit ?f)
-      (directory_restricted_deletion ?d)
+      (file_has_sticky_bit ?f)
+      (directory_has_sticky_bit ?d)
     )
   )
 
@@ -2517,6 +2310,18 @@
     )
     :effect (and
       (file_executable ?f)
+    )
+  )
+
+  (:action recursive_change_permissions
+    :parameters (?actor - user ?dir - directory)
+    :precondition (and
+      (directory_exists ?dir)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (directory_executable ?dir)
+      (file_executable ?f) for all files in ?dir
     )
   )
 
@@ -2533,17 +2338,14 @@
   )
 
   (:action change_ownership
-    :parameters (?actor - user ?uid - user ?home_dir - directory)
+    :parameters (?actor - user ?f - file ?o - user ?g - group)
     :precondition (and
       (file_exists ?f)
-      (uid_valid ?uid)
-      (home_dir_exists ?home_dir)
-      (uid_neq_home_dir_uid ?uid ?home_dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owned_by ?uid ?f)
-      (file_user_id_changed ?uid ?f)
+      (file_owned_by ?o ?f)
+      (file_grouped_as ?g ?f)
     )
   )
 
@@ -2554,8 +2356,8 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owned_by ?o)
-      (file_grouped_by ?g)
+      (file_owned_by ?o ?f)
+      (file_grouped_by ?g ?f)
     )
   )
 
@@ -2565,29 +2367,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (root_not_preserved)
-    )
-  )
-
-  (:action fail_recursive_root
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (recursive_operation_failed)
-    )
-  )
-
-  (:action set_owner_from_reference
-    :parameters (?actor - user ?r - file)
-    :precondition (and
-      (file_exists ?r)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (new_owner_set ?f)
-      (new_group_set ?f)
+      (operation_stopped ?)
     )
   )
 
@@ -2597,7 +2377,19 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (operation_performed_recursively)
+      (operation_recursive ?)
+    )
+  )
+
+  (:action reference_ownership
+    :parameters (?actor - user ?rfile - file)
+    :precondition (and
+      (file_exists ?rfile)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (new_owner_set ?rfile)
+      (new_group_set ?rfile)
     )
   )
 
@@ -2659,17 +2451,6 @@
     :effect (and
       (file_modified ?f)
       (file_accessed ?f)
-    )
-  )
-
-  (:action touch_file
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
     )
   )
 
@@ -2746,17 +2527,64 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (output_format_set ?format)
+      (output_format_single_line)
     )
   )
 
-  (:action switch_network_namespace
+  (:action set_network_namespace
     :parameters (?actor - user ?ns - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (network_namespace_switched ?ns)
+      (network_namespace_set ?ns)
+    )
+  )
+
+  (:action set_socket_receive_buffer_size
+    :parameters (?actor - user ?size - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (netlink_socket_receive_buffer_size ?size)
+    )
+  )
+
+  (:action set_rate_units
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (rate_units_IEC)
+    )
+  )
+
+  (:action output_json
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (json_output_enabled)
+    )
+  )
+
+  (:action output_pretty_json
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (pretty_json_output_enabled)
+    )
+  )
+
+  (:action send_applied_config
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (applied_config_sent)
     )
   )
 
@@ -2781,33 +2609,6 @@
     )
     :effect (and
       (not (interface_up ?int))
-    )
-  )
-
-  (:action hide_header
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (no_header)
-    )
-  )
-
-  (:action one_line_output
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (single_line_output)
-    )
-  )
-
-  (:action numeric_output
-    :parameters (?obj - file)
-    :precondition (and
-    )
-    :effect (and
-      (numeric_output)
     )
   )
 
@@ -2836,27 +2637,23 @@
   )
 
   (:action modify_host_syntax
-    :parameters (?actor - user ?obj - file)
+    :parameters (?f - file ?a - file ?p - port)
     :precondition (and
       (family_supported ?f)
       (address_valid ?a)
       (port_valid ?p)
-      (can_escalate ?actor)
     )
     :effect (and
-      (host_syntax_modified ?h)
+      (host_syntax_modified ?f ?a ?p)
     )
   )
 
-  (:action configure_network_link
-    :parameters (?actor - user ?addr - interface ?port - file)
+  (:action set_verbose_mode
+    :parameters (?obj - file)
     :precondition (and
-      (network_link_exists ?addr)
-      (port_available ?port)
-      (can_escalate ?actor)
     )
     :effect (and
-      (network_link_configured ?addr ?port)
+      (verbose_mode_enabled)
     )
   )
 
@@ -2907,48 +2704,46 @@
     )
   )
 
-  (:action change_socket_state
-    :parameters (?sock - file)
+  (:action set_timer
+    :parameters (?actor - user ?t - file)
     :precondition (and
-      (socket_exists ?sock)
-      (state_free ?sock)
+      (socket_exists ?s)
+      (can_escalate ?actor)
     )
     :effect (and
-      (state_allocated ?sock) or (state_not_allocated ?sock)
+      (timer_set ?s ?t)
     )
   )
 
-  (:action set_socket_flags
-    :parameters (?sock - file ?flag - file)
+  (:action set_protocol
+    :parameters (?actor - user ?p - file)
     :precondition (and
-      (socket_exists ?sock)
-      (state_allocated ?sock)
+      (socket_exists ?s)
+      (can_escalate ?actor)
     )
     :effect (and
-      (flag_set ?sock ?flag)
+      (protocol_set ?s ?p)
     )
   )
 
-  (:action set_socket_type
-    :parameters (?sock - file ?type - file)
+  (:action set_refcnt
+    :parameters (?actor - user ?r - file)
     :precondition (and
-      (socket_exists ?sock)
-      (state_allocated ?sock)
+      (socket_exists ?s)
+      (can_escalate ?actor)
     )
     :effect (and
-      (type_set ?sock ?type)
+      (refcnt_set ?s ?r)
     )
   )
 
   (:action mount_filesystem
     :parameters (?actor - user ?mnt_point - directory ?fs_type - file)
     :precondition (and
-      (fs_type_exists ?fs)
-      (mnt_point_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (filesystem_mounted ?mnt_point ?fs)
+      (filesystem_mounted ?mnt_point)
     )
   )
 
@@ -2963,10 +2758,20 @@
     )
   )
 
+  (:action switch_user
+    :parameters (?actor - user ?usr - user)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_changed ?usr)
+    )
+  )
+
   (:action set_limits
     :parameters (?actor - user ?obj - file)
     :precondition (and
-      (su_version >= 2.38)
+      (since_version 2.38)
       (can_escalate ?actor)
     )
     :effect (and
@@ -2975,26 +2780,6 @@
       (rlimit_fsize ?z)
       (rlimit_as ?w)
       (rlimit_nofile ?v)
-    )
-  )
-
-  (:action pass_command_to_shell
-    :parameters (?actor - user ?cmd - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (shell_passes_cmd ?x)
-    )
-  )
-
-  (:action run_in_fast_mode
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (fast_mode ?x)
     )
   )
 
@@ -3012,19 +2797,17 @@
     :precondition (and
     )
     :effect (and
-      (shell_set)
+      (shell_set ?shell)
     )
   )
 
   (:action set_session_command
     :parameters (?actor - user ?cmd - file)
     :precondition (and
-      (session_exists ?s)
-      (not (session_running ?s))
       (can_escalate ?actor)
     )
     :effect (and
-      (session_running ?s)
+      (session_created ?s)
     )
   )
 
@@ -3032,7 +2815,7 @@
     :parameters (?actor - user ?pid - process)
     :precondition (and
       (child_running ?pid)
-      (signal_received ?pid)
+      (signal_received ?sig)
       (can_escalate ?actor)
     )
     :effect (and
@@ -3062,16 +2845,6 @@
     )
   )
 
-  (:action switch_user
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_changed ?usr)
-    )
-  )
-
   (:action create_user
     :parameters (?actor - user ?u - user)
     :precondition (and
@@ -3090,17 +2863,77 @@
     )
     :effect (and
       (user_exists ?usr)
+      (group_exists ?usr)
     )
   )
 
-  (:action create_group
-    :parameters (?actor - user ?g - group)
+  (:action configure_user
+    :parameters (?actor - user ?obj - file)
     :precondition (and
-      (not (group_exists ?g))
+      (user_exists ?usr)
       (can_escalate ?actor)
     )
     :effect (and
+      (system_files_updated)
+      (home_directory_created)
+      (initial_files_copied)
+    )
+  )
+
+  (:action set_badname_option
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (badname_enabled)
+    )
+  )
+
+  (:action set_base_dir
+    :parameters (?actor - user ?dir - directory)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (base_directory_set ?dir)
+    )
+  )
+
+  (:action add_user_to_group
+    :parameters (?actor - user ?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
       (group_exists ?g)
+      (not (member_of ?u ?g))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (member_of ?u ?g)
+    )
+  )
+
+  (:action set_user_primary_group
+    :parameters (?actor - user ?usr - user ?grp - group)
+    :precondition (and
+      (user_exists ?usr)
+      (group_exists ?grp)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_primary_group ?usr ?grp)
+    )
+  )
+
+  (:action set_user_supplementary_groups
+    :parameters (?actor - user ?usr - user ?grp - group)
+    :precondition (and
+      (user_exists ?usr)
+      (group_exists ?grp)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_in_group ?usr ?grp)
     )
   )
 
@@ -3135,11 +2968,11 @@
   (:action set_defs
     :parameters (?actor - user ?obj - file)
     :precondition (and
-      (defs_not_set)
+      (not (defs_set))
       (can_escalate ?actor)
     )
     :effect (and
-      (defs_set_to_yes)
+      (defs_set)
     )
   )
 
@@ -3160,81 +2993,44 @@
   (:action add_group_entry
     :parameters (?actor - user ?g - group)
     :precondition (and
-      (not (group_exists ?g))
-      (group_line_length_limit ?l)
+      (not (group_line_reached ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?g)
-      (group_line_length_limit ?l)
+      (group_line_reached ?g)
     )
   )
 
   (:action set_password_expiration_limit
-    :parameters (?actor - user ?d - file)
+    :parameters (?actor - user ?days - file)
     :precondition (and
-      (not (password_expiration_limit_set ?d))
+      (not (password_expired ?user))
       (can_escalate ?actor)
     )
     :effect (and
-      (password_expiration_limit_set ?d)
+      (password_expired ?user)
     )
   )
 
   (:action set_minimum_password_change_interval
-    :parameters (?actor - user ?d - file)
+    :parameters (?actor - user ?days - file)
     :precondition (and
-      (not (minimum_password_change_interval_set ?d))
+      (not (password_changed_recently ?user))
       (can_escalate ?actor)
     )
     :effect (and
-      (minimum_password_change_interval_set ?d)
+      (password_changed_recently ?user)
     )
   )
 
-  (:action set_system_settings
-    :parameters (?actor - user ?obj - file)
+  (:action set_password_expiration_warning
+    :parameters (?actor - user ?days - file)
     :precondition (and
-      (file_exists ?f)
-      (not (setting_changed ?s))
+      (password_expiration_warning ?x)
       (can_escalate ?actor)
     )
     :effect (and
-      (setting_changed ?s)
-    )
-  )
-
-  (:action set_password_restrictions
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_warning_enabled ?p)
-    )
-  )
-
-  (:action set_subordinate_group_ids
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (file_exists ?f)
-      (not (subgroup_ids_set ?s))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subgroup_ids_set ?s)
-    )
-  )
-
-  (:action set_subordinate_user_ids
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (file_exists ?f)
-      (not (subuser_ids_set ?s))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subuser_ids_set ?s)
+      (password_expiration_warning ?x)
     )
   )
 
@@ -3250,55 +3046,55 @@
     )
   )
 
-  (:action allocate_system_user_ids
-    :parameters (?actor - user ?count - file ?min - file ?max - file)
+  (:action set_gid_range
+    :parameters (?actor - user ?obj - file)
     :precondition (and
-      (not (user_has_system_uids ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_allocated_system_uids ?u)
+      (sys_gid_min ?min)
+      (sys_gid_max ?max)
     )
   )
 
-  (:action allocate_system_group_ids
-    :parameters (?actor - user ?count - file ?min - file ?max - file)
+  (:action set_uid_range
+    :parameters (?actor - user ?obj - file)
     :precondition (and
-      (not (group_has_system_gid ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_allocated_system_gid ?g)
+      (sys_uid_min ?min)
+      (sys_uid_max ?max)
     )
   )
 
   (:action set_umask
-    :parameters (?actor - user ?obj - file)
+    :parameters (?actor - user ?num - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (umask_set ?mask)
+      (umask_set ?num)
     )
   )
 
   (:action set_usergroups_enable
-    :parameters (?actor - user ?obj - file)
+    :parameters (?actor - user ?bool - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (usergroups_enabled ?flag)
+      (usergroups_enabled ?bool)
     )
   )
 
   (:action modify_user_account
-    :parameters (?actor - user ?obj - file)
+    :parameters (?actor - user ?login - user)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (user_info_modified ?info)
+      (user_modified ?login)
     )
   )
 
@@ -3308,47 +3104,37 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (group_info_modified ?info)
+      (group_account_modified)
     )
   )
 
-  (:action modify_secure_user_account
+  (:action modify_default_values
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (secure_user_info_modified ?info)
+      (default_values_modified)
     )
   )
 
-  (:action modify_secure_group_account
+  (:action run_scripts_during_user_addition
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (secure_group_info_modified ?info)
+      (scripts_run)
     )
   )
 
-  (:action modify_default_account_creation_values
+  (:action run_scripts_during_user_deletion
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (default_account_creation_values_modified ?values)
-    )
-  )
-
-  (:action execute_run_part_files
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (run_part_files_executed ?files)
+      (scripts_run)
     )
   )
 
@@ -3409,15 +3195,14 @@
     )
   )
 
-  (:action no_user_group
+  (:action no_log_init
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (new_account)
-      (group_exists)
       (can_escalate ?actor)
     )
     :effect (and
-      (group_not_created)
+      (log_init_not_performed)
     )
   )
 
@@ -3425,24 +3210,10 @@
     :parameters (?actor - user ?obj - file)
     :precondition (and
       (new_account)
-      (unique_names_required)
       (can_escalate ?actor)
     )
     :effect (and
       (unique_names_not_required)
-    )
-  )
-
-  (:action add_user_to_group
-    :parameters (?actor - user ?u - user ?g - group)
-    :precondition (and
-      (user_exists ?u)
-      (group_exists ?g)
-      (not (member_of ?u ?g))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (member_of ?u ?g)
     )
   )
 
@@ -3470,17 +3241,47 @@
     )
   )
 
-  (:action update_user
-    :parameters (?actor - user ?usr - user)
+  (:action append_to_group
+    :parameters (?actor - user ?g - group ?u - user)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (user_modified ?usr)
+      (user_in_group ?u ?g)
     )
   )
 
-  (:action set_user_account_expiration_date
+  (:action update_comment
+    :parameters (?actor - user ?c - file ?u - user)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_comment_updated ?u ?c)
+    )
+  )
+
+  (:action change_home_directory
+    :parameters (?actor - user ?h - directory ?u - user)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_home_directory_changed ?u ?h)
+    )
+  )
+
+  (:action update_expire_date
+    :parameters (?actor - user ?e - file ?u - user)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_expire_date_updated ?u ?e)
+    )
+  )
+
+  (:action set_user_expiration
     :parameters (?actor - user ?date - file)
     :precondition (and
       (file_exists /etc/shadow)
@@ -3491,83 +3292,60 @@
     )
   )
 
-  (:action set_user_account_inactive_period
+  (:action set_password_expiration_grace_period
     :parameters (?actor - user ?days - file)
     :precondition (and
       (file_exists /etc/shadow)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_account_inactive ?days)
+      (password_expiration_grace_period ?days)
     )
   )
 
   (:action change_groups
-    :parameters (?actor - user ?g - group ?g1 - file ?g2 - file)
+    :parameters (?actor - user ?uid - user ?gid - group ?gids - file)
     :precondition (and
-      (user_exists ?u)
-      (group_exists ?g)
-      (not (primary_group_set ?u ?g))
+      (user_exists ?uid)
+      (group_exists ?gid)
+      (all (?g in ?gids) (group_exists ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (primary_group_set ?u ?g)
-      (group_member ?u ?g1)
-      (group_member ?u ?g2)
-      ...
+      (user_primary_group ?uid ?gid)
+      (user_supplementary_groups ?uid ?gids)
     )
   )
 
-  (:action append_group
-    :parameters (?actor - user ?u - user)
+  (:action change_user_settings
+    :parameters (?actor - user ?usr - user)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (user_supplementary_groups ?u)
+      (user_locked ?usr)
+      (user_home_directory_changed ?usr)
     )
   )
 
-  (:action change_login
-    :parameters (?actor - user ?old - file ?new - file)
+  (:action lock_user_account
+    :parameters (?actor - user ?usr - user)
     :precondition (and
-      (user_exists ?old)
+      (user_exists ?usr)
+      (not (user_locked ?usr))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_login ?new)
-    )
-  )
-
-  (:action lock_password
-    :parameters (?actor - user ?u - user)
-    :precondition (and
-      (user_exists ?u)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_password_locked ?u)
-    )
-  )
-
-  (:action move_home
-    :parameters (?actor - user ?u - user ?new - directory)
-    :precondition (and
-      (user_exists ?u)
-      (new_directory_exists ?new)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_home_directory ?new)
+      (user_locked ?usr)
     )
   )
 
   (:action modify_user
     :parameters (?actor - user ?usr - user)
     :precondition (and
-      (user_not_executing_processes ?usr)
-      (not (user_id_changed ?usr))
-      (not (user_home_dir_changed ?usr))
+      (user_exists ?usr)
+      (not (process_running ?usr))
+      (not (nis_changes_needed))
       (can_escalate ?actor)
     )
     :effect (and
@@ -3588,6 +3366,52 @@
     )
   )
 
+  (:action change_user_shell
+    :parameters (?actor - user ?u - user ?s - file)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_shell_set ?u ?s)
+    )
+  )
+
+  (:action change_user_uid
+    :parameters (?actor - user ?u - user ?uid - file)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_uid_set ?u ?uid)
+    )
+  )
+
+  (:action change_uid
+    :parameters (?actor - user ?uid - file)
+    :precondition (and
+      (non_negative ?uid)
+      (unique ?uid
+      -o)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (file_user_id_changed ?f) for all files owned by the user and located in their home directory
+    )
+  )
+
+  (:action unlock_password
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (user_password_locked)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_password_unlocked)
+    )
+  )
+
   (:action unlock_account
     :parameters (?actor - user ?obj - file)
     :precondition (and
@@ -3600,7 +3424,7 @@
   )
 
   (:action add_subuids
-    :parameters (?actor - user ?range - file)
+    :parameters (?actor - user ?first-last - file)
     :precondition (and
       (user_exists)
       (not (subuids_assigned ?user))
@@ -3612,7 +3436,7 @@
   )
 
   (:action del_subuids
-    :parameters (?actor - user ?range - file)
+    :parameters (?actor - user ?first-last - file)
     :precondition (and
       (user_exists)
       (subuids_assigned ?user)
@@ -3624,14 +3448,14 @@
   )
 
   (:action add_subgids
-    :parameters (?actor - user ?rg - file ?uid - user)
+    :parameters (?actor - user ?first-last - file)
     :precondition (and
-      (user_exists ?uid)
-      (subgid_range_valid ?rg)
+      (user_exists)
+      (not (subgids_assigned ?user))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_has_subgids ?uid ?rg)
+      (subgids_assigned ?user)
     )
   )
 
@@ -3643,7 +3467,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (user_no_longer_has_subgids ?uid ?rg)
+      (user_subgids_updated ?uid ?rg)
     )
   )
 
@@ -3654,52 +3478,27 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (user_mapped_to_seuser ?uid ?seuser)
+      (selinux_user_set ?uid ?seuser)
     )
   )
 
-  (:action change_crontab_owner
+  (:action change_lastlog_uid_max
     :parameters (?actor - user ?obj - file)
     :precondition (and
-      (crontab_files_present)
       (can_escalate ?actor)
     )
     :effect (and
-      (crontab_files_owned_by ?usr)
+      (lastlog_uid_max_changed)
     )
   )
 
-  (:action modify_nis_config
+  (:action change_mail_dir
     :parameters (?actor - user ?obj - file)
     :precondition (and
-      (nis_server_present)
       (can_escalate ?actor)
     )
     :effect (and
-      (nis_config_modified ?usr)
-    )
-  )
-
-  (:action update_lastlog_entries
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (LASTLOG_UID_MAX_set)
-      (not (user_id_changed ?usr))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (lastlog_entries_updated ?usr)
-    )
-  )
-
-  (:action update_mail_dir
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (MAIL_DIR_set)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (mail_dir_updated ?usr)
+      (mail_dir_changed)
     )
   )
 
@@ -3721,19 +3520,6 @@
     )
     :effect (and
       (not (user_exists ?u))
-    )
-  )
-
-  (:action remove_user
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (user_exists ?usr)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_removed ?usr)
-      (file_removed ?f)
-      (mail_spool_removed ?ms)
     )
   )
 
@@ -3766,7 +3552,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (mail_spool_created_or_moved_or_deleted)
+      (mail_spool_created_or_updated_or_deleted)
     )
   )
 
@@ -3777,6 +3563,16 @@
     )
     :effect (and
       (group_entry_split ?f)
+    )
+  )
+
+  (:action run_userdel_cmd
+    :parameters (?actor - user ?user - process)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_removed ?user)
     )
   )
 
@@ -3793,23 +3589,26 @@
     )
   )
 
-  (:action update_subgroup_ids
-    :parameters (?actor - user ?u - user)
+  (:action run_scripts
+    :parameters (?actor - user ?scripts - directory)
     :precondition (and
+      (user_exists ?u)
+      (not (user_deleted ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (subgid_updated ?u)
+      (user_deleted ?u)
     )
   )
 
-  (:action update_subuser_ids
-    :parameters (?actor - user ?u - user)
+  (:action create_group
+    :parameters (?actor - user ?g - group)
     :precondition (and
+      (not (group_exists ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (subuid_updated ?u)
+      (group_exists ?g)
     )
   )
 
@@ -3824,16 +3623,62 @@
     )
   )
 
-  (:action set_group_defaults
-    :parameters (?actor - user ?gid_min - file ?gid_max - file ?password - file ?non_unique - file ?system - file)
+  (:action change_groupname
+    :parameters (?actor - user ?g - group ?n - file)
     :precondition (and
-      (group_exists ?gid)
-      (not (group_password_set ?gid))
+      (group_exists ?g)
+      (string_valid ?n)
+      (length(?n) <= 32)
       (can_escalate ?actor)
     )
     :effect (and
-      (group_password_set ?gid)
-      (group_non_unique ?gid)
+      (groupname_set ?g ?n)
+    )
+  )
+
+  (:action change_group_gid
+    :parameters (?actor - user ?g - group ?g - file)
+    :precondition (and
+      (group_exists ?g)
+      (gid_valid ?gid)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_gid_set ?g ?gid)
+    )
+  )
+
+  (:action set_group_key
+    :parameters (?actor - user ?g - group ?k - file)
+    :precondition (and
+      (group_exists ?g)
+      (string_valid ?k)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_key_set ?g ?k)
+    )
+  )
+
+  (:action set_group_defaults
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (group_exists ?gid)
+      (not (group_defaults_set ?gid))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_defaults_set ?gid)
+    )
+  )
+
+  (:action add_users_to_group
+    :parameters (?actor - user ?users - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_members ?gid ?users)
     )
   )
 
