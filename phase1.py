@@ -902,7 +902,6 @@ class ScopeAnalyzer:
 
     def _add_predicates(self, entity: GraphEntity, predicates: list, name: str):
         """Generates PDDL state predicates for the problem file."""
-        name = self._sanitize_name(entity.name)
         data = entity.original_data
 
         if entity.entity_type == EntityType.SERVICE:
@@ -1325,7 +1324,7 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "llama3:8b"
+    model_id: str = "gemma3:27b"
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
@@ -1431,7 +1430,7 @@ Skip read-only or query commands.
     @dataclass
     class LLMExtractionConfig:
         """Configuration for LLM-based extraction."""
-        model_id: str = "llama3:8b"  # CHANGED from "gpt-oss:20b"
+        model_id: str = "gemma3:27b"  # CHANGED from "gpt-oss:20b"
         model_url: str = "http://localhost:11434"
         enabled: bool = True
         timeout: int = 120
@@ -1554,7 +1553,7 @@ Skip read-only or query commands.
             # 1. TRUNCATE AGGRESSIVELY
             # Most Ollama models have 8k context. Reserve space for prompt/output (~2k),
             # leaving ~6k tokens for input (~24k chars). Be conservative with 15k chars.
-            max_chars = 15000
+            max_chars = 20000
             if len(text) > max_chars:
                 text = text[:max_chars // 2] + "\n...[content truncated]...\n" + text[-max_chars // 2:]
 
@@ -2337,7 +2336,7 @@ Skip read-only or query commands.
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-        model_id: str = "llama3:8b",
+        model_id: str = "gemma3:27b",
         model_url: str = "http://localhost:11434",
         enable_llm: bool = True
 ) -> ManPageParser:
@@ -2719,7 +2718,7 @@ class Phase1Orchestrator:
                  osquery_socket: Optional[str] = None,
                  validate: bool = False,
                  scoping_mode: str = "dynamic",
-                 llm_model: str = "llama3:8b",
+                 llm_model: str = "gemma3:27b",
                  llm_url: str = "http://localhost:11434",
                  enable_llm: bool = True
                  ):
