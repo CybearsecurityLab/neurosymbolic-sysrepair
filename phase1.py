@@ -901,41 +901,32 @@ class ScopeAnalyzer:
         return dict(state)
 
     def _add_predicates(self, entity: GraphEntity, predicates: list, name: str):
-        """Generate predicates for an entity."""
+        """Generates PDDL state predicates for the problem file."""
         name = self._sanitize_name(entity.name)
         data = entity.original_data
 
         if entity.entity_type == EntityType.SERVICE:
+            # Mark service as existing
             predicates.append({"name": "service_exists", "arguments": [name], "value": True})
-            active = data.get("active_state") in AnchorCriteria.ACTIVE_STATES
-            predicates.append({"name": "service_running", "arguments": [name], "value": active})
-            predicates.append({"name": "service_failed", "arguments": [name],
-                             "value": data.get("active_state") == "failed"})
-            enabled = data.get("load_state") == "loaded" and data.get("fragment_path")
-            predicates.append({"name": "service_enabled", "arguments": [name], "value": enabled})
+            # Check active state
+            is_active = data.get("active_state") in AnchorCriteria.ACTIVE_STATES
+            predicates.append({"name": "service_running", "arguments": [name], "value": is_active})
+
+        elif entity.entity_type == EntityType.PACKAGE:
+            # Mark package as installed
+            predicates.append({"name": "package_installed", "arguments": [name], "value": True})
 
         elif entity.entity_type == EntityType.USER:
             predicates.append({"name": "user_exists", "arguments": [name], "value": True})
-            uid = int(data.get("uid", 0))
-            predicates.append({"name": "user_critical", "arguments": [name],
-                             "value": uid < AnchorCriteria.HUMAN_UID_MIN})
-            predicates.append({"name": "can_escalate", "arguments": [name],
-                             "value": data.get("can_sudo", False)})
-
-        elif entity.entity_type == EntityType.PACKAGE:
-            predicates.append({"name": "package_installed", "arguments": [name], "value": True})
-
-        elif entity.entity_type == EntityType.PORT:
-            predicates.append({"name": "port_open", "arguments": [name], "value": True})
+            # Grant sudo if root or sudo group member
+            if str(data.get("uid")) == "0" or data.get("can_sudo"):
+                predicates.append({"name": "can_escalate", "arguments": [name], "value": True})
 
         elif entity.entity_type == EntityType.CONFIG_FILE:
             predicates.append({"name": "file_exists", "arguments": [name], "value": True})
 
-        elif entity.entity_type == EntityType.PROCESS:
-            predicates.append({"name": "process_running", "arguments": [name], "value": True})
-
-        elif entity.entity_type == EntityType.GROUP:
-            predicates.append({"name": "group_exists", "arguments": [name], "value": True})
+        elif entity.entity_type == EntityType.PORT:
+            predicates.append({"name": "port_open", "arguments": [name], "value": True})
 
     def _sanitize_name(self, name: str) -> str:
             if not name:
@@ -1763,47 +1754,35 @@ Skip read-only or query commands.
             extraction_method="llm"
         )
 
-    def _convert_to_pddl_predicate(self, text: str, params: list,
-                                   is_precondition: bool) -> Optional[str]:
-        """Convert natural language to strict PDDL predicate."""
-        if not isinstance(text, str):
-            return None
+    def _convert_to_pddl_predicate(self, text: str, params: list, is_precondition: bool) -> Optional[str]:
+        if not isinstance(text, str): return None
 
-        # 1. FIX CURLY BRACES: Replace {VAR} with ?var
-        text = re.sub(r'\{([^}]+)}', r'?\1', text)
-
-        # 2. SANITIZE & NORMALIZE
-        # Remove parenthetical wrappers if the LLM added them e.g. "(predicate ?x)" -> "predicate ?x"
+        # 1. Clean wrappers
         clean_text = text.strip("() ").lower()
+        # 2. Handle {VAR} templates
+        clean_text = re.sub(r'\{([^}]+)\}', r'?\1', clean_text)
 
-        # 3. HANDLE SPACES: Force snake_case for the first token (the predicate name)
-        # Split into [predicate_name, arg1, arg2...]
         parts = clean_text.split()
-        if not parts:
-            return None
+        if not parts: return None
 
-        pred_name = parts[0]
-        args = parts[1:]
+        # 3. Merge non-variable parts to fix "no file modifications" -> "no_file_modifications"
+        pred_parts = []
+        args = []
 
-        # Fix: "tool configured" -> "tool_configured"
-        # If the predicate name has spaces (which split into multiple parts),
-        # but those parts aren't variables (don't start with ?), merge them.
-        new_args = []
-        complex_name_parts = [pred_name]
+        # The first token is always part of the name
+        pred_parts.append(parts[0])
 
-        for arg in args:
-            if arg.startswith('?'):
-                new_args.append(arg)
+        for p in parts[1:]:
+            if p.startswith('?'):
+                args.append(p)
             else:
-                # It's part of the name (e.g. "selinux user mapping")
-                complex_name_parts.append(arg)
+                pred_parts.append(p)
 
-        final_pred_name = "_".join(complex_name_parts)
-        # Remove any non-alphanumeric chars from name (except underscore/dash)
-        final_pred_name = re.sub(r'[^a-z0-9_-]', '_', final_pred_name)
+        final_name = "_".join(pred_parts)
+        # 4. Remove illegal characters
+        final_name = re.sub(r'[^a-z0-9_-]', '_', final_name)
 
-        # Reconstruct valid PDDL
-        return f"({final_pred_name} {' '.join(new_args)})"
+        return f"({final_name} {' '.join(args)})"
 
     def fetch_manpage(self, utility: str) -> Optional[str]:
         if utility in self.cached_manpages: return self.cached_manpages[utility]
