@@ -1576,13 +1576,20 @@ Skip read-only or query commands.
                 "format_handler": ollama.OLLAMA_FORMAT_HANDLER
             }
 
-            # 4. EXECUTE EXTRACTION
+            # 4. CREATE MODEL INSTANCE WITH TIMEOUT
+            # Direct instantiation ensures timeout is properly set
+            model_instance = ollama.OllamaLanguageModel(
+                model_id=self.llm_config.model_id,
+                model_url=self.llm_config.model_url,
+                timeout=self.llm_config.timeout
+            )
+
+            # 5. EXECUTE EXTRACTION
             result = lx.extract(
                 text_or_documents=text,
                 prompt_description=prompt,
                 examples=self.examples,
-                model_id=self.llm_config.model_id,
-                model_url=self.llm_config.model_url,
+                model=model_instance,  # Pass model instance directly
                 resolver_params=resolver_params,
                 show_progress=True,
             )
