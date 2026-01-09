@@ -28,7 +28,7 @@ def set_log_stream(stream: TextIO):
     global _log_stream
     _log_stream = stream
 
-
+MODEL = "gemma3:27b"
 # =============================================================================
 # SECTION 1: Data Models & Configuration
 # =============================================================================
@@ -1324,7 +1324,7 @@ class SystemStateExtractor:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based extraction."""
-    model_id: str = "gemma3:27b"
+    model_id: str = MODEL
     model_url: str = "http://localhost:11434"
     enabled: bool = True
     timeout: int = 120
@@ -1430,7 +1430,7 @@ Skip read-only or query commands.
     @dataclass
     class LLMExtractionConfig:
         """Configuration for LLM-based extraction."""
-        model_id: str = "gemma3:27b"  # CHANGED from "gpt-oss:20b"
+        model_id: str = MODEL
         model_url: str = "http://localhost:11434"
         enabled: bool = True
         timeout: int = 120
@@ -1464,8 +1464,7 @@ Skip read-only or query commands.
 
                 if not model_exists:
                     log(f"  LLM: Model '{model_name}' not found")
-                    log(f"  Available models: {', '.join(available_models[:5])}")
-                    log(f"  Suggestion: ollama pull gemma2:2b")
+                    log(f"  Available models: {', '.join(available_models)}")
                     return False
 
                 log(f"  LLM: Using model '{model_name}'")
@@ -1550,9 +1549,6 @@ Skip read-only or query commands.
             import langextract as lx
             from langextract.providers import ollama
 
-            # 1. TRUNCATE AGGRESSIVELY
-            # Most Ollama models have 8k context. Reserve space for prompt/output (~2k),
-            # leaving ~6k tokens for input (~24k chars). Be conservative with 15k chars.
             max_chars = 20000
             if len(text) > max_chars:
                 text = text[:max_chars // 2] + "\n...[content truncated]...\n" + text[-max_chars // 2:]
@@ -1610,7 +1606,6 @@ Skip read-only or query commands.
             log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}")
             if "JSON" in str(e) or "parse" in str(e).lower():
                 log(f"    [HINT] LLM may be returning non-JSON. Check model: {self.llm_config.model_id}")
-                log(f"    [HINT] Try: ollama pull gemma2:2b")
             return []
 
     def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
@@ -2336,7 +2331,7 @@ Skip read-only or query commands.
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-        model_id: str = "gemma3:27b",
+        model_id: str = MODEL,
         model_url: str = "http://localhost:11434",
         enable_llm: bool = True
 ) -> ManPageParser:
@@ -2718,7 +2713,7 @@ class Phase1Orchestrator:
                  osquery_socket: Optional[str] = None,
                  validate: bool = False,
                  scoping_mode: str = "dynamic",
-                 llm_model: str = "gemma3:27b",
+                 llm_model: str = MODEL,
                  llm_url: str = "http://localhost:11434",
                  enable_llm: bool = True
                  ):
