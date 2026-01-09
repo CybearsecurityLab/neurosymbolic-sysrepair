@@ -28,7 +28,7 @@ def set_log_stream(stream: TextIO):
     global _log_stream
     _log_stream = stream
 
-MODEL = "gemma3:27b"
+MODEL = "qwen2.5:32b"
 # =============================================================================
 # SECTION 1: Data Models & Configuration
 # =============================================================================
@@ -1327,7 +1327,7 @@ class LLMExtractionConfig:
     model_id: str = MODEL
     model_url: str = "http://localhost:11434"
     enabled: bool = True
-    timeout: int = 120
+    timeout: int = 600
     max_retries: int = 2
 
 
@@ -1602,7 +1602,7 @@ Skip read-only or query commands.
 
         except Exception as e:
             # More detailed error logging
-            err_msg = str(e).replace('\n', ' ')[:300]
+            err_msg = str(e).replace('\n', ' ')
             log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}")
             if "JSON" in str(e) or "parse" in str(e).lower():
                 log(f"    [HINT] LLM may be returning non-JSON. Check model: {self.llm_config.model_id}")
