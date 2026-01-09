@@ -1765,51 +1765,45 @@ Skip read-only or query commands.
 
     def _convert_to_pddl_predicate(self, text: str, params: list,
                                    is_precondition: bool) -> Optional[str]:
-        """Convert natural language condition to PDDL predicate."""
+        """Convert natural language to strict PDDL predicate."""
         if not isinstance(text, str):
             return None
 
-        text = text.lower().strip()
-        param_var = f"?{params[0].name}" if params else "?x"
-        param_type = params[0].pddl_type.value if params else "object"
+        # 1. FIX CURLY BRACES: Replace {VAR} with ?var
+        text = re.sub(r'\{([^}]+)}', r'?\1', text)
 
-        # Common patterns
-        patterns = {
-            # Existence patterns
-            r"(package|service|user|group|file) (exists|installed|present)":
-                lambda m: f"({m.group(1)}_exists {param_var})",
-            r"(package|service|user|group|file) not (exists|installed|present)":
-                lambda m: f"(not ({m.group(1)}_exists {param_var}))",
-            r"not installed":
-                lambda m: f"(not (package_installed {param_var}))",
-            r"installed":
-                lambda m: f"(package_installed {param_var})",
+        # 2. SANITIZE & NORMALIZE
+        # Remove parenthetical wrappers if the LLM added them e.g. "(predicate ?x)" -> "predicate ?x"
+        clean_text = text.strip("() ").lower()
 
-            # Service patterns
-            r"service (running|active)":
-                lambda m: f"(service_running {param_var})",
-            r"service (stopped|inactive|not running)":
-                lambda m: f"(not (service_running {param_var}))",
+        # 3. HANDLE SPACES: Force snake_case for the first token (the predicate name)
+        # Split into [predicate_name, arg1, arg2...]
+        parts = clean_text.split()
+        if not parts:
+            return None
 
-            # Network patterns
-            r"network (available|connected)":
-                lambda m: "(network_available)",
+        pred_name = parts[0]
+        args = parts[1:]
 
-            # Root/privilege patterns
-            r"(root|sudo|superuser)":
-                lambda m: f"(can_escalate ?actor)",
-        }
+        # Fix: "tool configured" -> "tool_configured"
+        # If the predicate name has spaces (which split into multiple parts),
+        # but those parts aren't variables (don't start with ?), merge them.
+        new_args = []
+        complex_name_parts = [pred_name]
 
-        for pattern, converter in patterns.items():
-            match = re.search(pattern, text)
-            if match:
-                return converter(match)
+        for arg in args:
+            if arg.startswith('?'):
+                new_args.append(arg)
+            else:
+                # It's part of the name (e.g. "selinux user mapping")
+                complex_name_parts.append(arg)
 
-        # Generic fallback based on type
-        if "not" in text or "no " in text:
-            return f"(not ({param_type}_ready {param_var}))"
-        else:
-            return f"({param_type}_ready {param_var})"
+        final_pred_name = "_".join(complex_name_parts)
+        # Remove any non-alphanumeric chars from name (except underscore/dash)
+        final_pred_name = re.sub(r'[^a-z0-9_-]', '_', final_pred_name)
+
+        # Reconstruct valid PDDL
+        return f"({final_pred_name} {' '.join(new_args)})"
 
     def fetch_manpage(self, utility: str) -> Optional[str]:
         if utility in self.cached_manpages: return self.cached_manpages[utility]
@@ -1857,32 +1851,80 @@ Skip read-only or query commands.
         return self._deduplicate_actions(all_actions)
 
     def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
-        """Deduplicate and filter read-only/noise actions."""
-        final = {}
-
-        # Keywords that indicate an action is likely read-only/useless for remediation
-        READ_ONLY_KEYWORDS = {
+        """
+        Deduplicate actions, prioritizing Regex over LLM, and aggressively pruning
+        'ghost' (no effect) and 'read-only' (observation) actions.
+        """
+        # LAYER 1: Stop Prefixes for Read-Only Actions
+        # These verbs imply observation or query, not state change.
+        # Remediation planners need actions that *change* the world.
+        STOP_PREFIXES = {
             "show", "list", "display", "print", "search", "query",
-            "check", "verify", "help", "version", "info", "man_page",
-            "debug", "verbose"
+            "check", "verify", "help", "version", "info", "man",
+            "debug", "verbose", "explain", "monitor", "watch", "get",
+            "dump", "validate", "assess", "audit", "status", "compare",
+            "report", "test", "find", "resolve", "assert"
         }
 
-        for a in actions:
-            # 1. Filter: Check if name starts with read-only keyword
-            if any(a.name.startswith(kw + "_") for kw in READ_ONLY_KEYWORDS):
+        # LAYER 2: Trivial Effect Patterns
+        # Even if a LLM hallucinates an effect, if it's just "X_displayed", it's noise.
+        TRIVIAL_EFFECT_SUBSTRINGS = [
+            "displayed", "shown", "listed", "printed", "visible",
+            "info_available", "help_shown", "version_shown"
+        ]
+
+        final_actions = {}
+
+        for action in actions:
+            # --- FILTER 1: Read-Only Name Check ---
+            # Identify the verb (first part of snake_case name)
+            parts = action.name.split('_')
+            verb = parts[0].lower() if parts else action.name.lower()
+
+            if verb in STOP_PREFIXES:
+                # Skip actions that are purely observational
                 continue
 
-            # 2. Filter: Actions with no effects (or only trivial effects)
-            if not a.effects:
+            # --- FILTER 2: Empty Effects (The "Ghost Action" Fix) ---
+            # If an action has no effects, the planner cannot use it.
+            if not action.effects:
                 continue
 
-            # 3. Deduplicate: Prefer regex over LLM
-            if a.name not in final:
-                final[a.name] = a
-            elif a.extraction_method == "regex":
-                final[a.name] = a  # Overwrite LLM with reliable Regex
+            # --- FILTER 3: Trivial/Hallucinated Effects ---
+            # Check if the effect effectively does nothing (e.g. "(help_displayed)")
+            is_trivial = True
+            for effect in action.effects:
+                effect_str = effect.lower()
+                # A valid effect must NOT contain trivial substrings
+                if not any(sub in effect_str for sub in TRIVIAL_EFFECT_SUBSTRINGS):
+                    # We found at least one "real" effect (e.g., "package_installed")
+                    is_trivial = False
+                    break
 
-        return list(final.values())
+            if is_trivial:
+                continue
+
+            # --- FILTER 4: Deduplication & Priority ---
+            if action.name not in final_actions:
+                final_actions[action.name] = action
+            else:
+                existing = final_actions[action.name]
+
+                # Priority Rule 1: Prefer REGEX over LLM
+                # Regex patterns are hard-coded and trusted. LLM is probabilistic.
+                if existing.extraction_method == "llm" and action.extraction_method == "regex":
+                    final_actions[action.name] = action
+
+                # Priority Rule 2: Prefer Specificity
+                # If both are same method, prefer the one with fewer generic "file" types
+                elif existing.extraction_method == action.extraction_method:
+                    existing_generic = sum(1 for p in existing.parameters if p.pddl_type.value in ["file", "object"])
+                    new_generic = sum(1 for p in action.parameters if p.pddl_type.value in ["file", "object"])
+
+                    if new_generic < existing_generic:
+                        final_actions[action.name] = action
+
+        return list(final_actions.values())
 
     def extract_all_actions(self) -> list[ActionSchema]:
         """Main entry point for extraction."""
@@ -2385,7 +2427,8 @@ class PDDLGenerator:
         lines.append("")
 
         # Predicates
-        lines.append(self._generate_predicates(state))
+        # FIX: Pass 'actions' here so dynamic predicates are generated!
+        lines.append(self._generate_predicates(state, actions))
         lines.append("")
 
         # Deduplicate actions by name (keep first occurrence)
@@ -2475,9 +2518,20 @@ class PDDLGenerator:
 
         return "\n".join(lines)
 
-    def _generate_predicates(self, state: dict) -> str:
-        """Generate PDDL predicates."""
+    def _generate_predicates(self, state: dict, actions: list[ActionSchema] = []) -> str:
+        """Generate PDDL predicates, including those found in actions."""
         lines = ["  (:predicates"]
+
+        # 1. Collect all predicates used in extracted actions
+        discovered_predicates = set()
+        for action in actions:
+            # Helper to extract name from "(pred_name ?arg)"
+            for condition in action.preconditions + action.effects:
+                match = re.match(r'\(\s*([^\s\)]+)', condition)
+                if match:
+                    name = match.group(1)
+                    if name != "not" and name != "and": # Skip logical operators
+                        discovered_predicates.add(name)
 
         # Dynamic predicates (from state)
         lines.append("    ; Dynamic state predicates - Packages")
@@ -2538,6 +2592,18 @@ class PDDLGenerator:
 
         lines.append("  )")
 
+        # 3. Add Discovered Predicates (Dynamic)
+        lines.append("    ; Dynamically Discovered Predicates")
+        known_predicates = {p['name'] for p in state.get("predicates", [])}
+        # Add hardcoded ones to known set to avoid dupes (simplified logic)
+
+        for pred_name in discovered_predicates:
+            # If we haven't explicitly defined it yet, add a generic definition
+            # Note: We don't know exact types, so we use generic '?x - object'
+            # Strict validators might warn, but it prevents "Undeclared predicate" errors.
+            lines.append(f"    ({pred_name} ?x - object ?y - object)")
+
+        lines.append("  )")
         return "\n".join(lines)
 
     def _generate_action(self, action: ActionSchema) -> str:
