@@ -1834,7 +1834,8 @@ Skip read-only or query commands.
 
     def fetch_help_output(self, utility: str) -> Optional[str]:
         try:
-            res = subprocess.run([utility, "--help"], capture_output=True, text=True, timeout=10)
+            cmd = [utility, "help", "--all"] if utility == "snap" else [utility, "--help"]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             return res.stdout or res.stderr
         except Exception: return None
 
@@ -2064,6 +2065,42 @@ Skip read-only or query commands.
                 preconditions=["(package_installed ?pkg)"],
                 effects=["(not (package_installed ?pkg))"],
                 command_template="snap remove {pkg}",
+                requires_root=True,
+                source_utility="snap"
+            ),
+            ActionSchema(
+                name="refresh_snap",
+                parameters=[ActionParameter("pkg", PDDLType.PACKAGE)],
+                preconditions=["(package_installed ?pkg)", "(network_available)"],
+                effects=["(not (package_outdated ?pkg))"],
+                command_template="snap refresh {pkg}",
+                requires_root=True,
+                source_utility="snap"
+            ),
+            ActionSchema(
+                name="revert_snap",
+                parameters=[ActionParameter("pkg", PDDLType.PACKAGE)],
+                preconditions=["(package_installed ?pkg)"],
+                effects=["(package_reverted ?pkg)"],
+                command_template="snap revert {pkg}",
+                requires_root=True,
+                source_utility="snap"
+            ),
+            ActionSchema(
+                name="enable_snap",
+                parameters=[ActionParameter("pkg", PDDLType.PACKAGE)],
+                preconditions=["(package_installed ?pkg)", "(not (package_enabled ?pkg))"],
+                effects=["(package_enabled ?pkg)"],
+                command_template="snap enable {pkg}",
+                requires_root=True,
+                source_utility="snap"
+            ),
+            ActionSchema(
+                name="disable_snap",
+                parameters=[ActionParameter("pkg", PDDLType.PACKAGE)],
+                preconditions=["(package_installed ?pkg)", "(package_enabled ?pkg)"],
+                effects=["(not (package_enabled ?pkg))"],
+                command_template="snap disable {pkg}",
                 requires_root=True,
                 source_utility="snap"
             ),
