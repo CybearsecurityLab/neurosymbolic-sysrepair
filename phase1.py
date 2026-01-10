@@ -821,7 +821,7 @@ class ScopeAnalyzer:
                     queue.append(neighbor_id)
 
     def _extract_scoped_state(self) -> dict:
-        """Extract scoped state from reachable entities."""
+        """Extract scoped state from reachable entities with guaranteed uniqueness."""
         state = {
             "objects": defaultdict(list),
             "predicates": [],
@@ -845,12 +845,36 @@ class ScopeAnalyzer:
             EntityType.CONFIG_FILE: "configuration_file",
         }
 
-        # 1. Update the loop that creates OBJECTS
+        # --- PASS 1: Generate Unique Names & Cache Them ---
+        # We map entity_id -> unique_pddl_name to ensure consistency between objects and relationships
+        entity_id_to_pddl_name = {}
+        used_names = set()
+
         for entity in self.graph.get_reachable():
             pddl_type = type_map.get(entity.entity_type, "object")
 
-            # CHANGE: Add prefix to ensure uniqueness (e.g. user_root, group_root)
-            clean_name = self._sanitize_name(f"{pddl_type}_{entity.name}")
+            # 1. Base sanitization (e.g. "user:root" -> "user_root")
+            raw_name = f"{pddl_type}_{entity.name}"
+            sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', str(raw_name)).lower()
+
+            # Ensure valid PDDL start char
+            if not sanitized or not sanitized[0].isalpha():
+                sanitized = "obj_" + sanitized.lstrip('_')
+
+            # 2. Collision Resolution (e.g. "user_root" -> "user_root_1")
+            final_name = sanitized
+            counter = 1
+            while final_name in used_names:
+                final_name = f"{sanitized}_{counter}"
+                counter += 1
+
+            used_names.add(final_name)
+            entity_id_to_pddl_name[entity.id] = final_name
+
+        # --- PASS 2: Build Objects ---
+        for entity in self.graph.get_reachable():
+            pddl_type = type_map.get(entity.entity_type, "object")
+            clean_name = entity_id_to_pddl_name[entity.id]
 
             obj = {
                 "name": clean_name,
@@ -860,22 +884,16 @@ class ScopeAnalyzer:
             }
 
             state["objects"][pddl_type].append(obj)
-
-            # Generate predicates (Pass the NEW name)
             self._add_predicates(entity, state["predicates"], clean_name)
 
-        # 2. Update the loop that creates RELATIONSHIPS
-        reachable_ids = {e.id for e in self.graph.get_reachable()}
+        # --- PASS 3: Build Relationships ---
+        # Now we use the cached names so relationships point to the correct objects
+        reachable_ids = set(entity_id_to_pddl_name.keys())
+
         for src_id, tgt_id, edge_type in self.graph.edges:
             if src_id in reachable_ids and tgt_id in reachable_ids:
-                src = self.graph.entities[src_id]
-                tgt = self.graph.entities[tgt_id]
-
-                # CHANGE: Apply same prefix logic here
-                src_type = type_map.get(src.entity_type, "object")
-                tgt_type = type_map.get(tgt.entity_type, "object")
-                src_name = self._sanitize_name(f"{src_type}_{src.name}")
-                tgt_name = self._sanitize_name(f"{tgt_type}_{tgt.name}")
+                src_name = entity_id_to_pddl_name[src_id]
+                tgt_name = entity_id_to_pddl_name[tgt_id]
 
                 if edge_type == "uses":
                     state["relationships"]["depends_on"].append({
@@ -892,11 +910,11 @@ class ScopeAnalyzer:
 
         # Add can_escalate relationships
         for entity in self.graph.get_reachable():
-            if entity.entity_type == EntityType.USER:
-                if entity.original_data.get("can_sudo"):
-                    state["relationships"]["can_escalate"].append({
-                        "user": self._sanitize_name(entity.name)
-                    })
+            if entity.entity_type == EntityType.USER and entity.original_data.get("can_sudo"):
+                clean_name = entity_id_to_pddl_name[entity.id]
+                state["relationships"]["can_escalate"].append({
+                    "user": clean_name
+                })
 
         return dict(state)
 
@@ -1329,6 +1347,7 @@ class LLMExtractionConfig:
     enabled: bool = True
     timeout: int = 600
     max_retries: int = 2
+    temperature: float = 0.0
 
 
 class ManPageParser:
@@ -1581,7 +1600,8 @@ Skip read-only or query commands.
             model_instance = ollama.OllamaLanguageModel(
                 model_id=self.llm_config.model_id,
                 model_url=self.llm_config.model_url,
-                timeout=self.llm_config.timeout
+                timeout=self.llm_config.timeout,
+                temperature=self.llm_config.temperature
             )
 
             # 5. EXECUTE EXTRACTION
@@ -2350,7 +2370,8 @@ Skip read-only or query commands.
 def create_hybrid_parser(
         model_id: str = MODEL,
         model_url: str = "http://localhost:11434",
-        enable_llm: bool = True
+        enable_llm: bool = True,
+        temperature: float = 0.0
 ) -> ManPageParser:
     """
     Create a HybridManPageParser with the specified configuration.
@@ -2359,14 +2380,15 @@ def create_hybrid_parser(
         model_id: Ollama model ID (e.g., "llama3:70b", "mixtral:8x7b")
         model_url: Ollama server URL
         enable_llm: Whether to enable LLM extraction
-
+        temperature: model temperature
     Returns:
         Configured HybridManPageParser instance
     """
     config = LLMExtractionConfig(
         model_id=model_id,
         model_url=model_url,
-        enabled=enable_llm
+        enabled=enable_llm,
+        temperature=temperature
     )
     return ManPageParser(llm_config=config)
 
@@ -2509,89 +2531,111 @@ class PDDLGenerator:
         return "\n".join(lines)
 
     def _generate_predicates(self, state: dict, actions: list[ActionSchema] = []) -> str:
-        """Generate PDDL predicates, including those found in actions."""
+        """Generate PDDL predicates, avoiding duplicates and fixing arity."""
         lines = ["  (:predicates"]
 
-        # 1. Collect all predicates used in extracted actions
-        discovered_predicates = set()
-        for action in actions:
-            # Helper to extract name from "(pred_name ?arg)"
-            for condition in action.preconditions + action.effects:
-                match = re.match(r'\(\s*([^\s)]+)', condition)
-                if match:
-                    name = match.group(1)
-                    if name != "not" and name != "and": # Skip logical operators
-                        discovered_predicates.add(name)
+        # Set to track names of predicates we have already defined
+        defined_predicates = set()
 
-        # Dynamic predicates (from state)
-        lines.append("    ; Dynamic state predicates - Packages")
-        lines.append("    (package_installed ?p - package)")
-        lines.append("    (package_outdated ?p - package)")
-        lines.append("    (package_configured ?p - package)")
-        lines.append("    (vulnerable ?p - package)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Services")
-        lines.append("    (service_exists ?s - service)")
-        lines.append("    (service_running ?s - service)")
-        lines.append("    (service_enabled ?s - service)")
-        lines.append("    (service_failed ?s - service)")
-        lines.append("    (config_applied ?s - service)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Filesystem")
-        lines.append("    (file_exists ?f - filesystem_object)")
-        lines.append("    (file_readable ?f - filesystem_object)")
-        lines.append("    (file_writable ?f - filesystem_object)")
-        lines.append("    (file_critical ?f - filesystem_object)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Users")
-        lines.append("    (user_exists ?u - user)")
-        lines.append("    (user_critical ?u - user)")
-        lines.append("    (user_locked ?u - user)")
-        lines.append("    (can_escalate ?u - user)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Groups")
-        lines.append("    (group_exists ?g - group)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Network")
-        lines.append("    (port_open ?p - port)")
-        lines.append("    (port_allowed ?p - port)")
-        lines.append("    (interface_exists ?i - interface)")
-        lines.append("    (interface_up ?i - interface)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Firewall")
-        lines.append("    (firewall_rule_exists ?r - firewall_rule)")
-        lines.append("    (traffic_blocked ?r - firewall_rule)")
-        lines.append("    ")
-        lines.append("    ; Dynamic state predicates - Processes")
-        lines.append("    (process_running ?pr - process)")
-        lines.append("    (executed_as_root ?pr - process)")
-        lines.append("    ")
+        def add_line(text):
+            lines.append(f"    {text}")
+            # Extract name to prevent re-definition
+            # Matches "(name" or "(name "
+            match = re.search(r'\(\s*([^\s)]+)', text)
+            if match:
+                defined_predicates.add(match.group(1))
 
-        # Static relationship predicates
-        lines.append("    ; Static relationship predicates")
-        lines.append("    (depends_on ?s - service ?p - package)")
-        lines.append("    (configures ?f - configuration_file ?s - service)")
-        lines.append("    (file_owned_by ?f - filesystem_object ?u - user)")
-        lines.append("    (member_of ?u - user ?g - group)")
-        lines.append("    ")
+        # --- 1. Static/Hardcoded Predicates ---
+        add_line("; Dynamic state predicates - Packages")
+        add_line("(package_installed ?p - package)")
+        add_line("(package_outdated ?p - package)")
+        add_line("(package_configured ?p - package)")
+        add_line("(vulnerable ?p - package)")
 
-        # Environment predicates
-        lines.append("    ; Environment predicates")
-        lines.append("    (network_available)")
-        lines.append("    (requires_env_preservation ?pr - process)")
+        add_line("; Dynamic state predicates - Services")
+        add_line("(service_exists ?s - service)")
+        add_line("(service_running ?s - service)")
+        add_line("(service_enabled ?s - service)")
+        add_line("(service_failed ?s - service)")
+        add_line("(config_applied ?s - service)")
 
-        lines.append("  )")
+        add_line("; Dynamic state predicates - Filesystem")
+        add_line("(file_exists ?f - filesystem_object)")
+        add_line("(file_readable ?f - filesystem_object)")
+        add_line("(file_writable ?f - filesystem_object)")
+        add_line("(file_critical ?f - filesystem_object)")
 
-        # 3. Add Discovered Predicates (Dynamic)
+        add_line("; Dynamic state predicates - Users")
+        add_line("(user_exists ?u - user)")
+        add_line("(user_critical ?u - user)")
+        add_line("(user_locked ?u - user)")
+        add_line("(can_escalate ?u - user)")
+
+        add_line("; Dynamic state predicates - Groups")
+        add_line("(group_exists ?g - group)")
+
+        add_line("; Dynamic state predicates - Network")
+        add_line("(port_open ?p - port)")
+        add_line("(port_allowed ?p - port)")
+        add_line("(interface_exists ?i - interface)")
+        add_line("(interface_up ?i - interface)")
+
+        add_line("; Dynamic state predicates - Firewall")
+        add_line("(firewall_rule_exists ?r - firewall_rule)")
+        add_line("(traffic_blocked ?r - firewall_rule)")
+
+        add_line("; Dynamic state predicates - Processes")
+        add_line("(process_running ?pr - process)")
+        add_line("(executed_as_root ?pr - process)")
+
+        add_line("; Static relationship predicates")
+        add_line("(depends_on ?s - service ?p - package)")
+        add_line("(configures ?f - configuration_file ?s - service)")
+        add_line("(file_owned_by ?f - filesystem_object ?u - user)")
+        add_line("(member_of ?u - user ?g - group)")
+
+        add_line("; Environment predicates")
+        add_line("(network_available)")
+        add_line("(requires_env_preservation ?pr - process)")
+
+        # --- 2. Dynamically Discovered Predicates ---
         lines.append("    ; Dynamically Discovered Predicates")
-        known_predicates = {p['name'] for p in state.get("predicates", [])}
-        # Add hardcoded ones to known set to avoid dupes (simplified logic)
 
-        for pred_name in discovered_predicates:
-            # If we haven't explicitly defined it yet, add a generic definition
-            # Note: We don't know exact types, so we use generic '?x - object'
-            # Strict validators might warn, but it prevents "Undeclared predicate" errors.
-            lines.append(f"    ({pred_name} ?x - object ?y - object)")
+        # Scan actions to determine arity (argument count)
+        discovered_signatures = {}  # name -> int (arity)
+
+        for action in actions:
+            # Check both preconditions and effects
+            all_conditions = action.preconditions + action.effects
+            for cond in all_conditions:
+                # Basic parsing to handle (not (pred ...)) and (pred ...)
+                clean = cond.strip()
+                if clean.startswith("(not"):
+                    # Remove (not ... ) wrapper
+                    clean = clean[4:-1].strip()
+
+                # Remove outer parentheses
+                clean = clean.strip("()")
+
+                # Split by whitespace
+                parts = clean.split()
+                if not parts:
+                    continue
+
+                pred_name = parts[0]
+                # Arity is length of parts minus the name itself
+                arity = len(parts) - 1
+
+                if pred_name not in discovered_signatures:
+                    discovered_signatures[pred_name] = arity
+
+        # Add ONLY predicates that haven't been defined yet
+        for name, arity in discovered_signatures.items():
+            if name not in defined_predicates and name not in ["and", "or", "not", "exists", "forall"]:
+                # Generate generic arguments like ?x0 ?x1 ...
+                args = " ".join([f"?x{i} - object" for i in range(arity)])
+                lines.append(f"    ({name} {args})")
+                defined_predicates.add(name)
 
         lines.append("  )")
         return "\n".join(lines)
