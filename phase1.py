@@ -923,24 +923,50 @@ class ScopeAnalyzer:
         data = entity.original_data
 
         if entity.entity_type == EntityType.SERVICE:
-            # Mark service as existing
+            # 1. Existence
             predicates.append({"name": "service_exists", "arguments": [name], "value": True})
-            # Check active state
+
+            # 2. State (Running)
             is_active = data.get("active_state") in AnchorCriteria.ACTIVE_STATES
             predicates.append({"name": "service_running", "arguments": [name], "value": is_active})
 
+            # 3. State (Failed) - FIX for missing predicate
+            is_failed = data.get("active_state") == "failed"
+            predicates.append({"name": "service_failed", "arguments": [name], "value": is_failed})
+
+            # 4. State (Enabled) - FIX for missing predicate
+            # Note: osquery 'load_state' is usually 'loaded', 'masked', or 'not-found'
+            # We treat 'loaded' + presence of fragment path as a proxy for enabled/manageable
+            is_loaded = data.get("load_state") == "loaded" and bool(data.get("fragment_path"))
+            predicates.append({"name": "service_enabled", "arguments": [name], "value": is_loaded})
+
         elif entity.entity_type == EntityType.PACKAGE:
-            # Mark package as installed
             predicates.append({"name": "package_installed", "arguments": [name], "value": True})
+            # Note: 'vulnerable' predicate requires external CVE data not available in standard osquery tables
 
         elif entity.entity_type == EntityType.USER:
             predicates.append({"name": "user_exists", "arguments": [name], "value": True})
-            # Grant sudo if root or sudo group member
-            if str(data.get("uid")) == "0" or data.get("can_sudo"):
+
+            # 1. Privileges
+            is_root = str(data.get("uid")) == "0"
+            if is_root or data.get("can_sudo"):
                 predicates.append({"name": "can_escalate", "arguments": [name], "value": True})
 
-        elif entity.entity_type == EntityType.CONFIG_FILE:
+            # 2. Criticality - FIX for missing predicate
+            # System users (uid < 1000) are generally critical
+            uid = int(data.get("uid", 9999))
+            is_critical = uid < 1000 or is_root
+            predicates.append({"name": "user_critical", "arguments": [name], "value": is_critical})
+
+        elif entity.entity_type in [EntityType.CONFIG_FILE, EntityType.FILE]:
             predicates.append({"name": "file_exists", "arguments": [name], "value": True})
+
+            # 1. Criticality - FIX for missing predicate
+            # Check if path is in critical system directories
+            path = data.get("path") or data.get("filename") or ""
+            critical_prefixes = ["/etc/passwd", "/etc/shadow", "/etc/sudoers", "/boot", "/usr/bin"]
+            is_critical = any(path.startswith(p) for p in critical_prefixes)
+            predicates.append({"name": "file_critical", "arguments": [name], "value": is_critical})
 
         elif entity.entity_type == EntityType.PORT:
             predicates.append({"name": "port_open", "arguments": [name], "value": True})
@@ -1627,15 +1653,54 @@ Skip read-only or query commands.
 
             log(f"    [DEBUG] {utility}: Got {len(result.extractions)} raw extractions")
 
-            # 6. PARSE RESULTS
-            return self._parse_llm_result(result, utility)
+            # 1. PARSE RESULTS (Convert raw LLM output to ActionSchema objects)
+            # We MUST call this first to get the ActionSchema objects
+            raw_actions = self._parse_llm_result(result, utility)
+
+            # 2. SANITIZE AND VALIDATE (Filter the ActionSchema objects)
+            valid_actions = []
+            for action in raw_actions:
+                # Helper to remove artifacts like {user} or [file]
+                def clean_str(s):
+                    return re.sub(r'[{}[\]]', '', s).strip()
+
+                # Apply cleanup
+                action.preconditions = [clean_str(p) for p in action.preconditions]
+                action.effects = [clean_str(e) for e in action.effects]
+
+                # Validation: Check for Unbound Variables
+                # Gather variables defined in parameters (e.g., "?pkg")
+                defined_vars = set()
+                for param in action.parameters:
+                    # action.parameters is a list of ActionParameter objects
+                    defined_vars.add(f"?{param.name}")
+
+                # Also allow ?actor which is implicitly added later for root actions
+                if action.requires_root:
+                    defined_vars.add("?actor")
+
+                is_valid = True
+                for condition in action.preconditions + action.effects:
+                    # Find all used variables (words starting with ?)
+                    used_vars = re.findall(r'\?[a-zA-Z0-9_-]+', condition)
+                    for var in used_vars:
+                        if var not in defined_vars:
+                            log(f"    [WARN] Dropping action '{action.name}': Unbound variable {var}")
+                            is_valid = False
+                            break
+                    if not is_valid: break
+
+                # Filter out empty effects
+                if not action.effects:
+                    is_valid = False
+
+                if is_valid:
+                    valid_actions.append(action)
+
+            return valid_actions
 
         except Exception as e:
-            # More detailed error logging
-            err_msg = str(e).replace('\n', ' ')
-            log(f"    [ERROR] LLM extraction failed for {utility}: {err_msg}")
-            if "JSON" in str(e) or "parse" in str(e).lower():
-                log(f"    [HINT] LLM may be returning non-JSON. Check model: {self.llm_config.model_id}")
+            log(f"    [ERROR] LLM extraction failed for {utility}: {e}")
             return []
 
     def _parse_llm_result(self, result: Any, utility: str) -> list[ActionSchema]:
