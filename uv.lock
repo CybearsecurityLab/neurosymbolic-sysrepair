@@ -249,6 +249,7 @@ dependencies = [
     { name = "accelerate" },
     { name = "langextract" },
     { name = "osquery" },
+    { name = "pddl" },
     { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.9.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "vllm", marker = "sys_platform != 'darwin'" },
@@ -259,6 +260,7 @@ requires-dist = [
     { name = "accelerate", specifier = ">=1.12.0" },
     { name = "langextract", specifier = ">=1.1.1" },
     { name = "osquery", specifier = ">=3.1.1" },
+    { name = "pddl", specifier = ">=0.3.1" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.9.0" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "vllm", marker = "sys_platform != 'darwin'", url = "https://github.com/vllm-project/vllm/releases/download/v0.13.0/vllm-0.13.0+cu130-cp38-abi3-manylinux_2_35_x86_64.whl" },
@@ -1481,6 +1483,15 @@ wheels = [
 ]
 
 [[package]]
+name = "lark-parser"
+version = "0.12.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/ee/fd1192d7724419ddfe15b6f17d1c8742800d4de917c0adac3b6aaf22e921/lark-parser-0.12.0.tar.gz", hash = "sha256:15967db1f1214013dca65b1180745047b9be457d73da224fcda3d9dd4e96a138", size = 235029, upload-time = "2021-08-30T09:14:44.484Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/00/90f05db333fe1aa6b6ffea83a35425b7d53ea95c8bba0b1597f226cf1d5f/lark_parser-0.12.0-py2.py3-none-any.whl", hash = "sha256:0eaf30cb5ba787fe404d73a7d6e61df97b21d5a63ac26c5008c78a494373c675", size = 103498, upload-time = "2021-08-30T13:01:01.603Z" },
+]
+
+[[package]]
 name = "llguidance"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2308,6 +2319,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6a/6d/eed37d7ebc1e0bcd27b831c0cf1fe94881934316187c4b30d23f29ea0bd4/partial_json_parser-0.2.1.1.post7.tar.gz", hash = "sha256:86590e1ba6bcb6739a2dfc17d2323f028cb5884f4c6ce23db376999132c9a922", size = 10296, upload-time = "2025-11-17T07:27:41.202Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/42/32/658973117bf0fd82a24abbfb94fe73a5e86216e49342985e10acce54775a/partial_json_parser-0.2.1.1.post7-py3-none-any.whl", hash = "sha256:145119e5eabcf80cbb13844a6b50a85c68bf99d376f8ed771e2a3c3b03e653ae", size = 10877, upload-time = "2025-11-17T07:27:40.457Z" },
+]
+
+[[package]]
+name = "pddl"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "lark-parser" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/00/2a/401fb52295e053025162582bc3a3d23b8c29a12bc4efe76f1071fb6a2ba8/pddl-0.3.1.tar.gz", hash = "sha256:504b461e1da69ccf7700f01f6530aa050dd68ef64b534f4825a22c01033149e4", size = 1160118, upload-time = "2023-05-31T14:41:27.497Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/a2/26548152b7c5634854355f946034ef66a7467bff61279bfee9ff70b9e877/pddl-0.3.1-py2.py3-none-any.whl", hash = "sha256:e0eda0bbfc475917907ee3e1df35bd6704827a007842128456d3b2f497a7958a", size = 33711, upload-time = "2023-05-31T14:41:24.908Z" },
 ]
 
 [[package]]

@@ -1967,7 +1967,7 @@ Skip read-only or query commands.
 
         return self._deduplicate_actions(all_actions)
 
-    def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
+    def _deduplicate_actions(self, actions: list) -> list:
         """
         Deduplicate actions and filter out invalid ones.
         """
@@ -2006,14 +2006,12 @@ Skip read-only or query commands.
                 continue
 
             # --- FILTER 4: Unbound Variables ---
-            # Collect defined variables from parameters
             defined_vars = {f"?{p.name}" for p in action.parameters}
             if action.requires_root:
                 defined_vars.add("?actor")
 
             has_unbound = False
             for condition in action.preconditions + action.effects:
-                # Find all ?variable references
                 used_vars = set(re.findall(r'\?[a-zA-Z0-9_-]+', condition))
                 unbound = used_vars - defined_vars
                 if unbound:
@@ -2024,14 +2022,24 @@ Skip read-only or query commands.
             if has_unbound:
                 continue
 
-            # --- FILTER 5: Malformed Predicate Names in Effects ---
+            # --- FILTER 5: Raw Paths in Conditions (NEW) ---
+            has_raw_path = False
+            for condition in action.preconditions + action.effects:
+                # Check for raw filesystem paths
+                if re.search(r'[^?]\s*/[a-zA-Z]', condition) or condition.strip().startswith('/'):
+                    log(f"    [WARN] Dropping '{action.name}': contains raw path in condition")
+                    has_raw_path = True
+                    break
+
+            if has_raw_path:
+                continue
+
+            # --- FILTER 6: Malformed Predicate Names ---
             has_malformed = False
             for eff in action.effects:
-                # Extract predicate name from effect like "(pred_name ?x ?y)"
                 match = re.match(r'\(?\s*(not\s+)?\(?\s*([a-zA-Z_][a-zA-Z0-9_-]*)', eff)
                 if match:
                     pred_name = match.group(2)
-                    # Check for leaked variables as predicate names
                     if pred_name.startswith('?') or pred_name in ['and', 'or', 'not']:
                         has_malformed = True
                         break
@@ -2044,7 +2052,6 @@ Skip read-only or query commands.
                 final_actions[action.name] = action
             else:
                 existing = final_actions[action.name]
-                # Prefer regex over LLM
                 if existing.extraction_method == "llm" and action.extraction_method == "regex":
                     final_actions[action.name] = action
 
@@ -2795,8 +2802,6 @@ class PDDLGenerator:
 
         def add_line(text):
             lines.append(f"    {text}")
-            # Extract name to prevent re-definition
-            # Matches "(name" or "(name "
             match = re.search(r'\(\s*([^\s)]+)', text)
             if match:
                 defined_predicates.add(match.group(1))
@@ -2857,59 +2862,64 @@ class PDDLGenerator:
         # --- 2. Dynamically Discovered Predicates ---
         lines.append("    ; Dynamically Discovered Predicates")
 
+        # Invalid predicate names to filter out
+        INVALID_PREDICATES = {
+            "and", "or", "not", "exists", "forall",  # PDDL keywords
+            "?policy", "?user", "?password", "?gid", "?value", "?shell",
+            "?group", "?seuser", "", "?",
+        }
+
         # Scan actions to determine arity (argument count)
         discovered_signatures = {}  # name -> int (arity)
 
         for action in actions:
-            # Check both preconditions and effects
             all_conditions = action.preconditions + action.effects
             for cond in all_conditions:
-                # Basic parsing to handle (not (pred ...)) and (pred ...)
-                clean = cond.strip()
+                # Sanitize the condition first
+                sanitized_cond = self._sanitize_predicate(cond) if hasattr(self, '_sanitize_predicate') else cond
+                if not sanitized_cond:
+                    continue
+
+                clean = sanitized_cond.strip()
                 if clean.startswith("(not"):
-                    # Remove (not ... ) wrapper
                     clean = clean[4:-1].strip()
 
-                # Remove outer parentheses
                 clean = clean.strip("()")
-
-                # Split by whitespace
                 parts = clean.split()
                 if not parts:
                     continue
 
                 pred_name = parts[0]
-                # Arity is length of parts minus the name itself
+
+                # Skip invalid predicate names
+                if pred_name in INVALID_PREDICATES:
+                    continue
+                if pred_name.startswith("?"):
+                    continue
+                if not pred_name or not pred_name[0].isalpha():
+                    continue
+                if not re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*$', pred_name):
+                    continue
+                # Skip predicates that look like paths (even partially sanitized)
+                if pred_name.startswith("_") or "__" in pred_name:
+                    continue
+
                 arity = len(parts) - 1
 
                 if pred_name not in discovered_signatures:
                     discovered_signatures[pred_name] = arity
 
-        # Add ONLY predicates that haven't been defined yet
-        # Add ONLY predicates that haven't been defined yet
-        # CRITICAL: Filter out malformed predicate names from LLM hallucinations
-        INVALID_PREDICATES = {
-            "and", "or", "not", "exists", "forall",  # PDDL keywords
-            "?policy", "?user", "?password", "?gid", "?value", "?shell", "?group", "?seuser",  # Variable leaks
-            "", "?",
-        }
-
+        # Add only valid predicates that haven't been defined yet
         for name, arity in discovered_signatures.items():
-            # Skip if: already defined, is a keyword, starts with ?, or contains invalid chars
             if name in defined_predicates:
                 continue
-            if name in INVALID_PREDICATES:
-                continue
-            if name.startswith("?"):  # Variables leaked as predicate names
-                continue
-            if not name or not name[0].isalpha():  # Must start with letter
-                continue
-            if not re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*$', name):  # Valid PDDL identifier
-                continue
 
-            # Generate generic arguments like ?x0 ?x1 ...
+            # Generate generic arguments
             args = " ".join([f"?x{i} - object" for i in range(arity)])
-            lines.append(f"    ({name} {args})")
+            if args:
+                lines.append(f"    ({name} {args})")
+            else:
+                lines.append(f"    ({name})")
             defined_predicates.add(name)
 
         lines.append("  )")

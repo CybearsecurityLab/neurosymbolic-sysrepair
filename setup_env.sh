@@ -78,7 +78,6 @@ else
 fi
 
 # --- 4. VAL (Validate) Check & Install ---
-# Force check: look for both binary AND library. If lib missing, force reinstall.
 if command -v validate &> /dev/null && ldconfig -p | grep -q libVAL.so; then
     echo -e "${GREEN}✔ VAL (Validate) and libraries are installed.${NC}"
 else
