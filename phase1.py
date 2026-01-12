@@ -2610,6 +2610,112 @@ class PDDLGenerator:
 
         return "\n".join(lines)
 
+    """
+    FIXES FOR phase1.py - PDDL Path Sanitization
+
+    The error occurs because raw file paths like `/var/cache/apt/archives` are being 
+    used in PDDL predicates, but `/` is not a valid character in PDDL identifiers.
+
+    Apply these changes to fix the issue:
+    """
+
+    # =============================================================================
+    # FIX 1: Add this helper method to the PDDLGenerator class (around line 2680)
+    # =============================================================================
+
+    def _sanitize_predicate(self, predicate_str: str) -> Optional[str]:
+        """
+        Sanitize a predicate string to ensure all arguments are valid PDDL identifiers.
+        Converts paths like /var/cache/apt to _var_cache_apt.
+        Returns None if the predicate is irrecoverably malformed.
+        """
+        if not predicate_str or not isinstance(predicate_str, str):
+            return None
+
+        predicate_str = predicate_str.strip()
+
+        # Handle negation wrapper
+        is_negated = False
+        inner = predicate_str
+        if predicate_str.startswith("(not"):
+            is_negated = True
+            # Extract inner predicate: (not (pred args)) -> (pred args)
+            match = re.match(r'\(not\s+(\([^)]+\))\s*\)', predicate_str)
+            if match:
+                inner = match.group(1)
+            else:
+                # Try simpler pattern
+                inner = re.sub(r'^\(not\s+', '(', predicate_str)
+                if inner.endswith('))'):
+                    inner = inner[:-1]
+
+        # Remove outer parentheses for processing
+        inner = inner.strip()
+        if inner.startswith('(') and inner.endswith(')'):
+            inner = inner[1:-1].strip()
+
+        # Split into predicate name and arguments
+        parts = inner.split()
+        if not parts:
+            return None
+
+        pred_name = parts[0]
+        args = parts[1:] if len(parts) > 1 else []
+
+        # Sanitize predicate name
+        pred_name = self._sanitize_pddl_identifier(pred_name)
+        if not pred_name:
+            return None
+
+        # Sanitize each argument
+        sanitized_args = []
+        for arg in args:
+            # Keep variables as-is (start with ?)
+            if arg.startswith('?'):
+                sanitized_args.append(arg)
+            else:
+                # Sanitize literal values (like paths)
+                sanitized = self._sanitize_pddl_identifier(arg)
+                if sanitized:
+                    sanitized_args.append(sanitized)
+                # Skip empty/invalid args
+
+        # Reconstruct predicate
+        if sanitized_args:
+            result = f"({pred_name} {' '.join(sanitized_args)})"
+        else:
+            result = f"({pred_name})"
+
+        if is_negated:
+            result = f"(not {result})"
+
+        return result
+
+    def _sanitize_pddl_identifier(self, name: str) -> str:
+        """
+        Convert any string to a valid PDDL identifier.
+        Handles paths, special characters, etc.
+        """
+        if not name:
+            return ""
+
+        # Replace path separators and other invalid characters with underscores
+        sanitized = re.sub(r'[^a-zA-Z0-9_?-]', '_', str(name))
+
+        # Remove leading underscores and collapse multiple underscores
+        sanitized = re.sub(r'_+', '_', sanitized).strip('_')
+
+        # Ensure doesn't start with a digit (unless it's a variable)
+        if sanitized and not sanitized.startswith('?'):
+            if sanitized[0].isdigit() or sanitized[0] == '_':
+                sanitized = "obj_" + sanitized.lstrip('_')
+
+        # Ensure it starts with a letter or ?
+        if sanitized and not sanitized[0].isalpha() and not sanitized.startswith('?'):
+            sanitized = "id_" + sanitized
+
+        return sanitized.lower()
+
     def generate_problem(self, state: dict, goal_predicates: list[str],
                         problem_name: str = "sysadmin-problem") -> str:
         """Generate PDDL problem file from current state."""
@@ -2826,25 +2932,35 @@ class PDDLGenerator:
         params = " ".join(params_list)
         lines.append(f"    :parameters ({params})")
 
-        # Preconditions
+        # Collect valid variable names from parameters
+        valid_vars = {f"?{p.name}" for p in action.parameters}
+        if action.requires_root:
+            valid_vars.add("?actor")
+
+        # Preconditions - sanitize each one
         lines.append("    :precondition (and")
         for pre in action.preconditions:
-            lines.append(f"      {pre}")
+            sanitized = self._sanitize_predicate(pre)
+            if sanitized:
+                lines.append(f"      {sanitized}")
 
-        # Add root requirement if needed (now using ?actor which is declared)
+        # Add root requirement if needed
         if action.requires_root:
             lines.append("      (can_escalate ?actor)")
 
         lines.append("    )")
 
-        # Effects
         # Effects - sanitize each effect
         lines.append("    :effect (and")
         valid_effects = []
         for eff in action.effects:
-            sanitized = self._sanitize_effect(eff)
+            # First sanitize the predicate (handles paths)
+            sanitized = self._sanitize_predicate(eff)
             if sanitized:
-                valid_effects.append(sanitized)
+                # Then apply the existing effect sanitization
+                final = self._sanitize_effect(sanitized)
+                if final:
+                    valid_effects.append(final)
 
         # Ensure at least one effect (PDDL requires non-empty effects)
         if not valid_effects:
