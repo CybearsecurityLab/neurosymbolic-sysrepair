@@ -88,7 +88,6 @@
     (package_updated ?x0 - object)
     (package_exists ?x0 - object)
     (policy_applied_to_package ?x0 - object)
-    (?policy )
     (package_reinstalled ?x0 - object)
     (source_fetched ?x0 - object)
     (source_repository_configured )
@@ -163,17 +162,16 @@
     (architecture_exists ?x0 - object)
     (package_reverted ?x0 - object)
     (package_enabled ?x0 - object)
-    (change_pending ?x0 - object)
+    (change_pending )
     (assertion_not_added )
     (assertion_added )
     (application_exists ?x0 - object)
     (alias_set ?x0 - object)
-    (plug_exists ?x0 - object)
-    (slot_exists ?x0 - object)
-    (connected ?x0 - object ?x1 - object)
     (snap_installed ?x0 - object)
-    (slot_matches_interface ?x0 - object ?x1 - object)
+    (plug_exists ?x0 - object ?x1 - object)
+    (slot_exists ?x0 - object ?x1 - object)
     (plug_connected_to_slot ?x0 - object ?x1 - object ?x2 - object ?x3 - object)
+    (slot_matches_interface ?x0 - object ?x1 - object)
     (all_snaps_installed ?x0 - object)
     (cohort_keys_created ?x0 - object)
     (snap_installed_in_devmode )
@@ -187,6 +185,7 @@
     (validation_set_enforced )
     (snaps_satisfy_validation )
     (snap_on_channel ?x0 - object ?x1 - object)
+    (connected ?x0 - object ?x1 - object)
     (logged_in )
     (snapshot_exists ?x0 - object)
     (system_restored_from_snapshot ?x0 - object)
@@ -232,7 +231,7 @@
     (file_updated ?x0 - object ?x1 - object)
     (file_updated_if_older ?x0 - object ?x1 - object)
     (security_context_default ?x0 - object)
-    (security_context_set ?x0 - object)
+    (security_context_set ?x0 - object ?x1 - object)
     (sparse_file_created ?x0 - object)
     (sparse_files_inhibited )
     (file_copied_lightweight ?x0 - object ?x1 - object)
@@ -245,7 +244,7 @@
     (file_copied_to_directory ?x0 - object ?x1 - object)
     (directory_exists_or_createable ?x0 - object)
     (file_copied_to_file ?x0 - object ?x1 - object)
-    (files_updated ?x0 - object)
+    (files_updated ?x0 - object ?x1 - object ?x2 - object)
     (files_copied_within_filesystem ?x0 - object ?x1 - object)
     (selinux_context_set_to_default ?x0 - object)
     (selinux_context_set_to_custom ?x0 - object ?x1 - object)
@@ -362,9 +361,8 @@
     (sockets_exist )
     (sockets_closed )
     (header_suppressed )
-    (command_executed_by_user ?x0 - object)
-    (?user )
     (permission_granted_to_execute ?x0 - object)
+    (command_executed_by ?x0 - object)
     (command_executed_by_root )
     (permission_granted_to_edit ?x0 - object)
     (file_edited_by ?x0 - object)
@@ -379,14 +377,13 @@
     (terminal_present )
     (askpass_used )
     (bell_rung )
-    (command_exists ?x0 - object)
-    (process_running_in_background ?x0 - object)
+    (command_backgrounded )
     (working_directory_changed_to ?x0 - object)
     (user_authorized )
     (policy_permits_preserve_env )
     (environment_variable_preserved ?x0 - object)
     (policy_permits_edit )
-    (primary_group_set ?x0 - object ?x1 - object)
+    (primary_group_set_to ?x0 - object)
     (home_set ?x0 - object)
     (shell_running_as_login ?x0 - object)
     (system_running )
@@ -402,10 +399,12 @@
     (timestamp_exists )
     (timestamp_erased )
     (timestamp_reset )
+    (command_exists ?x0 - object)
     (environment_preserved_for_command ?x0 - object)
     (command_run_with_group_privileges ?x0 - object)
     (home_directory_set_to_target_user ?x0 - object)
     (shell_running_as_user ?x0 - object)
+    (command_executed_by_user ?x0 - object ?x1 - object)
     (current_user_is ?x0 - object)
     (environment_updated_for ?x0 - object)
     (root_user_exists )
@@ -437,6 +436,7 @@
     (system_account ?x0 - object)
     (subuid_updated ?x0 - object)
     (subgid_updated ?x0 - object)
+    (primary_group_set ?x0 - object ?x1 - object)
     (all_group_exist ?x0 - object)
     (user_in_groups ?x0 - object ?x1 - object)
     (home_directory_created ?x0 - object)
@@ -454,7 +454,6 @@
     (changes_applied_in_chroot ?x0 - object)
     (changes_applied_in_prefix ?x0 - object)
     (user_shell_set ?x0 - object)
-    (?shell )
     (unique_uid ?x0 - object)
     (non_negative ?x0 - object)
     (user_has_id ?x0 - object ?x1 - object)
@@ -469,24 +468,23 @@
     (password_changed ?x0 - object)
     (subuid_allocated ?x0 - object)
     (number_range_valid ?x0 - object ?x1 - object ?x2 - object)
-    (system_group_exists ?x0 - object)
+    (group_gid_set ?x0 - object ?x1 - object)
     (user_uid_set ?x0 - object ?x1 - object)
     (default_config_exists )
     (modified_default_config ?x0 - object)
     (password_has_inactive_period ?x0 - object ?x1 - object)
     (system_user_exists ?x0 - object)
     (subid_entry_added ?x0 - object ?x1 - object)
-    (member_of_group ?x0 - object ?x1 - object)
+    (all_groups_exist ?x0 - object)
+    (supplementary_groups_added ?x0 - object ?x1 - object)
     (home_directory_not_created ?x0 - object)
     (no_user_group_created ?x0 - object)
     (unique_user_required )
     (duplicate_user_allowed ?x0 - object)
     (valid_uid ?x0 - object)
     (valid_shell ?x0 - object)
-    (?group )
     (valid_seuser ?x0 - object)
     (selinux_user_mapped ?x0 - object)
-    (?seuser )
     (account_modified ?x0 - object)
     (user_comment_updated ?x0 - object)
     (home_directory_changed ?x0 - object ?x1 - object)
@@ -495,7 +493,6 @@
     (account_disabled ?x0 - object)
     (password_grace_period_set ?x0 - object)
     (primary_group_of_user ?x0 - object ?x1 - object)
-    (all_groups_exist ?x0 - object)
     (supplementary_groups_of_user ?x0 - object ?x1 - object)
     (password_locked ?x0 - object)
     (user_expire_set ?x0 - object ?x1 - object)
@@ -503,7 +500,10 @@
     (subuid_range_exists ?x0 - object ?x1 - object)
     (subuid_range_removed ?x0 - object ?x1 - object)
     (subgid_range_added ?x0 - object ?x1 - object)
+    (process_running_by ?x0 - object)
     (user_modified ?x0 - object)
+    (uid_changed ?x0 - object ?x1 - object)
+    (name_changed ?x0 - object ?x1 - object)
     (nis_server_available )
     (nis_entry_exists ?x0 - object)
     (nis_entry_modified ?x0 - object ?x1 - object)
@@ -525,12 +525,9 @@
     (primary_group_used_by_other_user ?x0 - object)
     (password_encrypted ?x0 - object)
     (group_has_password ?x0 - object)
-    (?password )
     (group_has_gid ?x0 - object)
-    (?gid )
     (group_default_exists ?x0 - object)
     (group_default_value ?x0 - object)
-    (?value )
     (all_users_exist ?x0 - object)
     (users_in_group ?x0 - object ?x1 - object)
     (gid_used ?x0 - object)
@@ -716,7 +713,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_installed ?pkg) and (package_version ?pkg version)
+      (package_installed ?pkg)
     )
   )
 
@@ -729,7 +726,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (package_installed ?pkg) and (package_from_distribution ?pkg distribution)
+      (package_installed ?pkg)
     )
   )
 
@@ -752,8 +749,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (policy_applied_to_package ?pkg
-      ?policy)
+      (action_completed_set_package_policy)
     )
   )
 
@@ -942,7 +938,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (packages_installed ?pkgs) or (packages_removed ?pkgs)
+      (packages_installed ?pkgs)
     )
   )
 
@@ -1470,13 +1466,13 @@
   )
 
   (:action abort_change
-    :parameters (?actor - user ?change_id - process)
+    :parameters (?actor - user ?obj - file)
     :precondition (and
-      (change_pending ?change_id)
+      (change_pending)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (change_pending ?change_id))
+      (not (change_pending))
     )
   )
 
@@ -1503,14 +1499,16 @@
   )
 
   (:action connect_plug_slot
-    :parameters (?plug - interface ?slot - interface)
+    :parameters (?actor - user ?snap1 - file ?plug - interface ?snap2 - file ?slot - interface)
     :precondition (and
-      (plug_exists ?plug)
-      (slot_exists ?slot)
-      (not (connected ?plug ?slot))
+      (snap_installed ?snap1)
+      (snap_installed ?snap2)
+      (plug_exists ?snap1 ?plug)
+      (slot_exists ?snap2 ?slot)
+      (can_escalate ?actor)
     )
     :effect (and
-      (connected ?plug ?slot)
+      (plug_connected_to_slot ?snap1 ?plug ?snap2 ?slot)
     )
   )
 
@@ -2153,12 +2151,12 @@
   )
 
   (:action set_security_context_to_ctx
-    :parameters (?dir - directory ?ctx - file)
+    :parameters (?f - file ?ctx - file)
     :precondition (and
-      (not (security_context_set ?dir))
+      (file_exists ?f)
     )
     :effect (and
-      (security_context_set ?dir)
+      (security_context_set ?f ?ctx)
     )
   )
 
@@ -2301,13 +2299,13 @@
   )
 
   (:action update_files
-    :parameters (?src - file ?dest - directory)
+    :parameters (?src - file ?dest - directory ?update - file)
     :precondition (and
-      (directory_exists ?dest)
       (file_exists ?src)
+      (directory_exists ?dest)
     )
     :effect (and
-      (files_updated ?dest)
+      (files_updated ?src ?dest ?update)
     )
   )
 
@@ -3754,13 +3752,13 @@
   )
 
   (:action execute_command_as_user
-    :parameters (?cmd - process ?user - user)
+    :parameters (?cmd - file ?user - user)
     :precondition (and
       (user_exists ?user)
+      (permission_granted_to_execute ?cmd)
     )
     :effect (and
-      (command_executed_by_user ?cmd
-      ?user)
+      (command_executed_by ?user)
     )
   )
 
@@ -3840,13 +3838,12 @@
   )
 
   (:action background_command
-    :parameters (?actor - user ?cmd - process)
+    :parameters (?obj - file)
     :precondition (and
-      (command_exists ?cmd)
-      (can_escalate ?actor)
+      (terminal_present)
     )
     :effect (and
-      (process_running_in_background ?cmd)
+      (command_backgrounded)
     )
   )
 
@@ -3894,14 +3891,12 @@
   )
 
   (:action set_primary_group
-    :parameters (?actor - user ?user - user ?grp - group)
+    :parameters (?cmd - file ?grp - group)
     :precondition (and
-      (user_exists ?user)
       (group_exists ?grp)
-      (can_escalate ?actor)
     )
     :effect (and
-      (primary_group_set ?user ?grp)
+      (primary_group_set_to ?grp)
     )
   )
 
@@ -4250,8 +4245,7 @@
       (shell_allowed_in_etc_shells ?shell)
     )
     :effect (and
-      (effective_shell ?shell
-      ?user)
+      (action_completed_change_shell)
     )
   )
 
@@ -4549,8 +4543,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (user_shell_set ?user
-      ?shell)
+      (action_completed_set_shell_path)
     )
   )
 
@@ -4642,13 +4635,15 @@
   )
 
   (:action create_system_group
-    :parameters (?actor - user ?name - group)
+    :parameters (?actor - user ?group - group ?gid - file)
     :precondition (and
-      (not (group_exists ?name))
+      (not (group_exists ?group))
+      (number_range_valid ?gid SYS_GID_MIN SYS_GID_MAX)
       (can_escalate ?actor)
     )
     :effect (and
-      (system_group_exists ?name)
+      (group_exists ?group)
+      (group_gid_set ?group ?gid)
     )
   )
 
@@ -4723,14 +4718,14 @@
   )
 
   (:action add_supplementary_groups
-    :parameters (?actor - user ?groups - group ?login - user)
+    :parameters (?actor - user ?user - user ?groups - file)
     :precondition (and
-      (user_exists ?login)
-      (not (member_of_group ?login ?groups))
+      (user_exists ?user)
+      (all_groups_exist ?groups)
       (can_escalate ?actor)
     )
     :effect (and
-      (member_of_group ?login ?groups)
+      (supplementary_groups_added ?user ?groups)
     )
   )
 
@@ -4790,8 +4785,6 @@
     )
     :effect (and
       (group_exists ?group)
-      (user_in_group ?user
-      ?group)
     )
   )
 
@@ -4803,8 +4796,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (selinux_user_mapped ?user
-      ?seuser)
+      (action_completed_set_selinux_user_mapping)
     )
   )
 
@@ -5099,13 +5091,17 @@
   )
 
   (:action modify_user
-    :parameters (?actor - user ?login - user ?options - file)
+    :parameters (?actor - user ?usr - user ?uid - file ?name - file ?home_dir - directory)
     :precondition (and
-      (user_exists ?login)
+      (not (process_running_by ?usr))
+      (user_exists ?usr)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_modified ?login)
+      (user_modified ?usr)
+      (uid_changed ?usr ?uid)
+      (name_changed ?usr ?name)
+      (home_directory_changed ?usr ?home_dir)
     )
   )
 
@@ -5392,8 +5388,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (group_has_password ?group
-      ?password)
+      (action_completed_set_group_password)
     )
   )
 
@@ -5405,8 +5400,6 @@
     )
     :effect (and
       (group_exists ?name)
-      (group_has_gid ?name
-      ?gid)
     )
   )
 
@@ -5417,8 +5410,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (group_default_value ?key
-      ?value)
+      (action_completed_set_group_defaults)
     )
   )
 
