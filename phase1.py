@@ -231,6 +231,16 @@ OSQUERY_MAPPINGS = [
         name_column="name",
         additional_columns=["pid", "state", "uid"]
     ),
+    OSQueryMapping(
+        table="interface_addresses",
+        query="""SELECT interface, address, type, mask 
+                 FROM interface_addresses 
+                 WHERE interface NOT LIKE 'lo%'""",
+        pddl_type=PDDLType.INTERFACE,
+        predicate_name="interface_exists",
+        name_column="interface",
+        additional_columns=["address", "type"]
+    ),
 ]
 
 # Critical paths for file extraction
@@ -609,6 +619,7 @@ class ScopeAnalyzer:
         self._extract_services()
         self._extract_packages()
         self._extract_config_files()
+        self._extract_interfaces()
         self._build_edges()
 
     def _extract_users(self):
@@ -668,6 +679,24 @@ class ScopeAnalyzer:
                 original_data=row
             )
             self.graph.add_entity(entity)
+
+    def _extract_interfaces(self):
+        """Extract network interfaces."""
+        try:
+            results = self.osquery.execute_query(
+                "SELECT interface, address, type FROM interface_addresses WHERE interface NOT LIKE 'lo%'"
+            )
+            for row in results:
+                iface = row.get("interface", "")
+                entity = GraphEntity(
+                    id=f"interface:{iface}",
+                    entity_type=EntityType.INTERFACE,
+                    name=iface,
+                    original_data=row
+                )
+                self.graph.add_entity(entity)
+        except Exception:
+            pass
 
     def _extract_services(self):
         results = self.osquery.execute_query(
@@ -970,6 +999,18 @@ class ScopeAnalyzer:
 
         elif entity.entity_type == EntityType.PORT:
             predicates.append({"name": "port_open", "arguments": [name], "value": True})
+
+        elif entity.entity_type == EntityType.PROCESS:
+            # Process state: R=running, S=sleeping, D=disk sleep, Z=zombie, T=stopped
+            state = data.get("state", "")
+            is_running = state in ["R", "S", "D"]  # Consider sleeping processes as "running"
+            predicates.append({"name": "process_running", "arguments": [name], "value": is_running})
+
+        elif entity.entity_type == EntityType.INTERFACE:
+            predicates.append({"name": "interface_exists", "arguments": [name], "value": True})
+            # Assume interfaces with addresses are "up"
+            has_address = bool(data.get("address"))
+            predicates.append({"name": "interface_up", "arguments": [name], "value": has_address})
 
     def _sanitize_name(self, name: str) -> str:
             if not name:
@@ -1928,12 +1969,8 @@ Skip read-only or query commands.
 
     def _deduplicate_actions(self, actions: list[ActionSchema]) -> list[ActionSchema]:
         """
-        Deduplicate actions, prioritizing Regex over LLM, and aggressively pruning
-        'ghost' (no effect) and 'read-only' (observation) actions.
+        Deduplicate actions and filter out invalid ones.
         """
-        # LAYER 1: Stop Prefixes for Read-Only Actions
-        # These verbs imply observation or query, not state change.
-        # Remediation planners need actions that *change* the world.
         STOP_PREFIXES = {
             "show", "list", "display", "print", "search", "query",
             "check", "verify", "help", "version", "info", "man",
@@ -1942,8 +1979,6 @@ Skip read-only or query commands.
             "report", "test", "find", "resolve", "assert"
         }
 
-        # LAYER 2: Trivial Effect Patterns
-        # Even if a LLM hallucinates an effect, if it's just "X_displayed", it's noise.
         TRIVIAL_EFFECT_SUBSTRINGS = [
             "displayed", "shown", "listed", "printed", "visible",
             "info_available", "help_shown", "version_shown"
@@ -1953,52 +1988,65 @@ Skip read-only or query commands.
 
         for action in actions:
             # --- FILTER 1: Read-Only Name Check ---
-            # Identify the verb (first part of snake_case name)
             parts = action.name.split('_')
             verb = parts[0].lower() if parts else action.name.lower()
-
             if verb in STOP_PREFIXES:
-                # Skip actions that are purely observational
                 continue
 
-            # --- FILTER 2: Empty Effects (The "Ghost Action" Fix) ---
-            # If an action has no effects, the planner cannot use it.
+            # --- FILTER 2: Empty Effects ---
             if not action.effects:
                 continue
 
-            # --- FILTER 3: Trivial/Hallucinated Effects ---
-            # Check if the effect effectively does nothing (e.g. "(help_displayed)")
-            is_trivial = True
-            for effect in action.effects:
-                effect_str = effect.lower()
-                # A valid effect must NOT contain trivial substrings
-                if not any(sub in effect_str for sub in TRIVIAL_EFFECT_SUBSTRINGS):
-                    # We found at least one "real" effect (e.g., "package_installed")
-                    is_trivial = False
-                    break
-
+            # --- FILTER 3: Trivial Effects ---
+            is_trivial = all(
+                any(sub in eff.lower() for sub in TRIVIAL_EFFECT_SUBSTRINGS)
+                for eff in action.effects
+            )
             if is_trivial:
                 continue
 
-            # --- FILTER 4: Deduplication & Priority ---
+            # --- FILTER 4: Unbound Variables ---
+            # Collect defined variables from parameters
+            defined_vars = {f"?{p.name}" for p in action.parameters}
+            if action.requires_root:
+                defined_vars.add("?actor")
+
+            has_unbound = False
+            for condition in action.preconditions + action.effects:
+                # Find all ?variable references
+                used_vars = set(re.findall(r'\?[a-zA-Z0-9_-]+', condition))
+                unbound = used_vars - defined_vars
+                if unbound:
+                    log(f"    [WARN] Dropping '{action.name}': unbound vars {unbound}")
+                    has_unbound = True
+                    break
+
+            if has_unbound:
+                continue
+
+            # --- FILTER 5: Malformed Predicate Names in Effects ---
+            has_malformed = False
+            for eff in action.effects:
+                # Extract predicate name from effect like "(pred_name ?x ?y)"
+                match = re.match(r'\(?\s*(not\s+)?\(?\s*([a-zA-Z_][a-zA-Z0-9_-]*)', eff)
+                if match:
+                    pred_name = match.group(2)
+                    # Check for leaked variables as predicate names
+                    if pred_name.startswith('?') or pred_name in ['and', 'or', 'not']:
+                        has_malformed = True
+                        break
+
+            if has_malformed:
+                continue
+
+            # --- Deduplication ---
             if action.name not in final_actions:
                 final_actions[action.name] = action
             else:
                 existing = final_actions[action.name]
-
-                # Priority Rule 1: Prefer REGEX over LLM
-                # Regex patterns are hard-coded and trusted. LLM is probabilistic.
+                # Prefer regex over LLM
                 if existing.extraction_method == "llm" and action.extraction_method == "regex":
                     final_actions[action.name] = action
-
-                # Priority Rule 2: Prefer Specificity
-                # If both are same method, prefer the one with fewer generic "file" types
-                elif existing.extraction_method == action.extraction_method:
-                    existing_generic = sum(1 for p in existing.parameters if p.pddl_type.value in ["file", "object"])
-                    new_generic = sum(1 for p in action.parameters if p.pddl_type.value in ["file", "object"])
-
-                    if new_generic < existing_generic:
-                        final_actions[action.name] = action
 
         return list(final_actions.values())
 
@@ -2732,12 +2780,31 @@ class PDDLGenerator:
                     discovered_signatures[pred_name] = arity
 
         # Add ONLY predicates that haven't been defined yet
+        # Add ONLY predicates that haven't been defined yet
+        # CRITICAL: Filter out malformed predicate names from LLM hallucinations
+        INVALID_PREDICATES = {
+            "and", "or", "not", "exists", "forall",  # PDDL keywords
+            "?policy", "?user", "?password", "?gid", "?value", "?shell", "?group", "?seuser",  # Variable leaks
+            "", "?",
+        }
+
         for name, arity in discovered_signatures.items():
-            if name not in defined_predicates and name not in ["and", "or", "not", "exists", "forall"]:
-                # Generate generic arguments like ?x0 ?x1 ...
-                args = " ".join([f"?x{i} - object" for i in range(arity)])
-                lines.append(f"    ({name} {args})")
-                defined_predicates.add(name)
+            # Skip if: already defined, is a keyword, starts with ?, or contains invalid chars
+            if name in defined_predicates:
+                continue
+            if name in INVALID_PREDICATES:
+                continue
+            if name.startswith("?"):  # Variables leaked as predicate names
+                continue
+            if not name or not name[0].isalpha():  # Must start with letter
+                continue
+            if not re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*$', name):  # Valid PDDL identifier
+                continue
+
+            # Generate generic arguments like ?x0 ?x1 ...
+            args = " ".join([f"?x{i} - object" for i in range(arity)])
+            lines.append(f"    ({name} {args})")
+            defined_predicates.add(name)
 
         lines.append("  )")
         return "\n".join(lines)
@@ -2771,8 +2838,19 @@ class PDDLGenerator:
         lines.append("    )")
 
         # Effects
+        # Effects - sanitize each effect
         lines.append("    :effect (and")
+        valid_effects = []
         for eff in action.effects:
+            sanitized = self._sanitize_effect(eff)
+            if sanitized:
+                valid_effects.append(sanitized)
+
+        # Ensure at least one effect (PDDL requires non-empty effects)
+        if not valid_effects:
+            valid_effects.append(f"(action_completed_{action.name})")
+
+        for eff in valid_effects:
             lines.append(f"      {eff}")
         lines.append("    )")
 
@@ -2859,6 +2937,50 @@ class PDDLGenerator:
 
         return "\n".join(lines)
 
+    def _sanitize_effect(self, effect: str) -> Optional[str]:
+        """
+        Sanitize an effect string to ensure valid PDDL syntax.
+        Returns None if the effect is irrecoverably malformed.
+        """
+        if not effect or not isinstance(effect, str):
+            return None
+
+        effect = effect.strip()
+
+        # Remove invalid constructs that LLMs hallucinate
+        # Pattern: "(pred) or (pred2)" or "(pred) and (pred2)"
+        if " or " in effect.lower() or " and " in effect.lower():
+            # Try to extract just the first valid predicate
+            match = re.match(r'^\(([^)]+)\)', effect)
+            if match:
+                effect = f"({match.group(1)})"
+            else:
+                return None
+
+        # Remove trailing garbage like "and (package_version ?pkg version)"
+        # which is missing proper structure
+        if re.search(r'\)\s+and\s+\(', effect, re.IGNORECASE):
+            # Take only the first predicate
+            match = re.match(r'^(\([^)]+\))', effect)
+            if match:
+                effect = match.group(1)
+            else:
+                return None
+
+        # Ensure balanced parentheses
+        if effect.count('(') != effect.count(')'):
+            return None
+
+        # Ensure it starts and ends with parentheses (or is negated)
+        effect = effect.strip()
+        if not (effect.startswith('(') and effect.endswith(')')):
+            # Try to wrap it
+            if not effect.startswith('('):
+                effect = f"({effect})"
+            if not effect.endswith(')'):
+                effect = f"{effect})"
+
+        return effect
 
 # =============================================================================
 # SECTION 6: Main Orchestrator
