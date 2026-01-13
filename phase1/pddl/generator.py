@@ -121,12 +121,12 @@ class PDDLGenerator:
     # Map reserved keywords to appropriate predicate replacements
     # Add mappings for keywords commonly misused by LLMs
     KEYWORD_TO_PREDICATE = {
-        "exists": "file_exists",      # Most common: LLM uses (exists ?f) meaning file existence
-        "start": "is_started",        # LLM might use (start ?svc) for service state
-        "end": "is_ended",            # LLM might use (end ?proc) for process state
-        "increase": "is_increased",   # LLM might confuse with state predicate
-        "decrease": "is_decreased",   # LLM might confuse with state predicate
-        "all": "all_of",              # LLM might use as predicate
+        "exists": "file_exists",  # Most common: LLM uses (exists ?f) meaning file existence
+        "start": "is_started",  # LLM might use (start ?svc) for service state
+        "end": "is_ended",  # LLM might use (end ?proc) for process state
+        "increase": "is_increased",  # LLM might confuse with state predicate
+        "decrease": "is_decreased",  # LLM might confuse with state predicate
+        "all": "all_of",  # LLM might use as predicate
     }
 
     def _sanitize_predicate(self, predicate_str: str) -> Optional[str]:
@@ -134,12 +134,42 @@ class PDDLGenerator:
         Sanitize a predicate string to ensure all arguments are valid PDDL identifiers.
         Converts paths like /var/cache/apt to _var_cache_apt.
         Replaces reserved PDDL keywords used as predicate names.
+        Rejects malformed constructs like infix operators.
         Returns None if the predicate is irrecoverably malformed.
         """
         if not predicate_str or not isinstance(predicate_str, str):
             return None
 
         predicate_str = predicate_str.strip()
+
+        # =================================================================
+        # EARLY REJECTION: Detect malformed infix operators
+        # LLMs sometimes generate "(pred1) or (pred2)" instead of "(or (pred1) (pred2))"
+        # =================================================================
+
+        # Pattern: ") or " or ") and " - indicates infix usage (INVALID)
+        if re.search(r"\)\s+(or|and)\s+", predicate_str, re.IGNORECASE):
+            # Try to extract just the first valid predicate
+            match = re.match(r"^(\([^)]+\))", predicate_str)
+            if match:
+                # Recursively sanitize just the first predicate
+                return self._sanitize_predicate(match.group(1))
+            return None
+
+        # Pattern: standalone "or" or "and" not at start (malformed)
+        # e.g., "file_exists ?item or directory_exists ?item"
+        if re.search(r"\s+(or|and)\s+", predicate_str, re.IGNORECASE):
+            # Try to extract the first predicate-like segment
+            parts = re.split(r"\s+(?:or|and)\s+", predicate_str, flags=re.IGNORECASE)
+            if parts and parts[0].strip():
+                first_part = parts[0].strip()
+                # Ensure it has parentheses
+                if not first_part.startswith("("):
+                    first_part = f"({first_part})"
+                if not first_part.endswith(")"):
+                    first_part = f"{first_part})"
+                return self._sanitize_predicate(first_part)
+            return None
 
         # Handle negation wrapper
         is_negated = False
@@ -173,8 +203,10 @@ class PDDLGenerator:
         pred_name_lower = pred_name.lower()
         if pred_name_lower in self.PDDL_RESERVED_KEYWORDS:
             if pred_name_lower in self.KEYWORD_TO_PREDICATE:
+                # Replace with appropriate predicate
                 pred_name = self.KEYWORD_TO_PREDICATE[pred_name_lower]
             else:
+                # Reject predicates using other reserved keywords
                 return None
 
         # Sanitize predicate name
@@ -237,10 +269,10 @@ class PDDLGenerator:
         return sanitized.lower()
 
     def generate_problem(
-        self,
-        state: dict,
-        goal_predicates: list[str],
-        problem_name: str = "sysadmin-problem",
+            self,
+            state: dict,
+            goal_predicates: list[str],
+            problem_name: str = "sysadmin-problem",
     ) -> str:
         """Generate PDDL problem file from current state."""
         lines = []
@@ -311,7 +343,7 @@ class PDDLGenerator:
         return "\n".join(lines)
 
     def _generate_predicates(
-        self, state: dict, actions: list[ActionSchema] = []
+            self, state: dict, actions: list[ActionSchema] = []
     ) -> str:
         """Generate PDDL predicates, avoiding duplicates and fixing arity."""
         lines = ["  (:predicates"]
@@ -522,7 +554,7 @@ class PDDLGenerator:
 
         # Check if using dynamic scoping (no limits needed)
         is_dynamic = (
-            state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+                state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
         )
 
         for pddl_type, objects in state.get("objects", {}).items():
@@ -552,7 +584,7 @@ class PDDLGenerator:
 
         # Check scoping method
         is_dynamic = (
-            state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+                state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
         )
 
         # Build set of included object names
@@ -661,8 +693,8 @@ class PDDLGenerator:
             else:
                 return None
 
-        # Reject if predicate name is a variable or invalid
-        if pred_name.startswith("?") or pred_name in ["and", "or", "not"]:
+        # Reject if predicate name is a variable or reserved keyword
+        if pred_name.startswith("?") or pred_name.lower() in self.PDDL_RESERVED_KEYWORDS:
             return None
 
         return effect
