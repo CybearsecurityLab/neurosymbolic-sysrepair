@@ -2674,6 +2674,11 @@ class PDDLGenerator:
         if not pred_name:
             return None
 
+        # Reject if predicate name is a variable (starts with ?)
+        # Variables can only be arguments, not predicate names
+        if pred_name.startswith('?'):
+            return None
+
         # Sanitize each argument
         sanitized_args = []
         for arg in args:
@@ -3105,6 +3110,27 @@ class PDDLGenerator:
                 effect = f"({effect})"
             if not effect.endswith(')'):
                 effect = f"{effect})"
+
+        # Validate predicate name is not a variable
+        # Extract predicate name from effect (handle negation)
+        if effect.startswith('(not'):
+            # Extract inner predicate from (not (pred ...))
+            match = re.match(r'\(not\s+\(([^\s)]+)', effect)
+            if match:
+                pred_name = match.group(1)
+            else:
+                return None
+        else:
+            # Extract from (pred ...)
+            match = re.match(r'\(([^\s)]+)', effect)
+            if match:
+                pred_name = match.group(1)
+            else:
+                return None
+
+        # Reject if predicate name is a variable or invalid
+        if pred_name.startswith('?') or pred_name in ['and', 'or', 'not']:
+            return None
 
         return effect
 
