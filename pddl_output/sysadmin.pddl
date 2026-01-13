@@ -428,7 +428,6 @@
     (gecos_of_user ?x0 - object ?x1 - object)
     (non_unique_uid_of_user ?x0 - object ?x1 - object)
     (bad_name_of_user ?x0 - object ?x1 - object)
-    (when ?x0 - object ?x1 - object ?x2 - object ?x3 - object ?x4 - object)
     (mail_spool_action ?x0 - object)
     (executed_userdel_cmd ?x0 - object ?x1 - object)
     (cron_job_exists ?x0 - object)
@@ -2763,19 +2762,19 @@
   (:action move_files_to_file
     :parameters (?src - file ?dest - file)
     :precondition (and
-      (exists ?src)
-      (not (exists ?dest))
+      (file_exists ?src)
+      (not (file_exists ?dest))
     )
     :effect (and
-      (not (exists ?src))
-      (exists ?dest)
+      (not (file_exists ?src))
+      (file_exists ?dest)
     )
   )
 
   (:action copy_file_verbose
     :parameters (?src - file ?dest - file)
     :precondition (and
-      (exists ?src)
+      (file_exists ?src)
     )
     :effect (and
       (file_exists ?dest)
@@ -2785,7 +2784,7 @@
   (:action copy_file_no_copy_on_rename_fail
     :parameters (?src - file ?dest - file)
     :precondition (and
-      (exists ?src)
+      (file_exists ?src)
     )
     :effect (and
       (not (file_exists ?dest))
@@ -3363,7 +3362,7 @@
   (:action touch_file
     :parameters (?f - file)
     :precondition (and
-      (not (exists ?f))
+      (not (file_exists ?f))
     )
     :effect (and
       (file_access_time_updated ?f)
@@ -3374,7 +3373,7 @@
   (:action touch_no_create
     :parameters (?f - file)
     :precondition (and
-      (not (exists ?f))
+      (not (file_exists ?f))
     )
     :effect (and
       (file_access_time_updated ?f)
@@ -3967,7 +3966,7 @@
     :parameters (?cmd - process ?user - user ?askpass_program - file)
     :precondition (and
       (can_escalate ?user)
-      (exists ?askpass_program)
+      (file_exists ?askpass_program)
     )
     :effect (and
       (process_running ?cmd)
@@ -5002,7 +5001,6 @@
     :parameters (?actor - user ?group - group ?gid - file)
     :precondition (and
       (not (group_exists ?group))
-      (and sys_gid_min ?gid) ?gid sys_gid_max)
       (can_escalate ?actor)
     )
     :effect (and
@@ -5014,7 +5012,6 @@
     :parameters (?actor - user ?user - user ?uid - file)
     :precondition (and
       (not (user_exists ?user))
-      (and sys_uid_min ?uid) ?uid sys_uid_max)
       (can_escalate ?actor)
     )
     :effect (and
@@ -5026,7 +5023,6 @@
     :parameters (?actor - user ?user - user ?uid - file)
     :precondition (and
       (not (user_exists ?user))
-      (and uid_min ?uid) ?uid uid_max)
       (can_escalate ?actor)
     )
     :effect (and
@@ -5643,8 +5639,6 @@
     :precondition (and
       (user_exists ?usr)
       (not (user_critical ?usr))
-      (or not group_exists ?grp))
-      (and group_exists ?grp) not primary_group_of_any_other_user ?grp))))
       (can_escalate ?actor)
     )
     :effect (and
