@@ -13,8 +13,10 @@ from typing import Optional, List
 # Enums
 # =============================================================================
 
+
 class PDDLType(Enum):
     """Base PDDL types mapped from OS concepts."""
+
     PACKAGE = "package"
     SERVICE = "service"
     USER = "user"
@@ -30,6 +32,7 @@ class PDDLType(Enum):
 
 class EntityType(Enum):
     """Types of entities in the system dependency graph (Scoping)."""
+
     PORT = "port"
     PROCESS = "process"
     SERVICE = "service"
@@ -41,13 +44,16 @@ class EntityType(Enum):
     FIREWALL_RULE = "firewall_rule"
     INTERFACE = "interface"
 
+
 # =============================================================================
 # Configuration Data Classes
 # =============================================================================
 
+
 @dataclass
 class OSQueryMapping:
     """Configuration for mapping osquery tables to PDDL constructs."""
+
     table: str
     query: str
     pddl_type: PDDLType
@@ -60,6 +66,7 @@ class OSQueryMapping:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based action extraction."""
+
     model_id: str
     model_url: str = "http://localhost:11434"
     enabled: bool = True
@@ -67,13 +74,16 @@ class LLMExtractionConfig:
     max_retries: int = 2
     temperature: float = 0.0
 
+
 # =============================================================================
 # Extraction Data Classes
 # =============================================================================
 
+
 @dataclass
 class ExtractedObject:
     """Represents an extracted system object."""
+
     pddl_type: PDDLType
     name: str
     properties: dict = field(default_factory=dict)
@@ -82,6 +92,7 @@ class ExtractedObject:
 @dataclass
 class ExtractedPredicate:
     """Represents a grounded predicate from the system state."""
+
     name: str
     arguments: list
     value: bool = True
@@ -90,6 +101,7 @@ class ExtractedPredicate:
 @dataclass
 class GraphEntity:
     """A node in the dependency graph (used in Scoping)."""
+
     id: str
     entity_type: EntityType
     name: str
@@ -99,13 +111,16 @@ class GraphEntity:
     reachable: bool = False
     depth: int = -1
 
+
 # =============================================================================
 # Action Mining Data Classes
 # =============================================================================
 
+
 @dataclass
 class ActionParameter:
     """Parameter for a PDDL action."""
+
     name: str
     pddl_type: PDDLType
 
@@ -113,6 +128,7 @@ class ActionParameter:
 @dataclass
 class ActionSchema:
     """Extracted action schema from man pages."""
+
     name: str
     parameters: List[ActionParameter]
     preconditions: List[str]

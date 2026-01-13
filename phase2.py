@@ -25,8 +25,7 @@ from typing import Optional
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("Phase2")
 
@@ -35,9 +34,11 @@ logger = logging.getLogger("Phase2")
 # SECTION 1: Configuration & Hardware Detection
 # =============================================================================
 
+
 @dataclass
 class HardwareConfig:
     """Detected hardware configuration."""
+
     num_gpus: int = 2
     gpu_memory_gb: float = 48.0  # L40S
     total_ram_gb: float = 400.0
@@ -56,23 +57,29 @@ class HardwareConfig:
         # Detect GPUs via nvidia-smi
         try:
             result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=count,memory.total", "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=10
+                [
+                    "nvidia-smi",
+                    "--query-gpu=count,memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0:
-                lines = result.stdout.strip().split('\n')
+                lines = result.stdout.strip().split("\n")
                 config.num_gpus = len(lines)
                 if lines:
-                    parts = lines[0].split(',')
+                    parts = lines[0].split(",")
                     config.gpu_memory_gb = float(parts[1].strip()) / 1024
         except Exception:
             pass
 
         # Detect RAM
         try:
-            with open('/proc/meminfo') as f:
+            with open("/proc/meminfo") as f:
                 for line in f:
-                    if line.startswith('MemTotal:'):
+                    if line.startswith("MemTotal:"):
                         kb = int(line.split()[1])
                         config.total_ram_gb = kb / (1024 * 1024)
                         break
@@ -83,7 +90,9 @@ class HardwareConfig:
         config.num_cpus = os.cpu_count() or 100
 
         # Calculate optimal parallelism
-        config.max_parallel_workers = min(config.num_gpus * config.llm_workers_per_gpu, 8)
+        config.max_parallel_workers = min(
+            config.num_gpus * config.llm_workers_per_gpu, 8
+        )
 
         return config
 
@@ -91,7 +100,10 @@ class HardwareConfig:
 @dataclass
 class LLMConfig:
     """LLM inference configuration."""
-    model_name: str = "mistralai/Mistral-7B-Instruct-v0.3"  # Good for code/structured output
+
+    model_name: str = (
+        "mistralai/Mistral-7B-Instruct-v0.3"  # Good for code/structured output
+    )
     # Alternative: "codellama/CodeLlama-13b-Instruct-hf" for code-heavy tasks
     # Alternative: "meta-llama/Llama-3.1-70B-Instruct" if you want higher quality (fits in 2xL40S)
 
@@ -111,44 +123,62 @@ UTILITY_GROUPS = {
         "utilities": ["apt-get", "apt", "dpkg", "dpkg-query", "apt-cache", "snap"],
         "description": "Package management operations",
         "pddl_focus": ["package", "repository"],
-        "osquery_tables": ["deb_packages", "apt_sources"]
+        "osquery_tables": ["deb_packages", "apt_sources"],
     },
     "service": {
         "utilities": ["systemctl", "journalctl", "systemd-analyze"],
         "description": "Service lifecycle management (systemd v257)",
         "pddl_focus": ["service", "process"],
-        "osquery_tables": ["systemd_units", "processes"]
+        "osquery_tables": ["systemd_units", "processes"],
     },
     "network": {
         "utilities": ["iptables", "ip", "ss", "netstat", "ufw", "nft"],
         "description": "Firewall and network interface management",
         "pddl_focus": ["port", "interface", "firewall_rule"],
-        "osquery_tables": ["listening_ports", "iptables", "interface_addresses"]
+        "osquery_tables": ["listening_ports", "iptables", "interface_addresses"],
     },
     "filesystem": {
-        "utilities": ["cp", "mv", "rm", "chmod", "chown", "setfacl", "mkdir", "touch", "ln"],
+        "utilities": [
+            "cp",
+            "mv",
+            "rm",
+            "chmod",
+            "chown",
+            "setfacl",
+            "mkdir",
+            "touch",
+            "ln",
+        ],
         "description": "File manipulation (uutils coreutils)",
         "pddl_focus": ["file", "directory", "configuration_file"],
-        "osquery_tables": ["file", "file_events"]
+        "osquery_tables": ["file", "file_events"],
     },
     "user": {
-        "utilities": ["useradd", "usermod", "userdel", "groupadd", "groupmod", "passwd"],
+        "utilities": [
+            "useradd",
+            "usermod",
+            "userdel",
+            "groupadd",
+            "groupmod",
+            "passwd",
+        ],
         "description": "User and group management",
         "pddl_focus": ["user", "group"],
-        "osquery_tables": ["users", "groups", "user_groups"]
+        "osquery_tables": ["users", "groups", "user_groups"],
     },
     "privilege": {
         "utilities": ["sudo", "su", "pkexec"],
         "description": "Privilege escalation (sudo-rs aware)",
         "pddl_focus": ["user", "process"],
-        "osquery_tables": ["sudoers"]
-    }
+        "osquery_tables": ["sudoers"],
+    },
 }
 
 
 # =============================================================================
 # SECTION 2: LLM Interface (vLLM Backend)
 # =============================================================================
+
 
 class LLMInterface(ABC):
     """Abstract LLM interface for PDDL generation."""
@@ -184,9 +214,10 @@ class VLLMInterface(LLMInterface):
         if self._client is None:
             try:
                 from openai import OpenAI
+
                 self._client = OpenAI(
                     base_url=self.config.base_url,
-                    api_key="not-needed"  # vLLM doesn't require API key
+                    api_key="not-needed",  # vLLM doesn't require API key
                 )
             except ImportError:
                 raise RuntimeError("openai package required: pip install openai")
@@ -206,7 +237,7 @@ class VLLMInterface(LLMInterface):
                     messages=messages,
                     max_tokens=self.config.max_tokens,
                     temperature=self.config.temperature,
-                    timeout=self.config.request_timeout
+                    timeout=self.config.request_timeout,
                 )
                 return response.choices[0].message.content
             except Exception as e:
@@ -220,10 +251,11 @@ class VLLMInterface(LLMInterface):
         def process_single(idx: int, prompt: str):
             results[idx] = self.generate(prompt, system_prompt)
 
-        with ThreadPoolExecutor(max_workers=self.config.max_concurrent_requests) as executor:
+        with ThreadPoolExecutor(
+            max_workers=self.config.max_concurrent_requests
+        ) as executor:
             futures = [
-                executor.submit(process_single, i, p)
-                for i, p in enumerate(prompts)
+                executor.submit(process_single, i, p) for i, p in enumerate(prompts)
             ]
             for f in as_completed(futures):
                 try:
@@ -297,6 +329,7 @@ def get_llm_interface(config: LLMConfig, use_mock: bool = False) -> LLMInterface
 # SECTION 3: Man Page Fetcher & Documentation Extractor
 # =============================================================================
 
+
 class DocumentationExtractor:
     """Extracts and caches system documentation for LLM processing."""
 
@@ -327,12 +360,14 @@ class DocumentationExtractor:
         try:
             proc = subprocess.Popen(
                 f"man {utility} 2>/dev/null | col -b",
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
             stdout, _ = proc.communicate(timeout=30)
 
             if proc.returncode == 0 and stdout:
-                content = stdout.decode('utf-8', errors='replace')
+                content = stdout.decode("utf-8", errors="replace")
                 # Clean up
                 content = self._clean_man_page(content)
 
@@ -355,8 +390,7 @@ class DocumentationExtractor:
 
         try:
             result = subprocess.run(
-                [utility, "--help"],
-                capture_output=True, text=True, timeout=10
+                [utility, "--help"], capture_output=True, text=True, timeout=10
             )
             content = result.stdout or result.stderr
             if content:
@@ -369,7 +403,7 @@ class DocumentationExtractor:
 
     def _clean_man_page(self, content: str) -> str:
         """Clean and truncate man page for LLM context."""
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Remove excessive whitespace
         cleaned = []
@@ -386,7 +420,7 @@ class DocumentationExtractor:
         if len(cleaned) > 500:
             cleaned = cleaned[:500] + ["... [truncated]"]
 
-        return '\n'.join(cleaned)
+        return "\n".join(cleaned)
 
     def get_utility_docs(self, utilities: list[str]) -> dict[str, str]:
         """Get documentation for multiple utilities in parallel."""
@@ -394,8 +428,7 @@ class DocumentationExtractor:
 
         with ThreadPoolExecutor(max_workers=min(len(utilities), 20)) as executor:
             future_to_util = {
-                executor.submit(self._get_single_doc, u): u
-                for u in utilities
+                executor.submit(self._get_single_doc, u): u for u in utilities
             }
 
             for future in as_completed(future_to_util):
@@ -423,9 +456,11 @@ class DocumentationExtractor:
 # SECTION 4: Partial PDDL Domain Data Structure
 # =============================================================================
 
+
 @dataclass
 class PDDLType:
     """Represents a PDDL type definition."""
+
     name: str
     parent: Optional[str] = None
     source: str = ""  # Which worker generated this
@@ -434,6 +469,7 @@ class PDDLType:
 @dataclass
 class PDDLPredicate:
     """Represents a PDDL predicate definition."""
+
     name: str
     parameters: list[tuple[str, str]]  # [(var_name, type_name), ...]
     description: str = ""
@@ -443,6 +479,7 @@ class PDDLPredicate:
 @dataclass
 class PDDLAction:
     """Represents a PDDL action definition."""
+
     name: str
     parameters: list[tuple[str, str]]
     preconditions: list[str]
@@ -456,6 +493,7 @@ class PDDLAction:
 @dataclass
 class PartialPDDLDomain:
     """Partial PDDL domain generated by a worker agent."""
+
     worker_name: str
     group_name: str
     types: list[PDDLType] = field(default_factory=list)
@@ -472,8 +510,7 @@ class PartialPDDLDomain:
             "group_name": self.group_name,
             "types": [{"name": t.name, "parent": t.parent} for t in self.types],
             "predicates": [
-                {"name": p.name, "parameters": p.parameters}
-                for p in self.predicates
+                {"name": p.name, "parameters": p.parameters} for p in self.predicates
             ],
             "actions": [
                 {
@@ -481,17 +518,18 @@ class PartialPDDLDomain:
                     "parameters": a.parameters,
                     "preconditions": a.preconditions,
                     "effects": a.effects,
-                    "command": a.command_template
+                    "command": a.command_template,
                 }
                 for a in self.actions
             ],
-            "generation_time": self.generation_time
+            "generation_time": self.generation_time,
         }
 
 
 # =============================================================================
 # SECTION 5: Worker Agents (Map Phase)
 # =============================================================================
+
 
 class WorkerAgent:
     """
@@ -532,12 +570,12 @@ Output format - ONLY these sections, nothing else:
 """
 
     def __init__(
-            self,
-            group_name: str,
-            group_config: dict,
-            llm: LLMInterface,
-            doc_extractor: DocumentationExtractor,
-            osquery_data: Optional[dict] = None
+        self,
+        group_name: str,
+        group_config: dict,
+        llm: LLMInterface,
+        doc_extractor: DocumentationExtractor,
+        osquery_data: Optional[dict] = None,
     ):
         self.group_name = group_name
         self.config = group_config
@@ -551,8 +589,7 @@ Output format - ONLY these sections, nothing else:
         start_time = time.time()
 
         result = PartialPDDLDomain(
-            worker_name=self.worker_name,
-            group_name=self.group_name
+            worker_name=self.worker_name, group_name=self.group_name
         )
 
         try:
@@ -587,7 +624,7 @@ Output format - ONLY these sections, nothing else:
         prompt_parts = [
             f"Generate PDDL domain components for: {self.config['description']}",
             f"\nTarget PDDL types to define or use: {', '.join(self.config['pddl_focus'])}",
-            "\n\n=== SYSTEM DOCUMENTATION ===\n"
+            "\n\n=== SYSTEM DOCUMENTATION ===\n",
         ]
 
         # Add documentation (truncated for context limits)
@@ -617,17 +654,19 @@ Output format - ONLY these sections, nothing else:
     def _parse_pddl_output(self, raw: str, result: PartialPDDLDomain):
         """Parse LLM output into structured PDDL components."""
         # Extract types
-        types_match = re.search(r'\(:types\s*(.*?)\)', raw, re.DOTALL)
+        types_match = re.search(r"\(:types\s*(.*?)\)", raw, re.DOTALL)
         if types_match:
             result.types = self._parse_types(types_match.group(1))
 
         # Extract predicates
-        pred_match = re.search(r'\(:predicates\s*(.*?)\)\s*(?:\(:action|$)', raw, re.DOTALL)
+        pred_match = re.search(
+            r"\(:predicates\s*(.*?)\)\s*(?:\(:action|$)", raw, re.DOTALL
+        )
         if pred_match:
             result.predicates = self._parse_predicates(pred_match.group(1))
 
         # Extract actions
-        action_pattern = r'\(:action\s+(\w+)\s*(.*?)(?=\(:action|\Z)'
+        action_pattern = r"\(:action\s+(\w+)\s*(.*?)(?=\(:action|\Z)"
         for match in re.finditer(action_pattern, raw, re.DOTALL):
             action = self._parse_action(match.group(1), match.group(2))
             if action:
@@ -638,31 +677,26 @@ Output format - ONLY these sections, nothing else:
         """Parse PDDL type definitions."""
         types = []
         # Pattern: type1 type2 - parent_type
-        lines = types_str.strip().split('\n')
+        lines = types_str.strip().split("\n")
         for line in lines:
             line = line.strip()
-            if not line or line.startswith(';'):
+            if not line or line.startswith(";"):
                 continue
 
-            if ' - ' in line:
-                parts = line.split(' - ')
+            if " - " in line:
+                parts = line.split(" - ")
                 parent = parts[-1].strip()
                 children = parts[0].strip().split()
                 for child in children:
                     child = child.strip()
                     if child:
-                        types.append(PDDLType(
-                            name=child,
-                            parent=parent,
-                            source=self.worker_name
-                        ))
+                        types.append(
+                            PDDLType(name=child, parent=parent, source=self.worker_name)
+                        )
             else:
                 for t in line.split():
                     if t.strip():
-                        types.append(PDDLType(
-                            name=t.strip(),
-                            source=self.worker_name
-                        ))
+                        types.append(PDDLType(name=t.strip(), source=self.worker_name))
 
         return types
 
@@ -670,7 +704,7 @@ Output format - ONLY these sections, nothing else:
         """Parse PDDL predicate definitions."""
         predicates = []
         # Pattern: (predicate_name ?param1 - type1 ?param2 - type2)
-        pattern = r'\((\w+)((?:\s+\?\w+\s*-\s*\w+)*)\)'
+        pattern = r"\((\w+)((?:\s+\?\w+\s*-\s*\w+)*)\)"
 
         for match in re.finditer(pattern, pred_str):
             name = match.group(1)
@@ -678,15 +712,13 @@ Output format - ONLY these sections, nothing else:
 
             # Parse parameters
             params = []
-            param_pattern = r'\?(\w+)\s*-\s*(\w+)'
+            param_pattern = r"\?(\w+)\s*-\s*(\w+)"
             for pm in re.finditer(param_pattern, params_str):
                 params.append((pm.group(1), pm.group(2)))
 
-            predicates.append(PDDLPredicate(
-                name=name,
-                parameters=params,
-                source=self.worker_name
-            ))
+            predicates.append(
+                PDDLPredicate(name=name, parameters=params, source=self.worker_name)
+            )
 
         return predicates
 
@@ -694,21 +726,23 @@ Output format - ONLY these sections, nothing else:
         """Parse a single PDDL action."""
         try:
             # Extract parameters
-            params_match = re.search(r':parameters\s*\((.*?)\)', body, re.DOTALL)
+            params_match = re.search(r":parameters\s*\((.*?)\)", body, re.DOTALL)
             params = []
             if params_match:
-                param_pattern = r'\?(\w+)\s*-\s*(\w+)'
+                param_pattern = r"\?(\w+)\s*-\s*(\w+)"
                 for pm in re.finditer(param_pattern, params_match.group(1)):
                     params.append((pm.group(1), pm.group(2)))
 
             # Extract preconditions
-            pre_match = re.search(r':precondition\s*\((.*?)\)\s*:effect', body, re.DOTALL)
+            pre_match = re.search(
+                r":precondition\s*\((.*?)\)\s*:effect", body, re.DOTALL
+            )
             preconditions = []
             if pre_match:
                 preconditions = self._extract_conditions(pre_match.group(1))
 
             # Extract effects
-            eff_match = re.search(r':effect\s*\((.*?)\)\s*\)?$', body, re.DOTALL)
+            eff_match = re.search(r":effect\s*\((.*?)\)\s*\)?$", body, re.DOTALL)
             effects = []
             if eff_match:
                 effects = self._extract_conditions(eff_match.group(1))
@@ -717,7 +751,7 @@ Output format - ONLY these sections, nothing else:
                 name=name,
                 parameters=params,
                 preconditions=preconditions,
-                effects=effects
+                effects=effects,
             )
         except Exception as e:
             logger.warning(f"Failed to parse action {name}: {e}")
@@ -727,16 +761,16 @@ Output format - ONLY these sections, nothing else:
         """Extract individual conditions from an (and ...) block."""
         conditions = []
         # Remove outer 'and' if present
-        cond_str = re.sub(r'^\s*and\s*', '', cond_str.strip())
+        cond_str = re.sub(r"^\s*and\s*", "", cond_str.strip())
 
         # Match individual predicates including (not (...))
         depth = 0
         current = ""
         for char in cond_str:
-            if char == '(':
+            if char == "(":
                 depth += 1
                 current += char
-            elif char == ')':
+            elif char == ")":
                 depth -= 1
                 current += char
                 if depth == 0 and current.strip():
@@ -752,6 +786,7 @@ Output format - ONLY these sections, nothing else:
 # SECTION 6: Supervisor Agent (Orchestrator)
 # =============================================================================
 
+
 class SupervisorAgent:
     """
     Supervisor agent that orchestrates parallel worker execution.
@@ -759,10 +794,10 @@ class SupervisorAgent:
     """
 
     def __init__(
-            self,
-            llm: LLMInterface,
-            hardware_config: HardwareConfig,
-            osquery_data: Optional[dict] = None
+        self,
+        llm: LLMInterface,
+        hardware_config: HardwareConfig,
+        osquery_data: Optional[dict] = None,
     ):
         self.llm = llm
         self.hardware = hardware_config
@@ -777,24 +812,27 @@ class SupervisorAgent:
         logger.info("=" * 60)
         logger.info("MAP PHASE: Dispatching Worker Agents")
         logger.info("=" * 60)
-        logger.info(f"Hardware: {self.hardware.num_gpus} GPUs, "
-                    f"{self.hardware.num_cpus} CPUs, "
-                    f"{self.hardware.total_ram_gb:.0f}GB RAM")
+        logger.info(
+            f"Hardware: {self.hardware.num_gpus} GPUs, "
+            f"{self.hardware.num_cpus} CPUs, "
+            f"{self.hardware.total_ram_gb:.0f}GB RAM"
+        )
         logger.info(f"Max parallel workers: {self.hardware.max_parallel_workers}")
 
         start_time = time.time()
 
         # Create worker tasks
         worker_configs = [
-            (group_name, config)
-            for group_name, config in UTILITY_GROUPS.items()
+            (group_name, config) for group_name, config in UTILITY_GROUPS.items()
         ]
 
         # Execute workers in parallel using ThreadPoolExecutor
         # (GPU-bound via LLM, so threads are fine)
         results = []
 
-        with ThreadPoolExecutor(max_workers=self.hardware.max_parallel_workers) as executor:
+        with ThreadPoolExecutor(
+            max_workers=self.hardware.max_parallel_workers
+        ) as executor:
             future_to_worker = {}
 
             for group_name, config in worker_configs:
@@ -803,7 +841,7 @@ class SupervisorAgent:
                     group_config=config,
                     llm=self.llm,
                     doc_extractor=self.doc_extractor,
-                    osquery_data=self.osquery_data
+                    osquery_data=self.osquery_data,
                 )
                 future = executor.submit(worker.generate_partial_domain)
                 future_to_worker[future] = group_name
@@ -816,15 +854,19 @@ class SupervisorAgent:
                     logger.info(f"  ✓ {worker_name} completed")
                 except Exception as e:
                     logger.error(f"  ✗ {worker_name} failed: {e}")
-                    results.append(PartialPDDLDomain(
-                        worker_name=f"{worker_name}_agent",
-                        group_name=worker_name,
-                        error=str(e)
-                    ))
+                    results.append(
+                        PartialPDDLDomain(
+                            worker_name=f"{worker_name}_agent",
+                            group_name=worker_name,
+                            error=str(e),
+                        )
+                    )
 
         elapsed = time.time() - start_time
         logger.info(f"Map phase completed in {elapsed:.2f}s")
-        logger.info(f"Successful workers: {sum(1 for r in results if not r.error)}/{len(results)}")
+        logger.info(
+            f"Successful workers: {sum(1 for r in results if not r.error)}/{len(results)}"
+        )
 
         self.partial_domains = results
         return results
@@ -833,6 +875,7 @@ class SupervisorAgent:
 # =============================================================================
 # SECTION 7: Merger Agent (Reduce Phase)
 # =============================================================================
+
 
 class MergerAgent:
     """
@@ -920,9 +963,7 @@ class MergerAgent:
         # Start with core hierarchy
         for type_name, parent in self.CORE_TYPE_HIERARCHY.items():
             self.unified_types[type_name] = PDDLType(
-                name=type_name,
-                parent=parent,
-                source="core_hierarchy"
+                name=type_name, parent=parent, source="core_hierarchy"
             )
 
         # Add types from workers
@@ -1039,7 +1080,7 @@ class MergerAgent:
             command_template=best.command_template,
             requires_root=any(a.requires_root for a in actions),
             source_utility=best.source_utility,
-            source_worker="merged"
+            source_worker="merged",
         )
 
     def _construct_domain(self) -> str:
@@ -1077,7 +1118,10 @@ class MergerAgent:
 
         # Output remaining
         for parent, children in parent_groups.items():
-            if parent not in ["object", "filesystem_object", "file", "user"] and children:
+            if (
+                parent not in ["object", "filesystem_object", "file", "user"]
+                and children
+            ):
                 lines.append(f"    {' '.join(sorted(children))} - {parent}")
 
         lines.append("  )")
@@ -1145,7 +1189,7 @@ class MergerAgent:
         errors = []
 
         # Basic syntax checks
-        if pddl.count('(') != pddl.count(')'):
+        if pddl.count("(") != pddl.count(")"):
             errors.append("Unbalanced parentheses")
 
         if "(define (domain" not in pddl:
@@ -1160,13 +1204,18 @@ class MergerAgent:
         # Try VAL parser if available
         try:
             import tempfile
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.pddl', delete=False) as f:
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=False
+            ) as f:
                 f.write(pddl)
                 temp_path = f.name
 
             result = subprocess.run(
                 ["validate", "-p", temp_path],
-                capture_output=True, text=True, timeout=10
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
 
             if result.returncode != 0:
@@ -1183,14 +1232,14 @@ class MergerAgent:
     def _repair_pddl(self, pddl: str, errors: list[str]) -> str:
         """Attempt to repair PDDL syntax errors."""
         # Fix unbalanced parentheses
-        open_count = pddl.count('(')
-        close_count = pddl.count(')')
+        open_count = pddl.count("(")
+        close_count = pddl.count(")")
 
         if open_count > close_count:
-            pddl += ')' * (open_count - close_count)
+            pddl += ")" * (open_count - close_count)
         elif close_count > open_count:
             # Remove extra closing parens from end
-            while pddl.endswith(')') and pddl.count(')') > pddl.count('('):
+            while pddl.endswith(")") and pddl.count(")") > pddl.count("("):
                 pddl = pddl[:-1]
 
         return pddl
@@ -1204,6 +1253,7 @@ class MergerAgent:
 # SECTION 8: PDDL Validator
 # =============================================================================
 
+
 class PDDLValidator:
     """Validates PDDL syntax and semantic correctness."""
 
@@ -1213,10 +1263,7 @@ class PDDLValidator:
     def _check_val(self) -> bool:
         """Check if VAL parser is available."""
         try:
-            result = subprocess.run(
-                ["validate", "-h"],
-                capture_output=True, timeout=5
-            )
+            result = subprocess.run(["validate", "-h"], capture_output=True, timeout=5)
             return result.returncode == 0
         except Exception:
             return False
@@ -1237,14 +1284,14 @@ class PDDLValidator:
                 errors.append(f"Missing {req} section")
 
         # Check parenthesis balance
-        if domain_pddl.count('(') != domain_pddl.count(')'):
+        if domain_pddl.count("(") != domain_pddl.count(")"):
             errors.append(
                 f"Unbalanced parentheses: {domain_pddl.count('(')} open, "
                 f"{domain_pddl.count(')')} close"
             )
 
         # Check action structure
-        action_pattern = r':action\s+(\w+)'
+        action_pattern = r":action\s+(\w+)"
         actions = re.findall(action_pattern, domain_pddl)
 
         for action in actions:
@@ -1266,7 +1313,7 @@ class PDDLValidator:
 
     def _extract_action_text(self, pddl: str, action_name: str) -> Optional[str]:
         """Extract the text of a specific action."""
-        pattern = rf'\(:action\s+{action_name}\s*(.*?)(?=\(:action|\Z)'
+        pattern = rf"\(:action\s+{action_name}\s*(.*?)(?=\(:action|\Z)"
         match = re.search(pattern, pddl, re.DOTALL)
         return match.group(1) if match else None
 
@@ -1275,21 +1322,24 @@ class PDDLValidator:
         errors = []
         try:
             import tempfile
+
             with tempfile.NamedTemporaryFile(
-                    mode='w', suffix='.pddl', delete=False
+                mode="w", suffix=".pddl", delete=False
             ) as f:
                 f.write(pddl)
                 temp_path = f.name
 
             result = subprocess.run(
                 ["validate", "-p", temp_path],
-                capture_output=True, text=True, timeout=30
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             if result.returncode != 0:
                 # Parse VAL output for errors
-                for line in result.stderr.split('\n'):
-                    if 'error' in line.lower():
+                for line in result.stderr.split("\n"):
+                    if "error" in line.lower():
                         errors.append(f"VAL: {line.strip()}")
 
             os.unlink(temp_path)
@@ -1303,6 +1353,7 @@ class PDDLValidator:
 # SECTION 9: Phase 2 Orchestrator
 # =============================================================================
 
+
 class Phase2Orchestrator:
     """
     Main orchestrator for Phase 2: Parallel Synthesis.
@@ -1310,12 +1361,12 @@ class Phase2Orchestrator:
     """
 
     def __init__(
-            self,
-            hardware_config: Optional[HardwareConfig] = None,
-            llm_config: Optional[LLMConfig] = None,
-            osquery_data: Optional[dict] = None,
-            use_mock_llm: bool = False,
-            output_dir: str = "./pddl_output"
+        self,
+        hardware_config: Optional[HardwareConfig] = None,
+        llm_config: Optional[LLMConfig] = None,
+        osquery_data: Optional[dict] = None,
+        use_mock_llm: bool = False,
+        output_dir: str = "./pddl_output",
     ):
         self.hardware = hardware_config or HardwareConfig.detect()
         self.llm_config = llm_config or LLMConfig()
@@ -1328,9 +1379,7 @@ class Phase2Orchestrator:
 
         # Initialize components
         self.supervisor = SupervisorAgent(
-            llm=self.llm,
-            hardware_config=self.hardware,
-            osquery_data=self.osquery_data
+            llm=self.llm, hardware_config=self.hardware, osquery_data=self.osquery_data
         )
         self.merger = MergerAgent(llm=self.llm)
         self.validator = PDDLValidator()
@@ -1356,7 +1405,9 @@ class Phase2Orchestrator:
         print("PHASE 2: PARALLEL SYNTHESIS (MAP-REDUCE)")
         print("=" * 70)
         print(f"\nHardware Configuration:")
-        print(f"  GPUs: {self.hardware.num_gpus}x (L40S @ {self.hardware.gpu_memory_gb}GB)")
+        print(
+            f"  GPUs: {self.hardware.num_gpus}x (L40S @ {self.hardware.gpu_memory_gb}GB)"
+        )
         print(f"  RAM: {self.hardware.total_ram_gb:.0f}GB")
         print(f"  CPUs: {self.hardware.num_cpus}")
         print(f"  Parallel Workers: {self.hardware.max_parallel_workers}")
@@ -1372,9 +1423,7 @@ class Phase2Orchestrator:
             successful = [d for d in self.partial_domains if not d.error]
             results["statistics"]["workers_total"] = len(self.partial_domains)
             results["statistics"]["workers_successful"] = len(successful)
-            results["statistics"]["total_types"] = sum(
-                len(d.types) for d in successful
-            )
+            results["statistics"]["total_types"] = sum(len(d.types) for d in successful)
             results["statistics"]["total_predicates"] = sum(
                 len(d.predicates) for d in successful
             )
@@ -1434,15 +1483,25 @@ class Phase2Orchestrator:
         print("PHASE 2 SUMMARY")
         print("=" * 70)
         print(f"  Status: {'SUCCESS' if results['success'] else 'FAILED'}")
-        print(f"  Workers: {results['statistics'].get('workers_successful', 0)}/"
-              f"{results['statistics'].get('workers_total', 0)} successful")
-        print(f"  Types: {results['statistics'].get('total_types', 0)} → "
-              f"{len(self.merger.unified_types)} unified")
-        print(f"  Predicates: {results['statistics'].get('total_predicates', 0)} → "
-              f"{len(self.merger.unified_predicates)} unified")
-        print(f"  Actions: {results['statistics'].get('total_actions', 0)} → "
-              f"{len(self.merger.unified_actions)} unified")
-        print(f"  Validation: {'PASSED' if results['validation_passed'] else 'WARNINGS'}")
+        print(
+            f"  Workers: {results['statistics'].get('workers_successful', 0)}/"
+            f"{results['statistics'].get('workers_total', 0)} successful"
+        )
+        print(
+            f"  Types: {results['statistics'].get('total_types', 0)} → "
+            f"{len(self.merger.unified_types)} unified"
+        )
+        print(
+            f"  Predicates: {results['statistics'].get('total_predicates', 0)} → "
+            f"{len(self.merger.unified_predicates)} unified"
+        )
+        print(
+            f"  Actions: {results['statistics'].get('total_actions', 0)} → "
+            f"{len(self.merger.unified_actions)} unified"
+        )
+        print(
+            f"  Validation: {'PASSED' if results['validation_passed'] else 'WARNINGS'}"
+        )
 
         return results
 
@@ -1450,6 +1509,7 @@ class Phase2Orchestrator:
 # =============================================================================
 # SECTION 10: vLLM Server Launcher
 # =============================================================================
+
 
 def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subprocess.Popen:
     """
@@ -1460,28 +1520,34 @@ def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subproces
     - Or run multiple instances of smaller models
     """
     cmd = [
-        "python", "-m", "vllm.entrypoints.openai.api_server",
-        "--model", config.model_name,
-        "--tensor-parallel-size", str(config.tensor_parallel_size),
-        "--max-model-len", "8192",
-        "--gpu-memory-utilization", "0.90",
-        "--host", "0.0.0.0",
-        "--port", "8000",
+        "python",
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--model",
+        config.model_name,
+        "--tensor-parallel-size",
+        str(config.tensor_parallel_size),
+        "--max-model-len",
+        "8192",
+        "--gpu-memory-utilization",
+        "0.90",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
     ]
 
     logger.info(f"Launching vLLM server: {' '.join(cmd)}")
 
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for server to be ready
     import time
+
     for _ in range(60):  # Wait up to 60 seconds
         try:
             import urllib.request
+
             urllib.request.urlopen(f"{config.base_url}/health", timeout=1)
             logger.info("vLLM server is ready")
             return process
@@ -1495,6 +1561,7 @@ def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subproces
 # SECTION 11: Entry Point
 # =============================================================================
 
+
 def main():
     """Main entry point for Phase 2 execution."""
     import argparse
@@ -1503,33 +1570,23 @@ def main():
         description="Phase 2: Parallel Synthesis for PDDL Domain Generation"
     )
     parser.add_argument(
-        "--output-dir", "-o",
+        "--output-dir",
+        "-o",
         default="./pddl_output",
-        help="Output directory for PDDL files"
+        help="Output directory for PDDL files",
     )
     parser.add_argument(
-        "--model",
-        default="mistralai/Mistral-7B-Instruct-v0.3",
-        help="LLM model to use"
+        "--model", default="mistralai/Mistral-7B-Instruct-v0.3", help="LLM model to use"
     )
     parser.add_argument(
-        "--mock-llm",
-        action="store_true",
-        help="Use mock LLM for testing without GPU"
+        "--mock-llm", action="store_true", help="Use mock LLM for testing without GPU"
+    )
+    parser.add_argument("--phase1-state", help="Path to Phase 1 state JSON file")
+    parser.add_argument(
+        "--launch-vllm", action="store_true", help="Auto-launch vLLM server"
     )
     parser.add_argument(
-        "--phase1-state",
-        help="Path to Phase 1 state JSON file"
-    )
-    parser.add_argument(
-        "--launch-vllm",
-        action="store_true",
-        help="Auto-launch vLLM server"
-    )
-    parser.add_argument(
-        "--json-output", "-j",
-        action="store_true",
-        help="Output results as JSON"
+        "--json-output", "-j", action="store_true", help="Output results as JSON"
     )
 
     args = parser.parse_args()
@@ -1557,7 +1614,7 @@ def main():
             llm_config=llm_config,
             osquery_data=osquery_data,
             use_mock_llm=args.mock_llm,
-            output_dir=args.output_dir
+            output_dir=args.output_dir,
         )
 
         results = orchestrator.run()
@@ -1573,7 +1630,9 @@ def main():
                 print("=" * 70)
                 print(results["domain_pddl"][:3000])  # First 3000 chars
                 if len(results["domain_pddl"]) > 3000:
-                    print(f"\n... [{len(results['domain_pddl']) - 3000} more characters]")
+                    print(
+                        f"\n... [{len(results['domain_pddl']) - 3000} more characters]"
+                    )
 
         return 0 if results["success"] else 1
 

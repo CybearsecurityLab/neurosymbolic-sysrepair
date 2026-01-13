@@ -2,7 +2,12 @@ import re
 from typing import Optional
 
 from phase1.common.config import OSQUERY_MAPPINGS, CRITICAL_FILE_PATHS
-from phase1.common.models import ExtractedObject, ExtractedPredicate, OSQueryMapping, PDDLType
+from phase1.common.models import (
+    ExtractedObject,
+    ExtractedPredicate,
+    OSQueryMapping,
+    PDDLType,
+)
 from phase1.common.logger import log
 from phase1.introspection.client import OSQueryInterface, get_osquery_interface
 from phase1.introspection.scoping import ScopeAnalyzer
@@ -21,9 +26,12 @@ class SystemStateExtractor:
     - "static": Legacy static caps (deprecated)
     """
 
-    def __init__(self, osquery_interface: Optional[OSQueryInterface] = None,
-                 socket_path: Optional[str] = None,
-                 scoping_mode: str = "dynamic"):
+    def __init__(
+        self,
+        osquery_interface: Optional[OSQueryInterface] = None,
+        socket_path: Optional[str] = None,
+        scoping_mode: str = "dynamic",
+    ):
         """
         Initialize extractor with osquery interface.
 
@@ -33,8 +41,7 @@ class SystemStateExtractor:
             scoping_mode: "dynamic" for graph-based, "static" for legacy caps
         """
         self.osquery = osquery_interface or get_osquery_interface(
-            prefer_thrift=True,
-            socket_path=socket_path
+            prefer_thrift=True, socket_path=socket_path
         )
         self.scoping_mode = scoping_mode
         self.scope_analyzer = None
@@ -46,7 +53,7 @@ class SystemStateExtractor:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self.osquery, 'close'):
+        if hasattr(self.osquery, "close"):
             self.osquery.close()
 
     def extract_all(self) -> dict:
@@ -93,9 +100,9 @@ class SystemStateExtractor:
             "predicates": [],
             "relationships": {},
             "metadata": {
-                "osquery_version": getattr(self.osquery, 'version', 'unknown'),
-                "extraction_complete": False
-            }
+                "osquery_version": getattr(self.osquery, "version", "unknown"),
+                "extraction_complete": False,
+            },
         }
 
         # Extract objects and predicates for each mapping
@@ -147,7 +154,7 @@ class SystemStateExtractor:
                 "name": name,
                 "original_name": row.get(mapping.name_column),
                 "type": mapping.pddl_type.value,
-                "properties": properties
+                "properties": properties,
             }
             objects.append(obj)
 
@@ -161,48 +168,48 @@ class SystemStateExtractor:
             pred = {
                 "name": mapping.predicate_name,
                 "arguments": [name],
-                "value": predicate_value
+                "value": predicate_value,
             }
             predicates.append(pred)
 
             # Additional predicates for services
             if mapping.pddl_type == PDDLType.SERVICE:
                 # service_exists is always true if we found it
-                predicates.append({
-                    "name": "service_exists",
-                    "arguments": [name],
-                    "value": True
-                })
+                predicates.append(
+                    {"name": "service_exists", "arguments": [name], "value": True}
+                )
 
                 # service_enabled: check if load_state is 'loaded' and has fragment_path
                 # In systemd, enabled services have UnitFileState='enabled'
                 load_state = row.get("load_state", "")
                 fragment_path = row.get("fragment_path", "")
                 is_enabled = load_state == "loaded" and fragment_path
-                predicates.append({
-                    "name": "service_enabled",
-                    "arguments": [name],
-                    "value": is_enabled
-                })
+                predicates.append(
+                    {
+                        "name": "service_enabled",
+                        "arguments": [name],
+                        "value": is_enabled,
+                    }
+                )
 
                 # service_failed
                 active_state = row.get("active_state", "")
-                predicates.append({
-                    "name": "service_failed",
-                    "arguments": [name],
-                    "value": active_state == "failed"
-                })
+                predicates.append(
+                    {
+                        "name": "service_failed",
+                        "arguments": [name],
+                        "value": active_state == "failed",
+                    }
+                )
 
             # Additional predicates for users
             elif mapping.pddl_type == PDDLType.USER:
                 uid = row.get("uid")
                 # System users have UID < 1000
                 is_system = uid is not None and int(uid) < 1000
-                predicates.append({
-                    "name": "user_critical",
-                    "arguments": [name],
-                    "value": is_system
-                })
+                predicates.append(
+                    {"name": "user_critical", "arguments": [name], "value": is_system}
+                )
 
         return objects, predicates
 
@@ -226,13 +233,16 @@ class SystemStateExtractor:
                     name = self._sanitize_pddl_name(path)
                     file_type = row.get("type", "regular")
 
-                    pddl_type = (PDDLType.DIRECTORY.value
-                                if file_type == "directory"
-                                else PDDLType.FILE.value)
+                    pddl_type = (
+                        PDDLType.DIRECTORY.value
+                        if file_type == "directory"
+                        else PDDLType.FILE.value
+                    )
 
                     # Detect configuration files
-                    if (file_type == "regular" and
-                        (path.startswith("/etc/") or path.endswith(".conf"))):
+                    if file_type == "regular" and (
+                        path.startswith("/etc/") or path.endswith(".conf")
+                    ):
                         pddl_type = PDDLType.CONFIG_FILE.value
 
                     obj = {
@@ -243,16 +253,14 @@ class SystemStateExtractor:
                             "uid": row.get("uid"),
                             "gid": row.get("gid"),
                             "mode": row.get("mode"),
-                            "size": row.get("size")
-                        }
+                            "size": row.get("size"),
+                        },
                     }
                     objects.append(obj)
 
-                    predicates.append({
-                        "name": "file_exists",
-                        "arguments": [name],
-                        "value": True
-                    })
+                    predicates.append(
+                        {"name": "file_exists", "arguments": [name], "value": True}
+                    )
 
             except Exception as e:
                 log(f"Warning: Failed to query path {base_path}: {e}")
@@ -262,11 +270,11 @@ class SystemStateExtractor:
     def _extract_relationships(self, objects: dict) -> dict:
         """Extract relationships between objects (dependencies, ownership)."""
         relationships = {
-            "depends_on": [],      # service -> package
-            "configures": [],      # config_file -> service
-            "owned_by": [],        # file -> user
-            "member_of": [],       # user -> group
-            "can_escalate": [],    # users who can sudo
+            "depends_on": [],  # service -> package
+            "configures": [],  # config_file -> service
+            "owned_by": [],  # file -> user
+            "member_of": [],  # user -> group
+            "can_escalate": [],  # users who can sudo
         }
 
         # Extract service -> package dependencies via systemd
@@ -277,10 +285,9 @@ class SystemStateExtractor:
                 if "package" in objects:
                     for pkg in objects["package"]:
                         if pkg["name"] == svc_name or svc_name.startswith(pkg["name"]):
-                            relationships["depends_on"].append({
-                                "service": svc["name"],
-                                "package": pkg["name"]
-                            })
+                            relationships["depends_on"].append(
+                                {"service": svc["name"], "package": pkg["name"]}
+                            )
 
         # Extract config file -> service relationships
         if "configuration_file" in objects and "service" in objects:
@@ -289,20 +296,18 @@ class SystemStateExtractor:
                 for svc in objects["service"]:
                     svc_name = svc.get("original_name", "").replace(".service", "")
                     if svc_name in cfg_path:
-                        relationships["configures"].append({
-                            "config": cfg["name"],
-                            "service": svc["name"]
-                        })
+                        relationships["configures"].append(
+                            {"config": cfg["name"], "service": svc["name"]}
+                        )
 
         # Extract user group memberships and sudo capability
         try:
             query = "SELECT uid, gid FROM user_groups"
             results = self.osquery.execute_query(query)
             for row in results:
-                relationships["member_of"].append({
-                    "user_uid": row.get("uid"),
-                    "group_gid": row.get("gid")
-                })
+                relationships["member_of"].append(
+                    {"user_uid": row.get("uid"), "group_gid": row.get("gid")}
+                )
         except Exception:
             pass
 
@@ -324,9 +329,7 @@ class SystemStateExtractor:
                     for user in objects["user"]:
                         uid = user.get("properties", {}).get("uid")
                         if uid in sudo_uids:
-                            relationships["can_escalate"].append({
-                                "user": user["name"]
-                            })
+                            relationships["can_escalate"].append({"user": user["name"]})
         except Exception:
             pass
 
@@ -337,7 +340,7 @@ class SystemStateExtractor:
         if not name:
             return ""
         # Replace invalid characters with underscores
-        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
         # Ensure doesn't start with number
         if sanitized and sanitized[0].isdigit():
             sanitized = "obj_" + sanitized

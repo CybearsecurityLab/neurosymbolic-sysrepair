@@ -22,13 +22,14 @@ def log(msg: str):
     try:
         print(msg, file=_log_stream)
         # Flush to ensure immediate output for long-running processes
-        if hasattr(_log_stream, 'flush'):
+        if hasattr(_log_stream, "flush"):
             _log_stream.flush()
     except (IOError, BrokenPipeError):
         # Handle cases where the pipe is closed (e.g. | head)
         # Reopen stdout to /dev/null to suppress further errors
         import os
-        sys.stdout = open(os.devnull, 'w')
+
+        sys.stdout = open(os.devnull, "w")
 
 
 def set_log_stream(stream: TextIO):

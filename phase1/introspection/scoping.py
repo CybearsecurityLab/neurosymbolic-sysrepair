@@ -23,7 +23,9 @@ class DependencyGraph:
         self.incoming[target_id].append(source_id)
 
     def get_neighbors(self, entity_id: str) -> set[str]:
-        return set(self.outgoing.get(entity_id, [])) | set(self.incoming.get(entity_id, []))
+        return set(self.outgoing.get(entity_id, [])) | set(
+            self.incoming.get(entity_id, [])
+        )
 
     def get_anchors(self) -> list[GraphEntity]:
         return [e for e in self.entities.values() if e.is_anchor]
@@ -78,7 +80,7 @@ class ScopeAnalyzer:
                 id=f"user:{uid}",
                 entity_type=EntityType.USER,
                 name=row.get("username", ""),
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
             self.uid_to_entity[uid] = entity.id
@@ -90,7 +92,7 @@ class ScopeAnalyzer:
                 id=f"group:{row.get('gid', '')}",
                 entity_type=EntityType.GROUP,
                 name=row.get("groupname", ""),
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
 
@@ -106,7 +108,7 @@ class ScopeAnalyzer:
                 id=f"process:{pid}",
                 entity_type=EntityType.PROCESS,
                 name=row.get("name", ""),
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
             self.pid_to_entity[pid] = entity.id
@@ -122,7 +124,7 @@ class ScopeAnalyzer:
                 id=f"port:{protocol}:{port_num}",
                 entity_type=EntityType.PORT,
                 name=f"{protocol}_{port_num}",
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
 
@@ -138,7 +140,7 @@ class ScopeAnalyzer:
                     id=f"interface:{iface}",
                     entity_type=EntityType.INTERFACE,
                     name=iface,
-                    original_data=row
+                    original_data=row,
                 )
                 self.graph.add_entity(entity)
         except Exception:
@@ -155,21 +157,19 @@ class ScopeAnalyzer:
                 id=f"service:{service_id}",
                 entity_type=EntityType.SERVICE,
                 name=service_id,
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
 
     def _extract_packages(self):
-        results = self.osquery.execute_query(
-            "SELECT name, version FROM deb_packages"
-        )
+        results = self.osquery.execute_query("SELECT name, version FROM deb_packages")
         for row in results:
             pkg_name = row.get("name", "")
             entity = GraphEntity(
                 id=f"package:{pkg_name}",
                 entity_type=EntityType.PACKAGE,
                 name=pkg_name,
-                original_data=row
+                original_data=row,
             )
             self.graph.add_entity(entity)
 
@@ -186,7 +186,7 @@ class ScopeAnalyzer:
                     id=f"config:{path}",
                     entity_type=EntityType.CONFIG_FILE,
                     name=path,
-                    original_data=row
+                    original_data=row,
                 )
                 self.graph.add_entity(entity)
         except Exception:
@@ -305,9 +305,10 @@ class ScopeAnalyzer:
                 "total_entities": len(self.graph.entities),
                 "anchor_count": len(self.graph.get_anchors()),
                 "reachable_count": len(self.graph.get_reachable()),
-                "pruned_count": len(self.graph.entities) - len(self.graph.get_reachable()),
-                "scoping_method": "anchor_propagate"
-            }
+                "pruned_count": len(self.graph.entities)
+                - len(self.graph.get_reachable()),
+                "scoping_method": "anchor_propagate",
+            },
         }
 
         type_map = {
@@ -330,11 +331,11 @@ class ScopeAnalyzer:
 
             # 1. Base sanitization (e.g. "user:root" -> "user_root")
             raw_name = f"{pddl_type}_{entity.name}"
-            sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', str(raw_name)).lower()
+            sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(raw_name)).lower()
 
             # Ensure valid PDDL start char
             if not sanitized or not sanitized[0].isalpha():
-                sanitized = "obj_" + sanitized.lstrip('_')
+                sanitized = "obj_" + sanitized.lstrip("_")
 
             # 2. Collision Resolution (e.g. "user_root" -> "user_root_1")
             final_name = sanitized
@@ -355,7 +356,7 @@ class ScopeAnalyzer:
                 "name": clean_name,
                 "original_name": entity.name,
                 "type": pddl_type,
-                "properties": entity.original_data
+                "properties": entity.original_data,
             }
 
             state["objects"][pddl_type].append(obj)
@@ -371,25 +372,25 @@ class ScopeAnalyzer:
                 tgt_name = entity_id_to_pddl_name[tgt_id]
 
                 if edge_type == "uses":
-                    state["relationships"]["depends_on"].append({
-                        "service": src_name, "package": tgt_name
-                    })
+                    state["relationships"]["depends_on"].append(
+                        {"service": src_name, "package": tgt_name}
+                    )
                 elif edge_type == "configured_by":
-                    state["relationships"]["configures"].append({
-                        "config": tgt_name, "service": src_name
-                    })
+                    state["relationships"]["configures"].append(
+                        {"config": tgt_name, "service": src_name}
+                    )
                 elif edge_type == "member_of":
-                    state["relationships"]["member_of"].append({
-                        "user": src_name, "group": tgt_name
-                    })
+                    state["relationships"]["member_of"].append(
+                        {"user": src_name, "group": tgt_name}
+                    )
 
         # Add can_escalate relationships
         for entity in self.graph.get_reachable():
-            if entity.entity_type == EntityType.USER and entity.original_data.get("can_sudo"):
+            if entity.entity_type == EntityType.USER and entity.original_data.get(
+                "can_sudo"
+            ):
                 clean_name = entity_id_to_pddl_name[entity.id]
-                state["relationships"]["can_escalate"].append({
-                    "user": clean_name
-                })
+                state["relationships"]["can_escalate"].append({"user": clean_name})
 
         return dict(state)
 
@@ -399,49 +400,77 @@ class ScopeAnalyzer:
 
         if entity.entity_type == EntityType.SERVICE:
             # 1. Existence
-            predicates.append({"name": "service_exists", "arguments": [name], "value": True})
+            predicates.append(
+                {"name": "service_exists", "arguments": [name], "value": True}
+            )
 
             # 2. State (Running)
             is_active = data.get("active_state") in AnchorCriteria.ACTIVE_STATES
-            predicates.append({"name": "service_running", "arguments": [name], "value": is_active})
+            predicates.append(
+                {"name": "service_running", "arguments": [name], "value": is_active}
+            )
 
             # 3. State (Failed) - FIX for missing predicate
             is_failed = data.get("active_state") == "failed"
-            predicates.append({"name": "service_failed", "arguments": [name], "value": is_failed})
+            predicates.append(
+                {"name": "service_failed", "arguments": [name], "value": is_failed}
+            )
 
             # 4. State (Enabled) - FIX for missing predicate
             # Note: osquery 'load_state' is usually 'loaded', 'masked', or 'not-found'
             # We treat 'loaded' + presence of fragment path as a proxy for enabled/manageable
-            is_loaded = data.get("load_state") == "loaded" and bool(data.get("fragment_path"))
-            predicates.append({"name": "service_enabled", "arguments": [name], "value": is_loaded})
+            is_loaded = data.get("load_state") == "loaded" and bool(
+                data.get("fragment_path")
+            )
+            predicates.append(
+                {"name": "service_enabled", "arguments": [name], "value": is_loaded}
+            )
 
         elif entity.entity_type == EntityType.PACKAGE:
-            predicates.append({"name": "package_installed", "arguments": [name], "value": True})
+            predicates.append(
+                {"name": "package_installed", "arguments": [name], "value": True}
+            )
             # Note: 'vulnerable' predicate requires external CVE data not available in standard osquery tables
 
         elif entity.entity_type == EntityType.USER:
-            predicates.append({"name": "user_exists", "arguments": [name], "value": True})
+            predicates.append(
+                {"name": "user_exists", "arguments": [name], "value": True}
+            )
 
             # 1. Privileges
             is_root = str(data.get("uid")) == "0"
             if is_root or data.get("can_sudo"):
-                predicates.append({"name": "can_escalate", "arguments": [name], "value": True})
+                predicates.append(
+                    {"name": "can_escalate", "arguments": [name], "value": True}
+                )
 
             # 2. Criticality - FIX for missing predicate
             # System users (uid < 1000) are generally critical
             uid = int(data.get("uid", 9999))
             is_critical = uid < 1000 or is_root
-            predicates.append({"name": "user_critical", "arguments": [name], "value": is_critical})
+            predicates.append(
+                {"name": "user_critical", "arguments": [name], "value": is_critical}
+            )
 
         elif entity.entity_type in [EntityType.CONFIG_FILE, EntityType.FILE]:
-            predicates.append({"name": "file_exists", "arguments": [name], "value": True})
+            predicates.append(
+                {"name": "file_exists", "arguments": [name], "value": True}
+            )
 
             # 1. Criticality - FIX for missing predicate
             # Check if path is in critical system directories
             path = data.get("path") or data.get("filename") or ""
-            critical_prefixes = ["/etc/passwd", "/etc/shadow", "/etc/sudoers", "/boot", "/usr/bin"]
+            critical_prefixes = [
+                "/etc/passwd",
+                "/etc/shadow",
+                "/etc/sudoers",
+                "/boot",
+                "/usr/bin",
+            ]
             is_critical = any(path.startswith(p) for p in critical_prefixes)
-            predicates.append({"name": "file_critical", "arguments": [name], "value": is_critical})
+            predicates.append(
+                {"name": "file_critical", "arguments": [name], "value": is_critical}
+            )
 
         elif entity.entity_type == EntityType.PORT:
             predicates.append({"name": "port_open", "arguments": [name], "value": True})
@@ -449,26 +478,36 @@ class ScopeAnalyzer:
         elif entity.entity_type == EntityType.PROCESS:
             # Process state: R=running, S=sleeping, D=disk sleep, Z=zombie, T=stopped
             state = data.get("state", "")
-            is_running = state in ["R", "S", "D"]  # Consider sleeping processes as "running"
-            predicates.append({"name": "process_running", "arguments": [name], "value": is_running})
+            is_running = state in [
+                "R",
+                "S",
+                "D",
+            ]  # Consider sleeping processes as "running"
+            predicates.append(
+                {"name": "process_running", "arguments": [name], "value": is_running}
+            )
 
         elif entity.entity_type == EntityType.INTERFACE:
-            predicates.append({"name": "interface_exists", "arguments": [name], "value": True})
+            predicates.append(
+                {"name": "interface_exists", "arguments": [name], "value": True}
+            )
             # Assume interfaces with addresses are "up"
             has_address = bool(data.get("address"))
-            predicates.append({"name": "interface_up", "arguments": [name], "value": has_address})
+            predicates.append(
+                {"name": "interface_up", "arguments": [name], "value": has_address}
+            )
 
     def _sanitize_name(self, name: str) -> str:
-            if not name:
-                return ""
-            # Replace non-alphanumeric chars with underscores
-            sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', str(name))
+        if not name:
+            return ""
+        # Replace non-alphanumeric chars with underscores
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(name))
 
-            # Ensure it starts with a letter (if starts with _ or digit, prepend 'obj_')
-            if sanitized and not sanitized[0].isalpha():
-                sanitized = "obj_" + sanitized.lstrip('_')
+        # Ensure it starts with a letter (if starts with _ or digit, prepend 'obj_')
+        if sanitized and not sanitized[0].isalpha():
+            sanitized = "obj_" + sanitized.lstrip("_")
 
-            return sanitized.lower()
+        return sanitized.lower()
 
     def get_statistics(self) -> dict:
         """Return scoping statistics."""

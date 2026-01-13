@@ -9,6 +9,7 @@ import os
 import tempfile
 from typing import Tuple
 
+
 class PDDLValidator:
     """
     Validates generated PDDL using the 'pddl' Python library.
@@ -22,6 +23,7 @@ class PDDLValidator:
         """Check if the pddl library is installed."""
         try:
             import pddl
+
             return True
         except ImportError:
             return False
@@ -34,10 +36,13 @@ class PDDLValidator:
         Validate domain syntax by attempting to parse it.
         """
         if not self._available:
-            return True, "PDDL library not installed (pip install pddl) - skipping validation"
+            return (
+                True,
+                "PDDL library not installed (pip install pddl) - skipping validation",
+            )
 
         # Write content to a temporary file because parse_domain expects a file path
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.pddl', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pddl", delete=False) as f:
             f.write(domain_pddl)
             temp_path = f.name
 
@@ -68,11 +73,15 @@ class PDDLValidator:
         problem_file = None
 
         try:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.pddl', delete=False) as df:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=False
+            ) as df:
                 df.write(domain_pddl)
                 domain_file = df.name
 
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.pddl', delete=False) as pf:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=False
+            ) as pf:
                 pf.write(problem_pddl)
                 problem_file = pf.name
 

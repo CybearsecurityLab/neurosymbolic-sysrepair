@@ -15,6 +15,7 @@ from phase1.common.logger import log
 # Abstract Interface
 # =============================================================================
 
+
 class OSQueryInterface(ABC):
     """Abstract interface for osquery operations."""
 
@@ -37,6 +38,7 @@ class OSQueryInterface(ABC):
 # Shell Interface (Fallback)
 # =============================================================================
 
+
 class OSQueryShellInterface(OSQueryInterface):
     """
     Interface using osqueryi shell via subprocess.
@@ -54,7 +56,9 @@ class OSQueryShellInterface(OSQueryInterface):
         try:
             result = subprocess.run(
                 [self.osqueryi_path, "--version"],
-                capture_output=True, text=True, timeout=10
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             self._available = result.returncode == 0
             if self._available:
@@ -74,7 +78,9 @@ class OSQueryShellInterface(OSQueryInterface):
         try:
             result = subprocess.run(
                 [self.osqueryi_path, "--json", sql],
-                capture_output=True, text=True, timeout=30
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode != 0:
                 raise RuntimeError(f"Query failed: {result.stderr}")
@@ -89,6 +95,7 @@ class OSQueryShellInterface(OSQueryInterface):
 # =============================================================================
 # Thrift Interface (Primary)
 # =============================================================================
+
 
 class OSQueryThriftInterface(OSQueryInterface):
     """
@@ -137,7 +144,9 @@ class OSQueryThriftInterface(OSQueryInterface):
                 if test_result.response:
                     self._version = test_result.response[0].get("v", "unknown")
             else:
-                raise RuntimeError(f"Connection test failed: {test_result.status.message}")
+                raise RuntimeError(
+                    f"Connection test failed: {test_result.status.message}"
+                )
 
         except ImportError:
             raise RuntimeError(
@@ -211,8 +220,10 @@ class OSQueryThriftInterface(OSQueryInterface):
 # Factory
 # =============================================================================
 
-def get_osquery_interface(prefer_thrift: bool = True,
-                          socket_path: Optional[str] = None) -> OSQueryInterface:
+
+def get_osquery_interface(
+    prefer_thrift: bool = True, socket_path: Optional[str] = None
+) -> OSQueryInterface:
     """
     Factory function to get osquery interface.
 

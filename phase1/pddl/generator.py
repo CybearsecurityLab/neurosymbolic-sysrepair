@@ -100,18 +100,18 @@ class PDDLGenerator:
         if predicate_str.startswith("(not"):
             is_negated = True
             # Extract inner predicate: (not (pred args)) -> (pred args)
-            match = re.match(r'\(not\s+(\([^)]+\))\s*\)', predicate_str)
+            match = re.match(r"\(not\s+(\([^)]+\))\s*\)", predicate_str)
             if match:
                 inner = match.group(1)
             else:
                 # Try simpler pattern
-                inner = re.sub(r'^\(not\s+', '(', predicate_str)
-                if inner.endswith('))'):
+                inner = re.sub(r"^\(not\s+", "(", predicate_str)
+                if inner.endswith("))"):
                     inner = inner[:-1]
 
         # Remove outer parentheses for processing
         inner = inner.strip()
-        if inner.startswith('(') and inner.endswith(')'):
+        if inner.startswith("(") and inner.endswith(")"):
             inner = inner[1:-1].strip()
 
         # Split into predicate name and arguments
@@ -129,14 +129,14 @@ class PDDLGenerator:
 
         # Reject if predicate name is a variable (starts with ?)
         # Variables can only be arguments, not predicate names
-        if pred_name.startswith('?'):
+        if pred_name.startswith("?"):
             return None
 
         # Sanitize each argument
         sanitized_args = []
         for arg in args:
             # Keep variables as-is (start with ?)
-            if arg.startswith('?'):
+            if arg.startswith("?"):
                 sanitized_args.append(arg)
             else:
                 # Sanitize literal values (like paths)
@@ -165,24 +165,28 @@ class PDDLGenerator:
             return ""
 
         # Replace path separators and other invalid characters with underscores
-        sanitized = re.sub(r'[^a-zA-Z0-9_?-]', '_', str(name))
+        sanitized = re.sub(r"[^a-zA-Z0-9_?-]", "_", str(name))
 
         # Remove leading underscores and collapse multiple underscores
-        sanitized = re.sub(r'_+', '_', sanitized).strip('_')
+        sanitized = re.sub(r"_+", "_", sanitized).strip("_")
 
         # Ensure doesn't start with a digit (unless it's a variable)
-        if sanitized and not sanitized.startswith('?'):
-            if sanitized[0].isdigit() or sanitized[0] == '_':
-                sanitized = "obj_" + sanitized.lstrip('_')
+        if sanitized and not sanitized.startswith("?"):
+            if sanitized[0].isdigit() or sanitized[0] == "_":
+                sanitized = "obj_" + sanitized.lstrip("_")
 
         # Ensure it starts with a letter or ?
-        if sanitized and not sanitized[0].isalpha() and not sanitized.startswith('?'):
+        if sanitized and not sanitized[0].isalpha() and not sanitized.startswith("?"):
             sanitized = "id_" + sanitized
 
         return sanitized.lower()
 
-    def generate_problem(self, state: dict, goal_predicates: list[str],
-                        problem_name: str = "sysadmin-problem") -> str:
+    def generate_problem(
+        self,
+        state: dict,
+        goal_predicates: list[str],
+        problem_name: str = "sysadmin-problem",
+    ) -> str:
         """Generate PDDL problem file from current state."""
         lines = []
 
@@ -217,7 +221,7 @@ class PDDLGenerator:
 
         # Base types
         lines.append("    ; Base types")
-        #lines.append("    object")
+        # lines.append("    object")
         lines.append("    ")
 
         # Filesystem hierarchy
@@ -251,7 +255,9 @@ class PDDLGenerator:
 
         return "\n".join(lines)
 
-    def _generate_predicates(self, state: dict, actions: list[ActionSchema] = []) -> str:
+    def _generate_predicates(
+        self, state: dict, actions: list[ActionSchema] = []
+    ) -> str:
         """Generate PDDL predicates, avoiding duplicates and fixing arity."""
         lines = ["  (:predicates"]
 
@@ -260,7 +266,7 @@ class PDDLGenerator:
 
         def add_line(text):
             lines.append(f"    {text}")
-            match = re.search(r'\(\s*([^\s)]+)', text)
+            match = re.search(r"\(\s*([^\s)]+)", text)
             if match:
                 defined_predicates.add(match.group(1))
 
@@ -322,9 +328,21 @@ class PDDLGenerator:
 
         # Invalid predicate names to filter out
         INVALID_PREDICATES = {
-            "and", "or", "not", "exists", "forall",  # PDDL keywords
-            "?policy", "?user", "?password", "?gid", "?value", "?shell",
-            "?group", "?seuser", "", "?",
+            "and",
+            "or",
+            "not",
+            "exists",
+            "forall",  # PDDL keywords
+            "?policy",
+            "?user",
+            "?password",
+            "?gid",
+            "?value",
+            "?shell",
+            "?group",
+            "?seuser",
+            "",
+            "?",
         }
 
         # Scan actions to determine arity (argument count)
@@ -334,7 +352,11 @@ class PDDLGenerator:
             all_conditions = action.preconditions + action.effects
             for cond in all_conditions:
                 # Sanitize the condition first
-                sanitized_cond = self._sanitize_predicate(cond) if hasattr(self, '_sanitize_predicate') else cond
+                sanitized_cond = (
+                    self._sanitize_predicate(cond)
+                    if hasattr(self, "_sanitize_predicate")
+                    else cond
+                )
                 if not sanitized_cond:
                     continue
 
@@ -356,7 +378,7 @@ class PDDLGenerator:
                     continue
                 if not pred_name or not pred_name[0].isalpha():
                     continue
-                if not re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*$', pred_name):
+                if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", pred_name):
                     continue
                 # Skip predicates that look like paths (even partially sanitized)
                 if pred_name.startswith("_") or "__" in pred_name:
@@ -388,10 +410,7 @@ class PDDLGenerator:
         lines = [f"  (:action {action.name}"]
 
         # Build parameters list
-        params_list = [
-            f"?{p.name} - {p.pddl_type.value}"
-            for p in action.parameters
-        ]
+        params_list = [f"?{p.name} - {p.pddl_type.value}" for p in action.parameters]
 
         # Add ?actor parameter for actions requiring privilege
         if action.requires_root:
@@ -447,7 +466,9 @@ class PDDLGenerator:
         lines = ["  (:objects"]
 
         # Check if using dynamic scoping (no limits needed)
-        is_dynamic = state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+        is_dynamic = (
+            state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+        )
 
         for pddl_type, objects in state.get("objects", {}).items():
             if objects:
@@ -459,7 +480,9 @@ class PDDLGenerator:
                     limit = self.STATIC_OBJECT_LIMITS.get(pddl_type, 50)
                     selected_objects = objects[:limit]
                     if len(objects) > limit:
-                        lines.append(f"    ; ... truncated {len(objects) - limit} more {pddl_type}s")
+                        lines.append(
+                            f"    ; ... truncated {len(objects) - limit} more {pddl_type}s"
+                        )
 
                 obj_names = " ".join(obj["name"] for obj in selected_objects)
                 lines.append(f"    {obj_names} - {pddl_type}")
@@ -473,7 +496,9 @@ class PDDLGenerator:
         lines = ["  (:init"]
 
         # Check scoping method
-        is_dynamic = state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+        is_dynamic = (
+            state.get("metadata", {}).get("scoping_method") == "anchor_propagate"
+        )
 
         # Build set of included object names
         included_objects = set()
@@ -498,19 +523,19 @@ class PDDLGenerator:
         for rel_type, relations in state.get("relationships", {}).items():
             for rel in relations:  # Reasonable limit for relationships
                 if rel_type == "depends_on":
-                    svc, pkg = rel.get('service'), rel.get('package')
+                    svc, pkg = rel.get("service"), rel.get("package")
                     if svc in included_objects and pkg in included_objects:
                         lines.append(f"    (depends_on {svc} {pkg})")
                 elif rel_type == "configures":
-                    cfg, svc = rel.get('config'), rel.get('service')
+                    cfg, svc = rel.get("config"), rel.get("service")
                     if cfg in included_objects and svc in included_objects:
                         lines.append(f"    (configures {cfg} {svc})")
                 elif rel_type == "can_escalate":
-                    user = rel.get('user')
+                    user = rel.get("user")
                     if user in included_objects:
                         lines.append(f"    (can_escalate {user})")
                 elif rel_type == "member_of":
-                    user, group = rel.get('user'), rel.get('group')
+                    user, group = rel.get("user"), rel.get("group")
                     if user in included_objects and group in included_objects:
                         lines.append(f"    (member_of {user} {group})")
 
@@ -535,7 +560,7 @@ class PDDLGenerator:
         # Pattern: "(pred) or (pred2)" or "(pred) and (pred2)"
         if " or " in effect.lower() or " and " in effect.lower():
             # Try to extract just the first valid predicate
-            match = re.match(r'^\(([^)]+)\)', effect)
+            match = re.match(r"^\(([^)]+)\)", effect)
             if match:
                 effect = f"({match.group(1)})"
             else:
@@ -543,46 +568,46 @@ class PDDLGenerator:
 
         # Remove trailing garbage like "and (package_version ?pkg version)"
         # which is missing proper structure
-        if re.search(r'\)\s+and\s+\(', effect, re.IGNORECASE):
+        if re.search(r"\)\s+and\s+\(", effect, re.IGNORECASE):
             # Take only the first predicate
-            match = re.match(r'^(\([^)]+\))', effect)
+            match = re.match(r"^(\([^)]+\))", effect)
             if match:
                 effect = match.group(1)
             else:
                 return None
 
         # Ensure balanced parentheses
-        if effect.count('(') != effect.count(')'):
+        if effect.count("(") != effect.count(")"):
             return None
 
         # Ensure it starts and ends with parentheses (or is negated)
         effect = effect.strip()
-        if not (effect.startswith('(') and effect.endswith(')')):
+        if not (effect.startswith("(") and effect.endswith(")")):
             # Try to wrap it
-            if not effect.startswith('('):
+            if not effect.startswith("("):
                 effect = f"({effect})"
-            if not effect.endswith(')'):
+            if not effect.endswith(")"):
                 effect = f"{effect})"
 
         # Validate predicate name is not a variable
         # Extract predicate name from effect (handle negation)
-        if effect.startswith('(not'):
+        if effect.startswith("(not"):
             # Extract inner predicate from (not (pred ...))
-            match = re.match(r'\(not\s+\(([^\s)]+)', effect)
+            match = re.match(r"\(not\s+\(([^\s)]+)", effect)
             if match:
                 pred_name = match.group(1)
             else:
                 return None
         else:
             # Extract from (pred ...)
-            match = re.match(r'\(([^\s)]+)', effect)
+            match = re.match(r"\(([^\s)]+)", effect)
             if match:
                 pred_name = match.group(1)
             else:
                 return None
 
         # Reject if predicate name is a variable or invalid
-        if pred_name.startswith('?') or pred_name in ['and', 'or', 'not']:
+        if pred_name.startswith("?") or pred_name in ["and", "or", "not"]:
             return None
 
         return effect

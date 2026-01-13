@@ -10,7 +10,7 @@ from .models import PDDLType, OSQueryMapping
 # Global Configuration
 # =============================================================================
 
-#MODEL = "qwen2.5:32b"
+# MODEL = "qwen2.5:32b"
 MODEL = "gemma:2b"
 LLM_MAX_CONTEXT_CHARS = 20000
 
@@ -34,7 +34,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.PACKAGE,
         predicate_name="package_installed",
         name_column="name",
-        additional_columns=["version", "arch"]
+        additional_columns=["version", "arch"],
     ),
     OSQueryMapping(
         table="systemd_units",
@@ -49,7 +49,7 @@ OSQUERY_MAPPINGS = [
         predicate_name="service_running",
         predicate_condition="active_state='active'",
         name_column="id",
-        additional_columns=["active_state", "sub_state", "load_state", "fragment_path"]
+        additional_columns=["active_state", "sub_state", "load_state", "fragment_path"],
     ),
     OSQueryMapping(
         table="users",
@@ -57,7 +57,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.USER,
         predicate_name="user_exists",
         name_column="username",
-        additional_columns=["uid", "gid", "directory"]
+        additional_columns=["uid", "gid", "directory"],
     ),
     OSQueryMapping(
         table="groups",
@@ -65,7 +65,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.GROUP,
         predicate_name="group_exists",
         name_column="groupname",
-        additional_columns=["gid"]
+        additional_columns=["gid"],
     ),
     OSQueryMapping(
         table="listening_ports",
@@ -74,7 +74,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.PORT,
         predicate_name="port_open",
         name_column="port",
-        additional_columns=["protocol", "address", "pid"]
+        additional_columns=["protocol", "address", "pid"],
     ),
     OSQueryMapping(
         table="iptables",
@@ -91,7 +91,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.FIREWALL_RULE,
         predicate_name="firewall_rule_exists",
         name_column="chain",
-        additional_columns=["policy", "target", "src_ip", "dst_ip"]
+        additional_columns=["policy", "target", "src_ip", "dst_ip"],
     ),
     OSQueryMapping(
         table="processes",
@@ -100,7 +100,7 @@ OSQUERY_MAPPINGS = [
         predicate_name="process_running",
         predicate_condition="state='R' OR state='S'",
         name_column="name",
-        additional_columns=["pid", "state", "uid"]
+        additional_columns=["pid", "state", "uid"],
     ),
     OSQueryMapping(
         table="interface_addresses",
@@ -110,7 +110,7 @@ OSQUERY_MAPPINGS = [
         pddl_type=PDDLType.INTERFACE,
         predicate_name="interface_exists",
         name_column="interface",
-        additional_columns=["address", "type"]
+        additional_columns=["address", "type"],
     ),
 ]
 
@@ -118,6 +118,7 @@ OSQUERY_MAPPINGS = [
 # =============================================================================
 # Scoping Heuristics
 # =============================================================================
+
 
 class AnchorCriteria:
     """
@@ -134,8 +135,14 @@ class AnchorCriteria:
 
     # Kernel threads usually don't need to be modeled in PDDL
     KERNEL_THREAD_PATTERNS = [
-        "[", "kworker", "ksoftirqd", "migration", "rcu_",
-        "watchdog", "cpuhp", "idle_inject"
+        "[",
+        "kworker",
+        "ksoftirqd",
+        "migration",
+        "rcu_",
+        "watchdog",
+        "cpuhp",
+        "idle_inject",
     ]
 
     @classmethod
@@ -187,3 +194,31 @@ class AnchorCriteria:
         if name.startswith("[") and name.endswith("]"):
             return True
         return any(name.startswith(p) for p in cls.KERNEL_THREAD_PATTERNS)
+
+
+def get_base_predicates() -> list[str]:
+    """
+    Dynamically generates the list of base predicates defined in OSQuery mappings.
+    Used to seed the LLM context so it prefers existing vocabulary.
+    """
+    predicates = set()
+
+    # 1. Add predicates from OSQuery Mappings
+    for mapping in OSQUERY_MAPPINGS:
+        # Example: (package_installed ?package)
+        predicates.add(f"({mapping.predicate_name} ?{mapping.pddl_type.value})")
+
+        # Add implicit lifecycle predicates (implied by the mapping type)
+        if mapping.pddl_type == PDDLType.SERVICE:
+            predicates.add("(service_enabled ?service)")
+            predicates.add("(service_failed ?service)")
+        elif mapping.pddl_type == PDDLType.USER:
+            predicates.add("(can_escalate ?user)")
+            predicates.add("(user_critical ?user)")
+
+    # 2. Add static environment predicates
+    predicates.add("(network_available)")
+    predicates.add("(depends_on ?service ?package)")
+    predicates.add("(configures ?config ?service)")
+
+    return sorted(list(predicates))

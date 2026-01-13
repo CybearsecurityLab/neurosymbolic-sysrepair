@@ -32,8 +32,9 @@ def check_dependencies():
 
     # Check osquery
     try:
-        result = subprocess.run(["osqueryi", "--version"],
-                                capture_output=True, timeout=5)
+        result = subprocess.run(
+            ["osqueryi", "--version"], capture_output=True, timeout=5
+        )
         deps["osquery"] = result.returncode == 0
     except Exception:
         pass
@@ -41,6 +42,7 @@ def check_dependencies():
     # Check vLLM
     try:
         import vllm
+
         deps["vllm"] = True
     except ImportError:
         pass
@@ -48,6 +50,7 @@ def check_dependencies():
     # Check OpenAI client
     try:
         import openai
+
         deps["openai"] = True
     except ImportError:
         pass
@@ -86,27 +89,32 @@ def start_vllm_server(model: str, port: int = 8000) -> Optional[subprocess.Popen
     max_len = 4096 if tp_size == 2 else 8192
 
     cmd = [
-        sys.executable, "-m", "vllm.entrypoints.openai.api_server",
-        "--model", model,
-        "--tensor-parallel-size", str(tp_size),
-        "--max-model-len", str(max_len),
-        "--gpu-memory-utilization", "0.90",
-        "--port", str(port),
+        sys.executable,
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--model",
+        model,
+        "--tensor-parallel-size",
+        str(tp_size),
+        "--max-model-len",
+        str(max_len),
+        "--gpu-memory-utilization",
+        "0.90",
+        "--port",
+        str(port),
         "--disable-log-requests",
     ]
 
     # Start in background
     log_file = open("vllm_server.log", "w")
     process = subprocess.Popen(
-        cmd,
-        stdout=log_file,
-        stderr=subprocess.STDOUT,
-        preexec_fn=os.setsid
+        cmd, stdout=log_file, stderr=subprocess.STDOUT, preexec_fn=os.setsid
     )
 
     # Wait for server to be ready
     print("[*] Waiting for vLLM server to initialize...")
     import urllib.request
+
     for i in range(120):
         try:
             urllib.request.urlopen(f"http://localhost:{port}/health", timeout=1)
@@ -140,13 +148,17 @@ def run_phase1(output_dir: Path) -> dict:
 
     # Save state for Phase 2
     state_file = output_dir / "phase1_state.json"
-    with open(state_file, 'w') as f:
-        json.dump({
-            "objects": results.get("objects", {}),
-            "predicates": results.get("predicates", []),
-            "relationships": results.get("relationships", {}),
-            "statistics": results.get("statistics", {}),
-        }, f, indent=2)
+    with open(state_file, "w") as f:
+        json.dump(
+            {
+                "objects": results.get("objects", {}),
+                "predicates": results.get("predicates", []),
+                "relationships": results.get("relationships", {}),
+                "statistics": results.get("statistics", {}),
+            },
+            f,
+            indent=2,
+        )
 
     print(f"[✓] Phase 1 state saved to: {state_file}")
     return results
@@ -162,7 +174,7 @@ def run_minimal_phase1(output_dir: Path) -> dict:
         "objects": {},
         "predicates": [],
         "relationships": {},
-        "statistics": {}
+        "statistics": {},
     }
 
     # Try osquery extraction
@@ -170,40 +182,46 @@ def run_minimal_phase1(output_dir: Path) -> dict:
         # Packages
         proc = subprocess.run(
             ["osqueryi", "--json", "SELECT name, version FROM deb_packages LIMIT 100"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if proc.returncode == 0:
             packages = json.loads(proc.stdout)
             results["objects"]["package"] = [
-                {"name": p["name"], "version": p["version"]}
-                for p in packages
+                {"name": p["name"], "version": p["version"]} for p in packages
             ]
             results["statistics"]["package_count"] = len(packages)
 
         # Services
         proc = subprocess.run(
-            ["osqueryi", "--json",
-             "SELECT id, active_state FROM systemd_units WHERE id LIKE '%.service' LIMIT 100"],
-            capture_output=True, text=True, timeout=30
+            [
+                "osqueryi",
+                "--json",
+                "SELECT id, active_state FROM systemd_units WHERE id LIKE '%.service' LIMIT 100",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if proc.returncode == 0:
             services = json.loads(proc.stdout)
             results["objects"]["service"] = [
-                {"name": s["id"], "active": s["active_state"]}
-                for s in services
+                {"name": s["id"], "active": s["active_state"]} for s in services
             ]
             results["statistics"]["service_count"] = len(services)
 
         # Users
         proc = subprocess.run(
             ["osqueryi", "--json", "SELECT username, uid FROM users"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if proc.returncode == 0:
             users = json.loads(proc.stdout)
             results["objects"]["user"] = [
-                {"name": u["username"], "uid": u["uid"]}
-                for u in users
+                {"name": u["username"], "uid": u["uid"]} for u in users
             ]
             results["statistics"]["user_count"] = len(users)
 
@@ -217,17 +235,14 @@ def run_minimal_phase1(output_dir: Path) -> dict:
 
     # Save state
     state_file = output_dir / "phase1_state.json"
-    with open(state_file, 'w') as f:
+    with open(state_file, "w") as f:
         json.dump(results, f, indent=2)
 
     return results
 
 
 def run_phase2(
-        output_dir: Path,
-        phase1_state: dict,
-        model: str,
-        use_mock: bool = False
+    output_dir: Path, phase1_state: dict, model: str, use_mock: bool = False
 ) -> dict:
     """Execute Phase 2: Parallel Synthesis."""
     print("\n" + "=" * 70)
@@ -236,11 +251,7 @@ def run_phase2(
 
     # Import Phase 2 module
     try:
-        from phase2 import (
-            Phase2Orchestrator,
-            HardwareConfig,
-            LLMConfig
-        )
+        from phase2 import Phase2Orchestrator, HardwareConfig, LLMConfig
     except ImportError as e:
         print(f"[✗] Phase 2 module import failed: {e}")
         return {"success": False, "error": str(e)}
@@ -258,17 +269,14 @@ def run_phase2(
         llm_config=llm_config,
         osquery_data=osquery_data,
         use_mock_llm=use_mock,
-        output_dir=str(output_dir)
+        output_dir=str(output_dir),
     )
 
     return orchestrator.run()
 
 
 def generate_report(
-        output_dir: Path,
-        phase1_results: dict,
-        phase2_results: dict,
-        elapsed_time: float
+    output_dir: Path, phase1_results: dict, phase2_results: dict, elapsed_time: float
 ):
     """Generate final report."""
     report = {
@@ -286,12 +294,12 @@ def generate_report(
         "outputs": {
             "domain_file": str(output_dir / "sysadmin.pddl"),
             "problem_file": str(output_dir / "sysadmin_problem.pddl"),
-        }
+        },
     }
 
     # Save report
     report_file = output_dir / "pipeline_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     # Print summary
@@ -302,19 +310,19 @@ def generate_report(
     Total Time: {elapsed_time:.1f} seconds
 
     Phase 1 (Introspection):
-      Status: {'✓ SUCCESS' if phase1_results.get('success') else '✗ FAILED'}
-      Packages: {phase1_results.get('statistics', {}).get('package_count', 'N/A')}
-      Services: {phase1_results.get('statistics', {}).get('service_count', 'N/A')}
-      Users: {phase1_results.get('statistics', {}).get('user_count', 'N/A')}
+      Status: {"✓ SUCCESS" if phase1_results.get("success") else "✗ FAILED"}
+      Packages: {phase1_results.get("statistics", {}).get("package_count", "N/A")}
+      Services: {phase1_results.get("statistics", {}).get("service_count", "N/A")}
+      Users: {phase1_results.get("statistics", {}).get("user_count", "N/A")}
 
     Phase 2 (Synthesis):
-      Status: {'✓ SUCCESS' if phase2_results.get('success') else '✗ FAILED'}
-      Workers: {phase2_results.get('statistics', {}).get('workers_successful', 'N/A')}/{phase2_results.get('statistics', {}).get('workers_total', 'N/A')}
-      Actions: {phase2_results.get('statistics', {}).get('total_actions', 'N/A')}
-      Validation: {'✓ PASSED' if phase2_results.get('validation_passed') else '⚠ WARNINGS'}
+      Status: {"✓ SUCCESS" if phase2_results.get("success") else "✗ FAILED"}
+      Workers: {phase2_results.get("statistics", {}).get("workers_successful", "N/A")}/{phase2_results.get("statistics", {}).get("workers_total", "N/A")}
+      Actions: {phase2_results.get("statistics", {}).get("total_actions", "N/A")}
+      Validation: {"✓ PASSED" if phase2_results.get("validation_passed") else "⚠ WARNINGS"}
 
     Output Files:
-      Domain: {output_dir / 'sysadmin.pddl'}
+      Domain: {output_dir / "sysadmin.pddl"}
       Report: {report_file}
     """)
 
@@ -338,43 +346,35 @@ Examples:
 
   # Skip Phase 1, use existing state
   python run_pipeline.py --skip-phase1 --phase1-state ./output/phase1_state.json
-        """
+        """,
     )
 
     parser.add_argument(
-        "--output-dir", "-o",
+        "--output-dir",
+        "-o",
         default="./pddl_output",
-        help="Output directory (default: ./pddl_output)"
+        help="Output directory (default: ./pddl_output)",
     )
     parser.add_argument(
-        "--model", "-m",
+        "--model",
+        "-m",
         default="mistralai/Mistral-7B-Instruct-v0.3",
-        help="LLM model to use"
+        help="LLM model to use",
     )
     parser.add_argument(
-        "--mock",
-        action="store_true",
-        help="Use mock LLM (for testing without GPU)"
+        "--mock", action="store_true", help="Use mock LLM (for testing without GPU)"
     )
     parser.add_argument(
         "--skip-phase1",
         action="store_true",
-        help="Skip Phase 1, use existing state file"
+        help="Skip Phase 1, use existing state file",
+    )
+    parser.add_argument("--phase1-state", help="Path to existing Phase 1 state JSON")
+    parser.add_argument(
+        "--no-vllm", action="store_true", help="Don't auto-start vLLM server"
     )
     parser.add_argument(
-        "--phase1-state",
-        help="Path to existing Phase 1 state JSON"
-    )
-    parser.add_argument(
-        "--no-vllm",
-        action="store_true",
-        help="Don't auto-start vLLM server"
-    )
-    parser.add_argument(
-        "--vllm-port",
-        type=int,
-        default=8000,
-        help="vLLM server port (default: 8000)"
+        "--vllm-port", type=int, default=8000, help="vLLM server port (default: 8000)"
     )
 
     args = parser.parse_args()
@@ -424,7 +424,7 @@ Examples:
             output_dir=output_dir,
             phase1_state=phase1_results,
             model=args.model,
-            use_mock=args.mock
+            use_mock=args.mock,
         )
 
         # Generate report

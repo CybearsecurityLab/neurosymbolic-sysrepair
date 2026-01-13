@@ -1,6 +1,6 @@
 from typing import Optional
 
-from phase1.common.config import MODEL
+from phase1.common.config import MODEL, get_base_predicates
 from phase1.common.logger import log
 from phase1.introspection.extractor import SystemStateExtractor
 from phase1.mining.manpage_parser import create_hybrid_parser
@@ -16,14 +16,16 @@ class Phase1Orchestrator:
     Uses osquery 3.1.1 Thrift API for system state extraction.
     """
 
-    def __init__(self, output_dir: str = "./pddl_output",
-                 osquery_socket: Optional[str] = None,
-                 validate: bool = False,
-                 scoping_mode: str = "dynamic",
-                 llm_model: str = MODEL,
-                 llm_url: str = "http://localhost:11434",
-                 enable_llm: bool = True
-                 ):
+    def __init__(
+        self,
+        output_dir: str = "./pddl_output",
+        osquery_socket: Optional[str] = None,
+        validate: bool = False,
+        scoping_mode: str = "dynamic",
+        llm_model: str = MODEL,
+        llm_url: str = "http://localhost:11434",
+        enable_llm: bool = True,
+    ):
         """
         Initialize orchestrator.
 
@@ -58,7 +60,7 @@ class Phase1Orchestrator:
             "pddl_generated": False,
             "errors": [],
             "warnings": [],
-            "statistics": {}
+            "statistics": {},
         }
 
         # Step 1: Initialize osquery interface
@@ -69,8 +71,7 @@ class Phase1Orchestrator:
 
         try:
             self.extractor = SystemStateExtractor(
-                socket_path=self.osquery_socket,
-                scoping_mode=self.scoping_mode
+                socket_path=self.osquery_socket, scoping_mode=self.scoping_mode
             )
             log(f"  ✓ Connected to osquery")
         except Exception as e:
@@ -97,9 +98,11 @@ class Phase1Orchestrator:
                 # Show scoping results if using dynamic mode
                 metadata = self.state.get("metadata", {})
                 if metadata.get("scoping_method") == "anchor_propagate":
-                    log(f"  ✓ Scoping: {metadata.get('anchor_count', 0)} anchors → "
+                    log(
+                        f"  ✓ Scoping: {metadata.get('anchor_count', 0)} anchors → "
                         f"{metadata.get('reachable_count', 0)} reachable "
-                        f"(pruned {metadata.get('pruned_count', 0)})")
+                        f"(pruned {metadata.get('pruned_count', 0)})"
+                    )
 
                 log(f"  ✓ Extracted objects: {results['statistics']}")
             except Exception as e:
@@ -113,11 +116,14 @@ class Phase1Orchestrator:
         # Step 3: Mine actions from man pages
         log("\n[3/4] Mining actions from system documentation...")
 
+        known_preds = get_base_predicates()
+
         try:
             self.parser = create_hybrid_parser(
                 model_id=self.llm_model,
                 model_url=self.llm_url,
-                enable_llm=self.enable_llm
+                enable_llm=self.enable_llm,
+                known_predicates=known_preds,
             )
             self.actions = self.parser.extract_all_actions()
             results["actions_mined"] = True
@@ -141,7 +147,7 @@ class Phase1Orchestrator:
             problem_pddl = self.generator.generate_problem(
                 self.state,
                 ["(network_available)"],  # Trivial goal for validation
-                "sysadmin-initial"
+                "sysadmin-initial",
             )
 
             results["pddl_generated"] = True
@@ -173,27 +179,25 @@ class Phase1Orchestrator:
 
                 # Validate problem
                 problem_valid, problem_msg = self.validator.validate_problem(
-                    results.get("domain_pddl", ""),
-                    results.get("problem_pddl", "")
+                    results.get("domain_pddl", ""), results.get("problem_pddl", "")
                 )
                 results["problem_valid"] = problem_valid
                 if problem_valid:
                     log("  ✓ Problem syntax valid")
                 else:
                     log(f"  ✗ Problem invalid: {problem_msg[:200]}")
-                    results["warnings"].append(f"Problem validation: {problem_msg[:500]}")
+                    results["warnings"].append(
+                        f"Problem validation: {problem_msg[:500]}"
+                    )
             else:
                 log("  ⚠ VAL validator not installed (skipping)")
                 log("    Install from: https://github.com/KCL-Planning/VAL")
 
         # Final status
-        results["success"] = (
-            results["pddl_generated"] and
-            len(results["errors"]) == 0
-        )
+        results["success"] = results["pddl_generated"] and len(results["errors"]) == 0
 
         # Cleanup osquery connection
-        if self.extractor and hasattr(self.extractor.osquery, 'close'):
+        if self.extractor and hasattr(self.extractor.osquery, "close"):
             self.extractor.osquery.close()
             log("\n  ✓ Closed osquery connection")
 

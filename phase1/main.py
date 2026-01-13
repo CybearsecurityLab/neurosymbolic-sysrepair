@@ -13,47 +13,50 @@ def main():
         description="Phase 1: System Introspection for PDDL Domain Generation"
     )
     parser.add_argument(
-        "--output-dir", "-o",
+        "--output-dir",
+        "-o",
         default="./pddl_output",
-        help="Output directory for PDDL files"
+        help="Output directory for PDDL files",
     )
     parser.add_argument(
-        "--json-output", "-j",
+        "--json-output",
+        "-j",
         action="store_true",
-        help="Output results as JSON to stdout (progress goes to stderr)"
+        help="Output results as JSON to stdout (progress goes to stderr)",
     )
     parser.add_argument(
         "--include-pddl",
         action="store_true",
-        help="Include PDDL content in JSON output (use with -j)"
+        help="Include PDDL content in JSON output (use with -j)",
     )
     parser.add_argument(
-        "--osquery-socket", "-s",
+        "--osquery-socket",
+        "-s",
         default=None,
         help="Path to osqueryd socket (e.g., /var/osquery/osquery.em). "
-             "If not specified, spawns standalone instance."
+        "If not specified, spawns standalone instance.",
     )
     parser.add_argument(
-        "--quiet", "-q",
-        action="store_true",
-        help="Suppress progress output"
+        "--quiet", "-q", action="store_true", help="Suppress progress output"
     )
     parser.add_argument(
-        "--validate", "-v",
+        "--validate",
+        "-v",
         action="store_true",
-        help="Validate generated PDDL with VAL validator"
+        help="Validate generated PDDL with VAL validator",
     )
     parser.add_argument(
-        "--write-files", "-w",
+        "--write-files",
+        "-w",
         action="store_true",
-        help="Write PDDL files to output directory"
+        help="Write PDDL files to output directory",
     )
     parser.add_argument(
         "--scoping",
         choices=["dynamic", "static"],
         default="dynamic",
         help="Scoping method: 'dynamic' (graph-based Anchor & Propagate) or "
-             "'static' (legacy arbitrary caps). Default: dynamic"
+        "'static' (legacy arbitrary caps). Default: dynamic",
     )
 
     args = parser.parse_args()
@@ -66,28 +69,30 @@ def main():
     if args.quiet:
         # Suppress all progress output (cross-platform null device)
         import os
-        set_log_stream(open(os.devnull, 'w'))
+
+        set_log_stream(open(os.devnull, "w"))
 
     # Run orchestrator
     orchestrator = Phase1Orchestrator(
         output_dir=args.output_dir,
         osquery_socket=args.osquery_socket,
         validate=args.validate,
-        scoping_mode=args.scoping
+        scoping_mode=args.scoping,
     )
     results = orchestrator.run()
 
     # Write files if requested
     if args.write_files and results.get("pddl_generated"):
         import os
+
         os.makedirs(args.output_dir, exist_ok=True)
 
         domain_path = os.path.join(args.output_dir, "sysadmin.pddl")
         problem_path = os.path.join(args.output_dir, "problem.pddl")
 
-        with open(domain_path, 'w') as f:
+        with open(domain_path, "w") as f:
             f.write(results.get("domain_pddl", ""))
-        with open(problem_path, 'w') as f:
+        with open(problem_path, "w") as f:
             f.write(results.get("problem_pddl", ""))
 
         log(f"\nFiles written to {args.output_dir}/")
