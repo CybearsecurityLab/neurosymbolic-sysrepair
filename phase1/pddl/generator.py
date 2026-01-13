@@ -83,10 +83,57 @@ class PDDLGenerator:
     # FIX 1: Add this helper method to the PDDLGenerator class (around line 2680)
     # =============================================================================
 
+    # PDDL reserved keywords that cannot be used as predicate names
+    # Derived from BNF description of PDDL 3.1 (Kovacs)
+    PDDL_RESERVED_KEYWORDS = {
+        # Logical operators (Section 1.1 <GD>, <pre-GD>)
+        "and", "or", "not", "imply",
+        # Quantifiers (requires :existential-preconditions, :universal-preconditions)
+        "exists", "forall",
+        # Conditional effects
+        "when",
+        # Domain/Problem structure keywords
+        "define", "domain", "problem",
+        "requirements", "types", "constants", "predicates", "functions",
+        "constraints", "action", "durative-action", "derived",
+        # Action body keywords
+        "parameters", "precondition", "effect", "duration", "condition",
+        # Problem structure
+        "objects", "init", "goal", "metric", "length",
+        # Type keywords
+        "either", "object", "number",
+        # Numeric fluent operators (Section 1.1 <assign-op>)
+        "assign", "scale-up", "scale-down", "increase", "decrease",
+        # Temporal keywords (Section 1.1 <time-specifier>, <interval>)
+        "at", "over", "start", "end", "all",
+        # Trajectory constraint keywords (Section 1.2 <con-GD>)
+        "always", "sometime", "within", "at-most-once",
+        "sometime-after", "sometime-before", "always-within",
+        "hold-during", "hold-after",
+        # Metric keywords
+        "minimize", "maximize", "total-time", "total-cost", "is-violated",
+        # Preference keyword
+        "preference",
+        # Object fluent keywords
+        "undefined",
+    }
+
+    # Map reserved keywords to appropriate predicate replacements
+    # Add mappings for keywords commonly misused by LLMs
+    KEYWORD_TO_PREDICATE = {
+        "exists": "file_exists",      # Most common: LLM uses (exists ?f) meaning file existence
+        "start": "is_started",        # LLM might use (start ?svc) for service state
+        "end": "is_ended",            # LLM might use (end ?proc) for process state
+        "increase": "is_increased",   # LLM might confuse with state predicate
+        "decrease": "is_decreased",   # LLM might confuse with state predicate
+        "all": "all_of",              # LLM might use as predicate
+    }
+
     def _sanitize_predicate(self, predicate_str: str) -> Optional[str]:
         """
         Sanitize a predicate string to ensure all arguments are valid PDDL identifiers.
         Converts paths like /var/cache/apt to _var_cache_apt.
+        Replaces reserved PDDL keywords used as predicate names.
         Returns None if the predicate is irrecoverably malformed.
         """
         if not predicate_str or not isinstance(predicate_str, str):
@@ -121,6 +168,14 @@ class PDDLGenerator:
 
         pred_name = parts[0]
         args = parts[1:] if len(parts) > 1 else []
+
+        # Check for reserved PDDL keywords used as predicate names
+        pred_name_lower = pred_name.lower()
+        if pred_name_lower in self.PDDL_RESERVED_KEYWORDS:
+            if pred_name_lower in self.KEYWORD_TO_PREDICATE:
+                pred_name = self.KEYWORD_TO_PREDICATE[pred_name_lower]
+            else:
+                return None
 
         # Sanitize predicate name
         pred_name = self._sanitize_pddl_identifier(pred_name)
