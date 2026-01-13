@@ -18,7 +18,7 @@ STRICT PDDL 3.1 SYNTAX RULES:
 
 2. RESERVED KEYWORDS - NEVER use these as predicate names:
    - Logical operators: and, or, not, imply
-   - Quantifiers: exists, forall
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
    - Conditionals: when
    - Structure: define, domain, problem, action, parameters, precondition, effect
    - Types: either, object, number
@@ -26,8 +26,10 @@ STRICT PDDL 3.1 SYNTAX RULES:
    - Temporal: at, over, start, end, always, sometime, within
    - Other: preference, minimize, maximize, total-cost, total-time
    
-   WRONG: (exists ?f)           <- "exists" is a reserved quantifier keyword
-   RIGHT: (file_exists ?f)      <- Use descriptive predicate name
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
 
 3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
    WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
@@ -41,13 +43,15 @@ STRICT PDDL 3.1 SYNTAX RULES:
    - Predicate names must NOT be reserved keywords
    - Each predicate is a single S-expression, not multiple joined by operators
 
-5. PRECONDITIONS - Valid forms per BNF <GD> and <pre-GD>:
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
    - Atomic: (predicate ?args)
    - Negation: (not (predicate ?args))
    - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
-   - Disjunction: (or (pred1 ?x) (pred2 ?y) ...)      [requires :disjunctive-preconditions]
-   - Existential: (exists (?var - type) (predicate ?var))  [requires :existential-preconditions]
-   - Universal: (forall (?var - type) (predicate ?var))    [requires :universal-preconditions]
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
 
 6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
    - Add fact: (predicate ?args)
@@ -56,10 +60,12 @@ STRICT PDDL 3.1 SYNTAX RULES:
    - Conditional: (when (condition) (effect))         [requires :conditional-effects]
    - NO disjunction (or) in effects - this is INVALID in PDDL
 
-7. QUANTIFIER SYNTAX - exists/forall require typed variable list:
-   WRONG: (exists ?x (pred ?x))              <- Missing type declaration
-   WRONG: (exists ?x)                        <- Incomplete, missing body
-   RIGHT: (exists (?x - file) (pred ?x))     <- Correct: typed var + body
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
 
 8. TYPES:
    - All parameters must be typed: ?var - type

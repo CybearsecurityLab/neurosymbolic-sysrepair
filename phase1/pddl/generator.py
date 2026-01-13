@@ -134,7 +134,7 @@ class PDDLGenerator:
         Sanitize a predicate string to ensure all arguments are valid PDDL identifiers.
         Converts paths like /var/cache/apt to _var_cache_apt.
         Replaces reserved PDDL keywords used as predicate names.
-        Rejects malformed constructs like infix operators.
+        Rejects malformed constructs like infix operators and malformed quantifiers.
         Returns None if the predicate is irrecoverably malformed.
         """
         if not predicate_str or not isinstance(predicate_str, str):
@@ -170,6 +170,40 @@ class PDDLGenerator:
                     first_part = f"{first_part})"
                 return self._sanitize_predicate(first_part)
             return None
+
+        # =================================================================
+        # EARLY REJECTION: Detect malformed quantifier usage
+        # LLMs sometimes try to use exists/forall as quantifiers but mangle the syntax
+        # Since we use STRIPS (no :existential-preconditions), transform to simple predicate
+        # =================================================================
+
+        # Pattern: (exists ?var ...) or (forall ?var ...) - malformed quantifier
+        # e.g., "(exists ?f id_- file)" or "(exists ?f)"
+        quantifier_match = re.match(r"^\((?:not\s+)?\((exists|forall)\s+(\?\w+)", predicate_str, re.IGNORECASE)
+        if quantifier_match:
+            quantifier = quantifier_match.group(1).lower()
+            var = quantifier_match.group(2)
+            is_negated = predicate_str.strip().startswith("(not")
+
+            # Transform to simple predicate: (exists ?f ...) -> (file_exists ?f)
+            if quantifier == "exists":
+                result = f"(file_exists {var})"
+            else:  # forall - just reject, can't meaningfully transform
+                return None
+
+            if is_negated:
+                result = f"(not {result})"
+            return result
+
+        # Also catch: (exists ?var) without proper structure
+        simple_quantifier = re.match(r"^\((exists|forall)\s+(\?\w+)(?:\s+.*)?", predicate_str, re.IGNORECASE)
+        if simple_quantifier:
+            quantifier = simple_quantifier.group(1).lower()
+            var = simple_quantifier.group(2)
+
+            if quantifier == "exists":
+                return f"(file_exists {var})"
+            return None  # forall without body is meaningless
 
         # Handle negation wrapper
         is_negated = False
