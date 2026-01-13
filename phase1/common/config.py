@@ -10,8 +10,8 @@ from .models import PDDLType, OSQueryMapping
 # Global Configuration
 # =============================================================================
 
-# MODEL = "qwen2.5:32b"
-MODEL = "gemma:2b"
+MODEL = "qwen2.5:32b"
+#MODEL = "gemma2:2b"
 LLM_MAX_CONTEXT_CHARS = 20000
 
 # Critical paths to scan for file system objects
