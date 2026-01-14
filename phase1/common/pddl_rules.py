@@ -42,6 +42,11 @@ STRICT PDDL 3.1 SYNTAX RULES:
    - Example: (package_installed ?p)
    - Predicate names must NOT be reserved keywords
    - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
 
 5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
    - Atomic: (predicate ?args)

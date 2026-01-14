@@ -254,17 +254,37 @@ class PDDLGenerator:
             return None
 
         # Sanitize each argument
+        # In PDDL actions, predicate arguments should be variables (?x) or typed constants
+        # Bare words like "command", "dir", "file" are almost always meant to be variables
         sanitized_args = []
         for arg in args:
             # Keep variables as-is (start with ?)
             if arg.startswith("?"):
                 sanitized_args.append(arg)
             else:
-                # Sanitize literal values (like paths)
-                sanitized = self._sanitize_pddl_identifier(arg)
-                if sanitized:
-                    sanitized_args.append(sanitized)
-                # Skip empty/invalid args
+                # Check if this looks like a variable name missing the ? prefix
+                # Common patterns: single words that could be parameter names
+                arg_lower = arg.lower().strip()
+
+                # Skip type annotations that got mixed in (e.g., "- file")
+                if arg_lower.startswith("-") or arg_lower in [
+                    "file", "directory", "package", "service", "user", "group",
+                    "port", "process", "interface", "object", "configuration_file"
+                ]:
+                    # This looks like a type, not a variable - skip it
+                    continue
+
+                # If it's a simple word (letters/underscores), assume it should be a variable
+                if re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", arg):
+                    # Convert to variable by prepending ?
+                    sanitized_args.append(f"?{arg_lower}")
+                else:
+                    # Sanitize as identifier (for paths, etc.)
+                    sanitized = self._sanitize_pddl_identifier(arg)
+                    if sanitized:
+                        # Even sanitized literals should probably be variables in actions
+                        sanitized_args.append(f"?{sanitized}")
+                    # Skip empty/invalid args
 
         # Reconstruct predicate
         if sanitized_args:
