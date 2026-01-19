@@ -1,49 +1,40 @@
 import os
 import subprocess
+import logging
 from dataclasses import dataclass
+
+# Setup a logger for config to see detection errors
+logger = logging.getLogger("Phase2.Config")
 
 
 @dataclass
 class HardwareConfig:
     """Detected hardware configuration."""
 
-    num_gpus: int = 2
-    gpu_memory_gb: float = 48.0  # L40S
-    total_ram_gb: float = 400.0
-    num_cpus: int = 100
+    # --- FIX 1: Set safe defaults (0 GPUs, minimal RAM) ---
+    # If detection fails, we shouldn't assume we have 2x L40S GPUs.
+    num_gpus: int = 0
+    gpu_memory_gb: float = 0.0
+    total_ram_gb: float = 16.0
+    num_cpus: int = 4
 
     # Derived settings
-    llm_workers_per_gpu: int = 2  # vLLM can handle multiple concurrent requests
-    max_parallel_workers: int = 8  # Map workers
-    batch_size: int = 16  # LLM batch size
+    llm_workers_per_gpu: int = 1
+    max_parallel_workers: int = 2
+    batch_size: int = 4
 
     @classmethod
     def detect(cls) -> "HardwareConfig":
         """Auto-detect hardware capabilities."""
         config = cls()
 
-        # Detect GPUs via nvidia-smi
+        # 1. Detect CPUs
         try:
-            result = subprocess.run(
-                [
-                    "nvidia-smi",
-                    "--query-gpu=count,memory.total",
-                    "--format=csv,noheader,nounits",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
-                config.num_gpus = len(lines)
-                if lines:
-                    parts = lines[0].split(",")
-                    config.gpu_memory_gb = float(parts[1].strip()) / 1024
-        except Exception:
-            pass
+            config.num_cpus = os.cpu_count() or 4
+        except Exception as e:
+            logger.warning(f"CPU detection failed: {e}")
 
-        # Detect RAM
+        # 2. Detect RAM
         try:
             with open("/proc/meminfo") as f:
                 for line in f:
@@ -51,16 +42,50 @@ class HardwareConfig:
                         kb = int(line.split()[1])
                         config.total_ram_gb = kb / (1024 * 1024)
                         break
-        except Exception:
-            pass
+        except FileNotFoundError:
+            # Fallback for non-Linux (e.g., Mac/Windows)
+            logger.warning("/proc/meminfo not found (non-Linux system?)")
+        except Exception as e:
+            logger.warning(f"RAM detection failed: {e}")
 
-        # Detect CPUs
-        config.num_cpus = os.cpu_count() or 100
+        # 3. Detect GPUs via nvidia-smi
+        try:
+            result = subprocess.run(
+                [
+                    "nvidia-smi",
+                    "--query-gpu=memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                stdin=subprocess.DEVNULL,
+            )
 
-        # Calculate optimal parallelism
-        config.max_parallel_workers = min(
-            config.num_gpus * config.llm_workers_per_gpu, 8
-        )
+            if result.returncode == 0:
+                lines = [line for line in result.stdout.strip().split("\n") if line.strip()]
+                config.num_gpus = len(lines)
+                if lines:
+                    # Parse memory from first GPU
+                    config.gpu_memory_gb = float(lines[0].strip()) / 1024
+                    logger.info(f"Detected {config.num_gpus} GPUs with {config.gpu_memory_gb:.1f}GB VRAM each")
+            else:
+                logger.info("No NVIDIA GPUs detected (nvidia-smi returned non-zero)")
+
+        except FileNotFoundError:
+            logger.info("nvidia-smi not found. Assuming CPU-only mode.")
+        except Exception as e:
+            logger.warning(f"GPU detection error: {e}")
+
+        # 4. Calculate optimal parallelism
+        if config.num_gpus > 0:
+            # If we have GPUs, be aggressive
+            config.llm_workers_per_gpu = 2
+            config.max_parallel_workers = min(config.num_cpus, config.num_gpus * 4)
+        else:
+            # CPU-only mode: be conservative to avoid freezing the OS
+            config.llm_workers_per_gpu = 0
+            config.max_parallel_workers = max(1, config.num_cpus // 2)
 
         return config
 
@@ -68,21 +93,18 @@ class HardwareConfig:
 @dataclass
 class LLMConfig:
     """LLM inference configuration."""
-
-    model_name: str = (
-        "mistralai/Mistral-7B-Instruct-v0.3"
-    )
-
+    model_name: str = "mistralai/Mistral-7B-Instruct-v0.3"
     base_url: str = "http://localhost:8000/v1"
     max_tokens: int = 4096
     temperature: float = 0.1
-    tensor_parallel_size: int = 2
+    tensor_parallel_size: int = 1  # Default to 1 (safe for single GPU)
 
     # Batching config
     max_concurrent_requests: int = 16
     request_timeout: int = 120
 
-# Utility group definitions (Section 5.1)
+
+# Utility group definitions remain the same...
 UTILITY_GROUPS = {
     "package": {
         "utilities": ["apt-get", "apt", "dpkg", "dpkg-query", "apt-cache", "snap"],
@@ -104,15 +126,7 @@ UTILITY_GROUPS = {
     },
     "filesystem": {
         "utilities": [
-            "cp",
-            "mv",
-            "rm",
-            "chmod",
-            "chown",
-            "setfacl",
-            "mkdir",
-            "touch",
-            "ln",
+            "cp", "mv", "rm", "chmod", "chown", "setfacl", "mkdir", "touch", "ln",
         ],
         "description": "File manipulation (uutils coreutils)",
         "pddl_focus": ["file", "directory", "configuration_file"],
@@ -120,12 +134,7 @@ UTILITY_GROUPS = {
     },
     "user": {
         "utilities": [
-            "useradd",
-            "usermod",
-            "userdel",
-            "groupadd",
-            "groupmod",
-            "passwd",
+            "useradd", "usermod", "userdel", "groupadd", "groupmod", "passwd",
         ],
         "description": "User and group management",
         "pddl_focus": ["user", "group"],
