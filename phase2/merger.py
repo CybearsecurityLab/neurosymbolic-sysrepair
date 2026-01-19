@@ -1,8 +1,8 @@
-import os
-import subprocess
+import tempfile
 import time
 import re
 import logging
+from pathlib import Path
 from typing import Optional
 from .models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from .llm import LLMInterface
@@ -45,6 +45,18 @@ class MergerAgent:
         self.unified_actions: list[PDDLAction] = []
         self.merge_log: list[str] = []
         self.all_repairs: list[str] = []
+        self._pddl_available = self._check_pddl_library()
+
+    def _check_pddl_library(self) -> bool:
+        """Check if the pddl library is available."""
+        try:
+            from pddl import parse_domain
+            return True
+        except ImportError:
+            logger.warning(
+                "pddl library not available. Install with: pip install pddl"
+            )
+            return False
 
     def merge(self, partial_domains: list[PartialPDDLDomain]) -> str:
         """
@@ -106,7 +118,7 @@ class MergerAgent:
         # Final syntax repair pass
         domain_pddl = self.repairer.repair(domain_pddl)
 
-        # Validate syntax
+        # Validate syntax using pddl library
         is_valid, errors = self._validate_pddl(domain_pddl)
         if is_valid:
             logger.info("  ✓ Domain syntax validated")
@@ -573,10 +585,15 @@ class MergerAgent:
         return "\n".join(lines)
 
     def _validate_pddl(self, pddl: str) -> tuple[bool, list[str]]:
-        """Validate PDDL syntax using VAL if available."""
+        """
+        Validate PDDL syntax using the pddl library.
+
+        Uses the pddl Python package for parsing and validation instead of
+        external tools like VAL.
+        """
         errors = []
 
-        # Basic syntax checks
+        # Basic syntax checks (fast, no parsing needed)
         if pddl.count("(") != pddl.count(")"):
             errors.append("Unbalanced parentheses")
 
@@ -589,33 +606,96 @@ class MergerAgent:
         if "(:predicates" not in pddl:
             errors.append("Missing predicates section")
 
-        # Try VAL parser if available
-        try:
-            import tempfile
+        # Use pddl library for full validation if available
+        if self._pddl_available and not errors:
+            pddl_errors = self._validate_with_pddl_library(pddl)
+            errors.extend(pddl_errors)
 
+        return len(errors) == 0, errors
+
+    def _validate_with_pddl_library(self, pddl: str) -> list[str]:
+        """
+        Validate using the pddl library parser.
+
+        This provides full PDDL 3.1 syntax validation.
+        """
+        errors = []
+        temp_path = None
+
+        try:
+            from pddl import parse_domain
+
+            # The pddl library parses from file, so write to temp file
             with tempfile.NamedTemporaryFile(
                     mode="w", suffix=".pddl", delete=False
             ) as f:
                 f.write(pddl)
                 temp_path = f.name
 
-            result = subprocess.run(
-                ["validate", "-p", temp_path],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
+            # Attempt to parse the domain
+            try:
+                parsed_domain = parse_domain(temp_path)
+                logger.debug(f"Successfully parsed domain: {parsed_domain.name}")
 
-            if result.returncode != 0:
-                errors.append(f"VAL: {result.stderr}")
+                # Additional semantic checks after successful parse
+                semantic_errors = self._semantic_validation(parsed_domain)
+                errors.extend(semantic_errors)
 
-            os.unlink(temp_path)
-        except FileNotFoundError:
-            pass  # VAL not installed
+            except Exception as parse_error:
+                # Extract useful error message from parsing exception
+                error_msg = str(parse_error)
+                # Clean up the error message for readability
+                if "unexpected" in error_msg.lower():
+                    errors.append(f"PDDL Parse Error: {error_msg}")
+                elif "expected" in error_msg.lower():
+                    errors.append(f"PDDL Syntax Error: {error_msg}")
+                else:
+                    errors.append(f"PDDL Validation Error: {error_msg}")
+
+        except ImportError:
+            logger.warning("pddl library not available for validation")
         except Exception as e:
-            pass
+            logger.error(f"Unexpected validation error: {e}")
+        finally:
+            # Clean up temp file
+            if temp_path:
+                try:
+                    Path(temp_path).unlink()
+                except Exception:
+                    pass
 
-        return len(errors) == 0, errors
+        return errors
+
+    def _semantic_validation(self, parsed_domain) -> list[str]:
+        """
+        Perform semantic validation on a successfully parsed domain.
+
+        Args:
+            parsed_domain: A pddl.core.Domain object
+
+        Returns:
+            list of semantic error/warning messages
+        """
+        errors = []
+
+        try:
+            # Check that all actions have valid parameters
+            for action in parsed_domain.actions:
+                # Check for duplicate parameter names
+                param_names = [str(p.name) for p in action.parameters]
+                if len(param_names) != len(set(param_names)):
+                    errors.append(
+                        f"Action '{action.name}' has duplicate parameter names"
+                    )
+
+            # Check for empty predicates section
+            if not parsed_domain.predicates:
+                errors.append("Domain has no predicates defined")
+
+        except Exception as e:
+            logger.debug(f"Semantic validation check failed: {e}")
+
+        return errors
 
     def _repair_pddl(self, pddl: str, errors: list[str]) -> str:
         """Attempt to repair PDDL syntax errors."""

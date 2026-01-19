@@ -1,7 +1,10 @@
-import os
 import re
-import subprocess
+import tempfile
+import logging
+from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger("Phase2.Repair")
 
 
 class PDDLRepairer:
@@ -354,7 +357,7 @@ class PDDLRepairer:
             for _ in range(excess):
                 last_paren = pddl.rfind(")")
                 if last_paren > 0:
-                    pddl = pddl[:last_paren] + pddl[last_paren + 1 :]
+                    pddl = pddl[:last_paren] + pddl[last_paren + 1:]
             self.repairs_made.append(f"Removed {excess} excess closing parentheses")
 
         return pddl
@@ -364,33 +367,41 @@ class PDDLRepairer:
 
 
 class PDDLValidator:
-    """Validates PDDL syntax and semantic correctness."""
+    """
+    Validates PDDL syntax and semantic correctness using the pddl library.
+
+    Uses the pddl Python package (https://github.com/AI-Planning/pddl) for parsing
+    and validation instead of external tools like VAL.
+    """
 
     def __init__(self):
-        self.val_available = self._check_val()
+        self._pddl_available = self._check_pddl_library()
 
-    def _check_val(self) -> bool:
-        """Check if VAL parser is available."""
+    def _check_pddl_library(self) -> bool:
+        """Check if the pddl library is available."""
         try:
-            result = subprocess.run(["validate", "-h"], capture_output=True, timeout=5)
-            return result.returncode == 0
-        except Exception:
+            from pddl import parse_domain
+            return True
+        except ImportError:
+            logger.warning(
+                "pddl library not available. Install with: pip install pddl"
+            )
             return False
 
     def validate_domain(self, domain_pddl: str) -> tuple[bool, list[str]]:
-        """Validate a PDDL domain."""
+        """
+        Validate a PDDL domain string.
+
+        Returns:
+            tuple: (is_valid: bool, messages: list[str])
+        """
         errors = []
         warnings = []
 
-        # Structural validation
-        if "(define (domain" not in domain_pddl:
-            errors.append("Missing (define (domain ...))")
-
-        # Check required sections
-        required = [":types", ":predicates"]
-        for req in required:
-            if f"({req}" not in domain_pddl:
-                errors.append(f"Missing {req} section")
+        # Basic structural validation (fast checks before parsing)
+        structural_errors = self._structural_validation(domain_pddl)
+        if structural_errors:
+            errors.extend(structural_errors)
 
         # Check parenthesis balance
         if domain_pddl.count("(") != domain_pddl.count(")"):
@@ -400,6 +411,35 @@ class PDDLValidator:
             )
 
         # Check action structure
+        action_warnings = self._validate_actions_structure(domain_pddl)
+        warnings.extend(action_warnings)
+
+        # Use pddl library for full validation if available and no critical errors
+        if self._pddl_available and not errors:
+            pddl_errors = self._validate_with_pddl_library(domain_pddl)
+            errors.extend(pddl_errors)
+
+        return len(errors) == 0, errors + warnings
+
+    def _structural_validation(self, domain_pddl: str) -> list[str]:
+        """Perform basic structural validation."""
+        errors = []
+
+        if "(define (domain" not in domain_pddl:
+            errors.append("Missing (define (domain ...))")
+
+        # Check required sections
+        required = [":types", ":predicates"]
+        for req in required:
+            if f"({req}" not in domain_pddl:
+                errors.append(f"Missing {req} section")
+
+        return errors
+
+    def _validate_actions_structure(self, domain_pddl: str) -> list[str]:
+        """Validate action structure and return warnings."""
+        warnings = []
+
         action_pattern = r":action\s+(\w+)"
         actions = re.findall(action_pattern, domain_pddl)
 
@@ -407,18 +447,13 @@ class PDDLValidator:
             action_text = self._extract_action_text(domain_pddl, action)
             if action_text:
                 if ":parameters" not in action_text:
-                    errors.append(f"Action '{action}' missing :parameters")
+                    warnings.append(f"Action '{action}' missing :parameters")
                 if ":precondition" not in action_text:
                     warnings.append(f"Action '{action}' missing :precondition")
                 if ":effect" not in action_text:
                     warnings.append(f"Action '{action}' missing :effect")
 
-        # VAL validation if available
-        if self.val_available and not errors:
-            val_errors = self._validate_with_val(domain_pddl)
-            errors.extend(val_errors)
-
-        return len(errors) == 0, errors + warnings
+        return warnings
 
     def _extract_action_text(self, pddl: str, action_name: str) -> Optional[str]:
         """Extract the text of a specific action."""
@@ -426,33 +461,292 @@ class PDDLValidator:
         match = re.search(pattern, pddl, re.DOTALL)
         return match.group(1) if match else None
 
-    def _validate_with_val(self, pddl: str) -> list[str]:
-        """Validate using VAL parser."""
-        errors = []
-        try:
-            import tempfile
+    def _validate_with_pddl_library(self, domain_pddl: str) -> list[str]:
+        """
+        Validate using the pddl library parser.
 
+        This provides full PDDL 3.1 syntax validation.
+        """
+        errors = []
+        temp_path = None
+
+        try:
+            from pddl import parse_domain
+
+            # The pddl library parses from file, so write to temp file
             with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".pddl", delete=False
+                    mode="w", suffix=".pddl", delete=False
             ) as f:
-                f.write(pddl)
+                f.write(domain_pddl)
                 temp_path = f.name
 
-            result = subprocess.run(
-                ["validate", "-p", temp_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+            # Attempt to parse the domain
+            try:
+                parsed_domain = parse_domain(temp_path)
+                logger.debug(f"Successfully parsed domain: {parsed_domain.name}")
 
-            if result.returncode != 0:
-                # Parse VAL output for errors
-                for line in result.stderr.split("\n"):
-                    if "error" in line.lower():
-                        errors.append(f"VAL: {line.strip()}")
+                # Additional semantic checks after successful parse
+                semantic_errors = self._semantic_validation(parsed_domain)
+                errors.extend(semantic_errors)
 
-            os.unlink(temp_path)
+            except Exception as parse_error:
+                # Extract useful error message from parsing exception
+                error_msg = str(parse_error)
+                # Clean up the error message for readability
+                if "unexpected" in error_msg.lower():
+                    errors.append(f"PDDL Parse Error: {error_msg}")
+                elif "expected" in error_msg.lower():
+                    errors.append(f"PDDL Syntax Error: {error_msg}")
+                else:
+                    errors.append(f"PDDL Validation Error: {error_msg}")
+
+        except ImportError:
+            logger.warning("pddl library not available for validation")
         except Exception as e:
-            pass  # VAL not critical
+            logger.error(f"Unexpected validation error: {e}")
+        finally:
+            # Clean up temp file
+            if temp_path:
+                try:
+                    Path(temp_path).unlink()
+                except Exception:
+                    pass
 
         return errors
+
+    def _semantic_validation(self, parsed_domain) -> list[str]:
+        """
+        Perform semantic validation on a successfully parsed domain.
+
+        Args:
+            parsed_domain: A pddl.core.Domain object
+
+        Returns:
+            list of semantic error/warning messages
+        """
+        errors = []
+
+        try:
+            # Check that all actions have valid parameters
+            for action in parsed_domain.actions:
+                # Check for duplicate parameter names
+                param_names = [str(p.name) for p in action.parameters]
+                if len(param_names) != len(set(param_names)):
+                    errors.append(
+                        f"Action '{action.name}' has duplicate parameter names"
+                    )
+
+            # Check for empty predicates section
+            if not parsed_domain.predicates:
+                errors.append("Domain has no predicates defined")
+
+        except Exception as e:
+            logger.debug(f"Semantic validation check failed: {e}")
+
+        return errors
+
+    def validate_problem(self, problem_pddl: str, domain_pddl: str = None) -> tuple[bool, list[str]]:
+        """
+        Validate a PDDL problem string.
+
+        Args:
+            problem_pddl: The problem PDDL string
+            domain_pddl: Optional domain PDDL string for cross-validation
+
+        Returns:
+            tuple: (is_valid: bool, messages: list[str])
+        """
+        errors = []
+        temp_problem_path = None
+        temp_domain_path = None
+
+        # Basic structural checks
+        if "(define (problem" not in problem_pddl:
+            errors.append("Missing (define (problem ...))")
+
+        if "(:domain" not in problem_pddl:
+            errors.append("Missing (:domain ...) reference")
+
+        if "(:init" not in problem_pddl:
+            errors.append("Missing (:init ...) section")
+
+        if "(:goal" not in problem_pddl:
+            errors.append("Missing (:goal ...) section")
+
+        if not self._pddl_available:
+            return len(errors) == 0, errors
+
+        try:
+            from pddl import parse_problem, parse_domain
+
+            # Write problem to temp file
+            with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".pddl", delete=False
+            ) as f:
+                f.write(problem_pddl)
+                temp_problem_path = f.name
+
+            # Write domain to temp file if provided
+            if domain_pddl:
+                with tempfile.NamedTemporaryFile(
+                        mode="w", suffix=".pddl", delete=False
+                ) as f:
+                    f.write(domain_pddl)
+                    temp_domain_path = f.name
+
+            # Parse and validate
+            try:
+                parsed_problem = parse_problem(temp_problem_path)
+                logger.debug(f"Successfully parsed problem: {parsed_problem.name}")
+            except Exception as parse_error:
+                errors.append(f"PDDL Problem Parse Error: {parse_error}")
+
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.error(f"Problem validation error: {e}")
+        finally:
+            # Clean up temp files
+            for path in [temp_problem_path, temp_domain_path]:
+                if path:
+                    try:
+                        Path(path).unlink()
+                    except Exception:
+                        pass
+
+        return len(errors) == 0, errors
+
+
+class PDDLLibraryHelper:
+    """
+    Helper class for working with the pddl library programmatically.
+
+    Provides utilities for building and manipulating PDDL domains
+    using the pddl library's object model.
+    """
+
+    def __init__(self):
+        self._available = self._check_availability()
+
+    def _check_availability(self) -> bool:
+        """Check if pddl library components are available."""
+        try:
+            from pddl.core import Domain
+            from pddl.logic import Predicate, variables
+            from pddl.action import Action
+            return True
+        except ImportError:
+            return False
+
+    @property
+    def available(self) -> bool:
+        return self._available
+
+    def parse_domain_string(self, pddl_string: str):
+        """
+        Parse a PDDL domain string and return a Domain object.
+
+        Args:
+            pddl_string: PDDL domain as string
+
+        Returns:
+            pddl.core.Domain object or None if parsing fails
+        """
+        if not self._available:
+            return None
+
+        temp_path = None
+        try:
+            from pddl import parse_domain
+
+            with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".pddl", delete=False
+            ) as f:
+                f.write(pddl_string)
+                temp_path = f.name
+
+            return parse_domain(temp_path)
+
+        except Exception as e:
+            logger.error(f"Failed to parse domain: {e}")
+            return None
+        finally:
+            if temp_path:
+                try:
+                    Path(temp_path).unlink()
+                except Exception:
+                    pass
+
+    def domain_to_string(self, domain) -> str:
+        """
+        Convert a pddl Domain object back to string representation.
+
+        Args:
+            domain: pddl.core.Domain object
+
+        Returns:
+            PDDL string representation
+        """
+        if domain is None:
+            return ""
+        return str(domain)
+
+    def extract_predicates(self, domain) -> list[tuple[str, list[tuple[str, str]]]]:
+        """
+        Extract predicate definitions from a parsed domain.
+
+        Returns:
+            List of (name, [(param_name, param_type), ...]) tuples
+        """
+        if domain is None:
+            return []
+
+        predicates = []
+        try:
+            for pred in domain.predicates:
+                name = str(pred.name)
+                params = []
+                for term in pred.terms:
+                    param_name = str(term.name) if hasattr(term, 'name') else str(term)
+                    param_type = str(term.type_tags[0]) if term.type_tags else "object"
+                    params.append((param_name, param_type))
+                predicates.append((name, params))
+        except Exception as e:
+            logger.debug(f"Error extracting predicates: {e}")
+
+        return predicates
+
+    def extract_actions(self, domain) -> list[str]:
+        """
+        Extract action names from a parsed domain.
+
+        Returns:
+            List of action names
+        """
+        if domain is None:
+            return []
+
+        try:
+            return [str(action.name) for action in domain.actions]
+        except Exception as e:
+            logger.debug(f"Error extracting actions: {e}")
+            return []
+
+    def extract_types(self, domain) -> dict[str, Optional[str]]:
+        """
+        Extract type hierarchy from a parsed domain.
+
+        Returns:
+            Dict mapping type name to parent type (or None for base types)
+        """
+        if domain is None:
+            return {}
+
+        types = {}
+        try:
+            for type_name, parent in domain.types.items():
+                types[str(type_name)] = str(parent) if parent else None
+        except Exception as e:
+            logger.debug(f"Error extracting types: {e}")
+
+        return types

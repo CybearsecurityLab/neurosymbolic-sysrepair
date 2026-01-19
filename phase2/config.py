@@ -70,15 +70,13 @@ class LLMConfig:
     """LLM inference configuration."""
 
     model_name: str = (
-        "mistralai/Mistral-7B-Instruct-v0.3"  # Good for code/structured output
+        "mistralai/Mistral-7B-Instruct-v0.3"
     )
-    # Alternative: "codellama/CodeLlama-13b-Instruct-hf" for code-heavy tasks
-    # Alternative: "meta-llama/Llama-3.1-70B-Instruct" if you want higher quality (fits in 2xL40S)
 
-    base_url: str = "http://localhost:8000/v1"  # vLLM OpenAI-compatible endpoint
+    base_url: str = "http://localhost:8000/v1"
     max_tokens: int = 4096
-    temperature: float = 0.1  # Low temp for structured output
-    tensor_parallel_size: int = 2  # Use both GPUs for larger models
+    temperature: float = 0.1
+    tensor_parallel_size: int = 2
 
     # Batching config
     max_concurrent_requests: int = 16
