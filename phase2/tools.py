@@ -40,6 +40,8 @@ class DocumentationExtractor:
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                text=True
             )
             stdout, _ = proc.communicate(timeout=30)
 
