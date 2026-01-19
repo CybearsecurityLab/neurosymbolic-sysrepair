@@ -69,7 +69,7 @@ class Phase2Orchestrator:
         print("=" * 70)
         print(f"\nHardware Configuration:")
         print(
-            f"  GPUs: {self.hardware.num_gpus}x (L40S @ {self.hardware.gpu_memory_gb}GB)"
+            f"  GPUs: {self.hardware.num_gpus}x (detected @ {self.hardware.gpu_memory_gb:.1f}GB)"
         )
         print(f"  RAM: {self.hardware.total_ram_gb:.0f}GB")
         print(f"  CPUs: {self.hardware.num_cpus}")
