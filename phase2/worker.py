@@ -8,7 +8,9 @@ from typing import Optional
 from .models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from .llm import LLMInterface
 from .tools import DocumentationExtractor
+import logging
 
+logger = logging.getLogger("Phase2.Worker") #
 
 # =============================================================================
 # SECTION 5: Worker Agents (Map Phase)
