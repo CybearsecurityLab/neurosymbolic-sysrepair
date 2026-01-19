@@ -1,10 +1,9 @@
-import threading
-import asyncio  # <--- Fixes 'base_events' NameError
 import logging
+import threading
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
+import httpx
 from phase2.config import LLMConfig
+from openai import OpenAI
 
 logger = logging.getLogger("Phase2.LLM")
 
@@ -17,17 +16,22 @@ class VLLMInterface(LLMInterface):
     def __init__(self, config: LLMConfig):
         self.config = config
         self._semaphore = threading.Semaphore(config.max_concurrent_requests)
+        self._http_client = httpx.Client(
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+            timeout=config.request_timeout
+        )
+        self._client = None
+        self._client_lock = threading.Lock()
 
     def _get_client(self):
-        """Create a fresh client to avoid thread-safety issues."""
-        try:
-            from openai import OpenAI
-            return OpenAI(
-                base_url=self.config.base_url,
-                api_key="not-needed",
-            )
-        except ImportError:
-            raise RuntimeError("openai package required: pip install openai")
+        with self._client_lock:
+            if self._client is None:
+                self._client = OpenAI(
+                    base_url=self.config.base_url,
+                    api_key="not-needed",
+                    http_client=self._http_client,
+                )
+            return self._client
 
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         with self._semaphore:

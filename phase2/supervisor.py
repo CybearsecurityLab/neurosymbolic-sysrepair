@@ -32,6 +32,17 @@ class SupervisorAgent:
         self.partial_domains: list[PartialPDDLDomain] = []
         self.log_dir = Path(output_dir) / "llm_logs"
 
+    def _prewarm_doc_cache(self):
+        """Fetch all docs sequentially before parallel execution."""
+        all_utilities = []
+        for config in UTILITY_GROUPS.values():
+            all_utilities.extend(config["utilities"])
+
+        logger.info(f"Pre-warming documentation cache for {len(all_utilities)} utilities...")
+        for utility in all_utilities:
+            self.doc_extractor.fetch_man_page(utility)
+            self.doc_extractor.fetch_help_output(utility)
+
     def execute_map_phase(self) -> list[PartialPDDLDomain]:
         """
         Execute the Map phase: dispatch workers in parallel.
@@ -46,6 +57,7 @@ class SupervisorAgent:
         )
         logger.info(f"Max parallel workers: {self.hardware.max_parallel_workers}")
 
+        self._prewarm_doc_cache()
         start_time = time.time()
 
         # Create worker tasks
@@ -78,8 +90,14 @@ class SupervisorAgent:
                 worker_name = future_to_worker[future]
                 try:
                     result = future.result()
+                    has_content = result.types or result.predicates or result.actions
+                    if result.error:
+                        logger.error(f"  ✗ {worker_name} failed: {result.error}")
+                    elif not has_content:
+                        logger.warning(f"  ⚠ {worker_name} completed but generated no content")
+                    else:
+                        logger.info(f"  ✓ {worker_name} completed")
                     results.append(result)
-                    logger.info(f"  ✓ {worker_name} completed")
                 except Exception as e:
                     logger.error(f"  ✗ {worker_name} failed: {e}")
                     results.append(
