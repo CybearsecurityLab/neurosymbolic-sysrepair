@@ -1,6 +1,5 @@
 import logging
 import json
-import subprocess
 import time
 import re
 from pathlib import Path
@@ -8,9 +7,8 @@ from typing import Optional
 from .models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from .llm import LLMInterface
 from .tools import DocumentationExtractor
-import logging
 
-logger = logging.getLogger("Phase2.Worker") #
+logger = logging.getLogger("Phase2.Worker")
 
 # =============================================================================
 # SECTION 5: Worker Agents (Map Phase)
@@ -188,33 +186,107 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
 
         return "".join(prompt_parts)
 
+    # =========================================================================
+    # Parenthesis-Aware S-Expression Parsing
+    # =========================================================================
+
+    def _extract_sexp_at(self, text: str, start: int) -> Optional[str]:
+        """Extract a complete S-expression starting at position `start`."""
+        if start < 0 or start >= len(text) or text[start] != '(':
+            return None
+
+        depth = 0
+        end = start
+
+        for i, char in enumerate(text[start:], start=start):
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0:
+                    end = i + 1
+                    break
+
+        if depth != 0:
+            # Unbalanced parens - try to recover by finding where depth returns to 0
+            logger.warning(f"Unbalanced parentheses in S-expression at position {start}")
+            return None
+
+        return text[start:end]
+
+    def _extract_block(self, text: str, block_name: str) -> Optional[str]:
+        """Extract content of a PDDL block like (:predicates ...) handling nested parens."""
+        pattern = rf"\(:{block_name}\s*"
+        match = re.search(pattern, text, re.IGNORECASE)
+        if not match:
+            return None
+
+        return self._extract_sexp_at(text, match.start())
+
+    def _find_keyword_sexp(self, text: str, keyword: str) -> Optional[str]:
+        """Find a keyword like :precondition and extract the following S-expression."""
+        pattern = rf":{keyword}\s*"
+        match = re.search(pattern, text, re.IGNORECASE)
+        if not match:
+            return None
+
+        # Find the opening paren after the keyword
+        rest = text[match.end():]
+        paren_pos = rest.find('(')
+        if paren_pos == -1:
+            return None
+
+        return self._extract_sexp_at(text, match.end() + paren_pos)
+
+    # =========================================================================
+    # PDDL Parsing Methods
+    # =========================================================================
+
     def _parse_pddl_output(self, raw: str, result: PartialPDDLDomain):
         """Parse LLM output into structured PDDL components."""
-        # Extract types
-        types_match = re.search(r"\(:types\s*(.*?)\)", raw, re.DOTALL)
-        if types_match:
-            result.types = self._parse_types(types_match.group(1))
+        # Strip markdown code fences if present
+        raw = self._strip_markdown(raw)
 
-        # Extract predicates
-        pred_match = re.search(
-            r"\(:predicates\s*(.*?)\)\s*(?:\(:action|$)", raw, re.DOTALL
-        )
-        if pred_match:
-            result.predicates = self._parse_predicates(pred_match.group(1))
+        # Extract types block
+        types_block = self._extract_block(raw, "types")
+        if types_block:
+            result.types = self._parse_types(types_block)
 
-        # Extract actions
-        action_pattern = r"\(:action\s+(\w+)\s*(.*?)(?=\(:action|\Z)"
-        for match in re.finditer(action_pattern, raw, re.DOTALL):
-            action = self._parse_action(match.group(1), match.group(2))
-            if action:
-                action.source_worker = self.worker_name
-                result.actions.append(action)
+        # Extract predicates using paren-aware extraction
+        pred_block = self._extract_block(raw, "predicates")
+        if pred_block:
+            result.predicates = self._parse_predicates(pred_block)
 
-    def _parse_types(self, types_str: str) -> list[PDDLType]:
-        """Parse PDDL type definitions."""
+        # Extract actions using paren-aware extraction
+        action_starts = [m.start() for m in re.finditer(r"\(:action\s+", raw, re.IGNORECASE)]
+        for start in action_starts:
+            action_str = self._extract_sexp_at(raw, start)
+            if action_str:
+                # Extract action name
+                name_match = re.search(r"\(:action\s+(\w+)", action_str, re.IGNORECASE)
+                if name_match:
+                    action = self._parse_action(name_match.group(1), action_str)
+                    if action:
+                        action.source_worker = self.worker_name
+                        result.actions.append(action)
+
+    def _strip_markdown(self, text: str) -> str:
+        """Remove markdown code fences if present."""
+        # Remove ```pddl or ```lisp or ``` blocks
+        text = re.sub(r"^```(?:pddl|lisp|scheme)?\s*\n?", "", text, flags=re.MULTILINE)
+        text = re.sub(r"\n?```\s*$", "", text, flags=re.MULTILINE)
+        return text.strip()
+
+    def _parse_types(self, types_block: str) -> list[PDDLType]:
+        """Parse PDDL type definitions from a (:types ...) block."""
         types = []
+
+        # Remove outer (:types and )
+        inner = re.sub(r"^\s*\(:types\s*", "", types_block, flags=re.IGNORECASE)
+        inner = re.sub(r"\)\s*$", "", inner)
+
         # Pattern: type1 type2 - parent_type
-        lines = types_str.strip().split("\n")
+        lines = inner.strip().split("\n")
         for line in lines:
             line = line.strip()
             if not line or line.startswith(";"):
@@ -226,63 +298,107 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
                 children = parts[0].strip().split()
                 for child in children:
                     child = child.strip()
-                    if child:
+                    if child and not child.startswith(";"):
                         types.append(
                             PDDLType(name=child, parent=parent, source=self.worker_name)
                         )
             else:
                 for t in line.split():
-                    if t.strip():
-                        types.append(PDDLType(name=t.strip(), source=self.worker_name))
+                    t = t.strip()
+                    if t and not t.startswith(";"):
+                        types.append(PDDLType(name=t, source=self.worker_name))
 
         return types
 
-    def _parse_predicates(self, pred_str: str) -> list[PDDLPredicate]:
-        """Parse PDDL predicate definitions."""
+    def _parse_predicates(self, pred_block: str) -> list[PDDLPredicate]:
+        """Parse PDDL predicate definitions from a (:predicates ...) block."""
         predicates = []
-        # Pattern: (predicate_name ?param1 - type1 ?param2 - type2)
-        pattern = r"\((\w+)((?:\s+\?\w+\s*-\s*\w+)*)\)"
 
-        for match in re.finditer(pattern, pred_str):
-            name = match.group(1)
-            params_str = match.group(2).strip()
+        # Remove the outer (:predicates ... )
+        inner = re.sub(r"^\s*\(:predicates\s*", "", pred_block, flags=re.IGNORECASE)
+        inner = re.sub(r"\)\s*$", "", inner)
 
-            # Parse parameters
-            params = []
-            param_pattern = r"\?(\w+)\s*-\s*(\w+)"
-            for pm in re.finditer(param_pattern, params_str):
-                params.append((pm.group(1), pm.group(2)))
+        # Find each predicate definition by extracting s-expressions
+        i = 0
+        while i < len(inner):
+            # Skip whitespace and comments
+            while i < len(inner) and (inner[i].isspace() or inner[i] == ';'):
+                if inner[i] == ';':
+                    # Skip to end of line
+                    while i < len(inner) and inner[i] != '\n':
+                        i += 1
+                else:
+                    i += 1
 
-            predicates.append(
-                PDDLPredicate(name=name, parameters=params, source=self.worker_name)
-            )
+            if i >= len(inner):
+                break
+
+            if inner[i] == '(':
+                # Extract this predicate s-expression
+                sexp = self._extract_sexp_at(inner, i)
+                if sexp:
+                    pred = self._parse_single_predicate(sexp)
+                    if pred:
+                        predicates.append(pred)
+                    i += len(sexp)
+                else:
+                    i += 1
+            else:
+                i += 1
 
         return predicates
 
-    def _parse_action(self, name: str, body: str) -> Optional[PDDLAction]:
+    def _parse_single_predicate(self, sexp: str) -> Optional[PDDLPredicate]:
+        """Parse a single predicate like (installed ?p - package)."""
+        # Remove outer parens
+        inner = sexp.strip()[1:-1].strip()
+
+        if not inner:
+            return None
+
+        # First token is the predicate name
+        tokens = inner.split()
+        if not tokens:
+            return None
+
+        name = tokens[0]
+
+        # Skip if it looks like a keyword (starts with :)
+        if name.startswith(':'):
+            return None
+
+        params = []
+
+        # Parse parameters: ?var - type ?var2 - type2
+        param_str = " ".join(tokens[1:])
+        param_pattern = r"\?(\w+)\s*-\s*(\w+)"
+        for pm in re.finditer(param_pattern, param_str):
+            params.append((pm.group(1), pm.group(2)))
+
+        return PDDLPredicate(name=name, parameters=params, source=self.worker_name)
+
+    def _parse_action(self, name: str, action_str: str) -> Optional[PDDLAction]:
         """Parse a single PDDL action."""
         try:
             # Extract parameters
-            params_match = re.search(r":parameters\s*\((.*?)\)", body, re.DOTALL)
             params = []
-            if params_match:
+            params_sexp = self._find_keyword_sexp(action_str, "parameters")
+            if params_sexp:
                 param_pattern = r"\?(\w+)\s*-\s*(\w+)"
-                for pm in re.finditer(param_pattern, params_match.group(1)):
+                for pm in re.finditer(param_pattern, params_sexp):
                     params.append((pm.group(1), pm.group(2)))
 
             # Extract preconditions
-            pre_match = re.search(
-                r":precondition\s*\((.*?)\)\s*:effect", body, re.DOTALL
-            )
             preconditions = []
-            if pre_match:
-                preconditions = self._extract_conditions(pre_match.group(1))
+            pre_sexp = self._find_keyword_sexp(action_str, "precondition")
+            if pre_sexp:
+                preconditions = self._extract_conditions(pre_sexp)
 
             # Extract effects
-            eff_match = re.search(r":effect\s*\((.*?)\)\s*\)?$", body, re.DOTALL)
             effects = []
-            if eff_match:
-                effects = self._extract_conditions(eff_match.group(1))
+            eff_sexp = self._find_keyword_sexp(action_str, "effect")
+            if eff_sexp:
+                effects = self._extract_conditions(eff_sexp)
 
             return PDDLAction(
                 name=name,
@@ -294,29 +410,40 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
             logger.warning(f"Failed to parse action {name}: {e}")
             return None
 
-    def _extract_conditions(self, cond_str: str) -> list[str]:
-        """Extract individual conditions from an (and ...) block."""
+    def _extract_conditions(self, cond_sexp: str) -> list[str]:
+        """Extract individual conditions from an (and ...) block or single predicate."""
         conditions = []
-        # Remove outer 'and' if present
-        cond_str = re.sub(r"^\s*and\s*", "", cond_str.strip())
 
-        # Match individual predicates including (not (...))
-        depth = 0
-        current = ""
-        for char in cond_str:
-            if char == "(":
-                depth += 1
-                current += char
-            elif char == ")":
-                depth -= 1
-                current += char
-                if depth == 0 and current.strip():
-                    conditions.append(current.strip())
-                    current = ""
-            elif depth > 0:
-                current += char
+        if not cond_sexp:
+            return conditions
+
+        # Remove outer parens
+        inner = cond_sexp.strip()[1:-1].strip()
+
+        # Check if it starts with 'and'
+        if inner.lower().startswith('and'):
+            inner = inner[3:].strip()
+
+            # Extract each sub-sexp
+            i = 0
+            while i < len(inner):
+                while i < len(inner) and inner[i].isspace():
+                    i += 1
+
+                if i >= len(inner):
+                    break
+
+                if inner[i] == '(':
+                    sexp = self._extract_sexp_at(inner, i)
+                    if sexp:
+                        conditions.append(sexp)
+                        i += len(sexp)
+                    else:
+                        i += 1
+                else:
+                    i += 1
+        else:
+            # Single condition - return the whole thing
+            conditions.append(cond_sexp)
 
         return conditions
-
-
-
