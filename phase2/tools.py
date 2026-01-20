@@ -1,143 +1,360 @@
-import hashlib
-import subprocess
+"""
+phase2/tools.py
+
+Tools for documentation extraction and system introspection.
+Provides man page parsing and help output fetching.
+"""
+
 import logging
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import subprocess
+import re
+from functools import lru_cache
 from typing import Optional
-import threading
-from filelock import FileLock
 
 logger = logging.getLogger("Phase2.Tools")
 
+
 class DocumentationExtractor:
-    """Extracts and caches system documentation for LLM processing."""
+    """
+    Extracts documentation from system utilities.
+    Fetches man pages and --help output.
+    """
 
-    def __init__(self, cache_dir: str = "/tmp/pddl_doc_cache"):
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self._cache: dict[str, str] = {}
-        self._cache_lock = threading.Lock()
+    # Cache size for man pages
+    CACHE_SIZE = 100
 
-    def _cache_key(self, utility: str) -> str:
-        return hashlib.md5(utility.encode()).hexdigest()
+    def __init__(self):
+        self._man_cache: dict[str, str] = {}
+        self._help_cache: dict[str, str] = {}
 
-    def fetch_man_page(self, utility: str) -> Optional[str]:
-        """Fetch cleaned man page content."""
-        cache_key = self._cache_key(f"man_{utility}")
+    @lru_cache(maxsize=CACHE_SIZE)
+    def fetch_man_page(self, utility: str, section: int = 1) -> str:
+        """
+        Fetch and parse a man page for a utility.
 
-        # Thread-safe memory cache check
-        with self._cache_lock:
-            if cache_key in self._cache:
-                return self._cache[cache_key]
+        Args:
+            utility: Name of the utility (e.g., 'apt', 'systemctl')
+            section: Man page section (default: 1 for user commands)
 
-        cache_file = self.cache_dir / f"{cache_key}.txt"
-        lock_file = self.cache_dir / f"{cache_key}.lock"
+        Returns:
+            Man page content as text, or empty string if not found
+        """
+        try:
+            # Use man with -P cat to avoid pager
+            result = subprocess.run(
+                ["man", "-P", "cat", str(section), utility],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env={"MANWIDTH": "120", "LANG": "C"},
+            )
 
-        # File-level locking for disk cache
-        with FileLock(lock_file):
-            # Double-check after acquiring lock
-            if cache_file.exists():
-                content = cache_file.read_text()
-                with self._cache_lock:
-                    self._cache[cache_key] = content
+            if result.returncode == 0:
+                content = result.stdout
+                # Clean up formatting
+                content = self._clean_man_output(content)
+                logger.debug(f"Fetched man page for {utility} ({len(content)} chars)")
                 return content
+            else:
+                logger.debug(f"Man page not found for {utility}")
+                return ""
 
-            # Fetch and write INSIDE the lock
-            try:
-                proc = subprocess.Popen(
-                    f"man {utility} 2>/dev/null | col -b",
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    stdin=subprocess.DEVNULL,
-                    text=True
-                )
-                stdout, _ = proc.communicate(timeout=30)
+        except subprocess.TimeoutExpired:
+            logger.warning(f"Timeout fetching man page for {utility}")
+            return ""
+        except Exception as e:
+            logger.warning(f"Error fetching man page for {utility}: {e}")
+            return ""
 
-                if proc.returncode == 0 and stdout:
-                    content = self._clean_man_page(stdout)
-                    with self._cache_lock:
-                        self._cache[cache_key] = content
-                    cache_file.write_text(content)
-                    return content
-            except Exception as e:
-                logger.warning(f"Failed to fetch man page for {utility}: {e}")
+    @lru_cache(maxsize=CACHE_SIZE)
+    def fetch_help_output(self, utility: str) -> str:
+        """
+        Fetch --help output for a utility.
 
-        return None
+        Args:
+            utility: Name of the utility
 
-    def fetch_help_output(self, utility: str) -> Optional[str]:
-        """Fetch --help output."""
-        cache_key = self._cache_key(f"help_{utility}")
+        Returns:
+            Help output as text, or empty string if not available
+        """
+        try:
+            # Try --help first
+            result = subprocess.run(
+                [utility, "--help"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
 
-        # Thread-safe memory cache check
-        with self._cache_lock:
-            if cache_key in self._cache:
-                return self._cache[cache_key]
+            if result.returncode == 0 and result.stdout:
+                logger.debug(f"Fetched --help for {utility}")
+                return result.stdout
+            elif result.stderr:
+                # Some utilities output help to stderr
+                return result.stderr
 
-        cache_file = self.cache_dir / f"{cache_key}.txt"
-        lock_file = self.cache_dir / f"{cache_key}.lock"
+            # Try -h as fallback
+            result = subprocess.run(
+                [utility, "-h"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
 
-        with FileLock(lock_file):
-            # Double-check after acquiring lock
-            if cache_file.exists():
-                content = cache_file.read_text()
-                with self._cache_lock:
-                    self._cache[cache_key] = content
-                return content
+            if result.returncode == 0 and result.stdout:
+                return result.stdout
+            elif result.stderr:
+                return result.stderr
 
-            try:
-                result = subprocess.run(
-                    [utility, "--help"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    stdin=subprocess.DEVNULL
-                )
-                content = result.stdout or result.stderr
-                if content:
-                    with self._cache_lock:
-                        self._cache[cache_key] = content
-                    cache_file.write_text(content)
-                    return content
-            except Exception:
-                pass
+            return ""
 
-        return None
+        except FileNotFoundError:
+            logger.debug(f"Utility {utility} not found")
+            return ""
+        except subprocess.TimeoutExpired:
+            logger.warning(f"Timeout fetching help for {utility}")
+            return ""
+        except Exception as e:
+            logger.warning(f"Error fetching help for {utility}: {e}")
+            return ""
 
-    def _clean_man_page(self, content: str) -> str:
-        """Clean and truncate man page for LLM context."""
-        lines = content.split("\n")
-        cleaned = []
-        prev_empty = False
-        for line in lines:
-            line = line.rstrip()
-            is_empty = not line.strip()
-            if is_empty and prev_empty:
-                continue
-            cleaned.append(line)
-            prev_empty = is_empty
-
-        if len(cleaned) > 500:
-            cleaned = cleaned[:500] + ["... [truncated]"]
-
-        return "\n".join(cleaned)
+    def _clean_man_output(self, text: str) -> str:
+        """Clean up man page output by removing control characters."""
+        # Remove backspace sequences (bold/underline formatting)
+        text = re.sub(r".\x08", "", text)
+        # Remove other control characters
+        text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+        # Normalize whitespace
+        text = re.sub(r" +", " ", text)
+        return text.strip()
 
     def get_utility_docs(self, utilities: list[str]) -> dict[str, str]:
-        results = {}
-        with ThreadPoolExecutor(max_workers=min(len(utilities), 4)) as executor:
-            future_to_util = {
-                executor.submit(self._get_single_doc, u): u for u in utilities
-            }
-            for future in as_completed(future_to_util):
-                utility = future_to_util[future]
-                try:
-                    results[utility] = future.result()
-                except Exception as e:
-                    logger.warning(f"Doc extraction failed for {utility}: {e}")
-                    results[utility] = ""
-        return results
+        """
+        Get documentation for multiple utilities.
 
-    def _get_single_doc(self, utility: str) -> str:
-        man_page = self.fetch_man_page(utility) or ""
-        help_text = self.fetch_help_output(utility) or ""
-        return f"=== MAN PAGE: {utility} ===\n{man_page}\n\n=== HELP OUTPUT: {utility} ===\n{help_text}\n"
+        Args:
+            utilities: List of utility names
+
+        Returns:
+            Dict mapping utility name to combined documentation
+        """
+        docs = {}
+
+        for utility in utilities:
+            man_content = self.fetch_man_page(utility)
+            help_content = self.fetch_help_output(utility)
+
+            combined = ""
+            if man_content:
+                combined += f"=== MAN PAGE ===\n{man_content}\n\n"
+            if help_content:
+                combined += f"=== HELP OUTPUT ===\n{help_content}\n"
+
+            if combined:
+                docs[utility] = combined
+            else:
+                logger.warning(f"No documentation found for {utility}")
+                docs[utility] = f"# {utility}\nNo documentation available."
+
+        return docs
+
+    def extract_subcommands(self, utility: str) -> list[str]:
+        """
+        Extract subcommands from a utility's documentation.
+
+        Args:
+            utility: Name of the utility
+
+        Returns:
+            List of subcommand names
+        """
+        subcommands = []
+
+        help_text = self.fetch_help_output(utility)
+        if not help_text:
+            return subcommands
+
+        # Common patterns for subcommand listings
+        patterns = [
+            r"^\s*(\w+)\s+[-–]\s+",  # "subcommand - description"
+            r"^\s{2,4}(\w+)\s{2,}",  # "  subcommand  description"
+            r"^Commands:\s*\n((?:\s+\w+.*\n)+)",  # Commands: section
+        ]
+
+        for pattern in patterns[:2]:
+            matches = re.findall(pattern, help_text, re.MULTILINE)
+            for match in matches:
+                if match and match not in ["the", "a", "an", "or", "and"]:
+                    subcommands.append(match)
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique = []
+        for cmd in subcommands:
+            if cmd not in seen:
+                seen.add(cmd)
+                unique.append(cmd)
+
+        return unique
+
+    def extract_options(self, utility: str) -> list[dict]:
+        """
+        Extract command-line options from documentation.
+
+        Args:
+            utility: Name of the utility
+
+        Returns:
+            List of option dicts with 'short', 'long', 'description'
+        """
+        options = []
+
+        help_text = self.fetch_help_output(utility)
+        man_text = self.fetch_man_page(utility)
+
+        combined = f"{help_text}\n{man_text}"
+
+        # Pattern for options like "-v, --verbose    Description"
+        pattern = r"^\s*(-\w)?(?:,\s*)?(--[\w-]+)?\s+(.+)$"
+
+        for match in re.finditer(pattern, combined, re.MULTILINE):
+            short_opt = match.group(1)
+            long_opt = match.group(2)
+            description = match.group(3).strip()
+
+            if short_opt or long_opt:
+                options.append(
+                    {
+                        "short": short_opt,
+                        "long": long_opt,
+                        "description": description[:100],  # Truncate
+                    }
+                )
+
+        return options
+
+
+class SystemIntrospector:
+    """
+    Introspects the local system for package and service information.
+    Complements osquery data when available.
+    """
+
+    @staticmethod
+    def get_installed_packages() -> list[str]:
+        """Get list of installed package names."""
+        try:
+            result = subprocess.run(
+                ["dpkg-query", "-f", "${Package}\n", "-W"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                return result.stdout.strip().split("\n")
+        except Exception as e:
+            logger.warning(f"Failed to get installed packages: {e}")
+        return []
+
+    @staticmethod
+    def get_running_services() -> list[str]:
+        """Get list of running service names."""
+        try:
+            result = subprocess.run(
+                [
+                    "systemctl",
+                    "list-units",
+                    "--type=service",
+                    "--state=running",
+                    "--no-legend",
+                    "--plain",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0:
+                services = []
+                for line in result.stdout.strip().split("\n"):
+                    if line:
+                        parts = line.split()
+                        if parts:
+                            services.append(parts[0])
+                return services
+        except Exception as e:
+            logger.warning(f"Failed to get running services: {e}")
+        return []
+
+    @staticmethod
+    def get_system_users() -> list[str]:
+        """Get list of system user names."""
+        try:
+            with open("/etc/passwd", "r") as f:
+                users = []
+                for line in f:
+                    parts = line.strip().split(":")
+                    if len(parts) >= 1:
+                        users.append(parts[0])
+                return users
+        except Exception as e:
+            logger.warning(f"Failed to get system users: {e}")
+        return []
+
+    @staticmethod
+    def check_ubuntu_version() -> tuple[str, str]:
+        """
+        Check Ubuntu version and detect sudo-rs/uutils.
+
+        Returns:
+            Tuple of (version_id, variant_info)
+        """
+        version_id = ""
+        variant_info = ""
+
+        try:
+            with open("/etc/os-release", "r") as f:
+                for line in f:
+                    if line.startswith("VERSION_ID="):
+                        version_id = line.split("=")[1].strip().strip('"')
+                        break
+        except Exception:
+            pass
+
+        # Check for sudo-rs (Ubuntu 25.10+)
+        try:
+            result = subprocess.run(
+                ["sudo", "--version"], capture_output=True, text=True, timeout=5
+            )
+            if "sudo-rs" in result.stdout.lower():
+                variant_info = "sudo-rs"
+            else:
+                variant_info = "sudo"
+        except Exception:
+            pass
+
+        # Check for uutils coreutils
+        try:
+            result = subprocess.run(
+                ["ls", "--version"], capture_output=True, text=True, timeout=5
+            )
+            if "uutils" in result.stdout.lower():
+                variant_info += "+uutils" if variant_info else "uutils"
+        except Exception:
+            pass
+
+        return version_id, variant_info
+
+    @staticmethod
+    def get_os_capabilities() -> dict:
+        """
+        Returns a capability dict for prompt injection.
+        Detects if strict Rust variants are active.
+        """
+        version_id, variant_info = SystemIntrospector.check_ubuntu_version()
+
+        return {
+            "is_sudo_rs": "sudo-rs" in variant_info,
+            "is_uutils": "uutils" in variant_info,
+            "os_version": version_id,
+            "raw_variant": variant_info
+        }

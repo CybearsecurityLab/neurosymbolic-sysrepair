@@ -6,10 +6,9 @@ Defines utility groups, hardware detection, and LLM settings.
 """
 
 import os
-import psutil
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
+import psutil
 
 # =============================================================================
 # Utility Groups for Worker Distribution
