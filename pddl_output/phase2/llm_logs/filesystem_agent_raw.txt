@@ -1,0 +1,121 @@
+ :types
+  file - object
+  directory - object
+  configuration_file - object
+
+:predicates
+  (file_exists ?f - file)
+  (directory_exists ?d - directory)
+  (configuration_file_exists ?c - configuration_file)
+  (file_is_regular ?f - file)
+  (file_is_directory ?f - file)
+  (file_is_configuration ?f - file)
+  (file_is_readable ?f - file)
+  (file_is_writable ?f - file)
+  (file_is_executable ?f - file)
+  (file_has_owner ?f ?user - user)
+  (file_has_group ?f ?group - group)
+  (file_has_permissions ?f (r w x) - file)
+  (directory_has_contents ?d - directory)
+  (directory_has_subdirectory ?d ?subdir - directory)
+  (configuration_file_has_entry ?c ?entry - configuration_file)
+
+:action change_file_permissions
+  :parameters (?f - file ?r ?w ?x - string)
+  :precondition (and (file_exists ?f) (file_is_regular ?f))
+  :effect (and (file_has_permissions ?f (r ?r) (w ?w) (x ?x)))
+
+:action change_file_owner
+  :parameters (?f - file ?user - user)
+  :precondition (and (file_exists ?f) (file_is_regular ?f))
+  :effect (and (file_has_owner ?f ?user))
+
+:action change_file_group
+  :parameters (?f - file ?group - group)
+  :precondition (and (file_exists ?f) (file_is_regular ?f))
+  :effect (and (file_has_group ?f ?group))
+
+:action create_file
+  :parameters (?f - file)
+  :precondition (not (file_exists ?f))
+  :effect (and (file_exists ?f))
+
+:action delete_file
+  :parameters (?f - file)
+  :precondition (file_exists ?f)
+  :effect (not (file_exists ?f))
+
+:action rename_file
+  :parameters (?old_f - file ?new_f - file)
+  :precondition (and (file_exists ?old_f) (not (file_exists ?new_f)))
+  :effect (and (not (file_exists ?old_f)) (file_exists ?new_f))
+
+:action move_file_to_directory
+  :parameters (?f - file ?d - directory)
+  :precondition (and (file_exists ?f) (directory_exists ?d))
+  :effect (and (not (file_exists ?f)) (directory_has_contents ?d) (file_exists (concat ?d "/" ?f)))
+
+:action copy_file
+  :parameters (?src_f - file ?dest_f - file)
+  :precondition (and (file_exists ?src_f) (not (file_exists ?dest_f)))
+  :effect (and (not (file_exists ?src_f)) (file_exists ?dest_f))
+
+:action create_directory
+  :parameters (?d - directory)
+  :precondition (not (directory_exists ?d))
+  :effect (and (directory_exists ?d))
+
+:action delete_directory
+  :parameters (?d - directory)
+  :precondition (directory_exists ?d)
+  :effect (not (directory_exists ?d))
+
+:action rename_directory
+  :parameters (?old_d - directory ?new_d - directory)
+  :precondition (and (directory_exists ?old_d) (not (directory_exists ?new_d)))
+  :effect (and (not (directory_exists ?old_d)) (directory_exists ?new_d))
+
+:action move_directory
+  :parameters (?src_d - directory ?dest_d - directory)
+  :precondition (and (directory_exists ?src_d) (not (directory_exists ?dest_d)))
+  :effect (and (not (directory_exists ?src_d)) (directory_exists ?dest_d))
+
+:action copy_directory
+  :parameters (?src_d - directory ?dest_d - directory)
+  :precondition (and (directory_exists ?src_d) (not (directory_exists ?dest_d)))
+  :effect (and (not (directory_exists ?src_d)) (directory_exists ?dest_d))
+
+:action create_configuration_file
+  :parameters (?c - configuration_file)
+  :precondition (not (configuration_file_exists ?c))
+  :effect (and (configuration_file_exists ?c))
+
+:action delete_configuration_file
+  :parameters (?c - configuration_file)
+  :precondition (configuration_file_exists ?c)
+  :effect (not (configuration_file_exists ?c))
+
+:action rename_configuration_file
+  :parameters (?old_c - configuration_file ?new_c - configuration_file)
+  :precondition (and (configuration_file_exists ?old_c) (not (configuration_file_exists ?new_c)))
+  :effect (and (not (configuration_file_exists ?old_c)) (configuration_file_exists ?new_c))
+
+:action move_configuration_file
+  :parameters (?src_c - configuration_file ?dest_c - configuration_file)
+  :precondition (and (configuration_file_exists ?src_c) (not (configuration_file_exists ?dest_c)))
+  :effect (and (not (configuration_file_exists ?src_c)) (configuration_file_exists ?dest_c))
+
+:action copy_configuration_file
+  :parameters (?src_c - configuration_file ?dest_c - configuration_file)
+  :precondition (and (configuration_file_exists ?src_c) (not (configuration_file_exists ?dest_c)))
+  :effect (and (not (configuration_file_exists ?src_c)) (configuration_file_exists ?dest_c))
+
+:action add_entry_to_configuration_file
+  :parameters (?c - configuration_file ?entry - string)
+  :precondition (configuration_file_exists ?c)
+  :effect (and (configuration_file_has_entry ?c ?entry))
+
+:action remove_entry_from_configuration_file
+  :parameters (?c - configuration_file ?entry - string)
+  :precondition (configuration_file_exists ?c)
+  :effect (not (configuration_file_has_entry ?c ?entry))

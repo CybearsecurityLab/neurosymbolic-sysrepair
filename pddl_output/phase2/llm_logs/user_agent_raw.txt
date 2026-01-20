@@ -1,0 +1,44 @@
+ :types
+  user - object
+  group - object
+
+:predicates
+  (user_exists ?u - user)
+  (group_exists ?g - group)
+  (user_is_member_of ?u - user ?g - group)
+  (group_has_gid ?g - group ?gid - integer)
+
+:action user_create
+  :parameters (?u - user)
+  :precondition (not (user_exists ?u))
+  :effect (and (user_exists ?u))
+
+:action group_create
+  :parameters (?g - group)
+  :precondition (not (group_exists ?g))
+  :effect (and (group_exists ?g))
+
+:action user_add_to_group
+  :parameters (?u - user ?g - group)
+  :precondition (and (user_exists ?u) (group_exists ?g))
+  :effect (and (user_is_member_of ?u ?g))
+
+:action group_add_user
+  :parameters (?u - user ?g - group)
+  :precondition (and (user_exists ?u) (group_exists ?g))
+  :effect (and (user_is_member_of ?u ?g))
+
+:action group_set_gid
+  :parameters (?g - group ?gid - integer)
+  :precondition (and (group_exists ?g))
+  :effect (and (group_has_gid ?g ?gid))
+
+:action user_delete
+  :parameters (?u - user)
+  :precondition (user_exists ?u)
+  :effect (not (user_exists ?u))
+
+:action group_delete
+  :parameters (?g - group)
+  :precondition (group_exists ?g)
+  :effect (not (group_exists ?g))

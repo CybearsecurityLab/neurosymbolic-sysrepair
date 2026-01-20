@@ -1,0 +1,50 @@
+[
+  {
+    "worker_name": "privilege_agent",
+    "group_name": "privilege",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 7.493327617645264
+  },
+  {
+    "worker_name": "service_agent",
+    "group_name": "service",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 8.771658182144165
+  },
+  {
+    "worker_name": "package_agent",
+    "group_name": "package",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 14.673799276351929
+  },
+  {
+    "worker_name": "user_agent",
+    "group_name": "user",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 15.909733533859253
+  },
+  {
+    "worker_name": "network_agent",
+    "group_name": "network",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 16.98636221885681
+  },
+  {
+    "worker_name": "filesystem_agent",
+    "group_name": "filesystem",
+    "types": [],
+    "predicates": [],
+    "actions": [],
+    "generation_time": 51.07473587989807
+  }
+]

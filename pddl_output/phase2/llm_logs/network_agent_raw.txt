@@ -1,0 +1,50 @@
+ :types
+  port interface firewall_rule
+
+:predicates
+  (connected ?r - firewall_rule)
+  (open ?p - port)
+  (assigned ?i - interface)
+  (active ?r - firewall_rule)
+  (allowing ?r - firewall_rule)
+  (blocking ?r - firewall_rule)
+
+:action connect_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (and (open ?p) (assigned ?i))
+  :effect (and (connected ?r) (allowing ?r))
+
+:action disconnect_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (and (connected ?r) (assigned ?i))
+  :effect (and (not (connected ?r)) (blocking ?r))
+
+:action activate_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (and (connected ?r))
+  :effect (and (active ?r))
+
+:action deactivate_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (and (active ?r))
+  :effect (and (not (active ?r)))
+
+:action open_port
+  :parameters (?p - port)
+  :precondition (not (open ?p))
+  :effect (and (open ?p))
+
+:action close_port
+  :parameters (?p - port)
+  :precondition (open ?p)
+  :effect (and (not (open ?p)))
+
+:action assign_interface
+  :parameters (?i - interface)
+  :precondition (not (assigned ?i))
+  :effect (and (assigned ?i))
+
+:action unassign_interface
+  :parameters (?i - interface)
+  :precondition (assigned ?i)
+  :effect (and (not (assigned ?i)))

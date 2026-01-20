@@ -1,0 +1,22 @@
+ :types
+  user process - object
+
+:predicates
+  (user_is_root ?u - user)
+  (sudo_allowed ?u ?p - user process)
+  (pkexec_allowed ?u ?p - user process)
+
+:action sudo_run
+  :parameters (?u - user ?p - process)
+  :precondition (and (user_is_root) (sudo_allowed ?u ?p))
+  :effect (and (running ?p ?u))
+
+:action pkexec_run
+  :parameters (?u - user ?p - process)
+  :precondition (and (user_is_root) (pkexec_allowed ?u ?p))
+  :effect (and (running ?p ?u))
+
+:action su_run
+  :parameters (?u - user)
+  :precondition (user_is_root)
+  :effect (and (running (shell ?u) ?u))
