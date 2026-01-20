@@ -1,36 +1,24 @@
 """
 phase1/common/logger.py
 
-Centralized logging utility for the Phase 1 pipeline.
-Allows redirecting progress output to stderr or devnull.
+Simple logging utility for Phase 1.
 """
 
 import sys
-from typing import TextIO, Any
-
-# Default to stdout
-_log_stream: Any = sys.stdout
+from datetime import datetime
+from typing import TextIO
 
 
-def log(msg: str):
+def log(message: str, level: str = "INFO"):
     """
-    Print a message to the configured log stream.
-
+    Simple logging function that prints to stdout.
+    
     Args:
-        msg: The message string to print.
+        message: The message to log
+        level: Log level (INFO, WARNING, ERROR, DEBUG)
     """
-    try:
-        print(msg, file=_log_stream)
-        # Flush to ensure immediate output for long-running processes
-        if hasattr(_log_stream, "flush"):
-            _log_stream.flush()
-    except (IOError, BrokenPipeError):
-        # Handle cases where the pipe is closed (e.g. | head)
-        # Reopen stdout to /dev/null to suppress further errors
-        import os
-
-        sys.stdout = open(os.devnull, "w")
-
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] [{level}] {message}", file=sys.stderr if level == "ERROR" else sys.stdout)
 
 def set_log_stream(stream: TextIO):
     """

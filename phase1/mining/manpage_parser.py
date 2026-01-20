@@ -6,13 +6,13 @@ from typing import Optional, Any
 from phase1.common.config import MODEL, LLM_MAX_CONTEXT_CHARS
 from phase1.common.config import get_base_predicates
 from phase1.common.logger import log
-from phase1.common.models import (
+from common.models import (
     LLMExtractionConfig,
     ActionSchema,
     PDDLType,
     ActionParameter,
 )
-from phase1.common.pddl_rules import PDDL_SYNTAX_GUIDE
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 
 class ManPageParser:

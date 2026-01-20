@@ -2,16 +2,23 @@
 phase1/common/config.py
 
 Configuration constants, schema mappings, and scoping criteria.
+Updated to use shared common modules.
 """
 
-from .models import PDDLType, OSQueryMapping
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from common.models import OSQueryMapping
+from common.predicates import get_base_predicates as _get_base_predicates
+
 
 # =============================================================================
 # Global Configuration
 # =============================================================================
 
 MODEL = "qwen2.5:32b"
-#MODEL = "gemma2:2b"
 LLM_MAX_CONTEXT_CHARS = 20000
 
 # Critical paths to scan for file system objects
@@ -22,16 +29,16 @@ CRITICAL_FILE_PATHS = [
     "/lib/systemd/system",
 ]
 
+
 # =============================================================================
 # OSQuery Schema Mappings
 # =============================================================================
 
-# Defines how osquery tables map to PDDL types and predicates
 OSQUERY_MAPPINGS = [
     OSQueryMapping(
         table="deb_packages",
         query="SELECT name, version, arch, status FROM deb_packages",
-        pddl_type=PDDLType.PACKAGE,
+        pddl_type="package",
         predicate_name="package_installed",
         name_column="name",
         additional_columns=["version", "arch"],
@@ -45,7 +52,7 @@ OSQUERY_MAPPINGS = [
                         fragment_path
                  FROM systemd_units
                  WHERE id LIKE '%.service'""",
-        pddl_type=PDDLType.SERVICE,
+        pddl_type="service",
         predicate_name="service_running",
         predicate_condition="active_state='active'",
         name_column="id",
@@ -54,7 +61,7 @@ OSQUERY_MAPPINGS = [
     OSQueryMapping(
         table="users",
         query="SELECT username, uid, gid, directory, shell FROM users",
-        pddl_type=PDDLType.USER,
+        pddl_type="user",
         predicate_name="user_exists",
         name_column="username",
         additional_columns=["uid", "gid", "directory"],
@@ -62,7 +69,7 @@ OSQUERY_MAPPINGS = [
     OSQueryMapping(
         table="groups",
         query="SELECT groupname, gid FROM groups",
-        pddl_type=PDDLType.GROUP,
+        pddl_type="group",
         predicate_name="group_exists",
         name_column="groupname",
         additional_columns=["gid"],
@@ -71,7 +78,7 @@ OSQUERY_MAPPINGS = [
         table="listening_ports",
         query="""SELECT port, protocol, address, pid, family
                  FROM listening_ports""",
-        pddl_type=PDDLType.PORT,
+        pddl_type="port",
         predicate_name="port_open",
         name_column="port",
         additional_columns=["protocol", "address", "pid"],
@@ -88,7 +95,7 @@ OSQUERY_MAPPINGS = [
                         src_port,
                         dst_port
                  FROM iptables""",
-        pddl_type=PDDLType.FIREWALL_RULE,
+        pddl_type="firewall_rule",
         predicate_name="firewall_rule_exists",
         name_column="chain",
         additional_columns=["policy", "target", "src_ip", "dst_ip"],
@@ -96,7 +103,7 @@ OSQUERY_MAPPINGS = [
     OSQueryMapping(
         table="processes",
         query="SELECT pid, name, state, uid, cmdline FROM processes",
-        pddl_type=PDDLType.PROCESS,
+        pddl_type="process",
         predicate_name="process_running",
         predicate_condition="state='R' OR state='S'",
         name_column="name",
@@ -107,7 +114,7 @@ OSQUERY_MAPPINGS = [
         query="""SELECT interface, address, type, mask
                  FROM interface_addresses
                  WHERE interface NOT LIKE 'lo%'""",
-        pddl_type=PDDLType.INTERFACE,
+        pddl_type="interface",
         predicate_name="interface_exists",
         name_column="interface",
         additional_columns=["address", "type"],
@@ -118,7 +125,6 @@ OSQUERY_MAPPINGS = [
 # =============================================================================
 # Scoping Heuristics
 # =============================================================================
-
 
 class AnchorCriteria:
     """
@@ -133,7 +139,6 @@ class AnchorCriteria:
     ROOT_UID = 0
     ACTIVE_STATES = {"active", "activating", "reloading"}
 
-    # Kernel threads usually don't need to be modeled in PDDL
     KERNEL_THREAD_PATTERNS = [
         "[",
         "kworker",
@@ -147,10 +152,7 @@ class AnchorCriteria:
 
     @classmethod
     def is_anchor_port(cls, port_data: dict) -> tuple[bool, str]:
-        """
-        Identify if a port is significant (system port or explicitly listening).
-        Returns (is_anchor, reason).
-        """
+        """Identify if a port is significant."""
         port_num = int(port_data.get("port", 0))
         protocol = port_data.get("protocol", "tcp")
 
@@ -162,10 +164,7 @@ class AnchorCriteria:
 
     @classmethod
     def is_anchor_user(cls, user_data: dict) -> tuple[bool, str]:
-        """
-        Identify if a user is significant (root or human user).
-        Returns (is_anchor, reason).
-        """
+        """Identify if a user is significant."""
         uid = int(user_data.get("uid", -1))
         username = user_data.get("username", "")
 
@@ -177,19 +176,16 @@ class AnchorCriteria:
 
     @classmethod
     def is_anchor_service(cls, service_data: dict) -> tuple[bool, str]:
-        """
-        Identify if a service is significant (currently active).
-        Returns (is_anchor, reason).
-        """
+        """Identify if a service is significant."""
         active_state = service_data.get("active_state", "")
 
         if active_state in cls.ACTIVE_STATES:
-            return True, f"active_service"
+            return True, "active_service"
         return False, ""
 
     @classmethod
     def is_kernel_thread(cls, process_data: dict) -> bool:
-        """Check if a process is a kernel thread (to be ignored)."""
+        """Check if a process is a kernel thread."""
         name = process_data.get("name", "")
         if name.startswith("[") and name.endswith("]"):
             return True
@@ -198,27 +194,7 @@ class AnchorCriteria:
 
 def get_base_predicates() -> list[str]:
     """
-    Dynamically generates the list of base predicates defined in OSQuery mappings.
-    Used to seed the LLM context so it prefers existing vocabulary.
+    Get list of base predicates from the shared common module.
+    This is the canonical source for predicate vocabulary.
     """
-    predicates = set()
-
-    # 1. Add predicates from OSQuery Mappings
-    for mapping in OSQUERY_MAPPINGS:
-        # Example: (package_installed ?package)
-        predicates.add(f"({mapping.predicate_name} ?{mapping.pddl_type.value})")
-
-        # Add implicit lifecycle predicates (implied by the mapping type)
-        if mapping.pddl_type == PDDLType.SERVICE:
-            predicates.add("(service_enabled ?service)")
-            predicates.add("(service_failed ?service)")
-        elif mapping.pddl_type == PDDLType.USER:
-            predicates.add("(can_escalate ?user)")
-            predicates.add("(user_critical ?user)")
-
-    # 2. Add static environment predicates
-    predicates.add("(network_available)")
-    predicates.add("(depends_on ?service ?package)")
-    predicates.add("(configures ?config ?service)")
-
-    return sorted(list(predicates))
+    return _get_base_predicates()

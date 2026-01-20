@@ -4,7 +4,7 @@
 import re
 from typing import Optional
 
-from phase1.common.models import ActionSchema
+from common.models import ActionSchema
 
 
 class PDDLGenerator:

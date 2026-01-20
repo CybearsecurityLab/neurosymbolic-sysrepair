@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from phase1.common.config import OSQUERY_MAPPINGS, CRITICAL_FILE_PATHS
-from phase1.common.models import (
+from common.models import (
     ExtractedObject,
     ExtractedPredicate,
     OSQueryMapping,
@@ -153,7 +153,7 @@ class SystemStateExtractor:
             obj = {
                 "name": name,
                 "original_name": row.get(mapping.name_column),
-                "type": mapping.pddl_type.value,
+                "type": mapping.pddl_type,
                 "properties": properties,
             }
             objects.append(obj)
