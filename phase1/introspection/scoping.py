@@ -2,7 +2,7 @@ import re
 from collections import defaultdict
 
 from phase1.common.config import AnchorCriteria
-from phase1.common.models import GraphEntity, EntityType
+from common.models import GraphEntity, EntityType
 
 
 class DependencyGraph:

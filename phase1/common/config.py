@@ -19,7 +19,7 @@ from common.predicates import get_base_predicates as _get_base_predicates
 # =============================================================================
 
 MODEL = "qwen2.5:32b"
-LLM_MAX_CONTEXT_CHARS = 20000
+LLM_MAX_CONTEXT_CHARS = 30000
 
 # Critical paths to scan for file system objects
 CRITICAL_FILE_PATHS = [
