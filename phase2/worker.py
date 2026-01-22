@@ -143,94 +143,81 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
             prompt += "\n\nVIOLATING THESE CONSTRAINTS WILL CAUSE PLANNER FAILURE."
 
         return prompt
-
-    def _build_generation_prompt(
-            self,
-            docs: dict[str, str],
-            existing_actions: set[str]
-    ) -> str:
+    def generate_partial_domain(self) -> PartialPDDLDomain:
         """
-        Build the prompt for PDDL generation with Deterministic Predicate Glue.
+        Generate a partial PDDL domain for this worker's utility group.
+        Main entry point called by the supervisor.
         """
-        prompt_parts = [
-            f"Generate PDDL domain components for: {self.config['description']}",
-            f"\nTarget PDDL types: {', '.join(self.config['pddl_focus'])}",
-        ]
-
-        # =================================================================
-        # NEW: Inject Deterministic Schema Mappings (The "Glue")
-        # =================================================================
-        # Filter mappings relevant to this worker's tables
-        worker_tables = self.config.get("osquery_tables", [])
-        relevant_mappings = [
-            m for m in OSQUERY_MAPPINGS
-            if m.table in worker_tables
-        ]
-
-        if relevant_mappings:
-            prompt_parts.append("\n\n=== GROUND TRUTH PREDICATE MAPPINGS (STRICT RULES) ===")
-            prompt_parts.append("You MUST use these specific predicates when the system state matches the condition.")
-            prompt_parts.append("These map directly to the OS internal state (Osquery):")
-
-            for m in relevant_mappings:
-                # Format the deterministic rule
-                # e.g. "Table 'systemd_units': When active_state='active' -> Use (service_running ?id)"
-
-                condition_str = m.predicate_condition if m.predicate_condition else "row exists"
-
-                rule = (
-                    f"  - Table '{m.table}': "
-                    f"When [{condition_str}] "
-                    f"-> Use Predicate: ({m.predicate_name} ?{m.name_column})"
-                )
-                prompt_parts.append(rule)
-
-                # Add negative constraint if possible
-                prompt_parts.append(
-                    f"    (DO NOT invent aliases like 'is_{m.predicate_name}' or 'status_{m.predicate_name}')")
-
-        # =================================================================
-        # [Existing Code] Known Predicates
-        # =================================================================
-        if self.known_predicates:
-            prompt_parts.append("\n\n=== EXISTING PREDICATES (VOCABULARY) ===")
-            prompt_parts.append("Use these predicates when applicable:")
-            for pred in self.known_predicates[:50]:
-                prompt_parts.append(f"  {pred}")
-            if len(self.known_predicates) > 50:
-                prompt_parts.append(f"  ... and {len(self.known_predicates) - 50} more")
-
-        # =================================================================
-        # [Existing Code] Existing Actions
-        # =================================================================
-        if existing_actions:
-            prompt_parts.append("\n\n=== EXISTING ACTIONS (do NOT duplicate) ===")
-            for name in sorted(existing_actions):
-                prompt_parts.append(f"  - {name}")
-
-        # =================================================================
-        # [Existing Code] Documentation & Data
-        # =================================================================
-        prompt_parts.append("\n\n=== SYSTEM DOCUMENTATION ===\n")
-
-        for utility, doc in docs.items():
-            if doc:
-                truncated = doc[:2000] + "..." if len(doc) > 2000 else doc
-                prompt_parts.append(f"\n--- {utility} ---\n{truncated}\n")
-
-        # Add osquery context if available
-        if self.osquery_data:
-            prompt_parts.append("\n=== CURRENT SYSTEM STATE (Ground Truth) ===\n")
-            for table, data in self.osquery_data.items():
-                sample = data[:10] if isinstance(data, list) else data
-                prompt_parts.append(f"{table}: {json.dumps(sample, indent=2)}\n")
-
-        prompt_parts.append(
-            "\n\nGenerate NEW PDDL types, predicates, and actions. "
-            "STRICTLY ADHERE to the Ground Truth Predicate Mappings above."
+        start_time = time.time()
+        
+        result = PartialPDDLDomain(
+            worker_name=self.worker_name,
+            group_name=self.group_name,
         )
+        
+        try:
+            # =================================================================
+            # Step 1: Start with Phase 1 actions if reusing
+            # =================================================================
+            existing_actions = set()
+            
+            if self.reuse_phase1_actions and self.phase1_actions:
+                logger.info(
+                    f"[{self.worker_name}] Reusing {len(self.phase1_actions)} "
+                    f"Phase 1 actions"
+                )
+                converted = self._convert_phase1_actions()
+                result.actions.extend(converted)
+                existing_actions = {a.name for a in converted}
+                
+                # Extract types and predicates from reused actions
+                result.types.extend(self._extract_types_from_actions(converted))
+                result.predicates.extend(self._extract_predicates_from_actions(converted))
+            
+            # =================================================================
+            # Step 2: Fetch documentation for utilities
+            # =================================================================
+            utilities = self.config.get("utilities", [])
+            docs = self.doc_extractor.get_utility_docs(utilities)
+            
+            # =================================================================
+            # Step 3: Build prompt and call LLM for new actions
+            # =================================================================
+            system_prompt = self._build_system_prompt()
+            generation_prompt = self._build_generation_prompt(docs, existing_actions)
+            
+            # Log the prompt for debugging
+            log_file = self.log_dir / f"{self.worker_name}_prompt.txt"
+            log_file.write_text(f"=== SYSTEM ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}")
+            
+            logger.info(f"[{self.worker_name}] Calling LLM for PDDL generation...")
+            raw_response = self.llm.generate(generation_prompt, system_prompt)
+            
+            # Log the response
+            response_log = self.log_dir / f"{self.worker_name}_response.txt"
+            response_log.write_text(raw_response)
+            
+            result.raw_pddl = raw_response
+            
+            # =================================================================
+            # Step 4: Parse LLM output
+            # =================================================================
+            self._parse_pddl_output(raw_response, result)
+            
+            logger.info(
+                f"[{self.worker_name}] Generated: "
+                f"{len(result.types)} types, "
+                f"{len(result.predicates)} predicates, "
+                f"{len(result.actions)} actions"
+            )
+            
+        except Exception as e:
+            logger.error(f"[{self.worker_name}] Generation failed: {e}")
+            result.error = str(e)
+        
+        result.generation_time = time.time() - start_time
+        return result
 
-        return "".join(prompt_parts)
 
     def _convert_phase1_actions(self) -> list[PDDLAction]:
         """Convert Phase 1 ActionSchema objects to Phase 2 PDDLAction objects."""
