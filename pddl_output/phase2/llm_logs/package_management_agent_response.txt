@@ -1,0 +1,24 @@
+ :types
+  package repository
+
+(:predicates
+  (package_installed ?p - package)
+  (package_removed ?p - package)
+  (package_updated ?p - package)
+  (repository_available ?r - repository)
+)
+
+(:action install_package
+  :parameters (?p - package ?r - repository)
+  :precondition (and (repository_available ?r) (file_exists (package_file ?p)))
+  :effect (and (not (package_installed ?p)) (package_installed ?p) (file_executable (package_file ?p))))
+
+(:action remove_package
+  :parameters (?p - package)
+  :precondition (package_installed ?p)
+  :effect (and (package_installed ?p) (not (package_installed ?p)) (file_removed (package_file ?p))))
+
+(:action update_package
+  :parameters (?p - package)
+  :precondition (package_installed ?p)
+  :effect (and (package_installed ?p) (not (package_outdated ?p)) (package_updated ?p)))

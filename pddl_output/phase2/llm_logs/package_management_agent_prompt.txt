@@ -1,0 +1,212 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
+   - Do NOT invent new types like "string", "list", "command"
+
+2. PREDICATES: Boolean only, no functions
+   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
+   - Only invent new predicates if absolutely necessary
+
+3. ACTIONS: Every parameter MUST be declared
+   - Do NOT duplicate actions that already exist (listed below)
+   - Only generate NEW actions not covered by existing ones
+
+4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
+   INVALID: (installed (find_package ?name))
+   VALID: (installed ?p)
+
+5. NO STRING LITERALS in preconditions/effects
+
+6. NO NESTED PREDICATES
+
+7. VARIABLE SCOPE:
+   Any variable used in preconditions or effects MUST be defined in :parameters.
+
+OUTPUT FORMAT - exactly this structure:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown, no explanations, no comments.
+
+=== USER ===
+Generate PDDL domain components for: Package installation, removal, and updates
+Target PDDL types: package, repository
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?f - configuration_file ?s - service)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?f - filesystem_object)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_open ?p - port)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?s - service)  (service_exists ?s - service)  (service_failed ?s - service)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?u - user)  (user_exists ?u - user)  (user_locked ?u - user)  (vulnerable ?p - package)
+
+=== SYSTEM DOCUMENTATION ===
+
+--- apt ---
+=== HELP OUTPUT ===
+apt 2.8.3 (amd64)
+Usage: apt [options] command
+
+apt is a commandline package manager and provides commands for
+searching and managing as well as querying information about packages.
+It provides the same functionality as the specialized APT tools,
+like apt-get and apt-cache, but enables options more suitable for
+interactive use by default.
+
+Most used commands:
+  list - list packages based on package names
+  search - search in package descriptions
+  show - show package details
+  install - install packages
+  reinstall - reinstall packages
+  remove - remove packages
+  autoremove - automatically remove all unused packages
+  update - update list of available packages
+  upgrade - upgrade the system by installing/upgrading packages
+  full-upgrade - upgrade the system by removing/installing/upgrading packages
+  edit-sources - edit the source information file
+  satisfy - satisfy dependency strings
+
+See apt(8) for more information about the available commands.
+Configuration options and syntax is detailed in apt.conf(5).
+Information about how to configure sources can be found in sources.list(5).
+Package and version choices can be expressed via apt_preferences(5).
+Security details are available in apt-secure(8).
+                                        This APT has Super Cow Powers.
+
+
+
+--- apt-get ---
+=== HELP OUTPUT ===
+apt 2.8.3 (amd64)
+Usage: apt-get [options] command
+       apt-get [options] install|remove pkg1 [pkg2 ...]
+       apt-get [options] source pkg1 [pkg2 ...]
+
+apt-get is a command line interface for retrieval of packages
+and information about them from authenticated sources and
+for installation, upgrade and removal of packages together
+with their dependencies.
+
+Most used commands:
+  update - Retrieve new lists of packages
+  upgrade - Perform an upgrade
+  install - Install new packages (pkg is libc6 not libc6.deb)
+  reinstall - Reinstall packages (pkg is libc6 not libc6.deb)
+  remove - Remove packages
+  purge - Remove packages and config files
+  autoremove - Remove automatically all unused packages
+  dist-upgrade - Distribution upgrade, see apt-get(8)
+  dselect-upgrade - Follow dselect selections
+  build-dep - Configure build-dependencies for source packages
+  satisfy - Satisfy dependency strings
+  clean - Erase downloaded archive files
+  autoclean - Erase old downloaded archive files
+  check - Verify that there are no broken dependencies
+  source - Download source archives
+  download - Download the binary package into the current directory
+  changelog - Download and display the changelog for the given package
+
+See apt-get(8) for more information about the available commands.
+Configuration options and syntax is detailed in apt.conf(5).
+Information about how to configure sources can be found in sources.list(5).
+Package and version choices can be expressed via apt_preferences(5).
+Security details are available in apt-secure(8).
+                                        This APT has Super Cow Powers.
+
+
+
+--- dpkg ---
+=== MAN PAGE ===
+dpkg(1) dpkg suite dpkg(1)
+
+NAME
+ dpkg - package manager for Debian
+
+SYNOPSIS
+ dpkg [option...] action
+
+WARNING
+ This manual is intended for users wishing to understand dpkg's command line options and package states in more
+ detail than that provided by dpkg --help.
+
+ It should not be used by package maintainers wishing to understand how dpkg will install their packages. The
+ descriptions of what dpkg does when installing and removing packages are particularly inadequate.
+
+DESCRIPTION
+ dpkg is a medium-level tool to install, build, remove and manage Debian packages. The primary and more user-
+ friendly front-end for dpkg as a CLI (command-line interface) is apt(8) and as a TUI (terminal user interface)
+ is aptitude(8). dpkg itself is controlled entirely via command line parameters, which consist of exactly one
+ action and zero or more options. The action-parameter tells dpkg what to do and options control the behavior
+ of the action in some way.
+
+ dpkg can also be used as a front-end to dpkg-deb(1) and dpkg-query(1). The list of supported actions can be
+ found later on in the ACTIONS section. If any such action is encountered dpkg just runs dpkg-deb or dpkg-
+ query with the parameters given to it, but no specific options are currently passed to them, to use any such
+ option the back-ends need to be called directly.
+
+INFORMATION ABOUT PACKAGES
+ dpkg maintains some usable information about available packages. The information is divided in three classes:
+ states, selection states and flags. These values are intended to be changed mainly with dselect.
+
+ Package states
+ not-installed
+ The package is not installed on your system.
+
+ config-files
+ Only the configuration files or the postrm script and the data it needs to remove of the package exist on
+ the system.
+
+ half-installed
+ The installation of the package has been started, but not completed for some reason.
+
+ unpacked
+ The package is unpacked, but not configured.
+
+ half-configured
+ The package is un...
+
+--- snap ---
+=== HELP OUTPUT ===
+The snap command lets you install, configure, refresh and remove snaps.
+Snaps are packages that work across many different Linux distributions,
+enabling secure delivery and operation of the latest apps and utilities.
+
+Usage: snap <command> [<options>...]
+
+Commonly used commands can be classified as follows:
+
+           Basics: find, info, install, remove, list, components
+          ...more: refresh, revert, switch, disable, enable, create-cohort
+          History: changes, tasks, abort, watch
+          Daemons: services, start, stop, restart, logs
+      Permissions: connections, interface, connect, disconnect
+    Configuration: get, set, unset, wait
+      App Aliases: alias, aliases, unalias, prefer
+          Account: login, logout, whoami
+        Snapshots: saved, save, check-snapshot, restore, forget
+           Device: model, remodel, reboot, recovery
+     Quota Groups: set-quota, remove-quota, quotas, quota
+  Validation Sets: validate
+        ... Other: warnings, okay, known, ack, version
+      Development: download, pack, run, try, sign
+
+For more information about a command, run 'snap help <command>'.
+For a short summary of all commands, run 'snap help --all'.
+
+
+
+--- flatpak ---
+# flatpak
+No documentation available.
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

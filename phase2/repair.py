@@ -166,17 +166,37 @@ class PDDLValidator:
         """Check predicate definitions."""
         errors = []
 
-        # Extract predicates section
-        pred_match = re.search(r"\(:predicates\s*(.*?)\)\s*(?:\(:action|$)", pddl, re.DOTALL)
-        if not pred_match:
+        # Extract predicates section using balanced parenthesis matching
+        pred_start = pddl.find("(:predicates")
+        if pred_start == -1:
             return errors
 
-        pred_content = pred_match.group(1)
+        # Find the closing paren for the predicates section
+        depth = 0
+        pred_end = -1
+        for i in range(pred_start, len(pddl)):
+            if pddl[i] == '(':
+                depth += 1
+            elif pddl[i] == ')':
+                depth -= 1
+                if depth == 0:
+                    pred_end = i + 1
+                    break
 
-        # Check for reserved keywords used as predicate names
-        pred_pattern = r"\((\w+)"
-        for match in re.finditer(pred_pattern, pred_content):
+        if pred_end == -1:
+            return errors
+
+        pred_section = pddl[pred_start:pred_end]
+
+        # Extract individual predicate definitions
+        # Match predicates like: (predicate_name ?arg1 - type1 ?arg2 - type2)
+        pred_pattern = r"\(([a-zA-Z_][\w-]*)\s*(?:\?[\w-]+\s*-\s*[\w-]+\s*)*\)"
+
+        for match in re.finditer(pred_pattern, pred_section):
             pred_name = match.group(1)
+            # Skip if it's the "predicates" keyword itself
+            if pred_name == "predicates":
+                continue
             if pred_name in PDDL_RESERVED_KEYWORDS:
                 errors.append(
                     f"Predicate '{pred_name}' uses reserved PDDL keyword"

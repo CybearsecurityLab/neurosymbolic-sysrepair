@@ -166,28 +166,23 @@ class MergerAgent:
         """Send PDDL + Errors to LLM for correction."""
 
         # Summarize errors to fit context
-        error_report = "\n".join(f"- {e}" for e in errors[:10])
-        if len(errors) > 10:
-            error_report += f"\n... and {len(errors) - 10} more errors."
+        error_report = "\n".join(f"{i+1}. {e}" for i, e in enumerate(errors[:15]))
+        if len(errors) > 15:
+            error_report += f"\n... and {len(errors) - 15} more errors."
 
         prompt = (
-            "You are fixing a broken PDDL domain for Ubuntu 25.10.\n"
-            "The following PDDL has validation errors. You must fix them.\n\n"
-            "=== VALIDATION ERRORS ===\n"
+            "Fix the PDDL domain below. It has validation errors that must be corrected.\n\n"
+            "VALIDATION ERRORS:\n"
             f"{error_report}\n\n"
-            "=== BROKEN PDDL ===\n"
+            "PDDL TO FIX:\n"
             f"{pddl}\n\n"
-            "INSTRUCTIONS:\n"
-            "1. Fix the specific errors listed above (e.g., declare missing predicates, fix types).\n"
-            "2. Ensure all actions use valid syntax.\n"
-            "3. Return the COMPLETE, CORRECTED PDDL domain.\n"
-            "4. Do not output markdown or explanations, JUST the PDDL code."
+            "Return ONLY the corrected PDDL code. No explanations, no markdown, no additional text.\n"
+            "Start your response with (define (domain sysadmin)"
         )
 
         try:
-            # High temperature for creativity in fixing, or low for precision?
-            # Precision is better here.
-            repaired = self.llm.generate(prompt)
+            # Use low temperature for precision
+            repaired = self.llm.generate(prompt, temperature=0.1)
             return self._strip_markdown(repaired)
         except Exception as e:
             logger.error(f"LLM repair failed: {e}")
@@ -195,8 +190,27 @@ class MergerAgent:
 
     def _strip_markdown(self, text: str) -> str:
         """Helper to clean LLM output."""
+        # Remove markdown code fences
         text = re.sub(r"^```(?:pddl)?\s*\n?", "", text, flags=re.MULTILINE)
         text = re.sub(r"\n?```\s*$", "", text, flags=re.MULTILINE)
+
+        # Remove common LLM preambles and section headers
+        text = re.sub(r"^.*?Here is.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r"^.*?corrected.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r"^===.*?===\s*\n", "", text, flags=re.MULTILINE)
+
+        # Find the actual PDDL domain definition
+        # PDDL domains start with "(define (domain"
+        match = re.search(r'\(define\s+\(domain.*', text, re.DOTALL)
+        if match:
+            text = match.group(0)
+        else:
+            # Try to find any PDDL-like content starting with types, predicates, or actions
+            pddl_match = re.search(r'(?:\(:types|\(:predicates|\(:action).*', text, re.DOTALL)
+            if pddl_match:
+                # Wrap in domain definition if missing
+                text = f"(define (domain sysadmin)\n  (:requirements :strips :typing :negative-preconditions)\n  {pddl_match.group(0)}\n)"
+
         return text.strip()
 
     def _initialize_core_types(self):

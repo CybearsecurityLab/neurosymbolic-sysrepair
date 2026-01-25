@@ -1,0 +1,59 @@
+ :types
+  file - object
+  directory - object
+
+(:predicates)
+(file_in_directory ?f - file ?d - directory)
+(directory_empty ?d - directory)
+(file_exists ?f - file)
+(file_readable ?f - file)
+(file_writable ?f - file)
+(file_executable ?f - file)
+(file_owned_by ?f - file ?u - user)
+(file_is_directory ?f - file)
+(directory_contains_file ?d - directory ?f - file)
+
+(:action copy_file
+  :parameters (?src - file ?dst - file)
+  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))
+  :effect (and (not (file_exists ?dst)) (create_file ?dst) (copy_content ?src ?dst)))
+
+(:action move_file
+  :parameters (?src - file ?dst - file)
+  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))
+  :effect (and (not (file_exists ?src)) (rename_file ?src ?dst)))
+
+(:action remove_file
+  :parameters (?f - file)
+  :precondition (file_exists ?f)
+  :effect (delete_file ?f))
+
+(:action create_directory
+  :parameters (?d - directory)
+  :precondition (not (directory_exists ?d))
+  :effect (create_directory ?d))
+
+(:action remove_directory
+  :parameters (?d - directory)
+  :precondition (directory_empty ?d)
+  :effect (delete_directory ?d))
+
+(:action move_directory
+  :parameters (?src - directory ?dst - directory)
+  :precondition (directory_empty ?dst)
+  :effect (and (not (directory_exists ?src)) (not (directory_exists ?dst)) (create_directory ?dst) (rename_directory ?src ?dst)))
+
+(:action copy_directory
+  :parameters (?src - directory ?dst - directory)
+  :precondition (directory_exists ?src)
+  :effect (and (not (directory_exists ?dst)) (create_directory ?dst) (copy_subdirectory ?src ?dst)))
+
+(:action copy_subdirectory
+  :parameters (?src - directory ?dst - directory ?sub - directory)
+  :precondition (and (directory_exists ?src) (directory_contains_file ?src ?sub))
+  :effect (and (not (directory_exists ?sub)) (create_directory ?sub) (copy_files_in_directory ?src ?sub)))
+
+(:action copy_files_in_directory
+  :parameters (?src - directory ?dst - directory)
+  :precondition (directory_exists ?src)
+  :effect (forall (?f) (if (file_exists ?f) (and (not (file_in_directory ?src ?dst)) (copy_file ?f (concatenate_strings ?dst "/" ?f))) (true))))

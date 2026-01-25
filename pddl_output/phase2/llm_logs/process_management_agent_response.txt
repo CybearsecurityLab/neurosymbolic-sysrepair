@@ -1,0 +1,42 @@
+ :types
+  process
+
+(:predicates
+  (process_exists ?p - process)
+  (process_running ?p - process)
+  (process_terminated ?p - process)
+  (process_paused ?p - process)
+  (process_priority ?p - process ?priority)
+  (process_niceness ?p - process ?niceness)
+  (process_owned_by ?p - process ?user - user)
+)
+
+(:action kill_process
+  :parameters (?p - process)
+  :precondition (and (process_exists ?p))
+  :effect (and (not (process_running ?p)) (not (process_paused ?p))))
+
+(:action start_process
+  :parameters (?p - process)
+  :precondition (and (process_exists ?p) (not (process_running ?p)))
+  :effect (and (process_running ?p)))
+
+(:action pause_process
+  :parameters (?p - process)
+  :precondition (and (process_running ?p))
+  :effect (and (process_paused ?p)))
+
+(:action resume_process
+  :parameters (?p - process)
+  :precondition (and (process_paused ?p))
+  :effect (and (not (process_paused ?p)) (not (process_terminated ?p))))
+
+(:action change_process_priority
+  :parameters (?p - process ?priority - integer)
+  :precondition (and (process_exists ?p) (process_running ?p))
+  :effect (and (process_priority ?p ?priority)))
+
+(:action change_process_niceness
+  :parameters (?p - process ?niceness - integer)
+  :precondition (and (process_exists ?p) (process_running ?p))
+  :effect (and (process_niceness ?p ?niceness)))

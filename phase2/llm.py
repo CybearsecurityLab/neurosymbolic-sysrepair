@@ -19,7 +19,7 @@ class LLMInterface(ABC):
     """Abstract base class for LLM interfaces."""
 
     @abstractmethod
-    def generate(self, prompt: str, system_prompt: str = "") -> str:
+    def generate(self, prompt: str, system_prompt: str = "", temperature: Optional[float] = None) -> str:
         """Generate text from the LLM."""
         pass
 
@@ -53,7 +53,7 @@ class VLLMInterface(LLMInterface):
                 )
         return self._client
 
-    def generate(self, prompt: str, system_prompt: str = "") -> str:
+    def generate(self, prompt: str, system_prompt: str = "", temperature: Optional[float] = None) -> str:
         """Generate text using vLLM."""
         client = self._get_client()
 
@@ -62,13 +62,16 @@ class VLLMInterface(LLMInterface):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        # Use provided temperature or fall back to config default
+        temp = temperature if temperature is not None else self.config.temperature
+
         try:
             start = time.time()
             response = client.chat.completions.create(
                 model=self.config.model_name,
                 messages=messages,
                 max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature,
+                temperature=temp,
             )
             elapsed = time.time() - start
             logger.debug(f"LLM generation took {elapsed:.2f}s")
@@ -84,7 +87,9 @@ class VLLMInterface(LLMInterface):
         try:
             import urllib.request
 
-            urllib.request.urlopen(f"{self.config.base_url}/health", timeout=5)
+            # vLLM health endpoint is at /health, not /v1/health
+            base_url = self.config.base_url.replace("/v1", "")
+            urllib.request.urlopen(f"{base_url}/health", timeout=5)
             return True
         except Exception:
             return False
@@ -99,11 +104,14 @@ class OllamaInterface(LLMInterface):
         if "localhost:8000" in self.base_url:
             self.base_url = "http://localhost:11434"
 
-    def generate(self, prompt: str, system_prompt: str = "") -> str:
+    def generate(self, prompt: str, system_prompt: str = "", temperature: Optional[float] = None) -> str:
         """Generate text using Ollama."""
         import requests
 
         full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+
+        # Use provided temperature or fall back to config default
+        temp = temperature if temperature is not None else self.config.temperature
 
         try:
             start = time.time()
@@ -114,7 +122,7 @@ class OllamaInterface(LLMInterface):
                     "prompt": full_prompt,
                     "stream": False,
                     "options": {
-                        "temperature": self.config.temperature,
+                        "temperature": temp,
                         "num_predict": self.config.max_tokens,
                     },
                 },
@@ -183,7 +191,7 @@ class MockLLMInterface(LLMInterface):
         self.config = config
         self._call_count = 0
 
-    def generate(self, prompt: str, system_prompt: str = "") -> str:
+    def generate(self, prompt: str, system_prompt: str = "", temperature: Optional[float] = None) -> str:
         """Return mock PDDL for testing."""
         self._call_count += 1
         logger.info(f"MockLLM: Returning mock PDDL (call #{self._call_count})")

@@ -1,0 +1,142 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
+   - Do NOT invent new types like "string", "list", "command"
+
+2. PREDICATES: Boolean only, no functions
+   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
+   - Only invent new predicates if absolutely necessary
+
+3. ACTIONS: Every parameter MUST be declared
+   - Do NOT duplicate actions that already exist (listed below)
+   - Only generate NEW actions not covered by existing ones
+
+4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
+   INVALID: (installed (find_package ?name))
+   VALID: (installed ?p)
+
+5. NO STRING LITERALS in preconditions/effects
+
+6. NO NESTED PREDICATES
+
+7. VARIABLE SCOPE:
+   Any variable used in preconditions or effects MUST be defined in :parameters.
+
+OUTPUT FORMAT - exactly this structure:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown, no explanations, no comments.
+
+=== USER ===
+Generate PDDL domain components for: Service lifecycle and configuration
+Target PDDL types: service, configuration_file
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?f - configuration_file ?s - service)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?f - filesystem_object)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_open ?p - port)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?s - service)  (service_exists ?s - service)  (service_failed ?s - service)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?u - user)  (user_exists ?u - user)  (user_locked ?u - user)  (vulnerable ?p - package)
+
+=== SYSTEM DOCUMENTATION ===
+
+--- systemctl ---
+=== MAN PAGE ===
+SYSTEMCTL(1) systemctl SYSTEMCTL(1)
+
+NAME
+ systemctl - Control the systemd system and service manager
+
+SYNOPSIS
+
+ systemctl [OPTIONS...] COMMAND [UNIT...]
+
+DESCRIPTION
+ systemctl may be used to introspect and control the state of the "systemd" system and service manager. Please
+ refer to systemd(1) for an introduction into the basic concepts and functionality this tool manages.
+
+COMMANDS
+ The following commands are understood:
+
+ Unit Commands (Introspection and Modification)
+ list-units [PATTERN...]
+ List units that systemd currently has in memory. This includes units that are either referenced directly
+ or through a dependency, units that are pinned by applications programmatically, or units that were active
+ in the past and have failed. By default only units which are active, have pending jobs, or have failed are
+ shown; this can be changed with option --all. If one or more PATTERNs are specified, only units matching
+ one of them are shown. The units that are shown are additionally filtered by --type= and --state= if those
+ options are specified.
+
+ Note that this command does not show unit templates, but only instances of unit templates. Units templates
+ that aren't instantiated are not runnable, and will thus never show up in the output of this command.
+ Specifically this means that foo@.service will never be shown in this list -- unless instantiated, e.g. as
+ foo@bar.service. Use list-unit-files (see below) for listing installed unit template files.
+
+ Produces output similar to
+
+ UNIT LOAD ACTIVE SUB DESCRIPTION
+ sys-module-fuse.device loaded active plugged /sys/module/fuse
+ -.mount loaded active mounted Root Mount
+ boot-efi.mount loaded active mounted /boot/efi
+ systemd-journald.service loaded active running Journal Service
+ systemd-logind.service loaded active running Login Service
+ user@1000.service loaded failed failed User Manager for UID 1000
+ ...
+ systemd-tmpfiles-clean.timer loaded active waiting Daily Cleanup of Temporary Directories
+
+ ...
+
+--- service ---
+=== HELP OUTPUT ===
+Usage: service < option > | --status-all | [ service_name [ command | --full-restart ] ]
+
+
+
+--- journalctl ---
+=== MAN PAGE ===
+JOURNALCTL(1) journalctl JOURNALCTL(1)
+
+NAME
+ journalctl - Print log entries from the systemd journal
+
+SYNOPSIS
+
+ journalctl [OPTIONS...] [MATCHES...]
+
+DESCRIPTION
+ journalctl is used to print the log entries stored in the journal by systemd-journald.service(8) and systemd-
+ journal-remote.service(8).
+
+ If called without parameters, it will show the contents of the journal accessible to the calling user,
+ starting with the oldest entry collected.
+
+ If one or more match arguments are passed, the output is filtered accordingly. A match is in the format
+ "FIELD=VALUE", e.g. "_SYSTEMD_UNIT=httpd.service", referring to the components of a structured journal entry.
+ See systemd.journal-fields(7) for a list of well-known fields. If multiple matches are specified matching
+ different fields, the log entries are filtered by both, i.e. the resulting output will show only entries
+ matching all the specified matches of this kind. If two matches apply to the same field, then they are
+ automatically matched as alternatives, i.e. the resulting output will show entries matching any of the
+ specified matches for the same field. Finally, the character "+" may appear as a separate word between other
+ terms on the command line. This causes all matches before and after to be combined in a disjunction (i.e.
+ logical OR).
+
+ It is also possible to filter the entries by specifying an absolute file path as an argument. The file path
+ may be a file or a symbolic link and the file must exist at the time of the query. If a file path refers to an
+ executable binary, an "_EXE=" match for the canonicalized binary path is added to the query. If a file path
+ refers to an executable script, a "_COMM=" match for the script name is added to the query. If a file path
+ refers to a device node, "_KERNEL_DEVICE=" matches for the kernel name of the device and for each of its
+ ancestor devices is added to the query. Symbolic links are dereferenced, kernel names are synthesized, and
+ parent de...
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

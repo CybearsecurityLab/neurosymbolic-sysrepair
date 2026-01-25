@@ -1,0 +1,36 @@
+ :types
+  interface - object
+  port - object
+  firewall_rule - object
+
+(:predicates
+  (interface_exists ?i - interface)
+  (port_exists ?p - port)
+  (firewall_rule_exists ?r - firewall_rule)
+  (port_assigned_to_interface ?p - port ?i - interface)
+  (firewall_rule_applied_to_port ?r - firewall_rule ?p - port)
+)
+
+(:action assign_port_to_interface
+  :parameters (?p - port ?i - interface)
+  :precondition (and (interface_exists ?i) (port_exists ?p))
+  :effect (and (port_assigned_to_interface ?p ?i) (not (port_assigned_to_interface ?p ?_)) (not (port_assigned_to_interface ?_ ?i)))
+)
+
+(:action apply_firewall_rule_to_port
+  :parameters (?r - firewall_rule ?p - port)
+  :precondition (and (firewall_rule_exists ?r) (port_exists ?p))
+  :effect (and (firewall_rule_applied_to_port ?r ?p) (not (firewall_rule_applied_to_port ?r ?_)) (not (firewall_rule_applied_to_port ?_ ?p)))
+)
+
+(:action remove_port_from_interface
+  :parameters (?p - port ?i - interface)
+  :precondition (and (interface_exists ?i) (port_assigned_to_interface ?p ?i))
+  :effect (and (not (port_assigned_to_interface ?p ?i)) (not (port_assigned_to_interface ?p ?_)) (not (port_assigned_to_interface ?_ ?i)))
+)
+
+(:action remove_firewall_rule_from_port
+  :parameters (?r - firewall_rule ?p - port)
+  :precondition (and (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))
+  :effect (and (not (firewall_rule_applied_to_port ?r ?p)) (not (firewall_rule_applied_to_port ?r ?_)) (not (firewall_rule_applied_to_port ?_ ?p)))
+)

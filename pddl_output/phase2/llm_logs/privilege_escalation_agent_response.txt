@@ -1,0 +1,30 @@
+ :(types
+  user_privilege - object
+  sudo_command - string
+)
+
+(:predicates
+  (has_user_privilege ?u - user ?p - user_privilege)
+  (sudo_command_exists ?sc - sudo_command)
+  (sudo_command_executable ?sc - sudo_command)
+  (sudo_command_readable ?sc - sudo_command)
+  (sudo_command_writable ?sc - sudo_command)
+)
+
+(:action execute_sudo_command
+  :parameters (?u - user ?sc - sudo_command)
+  :precondition (and (user_exists ?u) (sudo_command_exists ?sc) (file_readable ?sc) (can_escalate ?u))
+  :effect (and (executed_as_root (create_process (sudo -u ?u -c ?sc))) (has_user_privilege ?u 'executed_sudo_command'))
+)
+
+(:action revoke_user_privilege
+  :parameters (?u - user ?p - user_privilege)
+  :precondition (and (user_exists ?u) (user_has_privilege ?u ?p))
+  :effect (and (not (has_user_privilege ?u ?p)))
+)
+
+(:action grant_user_privilege
+  :parameters (?u - user ?p - user_privilege)
+  :precondition (and (user_exists ?u))
+  :effect (and (has_user_privilege ?u ?p))
+)

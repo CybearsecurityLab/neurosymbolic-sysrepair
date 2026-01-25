@@ -1,0 +1,156 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
+   - Do NOT invent new types like "string", "list", "command"
+
+2. PREDICATES: Boolean only, no functions
+   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
+   - Only invent new predicates if absolutely necessary
+
+3. ACTIONS: Every parameter MUST be declared
+   - Do NOT duplicate actions that already exist (listed below)
+   - Only generate NEW actions not covered by existing ones
+
+4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
+   INVALID: (installed (find_package ?name))
+   VALID: (installed ?p)
+
+5. NO STRING LITERALS in preconditions/effects
+
+6. NO NESTED PREDICATES
+
+7. VARIABLE SCOPE:
+   Any variable used in preconditions or effects MUST be defined in :parameters.
+
+OUTPUT FORMAT - exactly this structure:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown, no explanations, no comments.
+
+=== USER ===
+Generate PDDL domain components for: Privilege management (sudo-rs for Ubuntu 25.10)
+Target PDDL types: user
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?f - configuration_file ?s - service)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?f - filesystem_object)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_open ?p - port)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?s - service)  (service_exists ?s - service)  (service_failed ?s - service)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?u - user)  (user_exists ?u - user)  (user_locked ?u - user)  (vulnerable ?p - package)
+
+=== SYSTEM DOCUMENTATION ===
+
+--- sudo ---
+=== HELP OUTPUT ===
+sudo - execute a command as another user
+
+usage: sudo -h | -K | -k | -V
+usage: sudo -v [-ABkNnS] [-g group] [-h host] [-p prompt] [-u user]
+usage: sudo -l [-ABkNnS] [-g group] [-h host] [-p prompt] [-U user]
+            [-u user] [command [arg ...]]
+usage: sudo [-ABbEHkNnPS] [-r role] [-t type] [-C num] [-D directory]
+            [-g group] [-h host] [-p prompt] [-R directory] [-T timeout]
+            [-u user] [VAR=value] [-i | -s] [command [arg ...]]
+usage: sudo -e [-ABkNnS] [-r role] [-t type] [-C num] [-D directory]
+            [-g group] [-h host] [-p prompt] [-R directory] [-T timeout]
+            [-u user] file ...
+
+Options:
+  -A, --askpass                 use a helper program for password prompting
+  -b, --background              run command in the background
+  -B, --bell                    ring bell when prompting
+  -C, --close-from=num          close all file descriptors >= num
+  -D, --chdir=directory         change the working directory before running
+                                command
+  -E, --preserve-env            preserve user environment when running command
+      --preserve-env=list       preserve specific environment variables
+  -e, --edit                    edit files instead of running a command
+  -g, --group=group             run command as the specified group name or ID
+  -H, --set-home                set HOME variable to target user's home dir
+  -h, --help                    display help message and exit
+  -h, --host=host               run command on host (if supported by plugin)
+  -i, --login                   run login shell as the target user; a command
+                                may also be specified
+  -K, --remove-timestamp        remove timestamp file completely
+  -k, --reset-timestamp         invalidate timestamp file
+  -l, --list                    list user's privileges or check a specific
+                                command; use twice for longer format
+  -n, --non-interactive         non-interactive ...
+
+--- su ---
+=== MAN PAGE ===
+SU(1) User Commands SU(1)
+
+NAME
+ su - run a command with substitute user and group ID
+
+SYNOPSIS
+ su [options] [-] [user [argument...]]
+
+DESCRIPTION
+ su allows commands to be run with a substitute user and group ID.
+
+ When called with no user specified, su defaults to running an interactive shell as root. When user is
+ specified, additional arguments can be supplied, in which case they are passed to the shell.
+
+ For backward compatibility, su defaults to not change the current directory and to only set the environment
+ variables HOME and SHELL (plus USER and LOGNAME if the target user is not root). It is recommended to always
+ use the --login option (instead of its shortcut -) to avoid side effects caused by mixing environments.
+
+ This version of su uses PAM for authentication, account and session management. Some configuration options
+ found in other su implementations, such as support for a wheel group, have to be configured via PAM.
+
+ su is mostly designed for unprivileged users, the recommended solution for privileged users (e.g., scripts
+ executed by root) is to use non-set-user-ID command runuser(1) that does not require authentication and
+ provides separate PAM configuration. If the PAM session is not required at all then the recommended solution
+ is to use command setpriv(1).
+
+ Note that su in all cases uses PAM (pam_getenvlist(3)) to do the final environment modification. Command-line
+ options such as --login and --preserve-environment affect the environment before it is modified by PAM.
+
+ Since version 2.38 su resets process resource limits RLIMIT_NICE, RLIMIT_RTPRIO, RLIMIT_FSIZE, RLIMIT_AS and
+ RLIMIT_NOFILE.
+
+OPTIONS
+ -c, --command=command
+ Pass command to the shell with the -c option.
+
+ -f, --fast
+ Pass -f to the shell, which may or may not be useful, depending on the shell.
+
+ -g, --group=group
+ Specify the primary group. This option is available to the root user only.
+
+ -G, --supp-group=group
+ Specify a supplementary group. This option...
+
+--- visudo ---
+=== HELP OUTPUT ===
+visudo - safely edit the sudoers file
+
+usage: visudo [-chqsV] [[-f] sudoers ]
+
+Options:
+  -c, --check              check-only mode
+  -f, --file=sudoers       specify sudoers file location
+  -h, --help               display help message and exit
+  -I, --no-includes        do not edit include files
+  -q, --quiet              less verbose (quiet) syntax error messages
+  -s, --strict             strict syntax checking
+  -V, --version            display version information and exit
+
+
+
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

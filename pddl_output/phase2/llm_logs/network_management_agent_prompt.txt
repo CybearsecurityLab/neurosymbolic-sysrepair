@@ -1,0 +1,277 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
+   - Do NOT invent new types like "string", "list", "command"
+
+2. PREDICATES: Boolean only, no functions
+   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
+   - Only invent new predicates if absolutely necessary
+
+3. ACTIONS: Every parameter MUST be declared
+   - Do NOT duplicate actions that already exist (listed below)
+   - Only generate NEW actions not covered by existing ones
+
+4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
+   INVALID: (installed (find_package ?name))
+   VALID: (installed ?p)
+
+5. NO STRING LITERALS in preconditions/effects
+
+6. NO NESTED PREDICATES
+
+7. VARIABLE SCOPE:
+   Any variable used in preconditions or effects MUST be defined in :parameters.
+
+OUTPUT FORMAT - exactly this structure:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown, no explanations, no comments.
+
+=== USER ===
+Generate PDDL domain components for: Network configuration and firewall
+Target PDDL types: interface, port, firewall_rule
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?f - configuration_file ?s - service)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?f - filesystem_object)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_open ?p - port)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?s - service)  (service_exists ?s - service)  (service_failed ?s - service)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?u - user)  (user_exists ?u - user)  (user_locked ?u - user)  (vulnerable ?p - package)
+
+=== SYSTEM DOCUMENTATION ===
+
+--- ip ---
+=== HELP OUTPUT ===
+Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }
+       ip [ -force ] -batch filename
+where  OBJECT := { address | addrlabel | amt | fou | help | ila | ioam | l2tp |
+                   link | macsec | maddress | monitor | mptcp | mroute | mrule |
+                   neighbor | neighbour | netconf | netns | nexthop | ntable |
+                   ntbl | route | rule | sr | tap | tcpmetrics |
+                   token | tunnel | tuntap | vrf | xfrm }
+       OPTIONS := { -V[ersion] | -s[tatistics] | -d[etails] | -r[esolve] |
+                    -h[uman-readable] | -iec | -j[son] | -p[retty] |
+                    -f[amily] { inet | inet6 | mpls | bridge | link } |
+                    -4 | -6 | -M | -B | -0 |
+                    -l[oops] { maximum-addr-flush-attempts } | -br[ief] |
+                    -o[neline] | -t[imestamp] | -ts[hort] | -b[atch] [filename] |
+                    -rc[vbuf] [size] | -n[etns] name | -N[umeric] | -a[ll] |
+                    -c[olor]}
+
+
+
+--- netplan ---
+=== HELP OUTPUT ===
+usage: /usr/sbin/netplan  [-h] [--debug]  ...
+
+Network configuration in YAML
+
+options:
+  -h, --help  show this help message and exit
+  --debug     Enable debug messages
+
+Available commands:
+  
+    help      Show this help message
+    apply     Apply current netplan config to running system
+    generate  Generate backend specific configuration files from
+              /etc/netplan/*.yaml
+    get       Get a setting by specifying a nested key like
+              "ethernets.eth0.addresses", or "all"
+    info      Show available features
+    ip        Retrieve IP information from the system
+    set       Add new setting by specifying a dotted key=value pair like
+              ethernets.eth0.dhcp4=true
+    rebind    Rebind SR-IOV virtual functions of given physical functions to
+              their driver
+    status    Query networking state of the running system
+    try       Try to apply a new netplan config to running system, with
+              automatic rollback
+
+
+
+--- ufw ---
+=== HELP OUTPUT ===
+
+Usage: ufw COMMAND
+
+Commands:
+ enable                          enables the firewall
+ disable                         disables the firewall
+ default ARG                     set default policy
+ logging LEVEL                   set logging to LEVEL
+ allow ARGS                      add allow rule
+ deny ARGS                       add deny rule
+ reject ARGS                     add reject rule
+ limit ARGS                      add limit rule
+ delete RULE|NUM                 delete RULE
+ insert NUM RULE                 insert RULE at NUM
+ prepend RULE                    prepend RULE
+ route RULE                      add route RULE
+ route delete RULE|NUM           delete route RULE
+ route insert NUM RULE           insert route RULE at NUM
+ reload                          reload firewall
+ reset                           reset firewall
+ status                          show firewall status
+ status numbered                 show firewall status as numbered list of RULES
+ status verbose                  show verbose firewall status
+ show ARG                        show firewall report
+ version                         display version information
+
+Application profile commands:
+ app list                        list application profiles
+ app info PROFILE                show information on PROFILE
+ app update PROFILE              update PROFILE
+ app default ARG                 set default application policy
+
+
+
+
+--- iptables ---
+=== HELP OUTPUT ===
+iptables v1.8.10 (nf_tables)
+
+Usage: iptables -[ACD] chain rule-specification [options]
+       iptables -I chain [rulenum] rule-specification [options]
+       iptables -R chain rulenum rule-specification [options]
+       iptables -D chain rulenum [options]
+       iptables -[LS] [chain [rulenum]] [options]
+       iptables -[FZ] [chain] [options]
+       iptables -[NX] chain
+       iptables -E old-chain-name new-chain-name
+       iptables -P chain target [options]
+       iptables -h (print this help information)
+
+Commands:
+Either long or short options are allowed.
+  --append  -A chain		Append to chain
+  --check   -C chain		Check for the existence of a rule
+  --delete  -D chain		Delete matching rule from chain
+  --delete  -D chain rulenum
+				Delete rule rulenum (1 = first) from chain
+  --insert  -I chain [rulenum]
+				Insert in chain as rulenum (default 1=first)
+  --replace -R chain rulenum
+				Replace rule rulenum (1 = first) in chain
+  --list    -L [chain [rulenum]]
+				List the rules in a chain or all chains
+  --list-rules -S [chain [rulenum]]
+				Print the rules in a chain or all chains
+  --flush   -F [chain]		Delete all rules in  chain or all chains
+  --zero    -Z [chain [rulenum]]
+				Zero counters in chain or all chains
+  --new     -N chain		Create a new user-defined chain
+  --delete-chain
+            -X [chain]		Delete a user-defined chain
+  --policy  -P chain target
+				Change policy on chain to target
+  --rename-chain
+            -E old-chain new-chain
+				Change chain name, (moving any references)
+
+Options:
+    --ipv4	-4		Nothing (line is ignored by ip6tables-restore)
+    --ipv6	-6		Error (line is ignored by iptables-restore)
+[!] --protocol	-p proto	protocol: by number or name, eg. `tcp'
+[!] --source	-s address[/mask][...]
+				source specification
+[!] --destination -d address[/mask][...]
+				destination specification
+[!] --in-interface -i input name[+]
+				network interface name ([+] for wildcard)
+ --jump	-j target
+				target for rule (ma...
+
+--- ss ---
+=== HELP OUTPUT ===
+Usage: ss [ OPTIONS ]
+       ss [ OPTIONS ] [ FILTER ]
+   -h, --help          this message
+   -V, --version       output version information
+   -n, --numeric       don't resolve service names
+   -r, --resolve       resolve host names
+   -a, --all           display all sockets
+   -l, --listening     display listening sockets
+   -o, --options       show timer information
+   -e, --extended      show detailed socket information
+   -m, --memory        show socket memory usage
+   -p, --processes     show process using socket
+   -T, --threads       show thread using socket
+   -i, --info          show internal TCP information
+       --tipcinfo      show internal tipc socket information
+   -s, --summary       show socket usage summary
+       --tos           show tos and priority information
+       --cgroup        show cgroup information
+   -b, --bpf           show bpf filter socket information
+   -E, --events        continually display sockets as they are destroyed
+   -Z, --context       display task SELinux security contexts
+   -z, --contexts      display task and socket SELinux security contexts
+   -N, --net           switch to the specified network namespace name
+
+   -4, --ipv4          display only IP version 4 sockets
+   -6, --ipv6          display only IP version 6 sockets
+   -0, --packet        display PACKET sockets
+   -t, --tcp           display only TCP sockets
+   -M, --mptcp         display only MPTCP sockets
+   -S, --sctp          display only SCTP sockets
+   -u, --udp           display only UDP sockets
+   -d, --dccp          display only DCCP sockets
+   -w, --raw           display only RAW sockets
+   -x, --unix          display only Unix domain sockets
+       --tipc          display only TIPC sockets
+       --vsock         display only vsock sockets
+       --xdp           display only XDP sockets
+   -f, --family=FAMILY display sockets of type FAMILY
+       FAMILY := {inet|inet6|link|unix|netlink|vsock|tipc|xdp|help}
+
+   -K, --kill          fo...
+
+--- nft ---
+=== HELP OUTPUT ===
+Usage: nft [ options ] [ cmds... ]
+
+Options (general):
+  -h, --help                      Show this help
+  -v, --version                   Show version information
+  -V                              Show extended version information
+
+Options (ruleset input handling):
+  -f, --file <filename>           Read input from <filename>
+  -D, --define <name=value>       Define variable, e.g. --define foo=1.2.3.4
+  -i, --interactive               Read input from interactive CLI
+  -I, --includepath <directory>   Add <directory> to the paths searched for include files. Default is: /etc
+  -c, --check                     Check commands validity without actually applying the changes.
+  -o, --optimize                  Optimize ruleset
+
+Options (ruleset list formatting):
+  -a, --handle                    Output rule handle.
+  -s, --stateless                 Omit stateful information of ruleset.
+  -t, --terse                     Omit contents of sets.
+  -S, --service                   Translate ports to service names as described in /etc/services.
+  -N, --reversedns                Translate IP addresses to names.
+  -u, --guid                      Print UID/GID as defined in /etc/passwd and /etc/group.
+  -n, --numeric                   Print fully numerical output.
+  -y, --numeric-priority          Print chain priority numerically.
+  -p, --numeric-protocol          Print layer 4 protocols numerically.
+  -T, --numeric-time              Print time values numerically.
+
+Options (command output formatting):
+  -e, --echo                      Echo what has been added, inserted or replaced.
+  -j, --json                      Format output in JSON
+  -d, --debug <level [,level...]> Specify debugging level (scanner, parser, eval, netlink, mnl, proto-ctx, segtree, all)
+
+
+
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

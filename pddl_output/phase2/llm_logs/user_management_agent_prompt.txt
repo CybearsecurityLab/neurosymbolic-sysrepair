@@ -1,0 +1,271 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
+   - Do NOT invent new types like "string", "list", "command"
+
+2. PREDICATES: Boolean only, no functions
+   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
+   - Only invent new predicates if absolutely necessary
+
+3. ACTIONS: Every parameter MUST be declared
+   - Do NOT duplicate actions that already exist (listed below)
+   - Only generate NEW actions not covered by existing ones
+
+4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
+   INVALID: (installed (find_package ?name))
+   VALID: (installed ?p)
+
+5. NO STRING LITERALS in preconditions/effects
+
+6. NO NESTED PREDICATES
+
+7. VARIABLE SCOPE:
+   Any variable used in preconditions or effects MUST be defined in :parameters.
+
+OUTPUT FORMAT - exactly this structure:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown, no explanations, no comments.
+
+=== USER ===
+Generate PDDL domain components for: User and group administration
+Target PDDL types: user, group
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?f - configuration_file ?s - service)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?f - filesystem_object)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_open ?p - port)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?s - service)  (service_exists ?s - service)  (service_failed ?s - service)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?u - user)  (user_exists ?u - user)  (user_locked ?u - user)  (vulnerable ?p - package)
+
+=== SYSTEM DOCUMENTATION ===
+
+--- useradd ---
+=== HELP OUTPUT ===
+Usage: useradd [options] LOGIN
+       useradd -D
+       useradd -D [options]
+
+Options:
+      --badname                 do not check for bad names
+  -b, --base-dir BASE_DIR       base directory for the home directory of the
+                                new account
+      --btrfs-subvolume-home    use BTRFS subvolume for home directory
+  -c, --comment COMMENT         GECOS field of the new account
+  -d, --home-dir HOME_DIR       home directory of the new account
+  -D, --defaults                print or change default useradd configuration
+  -e, --expiredate EXPIRE_DATE  expiration date of the new account
+  -f, --inactive INACTIVE       password inactivity period of the new account
+  -F, --add-subids-for-system   add entries to sub[ud]id even when adding a system user
+  -g, --gid GROUP               name or ID of the primary group of the new
+                                account
+  -G, --groups GROUPS           list of supplementary groups of the new
+                                account
+  -h, --help                    display this help message and exit
+  -k, --skel SKEL_DIR           use this alternative skeleton directory
+  -K, --key KEY=VALUE           override /etc/login.defs defaults
+  -l, --no-log-init             do not add the user to the lastlog and
+                                faillog databases
+  -m, --create-home             create the user's home directory
+  -M, --no-create-home          do not create the user's home directory
+  -N, --no-user-group           do not create a group with the same name as
+                                the user
+  -o, --non-unique              allow to create users with duplicate
+                                (non-unique) UID
+  -p, --password PASSWORD       encrypted password of the new account
+  -r, --system                  create a system account
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+  -s, --sh...
+
+--- usermod ---
+=== HELP OUTPUT ===
+Usage: usermod [options] LOGIN
+
+Options:
+  -a, --append                  append the user to the supplemental GROUPS
+                                mentioned by the -G option without removing
+                                the user from other groups
+  -b, --badname                 allow bad names
+  -c, --comment COMMENT         new value of the GECOS field
+  -d, --home HOME_DIR           new home directory for the user account
+  -e, --expiredate EXPIRE_DATE  set account expiration date to EXPIRE_DATE
+  -f, --inactive INACTIVE       set password inactive after expiration
+                                to INACTIVE
+  -g, --gid GROUP               force use GROUP as new primary group
+  -G, --groups GROUPS           new list of supplementary GROUPS
+  -h, --help                    display this help message and exit
+  -l, --login NEW_LOGIN         new value of the login name
+  -L, --lock                    lock the user account
+  -m, --move-home               move contents of the home directory to the
+                                new location (use only with -d)
+  -o, --non-unique              allow using duplicate (non-unique) UID
+  -p, --password PASSWORD       use encrypted password for the new password
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+  -r, --remove                  remove the user from only the supplemental GROUPS
+                                mentioned by the -G option without removing
+                                the user from other groups
+  -R, --root CHROOT_DIR         directory to chroot into
+  -s, --shell SHELL             new login shell for the user account
+  -u, --uid UID                 new UID for the user account
+  -U, --unlock                  unlock the user account
+  -v, --add-subuids FIRST-LAST  add range of subordinate uids
+  -V, --del-subuids FIRST-LAST  remove range of subordinate uids
+  -w, --add-subgids FIRST-LAST  add range of subordinate gids
+  -W, --del-subgids FIRS...
+
+--- userdel ---
+=== HELP OUTPUT ===
+Usage: userdel [options] LOGIN
+
+Options:
+  -f, --force                   force some actions that would fail otherwise
+                                e.g. removal of user still logged in
+                                or files, even if not owned by the user
+  -h, --help                    display this help message and exit
+  -r, --remove                  remove home directory and mail spool
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+      --extrausers              Use the extra users database
+  -Z, --selinux-user            remove any SELinux user mapping for the user
+
+
+
+
+--- groupadd ---
+=== HELP OUTPUT ===
+Usage: groupadd [options] GROUP
+
+Options:
+  -f, --force                   exit successfully if the group already exists,
+                                and cancel -g if the GID is already used
+  -g, --gid GID                 use GID for the new group
+  -h, --help                    display this help message and exit
+  -K, --key KEY=VALUE           override /etc/login.defs defaults
+  -o, --non-unique              allow to create groups with duplicate
+                                (non-unique) GID
+  -p, --password PASSWORD       use this encrypted password for the new group
+  -r, --system                  create a system account
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DI        directory prefix
+  -U, --users USERS             list of user members of this group
+      --extrausers              Use the extra users database
+
+
+
+
+--- passwd ---
+=== MAN PAGE ===
+PASSWD(1) User Commands PASSWD(1)
+
+NAME
+ passwd - change user password
+
+SYNOPSIS
+
+ passwd [options] [LOGIN]
+
+DESCRIPTION
+ The passwd command changes passwords for user accounts. A normal user may only change the password for their
+ own account, while the superuser may change the password for any account. passwd also changes the account or
+ associated password validity period.
+
+ Password Changes
+ The user is first prompted for their old password, if one is present. This password is then encrypted and
+ compared against the stored password. The user has only one chance to enter the correct password. The
+ superuser is permitted to bypass this step so that forgotten passwords may be changed.
+
+ After the password has been entered, password aging information is checked to see if the user is permitted to
+ change the password at this time. If not, passwd refuses to change the password and exits.
+
+ The user is then prompted twice for a replacement password. The second entry is compared against the first and
+ both are required to match in order for the password to be changed.
+
+ Then, the password is tested for complexity. As a general guideline, passwords should consist of 6 to 8
+ characters including one or more characters from each of the following sets:
+
+ o lower case alphabetics
+
+ o digits 0 thru 9
+
+ o punctuation marks
+
+ Care must be taken not to include the system default erase or kill characters. passwd will reject any
+ password which is not suitably complex.
+
+ Hints for user passwords
+ The security of a password depends upon the strength of the encryption algorithm and the size of the key
+ space. The legacy UNIX System encryption method is based on the NBS DES algorithm. More recent methods are now
+ recommended (see ENCRYPT_METHOD). The size of the key space depends upon the randomness of the password which
+ is selected.
+
+ Compromises in password security normally result from careless password selection or handling. For this
+ reason, you should not sel...
+
+--- chage ---
+=== MAN PAGE ===
+CHAGE(1) User Commands CHAGE(1)
+
+NAME
+ chage - change user password expiry information
+
+SYNOPSIS
+
+ chage [options] LOGIN
+
+DESCRIPTION
+ The chage command changes the number of days between password changes and the date of the last password
+ change. This information is used by the system to determine when a user must change their password.
+
+OPTIONS
+ The options which apply to the chage command are:
+
+ -d, --lastday LAST_DAY
+ Set the number of days since January 1st, 1970 when the password was last changed. The date may also be
+ expressed in the format YYYY-MM-DD (or the format more commonly used in your area). If the LAST_DAY is set
+ to 0 the user is forced to change his password on the next log on.
+
+ -E, --expiredate EXPIRE_DATE
+ Set the date or number of days since January 1, 1970 on which the user's account will no longer be
+ accessible. The date may also be expressed in the format YYYY-MM-DD (or the format more commonly used in
+ your area). A user whose account is locked must contact the system administrator before being able to use
+ the system again.
+
+ For example the following can be used to set an account to expire in 180 days:
+
+ chage -E $(date -d +180days +%Y-%m-%d)
+
+ Passing the number -1 as the EXPIRE_DATE will remove an account expiration date.
+
+ -h, --help
+ Display help message and exit.
+
+ -i, --iso8601
+ When printing dates, use YYYY-MM-DD format.
+
+ -I, --inactive INACTIVE
+ Set the number of days of inactivity after a password has expired before the account is locked. The
+ INACTIVE option is the number of days of inactivity. A user whose account is locked must contact the
+ system administrator before being able to use the system again.
+
+ Passing the number -1 as the INACTIVE will remove an account's inactivity.
+
+ -l, --list
+ Show account aging information.
+
+ -m, --mindays MIN_DAYS
+ Set the minimum number of days between password changes to MIN_DAYS. A value of zero for this field
+ indicates that the user may change their password at any ti...
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

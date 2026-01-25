@@ -1,0 +1,16 @@
+Extracted predicate 'configures' from action body
+Extracted predicate 'config_applied' from action body
+Extracted predicate 'create_file' from action body
+Extracted predicate 'copy_content' from action body
+Extracted predicate 'rename_file' from action body
+Extracted predicate 'create_directory' from action body
+Extracted predicate 'rename_directory' from action body
+Extracted predicate 'copy_subdirectory' from action body
+Extracted predicate 'directory_exists' from action body
+Extracted predicate 'directory_contains_file' from action body
+Extracted predicate 'copy_files_in_directory' from action body
+Extracted predicate 'user_exists' from action body
+Extracted predicate 'can_escalate' from action body
+Extracted predicate 'user_has_privilege' from action body
+Extracted predicate 'process_priority' from action body
+Extracted predicate 'process_niceness' from action body
