@@ -113,7 +113,7 @@
     ],
     "raw_pddl": " :types\n  package repository\n\n(:predicates\n  (package_installed ?p - package)\n  (package_removed ?p - package)\n  (package_updated ?p - package)\n  (repository_available ?r - repository)\n)\n\n(:action install_package\n  :parameters (?p - package ?r - repository)\n  :precondition (and (repository_available ?r) (file_exists (package_file ?p)))\n  :effect (and (not (package_installed ?p)) (package_installed ?p) (file_executable (package_file ?p))))\n\n(:action remove_package\n  :parameters (?p - package)\n  :precondition (package_installed ?p)\n  :effect (and (package_installed ?p) (not (package_installed ?p)) (file_removed (package_file ?p))))\n\n(:action update_package\n  :parameters (?p - package)\n  :precondition (package_installed ?p)\n  :effect (and (package_installed ?p) (not (package_outdated ?p)) (package_updated ?p)))",
     "error": null,
-    "generation_time": 9.068109035491943
+    "generation_time": 9.100570440292358
   },
   {
     "worker_name": "user_management_agent",
@@ -123,7 +123,7 @@
     "actions": [],
     "raw_pddl": " :types\n  user - object\n  group - object\n\n:predicates\n  (user_exists ?u - user)\n  (group_exists ?g - group)\n  (user_is_member_of ?u - user ?g - group)\n\n:action user_create\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_does_not_exist ?u) (group_exists ?g))\n  :effect (and (user_exists ?u) (member_of ?u ?g))\n\n:action user_delete\n  :parameters (?u - user)\n  :precondition (user_exists ?u)\n  :effect (not (user_exists ?u))\n\n:action user_add_to_group\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_exists ?u) (group_exists ?g) (not (member_of ?u ?g)))\n  :effect (member_of ?u ?g)\n\n:action user_remove_from_group\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_exists ?u) (group_exists ?g) (member_of ?u ?g))\n  :effect (not (member_of ?u ?g))\n\n:action group_create\n  :parameters (?g - group)\n  :precondition (not (group_exists ?g))\n  :effect (group_exists ?g)\n\n:action group_delete\n  :parameters (?g - group)\n  :precondition (group_exists ?g)\n  :effect (not (group_exists ?g))",
     "error": null,
-    "generation_time": 13.05707311630249
+    "generation_time": 13.09082555770874
   },
   {
     "worker_name": "service_management_agent",
@@ -140,10 +140,11 @@
           ]
         ],
         "preconditions": [
-          "(service-exists ?s)",
-          "(service-enabled ?s)"
+          "(service-exists ?s)"
         ],
         "effects": [
+          "(not (service-failed ?s))",
+          "(not (service-disabled ?s))",
           "(service-running ?s)"
         ],
         "command_template": "",
@@ -160,10 +161,12 @@
           ]
         ],
         "preconditions": [
+          "(service-exists ?s)",
           "(service-running ?s)"
         ],
         "effects": [
-          "(not (service-running ?s))"
+          "(not (service-running ?s))",
+          "(not (service-failed ?s))"
         ],
         "command_template": "",
         "requires_root": false,
@@ -182,7 +185,8 @@
           "(service-exists ?s)"
         ],
         "effects": [
-          "(service-enabled ?s)"
+          "(not (service-disabled ?s))",
+          "(not (service-failed ?s))"
         ],
         "command_template": "",
         "requires_root": false,
@@ -198,10 +202,10 @@
           ]
         ],
         "preconditions": [
-          "(service-enabled ?s)"
+          "(service-exists ?s)"
         ],
         "effects": [
-          "(not (service-enabled ?s))"
+          "(service-disabled ?s)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -217,11 +221,11 @@
           ]
         ],
         "preconditions": [
+          "(service-exists ?s)",
           "(service-running ?s)"
         ],
         "effects": [
-          "(not (service-running ?s))",
-          "(service-running ?s)"
+          "(not (service-failed ?s))"
         ],
         "command_template": "",
         "requires_root": false,
@@ -229,23 +233,16 @@
         "source_worker": "service_management_agent"
       },
       {
-        "name": "apply_configuration",
+        "name": "check_service_status",
         "parameters": [
-          [
-            "c",
-            "configuration_file"
-          ],
           [
             "s",
             "service"
           ]
         ],
-        "preconditions": [
-          "(file_exists ?c)",
-          "(configures ?c ?s)"
-        ],
+        "preconditions": [],
         "effects": [
-          "(config_applied ?c ?s)"
+          "(service-state ?s)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -253,22 +250,68 @@
         "source_worker": "service_management_agent"
       },
       {
-        "name": "revert_configuration",
+        "name": "configure_service_file",
         "parameters": [
-          [
-            "c",
-            "configuration_file"
-          ],
           [
             "s",
             "service"
+          ],
+          [
+            "f",
+            "configuration_file"
           ]
         ],
         "preconditions": [
-          "(config_applied ?c ?s)"
+          "(service-exists ?s)",
+          "(file_exists ?f)"
         ],
         "effects": [
-          "(not (config_applied ?c ?s))"
+          "(service-configured-file ?f ?s)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "revert_service_configuration",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ],
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(service-exists ?s)",
+          "(service-configured-file ?f ?s)"
+        ],
+        "effects": [
+          "(not (service-configured-file ?f ?s))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "check_service_configuration",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ],
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(service-configured-file ?f ?s)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -276,164 +319,153 @@
         "source_worker": "service_management_agent"
       }
     ],
-    "raw_pddl": " :types\n  service-state - object\n  configuration-file - object\n\n(:predicates\n  (service-running ?s - service)\n  (service-enabled ?s - service)\n  (service-failed ?s - service)\n  (configuration-applied ?c - configuration_file ?s - service)\n)\n\n(:action start_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s) (service-enabled ?s))\n  :effect (and (service-running ?s)))\n\n(:action stop_service\n  :parameters (?s - service)\n  :precondition (and (service-running ?s))\n  :effect (and (not (service-running ?s))))\n\n(:action enable_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (service-enabled ?s)))\n\n(:action disable_service\n  :parameters (?s - service)\n  :precondition (and (service-enabled ?s))\n  :effect (and (not (service-enabled ?s))))\n\n(:action reload_service\n  :parameters (?s - service)\n  :precondition (and (service-running ?s))\n  :effect (and (not (service-running ?s)) (service-running ?s)))\n\n(:action apply_configuration\n  :parameters (?c - configuration_file ?s - service)\n  :precondition (and (file_exists ?c) (configures ?c ?s))\n  :effect (and (config_applied ?c ?s)))\n\n(:action revert_configuration\n  :parameters (?c - configuration_file ?s - service)\n  :precondition (and (config_applied ?c ?s))\n  :effect (and (not (config_applied ?c ?s))))",
+    "raw_pddl": " :types\n  service-state - enum {enabled, disabled, failed, running}\n  configuration-file - object\n\n(:predicates\n  (service-exists ?s - service)\n  (service-state ?s - service service-state)\n  (service-configured-file ?s - service configuration-file)\n)\n\n(:action start_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (not (service-failed ?s)) (not (service-disabled ?s)) (service-running ?s)))\n\n(:action stop_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s) (service-running ?s))\n  :effect (and (not (service-running ?s)) (not (service-failed ?s))))\n\n(:action enable_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (not (service-disabled ?s)) (not (service-failed ?s))))\n\n(:action disable_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (service-disabled ?s)))\n\n(:action reload_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s) (service-running ?s))\n  :effect (and (not (service-failed ?s))))\n\n(:action check_service_status\n  :parameters (?s - service)\n  :effect (and (service-state ?s)))\n\n(:action configure_service_file\n  :parameters (?s - service ?f - configuration_file)\n  :precondition (and (service-exists ?s) (file_exists ?f))\n  :effect (and (service-configured-file ?f ?s)))\n\n(:action revert_service_configuration\n    :parameters (?s - service ?f - file)\n  :precondition (and (service-exists ?s) (service-configured-file ?f ?s))\n  :effect (and (not (service-configured-file ?f ?s))))\n\n(:action check_service_configuration\n    :parameters (?s - service ?f - file)\n  :effect (and (service-configured-file ?f ?s)))",
     "error": null,
-    "generation_time": 14.483729362487793
+    "generation_time": 17.885159969329834
   },
   {
-    "worker_name": "file_management_agent",
-    "group_name": "file_management",
+    "worker_name": "network_management_agent",
+    "group_name": "network_management",
     "types": [],
     "predicates": [
       {
-        "name": "file_in_directory",
+        "name": "interface_exists",
         "parameters": [
           [
-            "f",
-            "file"
+            "i",
+            "interface"
+          ]
+        ],
+        "source": "network_management_agent"
+      },
+      {
+        "name": "port_exists",
+        "parameters": [
+          [
+            "p",
+            "port"
+          ]
+        ],
+        "source": "network_management_agent"
+      },
+      {
+        "name": "firewall_rule_exists",
+        "parameters": [
+          [
+            "r",
+            "firewall_rule"
+          ]
+        ],
+        "source": "network_management_agent"
+      },
+      {
+        "name": "port_assigned_to_interface",
+        "parameters": [
+          [
+            "p",
+            "port"
           ],
           [
-            "d",
-            "directory"
+            "i",
+            "interface"
           ]
         ],
-        "source": "file_management_agent"
+        "source": "network_management_agent"
       },
       {
-        "name": "directory_empty",
+        "name": "firewall_rule_applied_to_port",
         "parameters": [
           [
-            "d",
-            "directory"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_exists",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_readable",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_writable",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_executable",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_owned_by",
-        "parameters": [
-          [
-            "f",
-            "file"
+            "r",
+            "firewall_rule"
           ],
           [
-            "u",
-            "user"
+            "p",
+            "port"
           ]
         ],
-        "source": "file_management_agent"
+        "source": "network_management_agent"
       },
       {
-        "name": "file_is_directory",
+        "name": "traffic_allowed_on_port",
         "parameters": [
           [
-            "f",
-            "file"
+            "p",
+            "port"
           ]
         ],
-        "source": "file_management_agent"
+        "source": "network_management_agent"
       }
     ],
     "actions": [
       {
-        "name": "copy_file",
+        "name": "assign_port_to_interface",
         "parameters": [
           [
-            "src",
-            "file"
+            "p",
+            "port"
           ],
           [
-            "dst",
-            "file"
+            "i",
+            "interface"
+          ],
+          [
+            "r",
+            "repository"
           ]
         ],
         "preconditions": [
-          "(file_exists ?src)",
-          "(not (file_in_directory ?src ?dst))",
-          "(not (file_exists ?dst))"
+          "(interface_exists ?i)",
+          "(port_exists ?p)",
+          "(not (port_assigned_to_interface ?p ?i))"
         ],
         "effects": [
-          "(not (file_exists ?dst))",
-          "(create_file ?dst)",
-          "(copy_content ?src ?dst)"
+          "(port_assigned_to_interface ?p ?i)",
+          "(not (traffic_blocked ?r))",
+          "(firewall_rule_exists ?r)",
+          "(firewall_rule_applied_to_port ?r ?p)"
         ],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
-        "source_worker": "file_management_agent"
+        "source_worker": "network_management_agent"
       },
       {
-        "name": "move_file",
+        "name": "apply_firewall_rule",
         "parameters": [
           [
-            "src",
-            "file"
+            "r",
+            "firewall_rule"
           ],
           [
-            "dst",
-            "file"
+            "p",
+            "port"
           ]
         ],
         "preconditions": [
-          "(file_exists ?src)",
-          "(not (file_in_directory ?src ?dst))",
-          "(not (file_exists ?dst))"
+          "(firewall_rule_exists ?r)",
+          "(port_exists ?p)",
+          "(not (firewall_rule_applied_to_port ?r ?p))"
         ],
         "effects": [
-          "(not (file_exists ?src))",
-          "(rename_file ?src ?dst)"
+          "(firewall_rule_applied_to_port ?r ?p)",
+          "(traffic_allowed_on_port ?p)"
         ],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
-        "source_worker": "file_management_agent"
+        "source_worker": "network_management_agent"
       },
       {
-        "name": "remove_file",
+        "name": "block_traffic_on_port",
         "parameters": [
           [
-            "f",
-            "file"
+            "p",
+            "port"
+          ],
+          [
+            "r",
+            "repository"
           ]
         ],
         "preconditions": [],
@@ -441,129 +473,36 @@
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
-        "source_worker": "file_management_agent"
+        "source_worker": "network_management_agent"
       },
       {
-        "name": "create_directory",
+        "name": "remove_firewall_rule_from_port",
         "parameters": [
           [
-            "d",
-            "directory"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "remove_directory",
-        "parameters": [
-          [
-            "d",
-            "directory"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "move_directory",
-        "parameters": [
-          [
-            "src",
-            "directory"
+            "r",
+            "firewall_rule"
           ],
           [
-            "dst",
-            "directory"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [
-          "(not (directory_exists ?src))",
-          "(not (directory_exists ?dst))",
-          "(create_directory ?dst)",
-          "(rename_directory ?src ?dst)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "copy_directory",
-        "parameters": [
-          [
-            "src",
-            "directory"
-          ],
-          [
-            "dst",
-            "directory"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [
-          "(not (directory_exists ?dst))",
-          "(create_directory ?dst)",
-          "(copy_subdirectory ?src ?dst)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "copy_subdirectory",
-        "parameters": [
-          [
-            "src",
-            "directory"
-          ],
-          [
-            "dst",
-            "directory"
-          ],
-          [
-            "sub",
-            "directory"
+            "p",
+            "port"
           ]
         ],
         "preconditions": [
-          "(directory_exists ?src)",
-          "(directory_contains_file ?src ?sub)"
+          "(firewall_rule_exists ?r)",
+          "(firewall_rule_applied_to_port ?r ?p)"
         ],
-        "effects": [
-          "(not (directory_exists ?sub))",
-          "(create_directory ?sub)",
-          "(copy_files_in_directory ?src ?sub)"
-        ],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
-        "source_worker": "file_management_agent"
+        "source_worker": "network_management_agent"
       },
       {
-        "name": "copy_files_in_directory",
+        "name": "enable_interface",
         "parameters": [
           [
-            "src",
-            "directory"
-          ],
-          [
-            "dst",
-            "directory"
-          ],
-          [
-            "f",
-            "file"
+            "i",
+            "interface"
           ]
         ],
         "preconditions": [],
@@ -571,12 +510,27 @@
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
-        "source_worker": "file_management_agent"
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "disable_interface",
+        "parameters": [
+          [
+            "i",
+            "interface"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
       }
     ],
-    "raw_pddl": " :types\n  file - object\n  directory - object\n\n(:predicates)\n(file_in_directory ?f - file ?d - directory)\n(directory_empty ?d - directory)\n(file_exists ?f - file)\n(file_readable ?f - file)\n(file_writable ?f - file)\n(file_executable ?f - file)\n(file_owned_by ?f - file ?u - user)\n(file_is_directory ?f - file)\n(directory_contains_file ?d - directory ?f - file)\n\n(:action copy_file\n  :parameters (?src - file ?dst - file)\n  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))\n  :effect (and (not (file_exists ?dst)) (create_file ?dst) (copy_content ?src ?dst)))\n\n(:action move_file\n  :parameters (?src - file ?dst - file)\n  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))\n  :effect (and (not (file_exists ?src)) (rename_file ?src ?dst)))\n\n(:action remove_file\n  :parameters (?f - file)\n  :precondition (file_exists ?f)\n  :effect (delete_file ?f))\n\n(:action create_directory\n  :parameters (?d - directory)\n  :precondition (not (directory_exists ?d))\n  :effect (create_directory ?d))\n\n(:action remove_directory\n  :parameters (?d - directory)\n  :precondition (directory_empty ?d)\n  :effect (delete_directory ?d))\n\n(:action move_directory\n  :parameters (?src - directory ?dst - directory)\n  :precondition (directory_empty ?dst)\n  :effect (and (not (directory_exists ?src)) (not (directory_exists ?dst)) (create_directory ?dst) (rename_directory ?src ?dst)))\n\n(:action copy_directory\n  :parameters (?src - directory ?dst - directory)\n  :precondition (directory_exists ?src)\n  :effect (and (not (directory_exists ?dst)) (create_directory ?dst) (copy_subdirectory ?src ?dst)))\n\n(:action copy_subdirectory\n  :parameters (?src - directory ?dst - directory ?sub - directory)\n  :precondition (and (directory_exists ?src) (directory_contains_file ?src ?sub))\n  :effect (and (not (directory_exists ?sub)) (create_directory ?sub) (copy_files_in_directory ?src ?sub)))\n\n(:action copy_files_in_directory\n    :parameters (?src - directory ?dst - directory ?f - file)\n  :precondition (directory_exists ?src)\n  :effect (forall (?f) (if (file_exists ?f) (and (not (file_in_directory ?src ?dst)) (copy_file ?f (concatenate_strings ?dst \"/\" ?f))) (true))))",
+    "raw_pddl": " :types\n  interface - object\n  port - object\n  firewall_rule - object\n\n(:predicates\n  (interface_exists ?i - interface)\n  (port_exists ?p - port)\n  (firewall_rule_exists ?r - firewall_rule)\n  (port_assigned_to_interface ?p - port ?i - interface)\n  (firewall_rule_applied_to_port ?r - firewall_rule ?p - port)\n  (traffic_allowed_on_port ?p - port)\n)\n\n(:action assign_port_to_interface\n    :parameters (?p - port ?i - interface ?r - repository)\n  :precondition (and (interface_exists ?i) (port_exists ?p) (not (port_assigned_to_interface ?p ?i)))\n  :effect (and (port_assigned_to_interface ?p ?i) (not (traffic_blocked ?r)) :for all ?r :where (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action apply_firewall_rule\n  :parameters (?r - firewall_rule ?p - port)\n  :precondition (and (firewall_rule_exists ?r) (port_exists ?p) (not (firewall_rule_applied_to_port ?r ?p)))\n  :effect (and (firewall_rule_applied_to_port ?r ?p) (traffic_allowed_on_port ?p))\n)\n\n(:action block_traffic_on_port\n    :parameters (?p - port ?r - repository)\n  :precondition (port_exists ?p)\n  :effect (traffic_blocked (make_firewall_rule ?r) :for some ?r :where (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action remove_firewall_rule_from_port\n  :parameters (?r - firewall_rule ?p - port)\n  :precondition (and (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))\n  :effect (not (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action enable_interface\n  :parameters (?i - interface)\n  :precondition (interface_exists ?i)\n  :effect (interface_up ?i)\n)\n\n(:action disable_interface\n  :parameters (?i - interface)\n  :precondition (interface_exists ?i)\n  :effect (not (interface_up ?i))\n)",
     "error": null,
-    "generation_time": 23.252046823501587
+    "generation_time": 18.92524743080139
   },
   {
     "worker_name": "privilege_escalation_agent",
@@ -713,7 +667,365 @@
     ],
     "raw_pddl": " :(types\n  user_privilege - object\n  sudo_command - string\n)\n\n(:predicates\n  (has_user_privilege ?u - user ?p - object)\n  (sudo_command_exists ?sc - object)\n  (sudo_command_executable ?sc - object)\n  (sudo_command_readable ?sc - object)\n  (sudo_command_writable ?sc - object)\n)\n\n(:action execute_sudo_command\n  :parameters (?u - user ?sc - object)\n  :precondition (and (user_exists ?u) (sudo_command_exists ?sc) (file_readable ?sc) (can_escalate ?u))\n  :effect (and (executed_as_root )) (has_user_privilege ?u 'executed_sudo_command'))\n)\n\n(:action revoke_user_privilege\n  :parameters (?u - user ?p - object)\n  :precondition (and (user_exists ?u) (user_has_privilege ?u ?p))\n  :effect (and (not (has_user_privilege ?u ?p)))\n)\n\n(:action grant_user_privilege\n  :parameters (?u - user ?p - object)\n  :precondition (and (user_exists ?u))\n  :effect (and (has_user_privilege ?u ?p))\n",
     "error": null,
-    "generation_time": 12.179469347000122
+    "generation_time": 11.682029962539673
+  },
+  {
+    "worker_name": "file_management_agent",
+    "group_name": "file_management",
+    "types": [],
+    "predicates": [
+      {
+        "name": "file_exists",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "directory_exists",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_in_directory",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_directory",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "directory_is_empty",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_readable",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_writable",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_executable",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_owned_by",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_is_group_owned_by",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "file_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "copy_file",
+        "parameters": [
+          [
+            "src_file",
+            "file"
+          ],
+          [
+            "dest_file",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?src_file)",
+          "(directory_exists (parent ?dest_file))"
+        ],
+        "effects": [
+          "(not (file_exists ?dest_file))",
+          "(file_exists ?dest_file)",
+          "(file_in_directory ?dest_file ?src_file)",
+          "(not (file_is_same_as ?src_file ?dest_file))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "move_file",
+        "parameters": [
+          [
+            "src_file",
+            "file"
+          ],
+          [
+            "dest_dir",
+            "directory"
+          ],
+          [
+            "dest_file",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?src_file)",
+          "(directory_exists ?dest_dir)"
+        ],
+        "effects": [
+          "(not (file_exists ?src_file))",
+          "(file_exists ?dest_file)",
+          "(file_in_directory ?dest_dir ?src_file)",
+          "(not (file_is_same_as ?src_file ?dest_file))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "rename_file",
+        "parameters": [
+          [
+            "src_file",
+            "file"
+          ],
+          [
+            "new_name",
+            "object"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?src_file)",
+          "(not (file_exists (rename ?src_file ?new_name)))"
+        ],
+        "effects": [
+          "(not (file_exists ?src_file))",
+          "(file_exists (rename ?src_file ?new_name))",
+          "(file_in_directory (parent (rename ?src_file ?new_name)) ?src_file)",
+          "(not (file_is_same_as ?src_file (rename ?src_file ?new_name)))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "create_directory",
+        "parameters": [
+          [
+            "dir",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "delete_directory",
+        "parameters": [
+          [
+            "dir",
+            "directory"
+          ],
+          [
+            "file",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (directory_exists ?dir))",
+          "(forall (?file - file) (implies (file_in_directory ?dir ?file) (not (file_exists ?file))))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "delete_file",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_permissions_file",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_permissions_directory",
+        "parameters": [
+          [
+            "dir",
+            "directory"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_owner_file",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ],
+          [
+            "new_owner",
+            "user"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_owner_directory",
+        "parameters": [
+          [
+            "dir",
+            "directory"
+          ],
+          [
+            "new_owner",
+            "user"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_group_file",
+        "parameters": [
+          [
+            "file",
+            "file"
+          ],
+          [
+            "new_group",
+            "group"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change_group_directory",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      }
+    ],
+    "raw_pddl": " :types\n  file - object\n  directory - object\n\n(:predicates)\n(file_exists ?f - file)\n(directory_exists ?d - directory)\n(file_in_directory ?f - file ?d - directory)\n(file_is_directory ?f - file)\n(directory_is_empty ?d - directory)\n(file_is_readable ?f - file)\n(file_is_writable ?f - file)\n(file_is_executable ?f - file)\n(file_is_owned_by ?f - file ?u - user)\n(file_is_group_owned_by ?f - file ?g - group)\n(file_has_permissions ?f - file (read write execute))\n(directory_has_permissions ?d - directory (read write execute))\n\n(:action copy_file\n  :parameters (?src_file - file ?dest_file - file)\n  :precondition (and (file_exists ?src_file) (directory_exists (parent ?dest_file)))\n  :effect (and (not (file_exists ?dest_file)) (file_exists ?dest_file) (file_in_directory ?dest_file ?src_file) (not (file_is_same_as ?src_file ?dest_file))))\n\n(:action move_file\n    :parameters (?src_file - file ?dest_dir - directory ?dest_file - file)\n  :precondition (and (file_exists ?src_file) (directory_exists ?dest_dir))\n  :effect (and (not (file_exists ?src_file)) (file_exists ?dest_file) (file_in_directory ?dest_dir ?src_file) (not (file_is_same_as ?src_file ?dest_file))))\n\n(:action rename_file\n  :parameters (?src_file - file ?new_name - object)\n  :precondition (and (file_exists ?src_file) (not (file_exists (rename ?src_file ?new_name))))\n  :effect (and (not (file_exists ?src_file)) (file_exists (rename ?src_file ?new_name)) (file_in_directory (parent (rename ?src_file ?new_name)) ?src_file) (not (file_is_same_as ?src_file (rename ?src_file ?new_name)))))\n\n(:action create_directory\n  :parameters (?dir - directory)\n  :precondition (not (directory_exists ?dir)))\n  :effect (directory_exists ?dir))\n\n(:action delete_directory\n    :parameters (?dir - directory ?file - file)\n  :precondition (directory_exists ?dir)\n  :effect (and (not (directory_exists ?dir)) (forall (?file - file) (implies (file_in_directory ?dir ?file) (not (file_exists ?file))))))\n\n(:action delete_file\n  :parameters (?file - file)\n  :precondition (file_exists ?file)\n  :effect (not (file_exists ?file)))\n\n(:action change_permissions_file\n  :parameters (?file - file ?permissions - (read write execute))\n  :precondition (file_exists ?file))\n  :effect (file_has_permissions ?file ?permissions))\n\n(:action change_permissions_directory\n  :parameters (?dir - directory ?permissions - (read write execute))\n  :precondition (directory_exists ?dir))\n  :effect (directory_has_permissions ?dir ?permissions))\n\n(:action change_owner_file\n  :parameters (?file - file ?new_owner - user))\n  :precondition (file_exists ?file))\n  :effect (file_is_owned_by ?file ?new_owner))\n\n(:action change_owner_directory\n  :parameters (?dir - directory ?new_owner - user))\n  :precondition (directory_exists ?dir))\n  :effect (directory_is_owned_by ?dir ?new_owner))\n\n(:action change_group_file\n  :parameters (?file - file ?new_group - group)\n  :precondition (file_exists ?file\n  :effect (file_is_group_owned_by ?file ?new_group\n\n(:action change_group_directory\n  :parameters (?dir - directory ?new_group - group\n  :precondition (directory_exists ?dir\n  :effect (directory_is_group_owned_by ?dir ?new_group",
+    "error": null,
+    "generation_time": 33.112648725509644
   },
   {
     "worker_name": "process_management_agent",
@@ -761,6 +1073,34 @@
         "source": "process_management_agent"
       },
       {
+        "name": "process_niceness",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "n",
+            "object"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "process_priority",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "p",
+            "object"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
         "name": "process_owned_by",
         "parameters": [
           [
@@ -768,8 +1108,32 @@
             "process"
           ],
           [
-            "user",
+            "u",
             "user"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "process_belongs_to_group",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "process_has_env_preservation",
+        "parameters": [
+          [
+            "p",
+            "process"
           ]
         ],
         "source": "process_management_agent"
@@ -836,7 +1200,7 @@
         "source_worker": "process_management_agent"
       },
       {
-        "name": "resume_process",
+        "name": "unpause_process",
         "parameters": [
           [
             "p",
@@ -847,8 +1211,7 @@
           "(process_paused ?p)"
         ],
         "effects": [
-          "(not (process_paused ?p))",
-          "(not (process_terminated ?p))"
+          "(not (process_paused ?p))"
         ],
         "command_template": "",
         "requires_root": false,
@@ -856,23 +1219,23 @@
         "source_worker": "process_management_agent"
       },
       {
-        "name": "change_process_priority",
+        "name": "change_niceness",
         "parameters": [
           [
             "p",
             "process"
           ],
           [
-            "priority",
+            "n",
             "object"
           ]
         ],
         "preconditions": [
           "(process_exists ?p)",
-          "(process_running ?p)"
+          "(integer ?n)"
         ],
         "effects": [
-          "(process_priority ?p ?priority)"
+          "(process_niceness ?p ?n)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -880,23 +1243,113 @@
         "source_worker": "process_management_agent"
       },
       {
-        "name": "change_process_niceness",
+        "name": "change_priority",
         "parameters": [
           [
             "p",
             "process"
           ],
           [
-            "niceness",
+            "p",
             "object"
           ]
         ],
         "preconditions": [
           "(process_exists ?p)",
-          "(process_running ?p)"
+          "(integer ?p)"
         ],
         "effects": [
-          "(process_niceness ?p ?niceness)"
+          "(process_priority ?p ?p)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "assign_to_group",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(process_exists ?p)",
+          "(group_exists ?g)"
+        ],
+        "effects": [
+          "(process_belongs_to_group ?p ?g)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "remove_from_group",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(process_belongs_to_group ?p ?g)"
+        ],
+        "effects": [
+          "(not (process_belongs_to_group ?p ?g))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "set_env_preservation",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "b",
+            "object"
+          ]
+        ],
+        "preconditions": [
+          "(process_exists ?p)"
+        ],
+        "effects": [
+          "(requires_env_preservation ?p ?b)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "unset_env_preservation",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "preconditions": [
+          "(process_exists ?p)",
+          "(requires_env_preservation ?p true)"
+        ],
+        "effects": [
+          "(not (requires_env_preservation ?p true))"
         ],
         "command_template": "",
         "requires_root": false,
@@ -904,198 +1357,8 @@
         "source_worker": "process_management_agent"
       }
     ],
-    "raw_pddl": " :types\n  process\n\n(:predicates\n  (process_exists ?p - process)\n  (process_running ?p - process)\n  (process_terminated ?p - process)\n  (process_paused ?p - process)\n  (process_priority ?p - process ?priority)\n  (process_niceness ?p - process ?niceness)\n  (process_owned_by ?p - process ?user - user)\n)\n\n(:action kill_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p))\n  :effect (and (not (process_running ?p)) (not (process_paused ?p))))\n\n(:action start_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p) (not (process_running ?p)))\n  :effect (and (process_running ?p)))\n\n(:action pause_process\n  :parameters (?p - process)\n  :precondition (and (process_running ?p))\n  :effect (and (process_paused ?p)))\n\n(:action resume_process\n  :parameters (?p - process)\n  :precondition (and (process_paused ?p))\n  :effect (and (not (process_paused ?p)) (not (process_terminated ?p))))\n\n(:action change_process_priority\n  :parameters (?p - process ?priority - object)\n  :precondition (and (process_exists ?p) (process_running ?p))\n  :effect (and (process_priority ?p ?priority)))\n\n(:action change_process_niceness\n  :parameters (?p - process ?niceness - object)\n  :precondition (and (process_exists ?p) (process_running ?p))\n  :effect (and (process_niceness ?p ?niceness)))",
+    "raw_pddl": " :types\n  process - object\n\n(:predicates\n  (process_exists ?p - process)\n  (process_running ?p - process)\n  (process_terminated ?p - process)\n  (process_paused ?p - process)\n  (process_niceness ?p - process ?n - object)\n  (process_priority ?p - process ?p - object)\n  (process_owned_by ?p - process ?u - user)\n  (process_belongs_to_group ?p - process ?g - group)\n  (process_has_env_preservation ?p - process)\n)\n\n(:action kill_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p))\n  :effect (and (not (process_running ?p)) (not (process_paused ?p))))\n\n(:action start_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p) (not (process_running ?p)))\n  :effect (and (process_running ?p)))\n\n(:action pause_process\n  :parameters (?p - process)\n  :precondition (and (process_running ?p))\n  :effect (and (process_paused ?p)))\n\n(:action unpause_process\n  :parameters (?p - process)\n  :precondition (and (process_paused ?p))\n  :effect (and (not (process_paused ?p))))\n\n(:action change_niceness\n  :parameters (?p - process ?n - object)\n  :precondition (and (process_exists ?p) (integer ?n))\n  :effect (and (process_niceness ?p ?n)))\n\n(:action change_priority\n  :parameters (?p - process ?p - object)\n  :precondition (and (process_exists ?p) (integer ?p))\n  :effect (and (process_priority ?p ?p)))\n\n(:action assign_to_group\n  :parameters (?p - process ?g - group)\n  :precondition (and (process_exists ?p) (group_exists ?g))\n  :effect (and (process_belongs_to_group ?p ?g)))\n\n(:action remove_from_group\n  :parameters (?p - process ?g - group)\n  :precondition (and (process_belongs_to_group ?p ?g))\n  :effect (and (not (process_belongs_to_group ?p ?g))))\n\n(:action set_env_preservation\n  :parameters (?p - process ?b - object)\n  :precondition (and (process_exists ?p))\n  :effect (and (requires_env_preservation ?p ?b)))\n\n(:action unset_env_preservation\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p) (requires_env_preservation ?p true))\n  :effect (and (not (requires_env_preservation ?p true))))",
     "error": null,
-    "generation_time": 14.010664701461792
-  },
-  {
-    "worker_name": "network_management_agent",
-    "group_name": "network_management",
-    "types": [],
-    "predicates": [
-      {
-        "name": "interface_exists",
-        "parameters": [
-          [
-            "i",
-            "interface"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "port_exists",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "firewall_rule_exists",
-        "parameters": [
-          [
-            "r",
-            "firewall_rule"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "port_assigned_to_interface",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ],
-          [
-            "i",
-            "interface"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "firewall_rule_applied_to_port",
-        "parameters": [
-          [
-            "r",
-            "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
-          ]
-        ],
-        "source": "network_management_agent"
-      }
-    ],
-    "actions": [
-      {
-        "name": "assign_port_to_interface",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ],
-          [
-            "i",
-            "interface"
-          ],
-          [
-            "_",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(interface_exists ?i)",
-          "(port_exists ?p)"
-        ],
-        "effects": [
-          "(port_assigned_to_interface ?p ?i)",
-          "(not (port_assigned_to_interface ?p ?_))",
-          "(not (port_assigned_to_interface ?_ ?i))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "apply_firewall_rule_to_port",
-        "parameters": [
-          [
-            "r",
-            "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
-          ],
-          [
-            "_",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(firewall_rule_exists ?r)",
-          "(port_exists ?p)"
-        ],
-        "effects": [
-          "(firewall_rule_applied_to_port ?r ?p)",
-          "(not (firewall_rule_applied_to_port ?r ?_))",
-          "(not (firewall_rule_applied_to_port ?_ ?p))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "remove_port_from_interface",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ],
-          [
-            "i",
-            "interface"
-          ],
-          [
-            "_",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(interface_exists ?i)",
-          "(port_assigned_to_interface ?p ?i)"
-        ],
-        "effects": [
-          "(not (port_assigned_to_interface ?p ?i))",
-          "(not (port_assigned_to_interface ?p ?_))",
-          "(not (port_assigned_to_interface ?_ ?i))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "remove_firewall_rule_from_port",
-        "parameters": [
-          [
-            "r",
-            "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
-          ],
-          [
-            "_",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(firewall_rule_exists ?r)",
-          "(firewall_rule_applied_to_port ?r ?p)"
-        ],
-        "effects": [
-          "(not (firewall_rule_applied_to_port ?r ?p))",
-          "(not (firewall_rule_applied_to_port ?r ?_))",
-          "(not (firewall_rule_applied_to_port ?_ ?p))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      }
-    ],
-    "raw_pddl": " :types\n  interface - object\n  port - object\n  firewall_rule - object\n\n(:predicates\n  (interface_exists ?i - interface)\n  (port_exists ?p - port)\n  (firewall_rule_exists ?r - firewall_rule)\n  (port_assigned_to_interface ?p - port ?i - interface)\n  (firewall_rule_applied_to_port ?r - firewall_rule ?p - port)\n)\n\n(:action assign_port_to_interface\n    :parameters (?p - port ?i - interface ?_ - object)\n  :precondition (and (interface_exists ?i) (port_exists ?p))\n  :effect (and (port_assigned_to_interface ?p ?i) (not (port_assigned_to_interface ?p ?_)) (not (port_assigned_to_interface ?_ ?i)))\n)\n\n(:action apply_firewall_rule_to_port\n    :parameters (?r - firewall_rule ?p - port ?_ - object)\n  :precondition (and (firewall_rule_exists ?r) (port_exists ?p))\n  :effect (and (firewall_rule_applied_to_port ?r ?p) (not (firewall_rule_applied_to_port ?r ?_)) (not (firewall_rule_applied_to_port ?_ ?p)))\n)\n\n(:action remove_port_from_interface\n    :parameters (?p - port ?i - interface ?_ - object)\n  :precondition (and (interface_exists ?i) (port_assigned_to_interface ?p ?i))\n  :effect (and (not (port_assigned_to_interface ?p ?i)) (not (port_assigned_to_interface ?p ?_)) (not (port_assigned_to_interface ?_ ?i)))\n)\n\n(:action remove_firewall_rule_from_port\n    :parameters (?r - firewall_rule ?p - port ?_ - object)\n  :precondition (and (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))\n  :effect (and (not (firewall_rule_applied_to_port ?r ?p)) (not (firewall_rule_applied_to_port ?r ?_)) (not (firewall_rule_applied_to_port ?_ ?p)))\n)",
-    "error": null,
-    "generation_time": 18.150641679763794
+    "generation_time": 22.22531270980835
   }
 ]

@@ -3,57 +3,75 @@
   directory - object
 
 (:predicates)
-(file_in_directory ?f - file ?d - directory)
-(directory_empty ?d - directory)
 (file_exists ?f - file)
-(file_readable ?f - file)
-(file_writable ?f - file)
-(file_executable ?f - file)
-(file_owned_by ?f - file ?u - user)
+(directory_exists ?d - directory)
+(file_in_directory ?f - file ?d - directory)
 (file_is_directory ?f - file)
-(directory_contains_file ?d - directory ?f - file)
+(directory_is_empty ?d - directory)
+(file_is_readable ?f - file)
+(file_is_writable ?f - file)
+(file_is_executable ?f - file)
+(file_is_owned_by ?f - file ?u - user)
+(file_is_group_owned_by ?f - file ?g - group)
+(file_has_permissions ?f - file (read write execute))
+(directory_has_permissions ?d - directory (read write execute))
 
 (:action copy_file
-  :parameters (?src - file ?dst - file)
-  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))
-  :effect (and (not (file_exists ?dst)) (create_file ?dst) (copy_content ?src ?dst)))
+  :parameters (?src_file - file ?dest_file - file)
+  :precondition (and (file_exists ?src_file) (directory_exists (parent ?dest_file)))
+  :effect (and (not (file_exists ?dest_file)) (file_exists ?dest_file) (file_in_directory ?dest_file ?src_file) (not (file_is_same_as ?src_file ?dest_file))))
 
 (:action move_file
-  :parameters (?src - file ?dst - file)
-  :precondition (and (file_exists ?src) (not (file_in_directory ?src ?dst)) (not (file_exists ?dst)))
-  :effect (and (not (file_exists ?src)) (rename_file ?src ?dst)))
+  :parameters (?src_file - file ?dest_dir - directory)
+  :precondition (and (file_exists ?src_file) (directory_exists ?dest_dir))
+  :effect (and (not (file_exists ?src_file)) (file_exists ?dest_file) (file_in_directory ?dest_dir ?src_file) (not (file_is_same_as ?src_file ?dest_file))))
 
-(:action remove_file
-  :parameters (?f - file)
-  :precondition (file_exists ?f)
-  :effect (delete_file ?f))
+(:action rename_file
+  :parameters (?src_file - file ?new_name - string)
+  :precondition (and (file_exists ?src_file) (not (file_exists (rename ?src_file ?new_name))))
+  :effect (and (not (file_exists ?src_file)) (file_exists (rename ?src_file ?new_name)) (file_in_directory (parent (rename ?src_file ?new_name)) ?src_file) (not (file_is_same_as ?src_file (rename ?src_file ?new_name)))))
 
 (:action create_directory
-  :parameters (?d - directory)
-  :precondition (not (directory_exists ?d))
-  :effect (create_directory ?d))
+  :parameters (?dir - directory)
+  :precondition (not (directory_exists ?dir)))
+  :effect (directory_exists ?dir))
 
-(:action remove_directory
-  :parameters (?d - directory)
-  :precondition (directory_empty ?d)
-  :effect (delete_directory ?d))
+(:action delete_directory
+  :parameters (?dir - directory)
+  :precondition (directory_exists ?dir)
+  :effect (and (not (directory_exists ?dir)) (forall (?file - file) (implies (file_in_directory ?dir ?file) (not (file_exists ?file))))))
 
-(:action move_directory
-  :parameters (?src - directory ?dst - directory)
-  :precondition (directory_empty ?dst)
-  :effect (and (not (directory_exists ?src)) (not (directory_exists ?dst)) (create_directory ?dst) (rename_directory ?src ?dst)))
+(:action delete_file
+  :parameters (?file - file)
+  :precondition (file_exists ?file)
+  :effect (not (file_exists ?file)))
 
-(:action copy_directory
-  :parameters (?src - directory ?dst - directory)
-  :precondition (directory_exists ?src)
-  :effect (and (not (directory_exists ?dst)) (create_directory ?dst) (copy_subdirectory ?src ?dst)))
+(:action change_permissions_file
+  :parameters (?file - file ?permissions - (read write execute))
+  :precondition (file_exists ?file))
+  :effect (file_has_permissions ?file ?permissions))
 
-(:action copy_subdirectory
-  :parameters (?src - directory ?dst - directory ?sub - directory)
-  :precondition (and (directory_exists ?src) (directory_contains_file ?src ?sub))
-  :effect (and (not (directory_exists ?sub)) (create_directory ?sub) (copy_files_in_directory ?src ?sub)))
+(:action change_permissions_directory
+  :parameters (?dir - directory ?permissions - (read write execute))
+  :precondition (directory_exists ?dir))
+  :effect (directory_has_permissions ?dir ?permissions))
 
-(:action copy_files_in_directory
-  :parameters (?src - directory ?dst - directory)
-  :precondition (directory_exists ?src)
-  :effect (forall (?f) (if (file_exists ?f) (and (not (file_in_directory ?src ?dst)) (copy_file ?f (concatenate_strings ?dst "/" ?f))) (true))))
+(:action change_owner_file
+  :parameters (?file - file ?new_owner - user))
+  :precondition (file_exists ?file))
+  :effect (file_is_owned_by ?file ?new_owner))
+
+(:action change_owner_directory
+  :parameters (?dir - directory ?new_owner - user))
+  :precondition (directory_exists ?dir))
+  :effect (directory_is_owned_by ?dir ?new_owner))
+
+(:action change_group_file
+  :parameters (?file - file ?new_group - group))
+  :precondition (file_exists ?file))
+  :effect (file_is_group_owned_by ?file ?new_group))
+
+(:action change_group_directory
+  :parameters (?dir - directory ?new_group - group))
+  :precondition (directory_exists ?dir))
+  :effect (directory_is_group_owned_by ?dir ?new_group))
