@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Full Pipeline Runner: Phase 1 (Introspection) + Phase 2 (Parallel Synthesis)
+Full Pipeline Runner: Phase 1 + Phase 2 + Phase 3
 Automated Neurosymbolic Domain Formalization for Ubuntu 25.10
+
+Phase 1: System Introspection (osquery + man page mining)
+Phase 2: Parallel Synthesis (LLM Map-Reduce)
+Phase 3: Iterative Refinement via Exploration Walks
 
 Optimized for: 2x L40S GPUs, 400GB RAM, 100 CPUs
 """
@@ -28,6 +32,7 @@ def check_dependencies():
         "vllm": False,
         "openai": False,
         "cuda": False,
+        "docker": False,
     }
 
     # Check osquery
@@ -62,6 +67,13 @@ def check_dependencies():
     except Exception:
         pass
 
+    # Check Docker
+    try:
+        result = subprocess.run(["docker", "--version"], capture_output=True, timeout=5)
+        deps["docker"] = result.returncode == 0
+    except Exception:
+        pass
+
     return deps
 
 
@@ -75,6 +87,7 @@ def print_banner():
 ║                                                                              ║
 ║   Phase 1: System Introspection (osquery + man page mining)                  ║
 ║   Phase 2: Parallel Synthesis (LLM Map-Reduce)                               ║
+║   Phase 3: Iterative Refinement via Exploration Walks                        ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
     """)
@@ -275,8 +288,48 @@ def run_phase2(
     return orchestrator.run()
 
 
+def run_phase3(
+    output_dir: Path,
+    domain_path: Path,
+    problem_path: Path,
+    target_score: float = 0.9,
+    max_iterations: int = 10,
+    use_mock: bool = False,
+) -> dict:
+    """Execute Phase 3: Iterative Refinement via Exploration Walks."""
+    print("\n" + "=" * 70)
+    print("PHASE 3: ITERATIVE REFINEMENT VIA EXPLORATION WALKS")
+    print("=" * 70)
+
+    # Import Phase 3 module
+    try:
+        from phase3 import Phase3Orchestrator, Phase3Config
+    except ImportError as e:
+        print(f"[✗] Phase 3 module import failed: {e}")
+        return {"success": False, "error": str(e)}
+
+    # Configure
+    config = Phase3Config()
+    config.input_domain_path = str(domain_path)
+    config.input_problem_path = str(problem_path)
+    config.output_dir = str(output_dir / "phase3")
+    config.ew_target_score = target_score
+    config.max_refinement_iterations = max_iterations
+    config.use_mock_docker = use_mock
+    config.use_mock_planner = use_mock
+    config.use_mock_llm = use_mock
+
+    # Run orchestrator
+    orchestrator = Phase3Orchestrator(config=config)
+    return orchestrator.run()
+
+
 def generate_report(
-    output_dir: Path, phase1_results: dict, phase2_results: dict, elapsed_time: float
+    output_dir: Path,
+    phase1_results: dict,
+    phase2_results: dict,
+    elapsed_time: float,
+    phase3_results: Optional[dict] = None,
 ):
     """Generate final report."""
     report = {
@@ -297,6 +350,17 @@ def generate_report(
         },
     }
 
+    # Add Phase 3 results if available
+    if phase3_results:
+        report["phase3"] = {
+            "success": phase3_results.get("success", False),
+            "final_score": phase3_results.get("final_score", 0.0),
+            "target_achieved": phase3_results.get("target_achieved", False),
+            "iterations": phase3_results.get("iterations", 0),
+            "statistics": phase3_results.get("statistics", {}),
+        }
+        report["outputs"]["refined_domain_file"] = str(output_dir / "phase3" / "sysadmin_refined.pddl")
+
     # Save report
     report_file = output_dir / "pipeline_report.json"
     with open(report_file, "w") as f:
@@ -306,6 +370,17 @@ def generate_report(
     print("\n" + "=" * 70)
     print("PIPELINE COMPLETE")
     print("=" * 70)
+
+    phase3_summary = ""
+    if phase3_results:
+        phase3_summary = f"""
+    Phase 3 (Refinement):
+      Status: {"✓ SUCCESS" if phase3_results.get("target_achieved") else "⚠ INCOMPLETE"}
+      EW Score: {phase3_results.get("final_score", 0):.3f} (target: {phase3_results.get("target_score", 0.9)})
+      Iterations: {phase3_results.get("iterations", 0)}
+      Refined Domain: {output_dir / "phase3" / "sysadmin_refined.pddl"}
+"""
+
     print(f"""
     Total Time: {elapsed_time:.1f} seconds
 
@@ -320,7 +395,7 @@ def generate_report(
       Workers: {phase2_results.get("statistics", {}).get("workers_successful", "N/A")}/{phase2_results.get("statistics", {}).get("workers_total", "N/A")}
       Actions: {phase2_results.get("statistics", {}).get("total_actions", "N/A")}
       Validation: {"✓ PASSED" if phase2_results.get("validation_passed") else "⚠ WARNINGS"}
-
+{phase3_summary}
     Output Files:
       Domain: {output_dir / "sysadmin.pddl"}
       Report: {report_file}
@@ -331,11 +406,11 @@ def generate_report(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Full PDDL Domain Generation Pipeline",
+        description="Full PDDL Domain Generation Pipeline (Phase 1 + 2 + 3)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with mock LLM (no GPU required)
+  # Run with mock components (no GPU/Docker required)
   python run_pipeline.py --mock
 
   # Run with Mistral-7B (single GPU)
@@ -346,6 +421,12 @@ Examples:
 
   # Skip Phase 1, use existing state
   python run_pipeline.py --skip-phase1 --phase1-state ./output/phase1_state.json
+
+  # Run only Phase 1 and 2, skip refinement
+  python run_pipeline.py --skip-phase3
+
+  # Run with custom EW target score
+  python run_pipeline.py --ew-target 0.85 --max-refinement-iterations 5
         """,
     )
 
@@ -362,7 +443,7 @@ Examples:
         help="LLM model to use",
     )
     parser.add_argument(
-        "--mock", action="store_true", help="Use mock LLM (for testing without GPU)"
+        "--mock", action="store_true", help="Use mock components (for testing without GPU/Docker)"
     )
     parser.add_argument(
         "--skip-phase1",
@@ -375,6 +456,25 @@ Examples:
     )
     parser.add_argument(
         "--vllm-port", type=int, default=8000, help="vLLM server port (default: 8000)"
+    )
+
+    # Phase 3 arguments
+    parser.add_argument(
+        "--skip-phase3",
+        action="store_true",
+        help="Skip Phase 3 refinement (output unrefined domain from Phase 2)",
+    )
+    parser.add_argument(
+        "--ew-target",
+        type=float,
+        default=0.9,
+        help="Target EW score for Phase 3 (default: 0.9)",
+    )
+    parser.add_argument(
+        "--max-refinement-iterations",
+        type=int,
+        default=10,
+        help="Maximum refinement iterations in Phase 3 (default: 10)",
     )
 
     args = parser.parse_args()

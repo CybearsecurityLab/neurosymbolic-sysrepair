@@ -1,0 +1,233 @@
+"""
+Main entry point for Phase 3: Iterative Refinement via Exploration Walks
+
+Usage:
+    python -m phase3.main [options]
+
+    # Run with default settings
+    python -m phase3.main
+
+    # Use mock components for testing
+    python -m phase3.main --mock
+
+    # Custom domain path
+    python -m phase3.main --domain ./my_domain.pddl --problem ./my_problem.pddl
+
+    # Adjust parameters
+    python -m phase3.main --target-score 0.85 --max-iterations 5
+"""
+
+import argparse
+import json
+import logging
+import sys
+from pathlib import Path
+
+from .config import Phase3Config
+from .orchestrator import Phase3Orchestrator
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+
+def main():
+    """Main entry point for Phase 3 execution."""
+    parser = argparse.ArgumentParser(
+        description="Phase 3: Iterative Refinement via Exploration Walks",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with mock components (no Docker/LLM required)
+  python -m phase3 --mock
+
+  # Run with custom domain
+  python -m phase3 --domain ./pddl_output/sysadmin.pddl
+
+  # Run with lower target for faster completion
+  python -m phase3 --target-score 0.7 --max-iterations 3
+
+  # Output as JSON
+  python -m phase3 --json-output
+        """,
+    )
+
+    # Input/Output
+    parser.add_argument(
+        "--domain", "-d",
+        default="./pddl_output/sysadmin.pddl",
+        help="Path to input PDDL domain file",
+    )
+    parser.add_argument(
+        "--problem", "-p",
+        default="./pddl_output/problem.pddl",
+        help="Path to input PDDL problem file",
+    )
+    parser.add_argument(
+        "--output-dir", "-o",
+        default="./pddl_output/phase3",
+        help="Output directory for refined domain and reports",
+    )
+
+    # Refinement parameters
+    parser.add_argument(
+        "--target-score", "-t",
+        type=float,
+        default=0.9,
+        help="Target EW score to achieve (default: 0.9)",
+    )
+    parser.add_argument(
+        "--max-iterations", "-i",
+        type=int,
+        default=10,
+        help="Maximum refinement iterations (default: 10)",
+    )
+    parser.add_argument(
+        "--walks-per-iteration", "-n",
+        type=int,
+        default=10,
+        help="Number of exploration walks per iteration (default: 10)",
+    )
+    parser.add_argument(
+        "--walk-depth", "-w",
+        type=int,
+        default=5,
+        help="Maximum depth of each walk (default: 5)",
+    )
+
+    # Docker configuration
+    parser.add_argument(
+        "--docker-image",
+        default="ubuntu:25.10",
+        help="Docker image for sandbox (default: ubuntu:25.10)",
+    )
+
+    # LLM configuration
+    parser.add_argument(
+        "--llm-url",
+        default="http://localhost:8000/v1",
+        help="LLM API base URL (default: http://localhost:8000/v1)",
+    )
+    parser.add_argument(
+        "--llm-model",
+        default="mistralai/Mistral-7B-Instruct-v0.3",
+        help="LLM model name",
+    )
+
+    # Mock/testing
+    parser.add_argument(
+        "--mock",
+        action="store_true",
+        help="Use mock components (no Docker/LLM required)",
+    )
+    parser.add_argument(
+        "--mock-docker",
+        action="store_true",
+        help="Use mock Docker executor only",
+    )
+    parser.add_argument(
+        "--mock-llm",
+        action="store_true",
+        help="Use mock LLM only",
+    )
+    parser.add_argument(
+        "--mock-planner",
+        action="store_true",
+        help="Use mock planner only",
+    )
+
+    # Output options
+    parser.add_argument(
+        "--json-output", "-j",
+        action="store_true",
+        help="Output results as JSON",
+    )
+    parser.add_argument(
+        "--quiet", "-q",
+        action="store_true",
+        help="Suppress progress output",
+    )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose/debug output",
+    )
+    parser.add_argument(
+        "--save-intermediate",
+        action="store_true",
+        default=True,
+        help="Save intermediate domain versions (default: true)",
+    )
+
+    args = parser.parse_args()
+
+    # Configure logging
+    if args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+    elif args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Build configuration
+    config = Phase3Config()
+
+    # I/O paths
+    config.input_domain_path = args.domain
+    config.input_problem_path = args.problem
+    config.output_dir = args.output_dir
+
+    # Refinement parameters
+    config.ew_target_score = args.target_score
+    config.max_refinement_iterations = args.max_iterations
+    config.walks_per_iteration = args.walks_per_iteration
+    config.walk_depth = args.walk_depth
+    config.save_intermediate_domains = args.save_intermediate
+
+    # Docker
+    config.docker.image = args.docker_image
+
+    # LLM
+    config.llm.base_url = args.llm_url
+    config.llm.model_name = args.llm_model
+
+    # Mock settings
+    if args.mock:
+        config.use_mock_docker = True
+        config.use_mock_planner = True
+        config.use_mock_llm = True
+    else:
+        config.use_mock_docker = args.mock_docker
+        config.use_mock_planner = args.mock_planner
+        config.use_mock_llm = args.mock_llm
+
+    # Validate inputs
+    if not Path(config.input_domain_path).exists():
+        print(f"Error: Domain file not found: {config.input_domain_path}", file=sys.stderr)
+        print("Run Phase 1 and Phase 2 first, or specify --domain path", file=sys.stderr)
+        return 1
+
+    # Run orchestrator
+    orchestrator = Phase3Orchestrator(config=config)
+    results = orchestrator.run()
+
+    # Output results
+    if args.json_output:
+        # Clean results for JSON output
+        output = {
+            "success": results["success"],
+            "final_score": results["final_score"],
+            "target_score": results["target_score"],
+            "target_achieved": results["target_achieved"],
+            "iterations": results["iterations"],
+            "statistics": results.get("statistics", {}),
+            "domain_path": results.get("domain_path", ""),
+            "errors": results.get("errors", []),
+        }
+        print(json.dumps(output, indent=2))
+
+    return 0 if results["success"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
