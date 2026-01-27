@@ -239,6 +239,9 @@ class Phase1Orchestrator:
 
         log(f"\n  ✓ Serialized {len(serialized_actions)} actions for Phase 2")
 
+        # Save Phase 2 compatible state
+        self.save_phase2_compat_state()
+
         # Final status
         results["success"] = results["pddl_generated"] and len(results["errors"]) == 0
 
@@ -322,4 +325,35 @@ class Phase1Orchestrator:
             f.write(phase1_state.to_json(indent=2))
 
         log(f"  ✓ Saved Phase 1 state to {filepath}")
+        return filepath
+
+    def save_phase2_compat_state(self, filepath: str = None) -> str:
+        """
+        Save the state in a format compatible with Phase 2.
+
+        Args:
+            filepath: Path to save the state. Defaults to output_dir/phase1_statep2.json
+
+        Returns:
+            Path to the saved file
+        """
+        if filepath is None:
+            os.makedirs(self.output_dir, exist_ok=True)
+            filepath = os.path.join(self.output_dir, "phase1_statep2.json")
+
+        # Create a dictionary with the required keys
+        phase2_state = {
+            "objects": self.state.get("objects", {}),
+            "predicates": self.state.get("predicates", []),
+            "relationships": self.state.get("relationships", {}),
+            "statistics": {
+                f"{obj_type}_count": len(objs)
+                for obj_type, objs in self.state.get("objects", {}).items()
+            },
+        }
+
+        with open(filepath, "w") as f:
+            json.dump(phase2_state, f, indent=2)
+
+        log(f"  ✓ Saved Phase 2 compatible state to {filepath}")
         return filepath
