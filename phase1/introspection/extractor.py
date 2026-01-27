@@ -272,10 +272,27 @@ class SystemStateExtractor:
         relationships = {
             "depends_on": [],  # service -> package
             "configures": [],  # config_file -> service
-            "owned_by": [],  # file -> user
+            "file_owned_by": [],  # file -> user
+            "file_owned_by_group": [],  # file -> group
             "member_of": [],  # user -> group
             "can_escalate": [],  # users who can sudo
         }
+
+        # Build lookup maps for users and groups by UID/GID
+        uid_to_user = {}
+        gid_to_group = {}
+
+        if "user" in objects:
+            for user in objects["user"]:
+                uid = user.get("properties", {}).get("uid")
+                if uid:
+                    uid_to_user[str(uid)] = user["name"]
+
+        if "group" in objects:
+            for group in objects["group"]:
+                gid = group.get("properties", {}).get("gid")
+                if gid:
+                    gid_to_group[str(gid)] = group["name"]
 
         # Extract service -> package dependencies via systemd
         if "service" in objects:
@@ -300,14 +317,34 @@ class SystemStateExtractor:
                             {"config": cfg["name"], "service": svc["name"]}
                         )
 
-        # Extract user group memberships and sudo capability
+        # Extract file ownership relationships
+        for file_type in ["file", "configuration_file"]:
+            if file_type in objects:
+                for f in objects[file_type]:
+                    props = f.get("properties", {})
+                    uid = str(props.get("uid", ""))
+                    gid = str(props.get("gid", ""))
+
+                    if uid in uid_to_user:
+                        relationships["file_owned_by"].append(
+                            {"file": f["name"], "user": uid_to_user[uid]}
+                        )
+                    if gid in gid_to_group:
+                        relationships["file_owned_by_group"].append(
+                            {"file": f["name"], "group": gid_to_group[gid]}
+                        )
+
+        # Extract user group memberships
         try:
             query = "SELECT uid, gid FROM user_groups"
             results = self.osquery.execute_query(query)
             for row in results:
-                relationships["member_of"].append(
-                    {"user_uid": row.get("uid"), "group_gid": row.get("gid")}
-                )
+                uid = str(row.get("uid", ""))
+                gid = str(row.get("gid", ""))
+                if uid in uid_to_user and gid in gid_to_group:
+                    relationships["member_of"].append(
+                        {"user": uid_to_user[uid], "group": gid_to_group[gid]}
+                    )
         except Exception:
             pass
 
@@ -325,9 +362,9 @@ class SystemStateExtractor:
 
                 # Map UIDs to usernames
                 if "user" in objects:
-                    sudo_uids = {r.get("uid") for r in member_results}
+                    sudo_uids = {str(r.get("uid")) for r in member_results}
                     for user in objects["user"]:
-                        uid = user.get("properties", {}).get("uid")
+                        uid = str(user.get("properties", {}).get("uid", ""))
                         if uid in sudo_uids:
                             relationships["can_escalate"].append({"user": user["name"]})
         except Exception:

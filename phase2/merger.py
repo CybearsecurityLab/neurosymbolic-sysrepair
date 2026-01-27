@@ -30,6 +30,7 @@ from common.predicates import (
     generate_predicates_pddl,
 )
 from common.pddl_sanitizer import PDDLSanitizer, PDDL_RESERVED_KEYWORDS
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 from phase2.models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from phase2.llm import LLMInterface
@@ -46,7 +47,33 @@ class MergerAgent:
     - Type hierarchy (common.type_hierarchy)
     - Predicate definitions (common.predicates)
     - Sanitization (common.pddl_sanitizer)
+    - Strict validation to reject invalid LLM-generated constructs
     """
+
+    # Invalid patterns that should cause action rejection
+    INVALID_PATTERNS = [
+        r'\(assert\s',           # (assert ...) - not valid PDDL
+        r'\(equal\s',            # (equal ?x ?y) - not valid PDDL
+        r'\(create_process\s',   # functions not allowed
+        r'\(strcat\s',           # string operations not allowed
+        r'\(concat\s',           # string operations not allowed
+        r'\(member\s',           # list operations not allowed
+        r'\(implies\s',          # use (when) instead
+        r'\(imply\s',            # use (when) instead
+        r"'[^']*'",              # single-quoted string literals
+        r'"[^"]*"',              # double-quoted string literals
+        r'\(\s*\)',              # empty parentheses
+        r'\)\s*\(\s*\(',         # malformed )((
+        r'\)\(\(',               # malformed )((
+        r'\(exists\s',           # quantifiers not allowed in STRIPS
+        r'\(forall\s',           # quantifiers not allowed in STRIPS
+    ]
+
+    # Invalid types that should be normalized or rejected
+    INVALID_TYPES = frozenset([
+        'string', 'boolean', 'integer', 'list', 'command', 'cmd',
+        '_user', '_group', '_file', '_service', '_package',
+    ])
 
     def __init__(self, llm: Optional[LLMInterface] = None):
         self.llm = llm
@@ -57,6 +84,7 @@ class MergerAgent:
         self.unified_actions: list[PDDLAction] = []
         self.merge_log: list[str] = []
         self.all_repairs: list[str] = []
+        self.rejected_actions: list[tuple[str, str]] = []  # (name, reason)
         self._pddl_available = self._check_pddl_library()
 
     def _check_pddl_library(self) -> bool:
@@ -337,14 +365,29 @@ class MergerAgent:
                             self._extract_predicate_from_condition(cond_clean, "validator")
 
     def _consolidate_actions(self, domains: list[PartialPDDLDomain]):
-        """Consolidate actions, detecting and merging duplicates."""
+        """Consolidate actions, detecting and merging duplicates with strict validation."""
         action_map: dict[str, list[PDDLAction]] = {}
 
         for domain in domains:
             for action in domain.actions:
-                if action.name not in action_map:
-                    action_map[action.name] = []
-                action_map[action.name].append(action)
+                # Validate action before adding to map
+                is_valid, reason = self._validate_action(action)
+                if not is_valid:
+                    self.rejected_actions.append((action.name, reason))
+                    self.merge_log.append(f"Rejected action '{action.name}': {reason}")
+                    continue
+
+                # Sanitize the action
+                sanitized_action = self._sanitize_action(action)
+                if sanitized_action is None:
+                    self.rejected_actions.append((action.name, "Failed sanitization"))
+                    continue
+
+                if sanitized_action.name not in action_map:
+                    action_map[sanitized_action.name] = []
+                action_map[sanitized_action.name].append(sanitized_action)
+
+        logger.info(f"  Rejected {len(self.rejected_actions)} invalid actions")
 
         for name, actions in action_map.items():
             if len(actions) == 1:
@@ -352,7 +395,7 @@ class MergerAgent:
             else:
                 # Prefer Phase 1 actions (marked as phase1_reuse)
                 phase1_actions = [
-                    a for a in actions 
+                    a for a in actions
                     if getattr(a, 'source_worker', '') == 'phase1_reuse'
                 ]
                 if phase1_actions:
@@ -366,6 +409,122 @@ class MergerAgent:
                     self.merge_log.append(
                         f"Merged {len(actions)} definitions of action '{name}'"
                     )
+
+    def _validate_action(self, action: PDDLAction) -> tuple[bool, str]:
+        """
+        Validate an action for PDDL correctness.
+        Returns (is_valid, reason) tuple.
+        """
+        if not action or not action.name:
+            return False, "Missing action name"
+
+        # Check for invalid patterns in preconditions
+        for pre in action.preconditions:
+            for pattern in self.INVALID_PATTERNS:
+                if re.search(pattern, pre, re.IGNORECASE):
+                    return False, f"Invalid pattern in precondition: {pattern}"
+
+        # Check for invalid patterns in effects
+        for eff in action.effects:
+            for pattern in self.INVALID_PATTERNS:
+                if re.search(pattern, eff, re.IGNORECASE):
+                    return False, f"Invalid pattern in effect: {pattern}"
+
+        # Check for invalid types in parameters
+        for param_name, param_type in action.parameters:
+            if param_type in self.INVALID_TYPES:
+                # This will be normalized, but log it
+                self.merge_log.append(
+                    f"Action '{action.name}': normalizing invalid type '{param_type}'"
+                )
+
+        # Check that effects are not empty (action must do something)
+        if not action.effects:
+            return False, "Action has no effects"
+
+        # Check for balanced parentheses in all conditions
+        for cond in action.preconditions + action.effects:
+            if cond.count('(') != cond.count(')'):
+                return False, f"Unbalanced parentheses in: {cond[:50]}"
+
+        # Check that all variables in preconditions/effects are declared
+        declared_vars = {f"?{p[0]}" for p in action.parameters}
+        for cond in action.preconditions + action.effects:
+            var_pattern = r'\?(\w+)'
+            found_vars = {f"?{m.group(1)}" for m in re.finditer(var_pattern, cond)}
+            undeclared = found_vars - declared_vars
+            if undeclared:
+                return False, f"Undeclared variables: {undeclared}"
+
+        return True, ""
+
+    def _sanitize_action(self, action: PDDLAction) -> Optional[PDDLAction]:
+        """
+        Sanitize an action by normalizing types and fixing common issues.
+        Returns None if the action cannot be fixed.
+        """
+        try:
+            # Normalize parameter types
+            normalized_params = []
+            for param_name, param_type in action.parameters:
+                normalized_type = normalize_type(param_type)
+                normalized_params.append((param_name, normalized_type))
+
+            # Filter out invalid conditions from preconditions
+            valid_preconds = []
+            for pre in action.preconditions:
+                sanitized = self._sanitize_condition(pre)
+                if sanitized:
+                    valid_preconds.append(sanitized)
+
+            # Filter out invalid conditions from effects
+            valid_effects = []
+            for eff in action.effects:
+                sanitized = self._sanitize_condition(eff)
+                if sanitized:
+                    valid_effects.append(sanitized)
+
+            if not valid_effects:
+                return None
+
+            return PDDLAction(
+                name=action.name,
+                parameters=normalized_params,
+                preconditions=valid_preconds,
+                effects=valid_effects,
+                command_template=action.command_template,
+                requires_root=action.requires_root,
+                source_utility=action.source_utility,
+                source_worker=getattr(action, 'source_worker', 'sanitized'),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to sanitize action '{action.name}': {e}")
+            return None
+
+    def _sanitize_condition(self, condition: str) -> Optional[str]:
+        """
+        Sanitize a single condition/effect.
+        Returns None if the condition is invalid and cannot be fixed.
+        """
+        if not condition or not condition.strip():
+            return None
+
+        cond = condition.strip()
+
+        # Check for invalid patterns - reject entirely
+        for pattern in self.INVALID_PATTERNS:
+            if re.search(pattern, cond, re.IGNORECASE):
+                return None
+
+        # Check balanced parentheses
+        if cond.count('(') != cond.count(')'):
+            return None
+
+        # Must start with '('
+        if not cond.startswith('('):
+            return None
+
+        return cond
 
     def _merge_actions(self, actions: list[PDDLAction]) -> PDDLAction:
         """Merge multiple action definitions into one."""
@@ -683,3 +842,19 @@ class MergerAgent:
     def get_merge_log(self) -> list[str]:
         """Return the merge operation log."""
         return self.merge_log
+
+    def get_rejected_actions(self) -> list[tuple[str, str]]:
+        """Return list of rejected actions with reasons: [(name, reason), ...]"""
+        return self.rejected_actions
+
+    def get_validation_summary(self) -> dict:
+        """Return a summary of validation results."""
+        return {
+            "total_actions_processed": len(self.unified_actions) + len(self.rejected_actions),
+            "valid_actions": len(self.unified_actions),
+            "rejected_actions": len(self.rejected_actions),
+            "rejection_reasons": dict(
+                (name, reason) for name, reason in self.rejected_actions
+            ),
+            "total_repairs": len(self.all_repairs),
+        }

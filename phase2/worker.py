@@ -6,6 +6,7 @@ Updated to:
 - Reuse Phase 1 actions instead of regenerating
 - Use known predicates for vocabulary consistency
 - Only generate new actions for gaps not covered by Phase 1
+- Import PDDL syntax rules to enforce valid generation
 """
 
 import json
@@ -21,6 +22,8 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.models import ActionSchema
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
+from common.type_hierarchy import VALID_TYPES, normalize_type
 
 from phase2.models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from phase2.llm import LLMInterface
@@ -41,34 +44,47 @@ class WorkerAgent:
     - Only ask LLM to fill gaps (actions not covered by Phase 1)
     """
 
-    # Updated system prompt that references known predicates
-    SYSTEM_PROMPT = """You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+    # Base system prompt - will be extended with PDDL_SYNTAX_GUIDE
+    SYSTEM_PROMPT_BASE = """You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
 
 ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
 
-1. TYPES: Only these base types exist: object, package, service, user, group, file, directory, configuration_file, port, interface, firewall_rule, process, repository
-   - Do NOT invent new types like "string", "list", "command"
+1. VALID TYPES ONLY - Use ONLY these types:
+   object, package, service, user, group, file, directory, configuration_file,
+   port, interface, firewall_rule, process, repository, filesystem_object,
+   system_user, human_user
 
-2. PREDICATES: Boolean only, no functions
-   - USE EXISTING PREDICATES from the vocabulary provided below when applicable
-   - Only invent new predicates if absolutely necessary
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
 
-3. ACTIONS: Every parameter MUST be declared
-   - Do NOT duplicate actions that already exist (listed below)
-   - Only generate NEW actions not covered by existing ones
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
 
-4. NO FUNCTIONS OR EXPRESSIONS IN EFFECTS:
-   INVALID: (installed (find_package ?name))
-   VALID: (installed ?p)
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
 
-5. NO STRING LITERALS in preconditions/effects
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
 
-6. NO NESTED PREDICATES
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
 
-7. VARIABLE SCOPE:
-   Any variable used in preconditions or effects MUST be defined in :parameters.
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
 
-OUTPUT FORMAT - exactly this structure:
+OUTPUT FORMAT - exactly this structure, no markdown:
 (:types
   package service - object
 )
@@ -83,7 +99,7 @@ OUTPUT FORMAT - exactly this structure:
   :effect (and (pred2 ?p))
 )
 
-Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments."""
 
     def __init__(
         self,
@@ -113,11 +129,21 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
 
     def _build_system_prompt(self) -> str:
         """
-        Build the system prompt dynamically, injecting OS-specific constraints.
-        This forces the LLM to respect Ubuntu 25.10 security boundaries (sudo-rs/uutils).
+        Build the system prompt dynamically, injecting:
+        1. Base PDDL syntax rules
+        2. Official PDDL BNF-derived rules from common.pddl_rules
+        3. OS-specific constraints (sudo-rs/uutils for Ubuntu 25.10)
         """
         # Start with the base syntax rules
-        prompt = self.SYSTEM_PROMPT
+        prompt = self.SYSTEM_PROMPT_BASE
+
+        # Add the official PDDL syntax guide from common.pddl_rules
+        prompt += "\n\n=== OFFICIAL PDDL SYNTAX REFERENCE ===\n"
+        prompt += PDDL_SYNTAX_GUIDE
+
+        # Add valid types list for reference
+        prompt += "\n\n=== VALID TYPES (use ONLY these) ===\n"
+        prompt += ", ".join(sorted(VALID_TYPES))
 
         # --- NEW: Inject Constraints based on OS Capabilities ---
         constraints = []
@@ -392,7 +418,7 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
         if pred_block:
             result.predicates = self._parse_predicates(pred_block)
 
-        # Extract actions
+        # Extract actions with validation
         action_starts = [
             m.start() for m in re.finditer(r"\(:action\s+", raw, re.IGNORECASE)
         ]
@@ -403,8 +429,15 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
                 if name_match:
                     action = self._parse_action(name_match.group(1), action_str)
                     if action:
-                        action.source_worker = self.worker_name
-                        result.actions.append(action)
+                        # Validate and normalize the action
+                        validated_action = self._validate_and_normalize_action(action)
+                        if validated_action:
+                            validated_action.source_worker = self.worker_name
+                            result.actions.append(validated_action)
+                        else:
+                            logger.warning(
+                                f"[{self.worker_name}] Discarded invalid action: {action.name}"
+                            )
 
     def _strip_markdown(self, text: str) -> str:
         """Remove markdown code fences."""
@@ -596,13 +629,135 @@ Generate ONLY valid PDDL. No markdown, no explanations, no comments."""
                 if inner[i] == '(':
                     sexp = self._extract_sexp_at(inner, i)
                     if sexp:
-                        conditions.append(sexp)
+                        # Validate and filter the condition
+                        if self._is_valid_condition(sexp):
+                            conditions.append(sexp)
+                        else:
+                            logger.debug(f"Filtered invalid condition: {sexp[:50]}...")
                         i += len(sexp)
                     else:
                         i += 1
                 else:
                     i += 1
         else:
-            conditions.append(cond_sexp)
+            if self._is_valid_condition(cond_sexp):
+                conditions.append(cond_sexp)
 
         return conditions
+
+    # =========================================================================
+    # Validation Methods - Filter invalid LLM-generated constructs
+    # =========================================================================
+
+    # Patterns that indicate INVALID PDDL constructs
+    INVALID_PATTERNS = [
+        r'\(assert\s',           # (assert ...) - not valid PDDL
+        r'\(equal\s',            # (equal ?x ?y) - not valid PDDL
+        r'\(create_process\s',   # functions not allowed
+        r'\(strcat\s',           # string operations not allowed
+        r'\(concat\s',           # string operations not allowed
+        r'\(member\s',           # list operations not allowed
+        r'\(implies\s',          # use (when) instead in effects
+        r'\(imply\s',            # use (when) instead in effects
+        r"'[^']*'",              # single-quoted string literals
+        r'"[^"]*"',              # double-quoted string literals
+        r'\(\s*\)',              # empty parentheses
+        r'\)\s*\(\s*\(',         # malformed )((
+        r'\)\(\(',               # malformed )((
+    ]
+
+    # Quantifiers - should not be used in STRIPS
+    QUANTIFIER_PATTERNS = [
+        r'\(exists\s',
+        r'\(forall\s',
+    ]
+
+    def _is_valid_condition(self, condition: str) -> bool:
+        """
+        Check if a condition/effect is valid PDDL.
+        Rejects constructs that will cause parser failure.
+        """
+        if not condition or not condition.strip():
+            return False
+
+        cond = condition.strip()
+
+        # Check for invalid patterns
+        for pattern in self.INVALID_PATTERNS:
+            if re.search(pattern, cond, re.IGNORECASE):
+                logger.debug(f"Invalid pattern '{pattern}' found in: {cond[:50]}")
+                return False
+
+        # Check for quantifiers (not allowed in STRIPS)
+        for pattern in self.QUANTIFIER_PATTERNS:
+            if re.search(pattern, cond, re.IGNORECASE):
+                logger.debug(f"Quantifier found in: {cond[:50]}")
+                return False
+
+        # Check for balanced parentheses
+        if cond.count('(') != cond.count(')'):
+            logger.debug(f"Unbalanced parentheses in: {cond[:50]}")
+            return False
+
+        # Check for malformed starts (should start with '(' or be empty after stripping)
+        if not cond.startswith('('):
+            return False
+
+        return True
+
+    def _validate_and_normalize_action(self, action: PDDLAction) -> Optional[PDDLAction]:
+        """
+        Validate and normalize an action, fixing common LLM errors.
+        Returns None if the action is fundamentally broken.
+        """
+        if not action or not action.name:
+            return None
+
+        # Normalize parameter types
+        normalized_params = []
+        for param_name, param_type in action.parameters:
+            normalized_type = normalize_type(param_type)
+            normalized_params.append((param_name, normalized_type))
+        action.parameters = normalized_params
+
+        # Get declared parameter names
+        declared_vars = {f"?{p[0]}" for p in action.parameters}
+
+        # Filter preconditions - remove those with undeclared variables
+        valid_preconds = []
+        for pre in action.preconditions:
+            if self._condition_uses_only_declared_vars(pre, declared_vars):
+                valid_preconds.append(pre)
+            else:
+                logger.debug(f"Filtered precondition with undeclared var: {pre[:50]}")
+        action.preconditions = valid_preconds
+
+        # Filter effects - remove those with undeclared variables
+        valid_effects = []
+        for eff in action.effects:
+            if self._condition_uses_only_declared_vars(eff, declared_vars):
+                valid_effects.append(eff)
+            else:
+                logger.debug(f"Filtered effect with undeclared var: {eff[:50]}")
+        action.effects = valid_effects
+
+        # Action must have at least one effect to be useful
+        if not action.effects:
+            logger.warning(f"Action '{action.name}' has no valid effects, discarding")
+            return None
+
+        return action
+
+    def _condition_uses_only_declared_vars(self, condition: str, declared_vars: set[str]) -> bool:
+        """Check that all variables in a condition are declared in parameters."""
+        # Find all ?variable references
+        var_pattern = r'\?(\w+)'
+        found_vars = {f"?{m.group(1)}" for m in re.finditer(var_pattern, condition)}
+
+        # Check if all found vars are declared
+        undeclared = found_vars - declared_vars
+        if undeclared:
+            logger.debug(f"Undeclared variables: {undeclared}")
+            return False
+
+        return True
