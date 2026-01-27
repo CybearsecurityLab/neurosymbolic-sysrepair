@@ -1,8 +1,184 @@
 [
   {
+    "worker_name": "user_management_agent",
+    "group_name": "user_management",
+    "types": [
+      {
+        "name": "user",
+        "parent": "object",
+        "source": "user_management_agent"
+      },
+      {
+        "name": "group",
+        "parent": "object",
+        "source": "user_management_agent"
+      }
+    ],
+    "predicates": [
+      {
+        "name": "user_exists",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "user_management_agent"
+      },
+      {
+        "name": "group_exists",
+        "parameters": [
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "user_management_agent"
+      },
+      {
+        "name": "member_of",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "user_management_agent"
+      },
+      {
+        "name": "can_escalate",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "user_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "create_user",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(not (user_exists ?u))"
+        ],
+        "effects": [
+          "(user_exists ?u)",
+          "(member_of ?u ?g)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "user_management_agent"
+      },
+      {
+        "name": "modify_user",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)"
+        ],
+        "effects": [
+          "(member_of ?u ?g)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "user_management_agent"
+      },
+      {
+        "name": "delete_user",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "user_management_agent"
+      },
+      {
+        "name": "create_group",
+        "parameters": [
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(not (group_exists ?g))"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "user_management_agent"
+      },
+      {
+        "name": "delete_group",
+        "parameters": [
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "preconditions": [
+          "(group_exists ?g)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "user_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(:types\n  user group - object\n)\n\n(:predicates\n  (user_exists ?u - user)\n  (group_exists ?g - group)\n  (member_of ?u - user ?g - group)\n  (can_escalate ?u - user)\n)\n\n(:action create_user\n  :parameters (?u - user ?g - group)\n  :precondition (and (not (user_exists ?u)))\n  :effect (and (user_exists ?u) (member_of ?u ?g))\n)\n\n(:action modify_user\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_exists ?u))\n  :effect (and (member_of ?u ?g))\n)\n\n(:action delete_user\n  :parameters (?u - user)\n  :precondition (and (user_exists ?u))\n  :effect (not (user_exists ?u))\n)\n\n(:action create_group\n  :parameters (?g - group)\n  :precondition (and (not (group_exists ?g)))\n  :effect (group_exists ?g)\n)\n\n(:action delete_group\n  :parameters (?g - group)\n  :precondition (and (group_exists ?g))\n  :effect (not (group_exists ?g))\n)\n```",
+    "error": null,
+    "generation_time": 10.293643236160278
+  },
+  {
     "worker_name": "package_management_agent",
     "group_name": "package_management",
-    "types": [],
+    "types": [
+      {
+        "name": "package",
+        "parent": "object",
+        "source": "package_management_agent"
+      },
+      {
+        "name": "repository",
+        "parent": "object",
+        "source": "package_management_agent"
+      }
+    ],
     "predicates": [
       {
         "name": "package_installed",
@@ -15,7 +191,7 @@
         "source": "package_management_agent"
       },
       {
-        "name": "package_removed",
+        "name": "available",
         "parameters": [
           [
             "p",
@@ -25,7 +201,7 @@
         "source": "package_management_agent"
       },
       {
-        "name": "package_updated",
+        "name": "upgradable",
         "parameters": [
           [
             "p",
@@ -35,11 +211,51 @@
         "source": "package_management_agent"
       },
       {
-        "name": "repository_available",
+        "name": "outdated",
         "parameters": [
           [
-            "r",
-            "repository"
+            "p",
+            "package"
+          ]
+        ],
+        "source": "package_management_agent"
+      },
+      {
+        "name": "reverted",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "package_management_agent"
+      },
+      {
+        "name": "configured",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "package_management_agent"
+      },
+      {
+        "name": "enabled",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "package_management_agent"
+      },
+      {
+        "name": "removed",
+        "parameters": [
+          [
+            "p",
+            "package"
           ]
         ],
         "source": "package_management_agent"
@@ -59,14 +275,10 @@
           ]
         ],
         "preconditions": [
-          "(repository_available ?r)",
-          "(file_exists (package_file ?p))"
+          "(available ?p)",
+          "(not (installed ?p))"
         ],
-        "effects": [
-          "(not (package_installed ?p))",
-          "(package_installed ?p)",
-          "(file_executable (package_file ?p))"
-        ],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
@@ -81,11 +293,7 @@
           ]
         ],
         "preconditions": [],
-        "effects": [
-          "(package_installed ?p)",
-          "(not (package_installed ?p))",
-          "(file_removed (package_file ?p))"
-        ],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
@@ -99,234 +307,86 @@
             "package"
           ]
         ],
-        "preconditions": [],
-        "effects": [
-          "(package_installed ?p)",
-          "(not (package_outdated ?p))",
-          "(package_updated ?p)"
+        "preconditions": [
+          "(installed ?p)",
+          "(upgradable ?p)"
         ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      },
+      {
+        "name": "revert_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      },
+      {
+        "name": "configure_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      },
+      {
+        "name": "enable_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
         "source_worker": "package_management_agent"
       }
     ],
-    "raw_pddl": " :types\n  package repository\n\n(:predicates\n  (package_installed ?p - package)\n  (package_removed ?p - package)\n  (package_updated ?p - package)\n  (repository_available ?r - repository)\n)\n\n(:action install_package\n  :parameters (?p - package ?r - repository)\n  :precondition (and (repository_available ?r) (file_exists (package_file ?p)))\n  :effect (and (not (package_installed ?p)) (package_installed ?p) (file_executable (package_file ?p))))\n\n(:action remove_package\n  :parameters (?p - package)\n  :precondition (package_installed ?p)\n  :effect (and (package_installed ?p) (not (package_installed ?p)) (file_removed (package_file ?p))))\n\n(:action update_package\n  :parameters (?p - package)\n  :precondition (package_installed ?p)\n  :effect (and (package_installed ?p) (not (package_outdated ?p)) (package_updated ?p)))",
+    "raw_pddl": "(:types\n  package repository - object\n)\n\n(:predicates\n  (installed ?p - package)\n  (available ?p - package)\n  (upgradable ?p - package)\n  (outdated ?p - package)\n  (reverted ?p - package)\n  (configured ?p - package)\n  (enabled ?p - package)\n  (removed ?p - package)\n)\n\n(:action install_package\n  :parameters (?p - package ?r - repository)\n  :precondition (and (available ?p) (not (installed ?p)))\n  :effect (installed ?p)\n)\n\n(:action remove_package\n  :parameters (?p - package)\n  :precondition (installed ?p)\n  :effect (removed ?p)\n)\n\n(:action update_package\n  :parameters (?p - package)\n  :precondition (and (installed ?p) (upgradable ?p))\n  :effect (installed ?p)\n)\n\n(:action revert_package\n  :parameters (?p - package)\n  :precondition (installed ?p)\n  :effect (reverted ?p)\n)\n\n(:action configure_package\n  :parameters (?p - package)\n  :precondition (installed ?p)\n  :effect (configured ?p)\n)\n\n(:action enable_package\n  :parameters (?p - package)\n  :precondition (installed ?p)\n  :effect (enabled ?p)\n)",
     "error": null,
-    "generation_time": 9.100570440292358
-  },
-  {
-    "worker_name": "user_management_agent",
-    "group_name": "user_management",
-    "types": [],
-    "predicates": [],
-    "actions": [],
-    "raw_pddl": " :types\n  user - object\n  group - object\n\n:predicates\n  (user_exists ?u - user)\n  (group_exists ?g - group)\n  (user_is_member_of ?u - user ?g - group)\n\n:action user_create\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_does_not_exist ?u) (group_exists ?g))\n  :effect (and (user_exists ?u) (member_of ?u ?g))\n\n:action user_delete\n  :parameters (?u - user)\n  :precondition (user_exists ?u)\n  :effect (not (user_exists ?u))\n\n:action user_add_to_group\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_exists ?u) (group_exists ?g) (not (member_of ?u ?g)))\n  :effect (member_of ?u ?g)\n\n:action user_remove_from_group\n  :parameters (?u - user ?g - group)\n  :precondition (and (user_exists ?u) (group_exists ?g) (member_of ?u ?g))\n  :effect (not (member_of ?u ?g))\n\n:action group_create\n  :parameters (?g - group)\n  :precondition (not (group_exists ?g))\n  :effect (group_exists ?g)\n\n:action group_delete\n  :parameters (?g - group)\n  :precondition (group_exists ?g)\n  :effect (not (group_exists ?g))",
-    "error": null,
-    "generation_time": 13.09082555770874
-  },
-  {
-    "worker_name": "service_management_agent",
-    "group_name": "service_management",
-    "types": [],
-    "predicates": [],
-    "actions": [
-      {
-        "name": "start_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)"
-        ],
-        "effects": [
-          "(not (service-failed ?s))",
-          "(not (service-disabled ?s))",
-          "(service-running ?s)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "stop_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)",
-          "(service-running ?s)"
-        ],
-        "effects": [
-          "(not (service-running ?s))",
-          "(not (service-failed ?s))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "enable_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)"
-        ],
-        "effects": [
-          "(not (service-disabled ?s))",
-          "(not (service-failed ?s))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "disable_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)"
-        ],
-        "effects": [
-          "(service-disabled ?s)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "reload_service",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)",
-          "(service-running ?s)"
-        ],
-        "effects": [
-          "(not (service-failed ?s))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "check_service_status",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [
-          "(service-state ?s)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "configure_service_file",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ],
-          [
-            "f",
-            "configuration_file"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)",
-          "(file_exists ?f)"
-        ],
-        "effects": [
-          "(service-configured-file ?f ?s)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "revert_service_configuration",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ],
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "preconditions": [
-          "(service-exists ?s)",
-          "(service-configured-file ?f ?s)"
-        ],
-        "effects": [
-          "(not (service-configured-file ?f ?s))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      },
-      {
-        "name": "check_service_configuration",
-        "parameters": [
-          [
-            "s",
-            "service"
-          ],
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [
-          "(service-configured-file ?f ?s)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "service_management_agent"
-      }
-    ],
-    "raw_pddl": " :types\n  service-state - enum {enabled, disabled, failed, running}\n  configuration-file - object\n\n(:predicates\n  (service-exists ?s - service)\n  (service-state ?s - service service-state)\n  (service-configured-file ?s - service configuration-file)\n)\n\n(:action start_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (not (service-failed ?s)) (not (service-disabled ?s)) (service-running ?s)))\n\n(:action stop_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s) (service-running ?s))\n  :effect (and (not (service-running ?s)) (not (service-failed ?s))))\n\n(:action enable_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (not (service-disabled ?s)) (not (service-failed ?s))))\n\n(:action disable_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s))\n  :effect (and (service-disabled ?s)))\n\n(:action reload_service\n  :parameters (?s - service)\n  :precondition (and (service-exists ?s) (service-running ?s))\n  :effect (and (not (service-failed ?s))))\n\n(:action check_service_status\n  :parameters (?s - service)\n  :effect (and (service-state ?s)))\n\n(:action configure_service_file\n  :parameters (?s - service ?f - configuration_file)\n  :precondition (and (service-exists ?s) (file_exists ?f))\n  :effect (and (service-configured-file ?f ?s)))\n\n(:action revert_service_configuration\n    :parameters (?s - service ?f - file)\n  :precondition (and (service-exists ?s) (service-configured-file ?f ?s))\n  :effect (and (not (service-configured-file ?f ?s))))\n\n(:action check_service_configuration\n    :parameters (?s - service ?f - file)\n  :effect (and (service-configured-file ?f ?s)))",
-    "error": null,
-    "generation_time": 17.885159969329834
+    "generation_time": 11.068402290344238
   },
   {
     "worker_name": "network_management_agent",
     "group_name": "network_management",
-    "types": [],
+    "types": [
+      {
+        "name": "interface",
+        "parent": "object",
+        "source": "network_management_agent"
+      },
+      {
+        "name": "port",
+        "parent": "object",
+        "source": "network_management_agent"
+      },
+      {
+        "name": "firewall_rule",
+        "parent": "object",
+        "source": "network_management_agent"
+      }
+    ],
     "predicates": [
       {
         "name": "interface_exists",
@@ -339,7 +399,27 @@
         "source": "network_management_agent"
       },
       {
-        "name": "port_exists",
+        "name": "interface_up",
+        "parameters": [
+          [
+            "i",
+            "interface"
+          ]
+        ],
+        "source": "network_management_agent"
+      },
+      {
+        "name": "port_allowed",
+        "parameters": [
+          [
+            "p",
+            "port"
+          ]
+        ],
+        "source": "network_management_agent"
+      },
+      {
+        "name": "port_open",
         "parameters": [
           [
             "p",
@@ -359,39 +439,11 @@
         "source": "network_management_agent"
       },
       {
-        "name": "port_assigned_to_interface",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ],
-          [
-            "i",
-            "interface"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "firewall_rule_applied_to_port",
+        "name": "traffic_blocked",
         "parameters": [
           [
             "r",
             "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
-          ]
-        ],
-        "source": "network_management_agent"
-      },
-      {
-        "name": "traffic_allowed_on_port",
-        "parameters": [
-          [
-            "p",
-            "port"
           ]
         ],
         "source": "network_management_agent"
@@ -399,31 +451,18 @@
     ],
     "actions": [
       {
-        "name": "assign_port_to_interface",
+        "name": "configure_interface",
         "parameters": [
-          [
-            "p",
-            "port"
-          ],
           [
             "i",
             "interface"
-          ],
-          [
-            "r",
-            "repository"
           ]
         ],
         "preconditions": [
-          "(interface_exists ?i)",
-          "(port_exists ?p)",
-          "(not (port_assigned_to_interface ?p ?i))"
+          "(interface_exists ?i)"
         ],
         "effects": [
-          "(port_assigned_to_interface ?p ?i)",
-          "(not (traffic_blocked ?r))",
-          "(firewall_rule_exists ?r)",
-          "(firewall_rule_applied_to_port ?r ?p)"
+          "(interface_up ?i)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -431,25 +470,37 @@
         "source_worker": "network_management_agent"
       },
       {
-        "name": "apply_firewall_rule",
+        "name": "open_port",
+        "parameters": [
+          [
+            "p",
+            "port"
+          ]
+        ],
+        "preconditions": [
+          "(port_allowed ?p)"
+        ],
+        "effects": [
+          "(port_open ?p)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "create_firewall_rule",
         "parameters": [
           [
             "r",
             "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
           ]
         ],
         "preconditions": [
-          "(firewall_rule_exists ?r)",
-          "(port_exists ?p)",
-          "(not (firewall_rule_applied_to_port ?r ?p))"
+          "(not (firewall_rule_exists ?r))"
         ],
         "effects": [
-          "(firewall_rule_applied_to_port ?r ?p)",
-          "(traffic_allowed_on_port ?p)"
+          "(firewall_rule_exists ?r)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -457,70 +508,16 @@
         "source_worker": "network_management_agent"
       },
       {
-        "name": "block_traffic_on_port",
-        "parameters": [
-          [
-            "p",
-            "port"
-          ],
-          [
-            "r",
-            "repository"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "remove_firewall_rule_from_port",
+        "name": "block_traffic",
         "parameters": [
           [
             "r",
             "firewall_rule"
-          ],
-          [
-            "p",
-            "port"
           ]
         ],
         "preconditions": [
-          "(firewall_rule_exists ?r)",
-          "(firewall_rule_applied_to_port ?r ?p)"
+          "(firewall_rule_exists ?r)"
         ],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "enable_interface",
-        "parameters": [
-          [
-            "i",
-            "interface"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "network_management_agent"
-      },
-      {
-        "name": "disable_interface",
-        "parameters": [
-          [
-            "i",
-            "interface"
-          ]
-        ],
-        "preconditions": [],
         "effects": [],
         "command_template": "",
         "requires_root": false,
@@ -528,64 +525,566 @@
         "source_worker": "network_management_agent"
       }
     ],
-    "raw_pddl": " :types\n  interface - object\n  port - object\n  firewall_rule - object\n\n(:predicates\n  (interface_exists ?i - interface)\n  (port_exists ?p - port)\n  (firewall_rule_exists ?r - firewall_rule)\n  (port_assigned_to_interface ?p - port ?i - interface)\n  (firewall_rule_applied_to_port ?r - firewall_rule ?p - port)\n  (traffic_allowed_on_port ?p - port)\n)\n\n(:action assign_port_to_interface\n    :parameters (?p - port ?i - interface ?r - repository)\n  :precondition (and (interface_exists ?i) (port_exists ?p) (not (port_assigned_to_interface ?p ?i)))\n  :effect (and (port_assigned_to_interface ?p ?i) (not (traffic_blocked ?r)) :for all ?r :where (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action apply_firewall_rule\n  :parameters (?r - firewall_rule ?p - port)\n  :precondition (and (firewall_rule_exists ?r) (port_exists ?p) (not (firewall_rule_applied_to_port ?r ?p)))\n  :effect (and (firewall_rule_applied_to_port ?r ?p) (traffic_allowed_on_port ?p))\n)\n\n(:action block_traffic_on_port\n    :parameters (?p - port ?r - repository)\n  :precondition (port_exists ?p)\n  :effect (traffic_blocked (make_firewall_rule ?r) :for some ?r :where (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action remove_firewall_rule_from_port\n  :parameters (?r - firewall_rule ?p - port)\n  :precondition (and (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))\n  :effect (not (firewall_rule_applied_to_port ?r ?p))\n)\n\n(:action enable_interface\n  :parameters (?i - interface)\n  :precondition (interface_exists ?i)\n  :effect (interface_up ?i)\n)\n\n(:action disable_interface\n  :parameters (?i - interface)\n  :precondition (interface_exists ?i)\n  :effect (not (interface_up ?i))\n)",
+    "raw_pddl": "```pddl\n(:types\n  interface port firewall_rule - object\n)\n\n(:predicates\n  (interface_exists ?i - interface)\n  (interface_up ?i - interface)\n  (port_allowed ?p - port)\n  (port_open ?p - port)\n  (firewall_rule_exists ?r - firewall_rule)\n  (traffic_blocked ?r - firewall_rule)\n)\n\n(:action configure_interface\n  :parameters (?i - interface)\n  :precondition (and (interface_exists ?i))\n  :effect (and (interface_up ?i))\n)\n\n(:action open_port\n  :parameters (?p - port)\n  :precondition (and (port_allowed ?p))\n  :effect (and (port_open ?p))\n)\n\n(:action create_firewall_rule\n  :parameters (?r - firewall_rule)\n  :precondition (and (not (firewall_rule_exists ?r)))\n  :effect (and (firewall_rule_exists ?r))\n)\n\n(:action block_traffic\n  :parameters (?r - firewall_rule)\n  :precondition (and (firewall_rule_exists ?r))\n  :effect (and (traffic_blocked ?r))\n)\n```",
     "error": null,
-    "generation_time": 18.92524743080139
+    "generation_time": 7.6468634605407715
+  },
+  {
+    "worker_name": "process_management_agent",
+    "group_name": "process_management",
+    "types": [
+      {
+        "name": "process",
+        "parent": "object",
+        "source": "process_management_agent"
+      }
+    ],
+    "predicates": [
+      {
+        "name": "running",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "stopped",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "has_priority",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "n",
+            "object"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "is_niced",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "source": "process_management_agent"
+      },
+      {
+        "name": "is_nohungup",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "source": "process_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "start_process",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "stop_process",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "set_priority",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ],
+          [
+            "n",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "apply_nice",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "apply_nohangup",
+        "parameters": [
+          [
+            "p",
+            "process"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(:types\n  process - object\n)\n\n(:predicates\n  (running ?p - process)\n  (stopped ?p - process)\n  (has_priority ?p - process ?n - object)\n  (is_niced ?p - process)\n  (is_nohungup ?p - process)\n)\n\n(:action start_process\n  :parameters (?p - process)\n  :precondition (not (running ?p))\n  :effect (running ?p)\n)\n\n(:action stop_process\n  :parameters (?p - process)\n  :precondition (running ?p)\n  :effect (stopped ?p)\n)\n\n(:action set_priority\n  :parameters (?p - process ?n - object)\n  :precondition (running ?p)\n  :effect (has_priority ?p ?n)\n)\n\n(:action apply_nice\n  :parameters (?p - process)\n  :precondition (running ?p)\n  :effect (is_niced ?p)\n)\n\n(:action apply_nohangup\n  :parameters (?p - process)\n  :precondition (running ?p)\n  :effect (is_nohungup ?p)\n)\n```",
+    "error": null,
+    "generation_time": 7.605994939804077
+  },
+  {
+    "worker_name": "service_management_agent",
+    "group_name": "service_management",
+    "types": [
+      {
+        "name": "service",
+        "parent": "object",
+        "source": "service_management_agent"
+      },
+      {
+        "name": "configuration_file",
+        "parent": "object",
+        "source": "service_management_agent"
+      }
+    ],
+    "predicates": [
+      {
+        "name": "service_enabled",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "service_running",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "config_applied",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "configures",
+        "parameters": [
+          [
+            "f",
+            "configuration_file"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "package_installed",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "package_configured",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "package_enabled",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "package_outdated",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "package_reverted",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_exists",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_readable",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_writable",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_executable",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_owned_by",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ],
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_critical",
+        "parameters": [
+          [
+            "f",
+            "filesystem_object"
+          ]
+        ],
+        "source": "service_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "enable_service",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)"
+        ],
+        "effects": [
+          "(service_enabled ?s)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "disable_service",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)"
+        ],
+        "effects": [
+          "(not (service_enabled ?s))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "start_service",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)"
+        ],
+        "effects": [
+          "(service_running ?s)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "stop_service",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)"
+        ],
+        "effects": [
+          "(not (service_running ?s))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "apply_configuration",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ],
+          [
+            "f",
+            "configuration_file"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(configures ?f ?s)"
+        ],
+        "effects": [
+          "(config_applied ?s)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "install_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(not (package_installed ?p))"
+        ],
+        "effects": [
+          "(package_installed ?p)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "configure_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(package_installed ?p)"
+        ],
+        "effects": [
+          "(package_configured ?p)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "enable_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(package_installed ?p)"
+        ],
+        "effects": [
+          "(package_enabled ?p)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "revert_package",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(package_installed ?p)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(:types\n  service configuration_file - object\n)\n\n(:predicates\n  (service_enabled ?s - service)\n  (service_running ?s - service)\n  (config_applied ?s - service)\n  (configures ?f - configuration_file ?s - service)\n  (package_installed ?p - package)\n  (package_configured ?p - package)\n  (package_enabled ?p - package)\n  (package_outdated ?p - package)\n  (package_reverted ?p - package)\n  (file_exists ?f - filesystem_object)\n  (file_readable ?f - filesystem_object)\n  (file_writable ?f - filesystem_object)\n  (file_executable ?f - filesystem_object)\n  (file_owned_by ?f - filesystem_object ?u - user)\n  (file_critical ?f - filesystem_object)\n)\n\n(:action enable_service\n  :parameters (?s - service)\n  :precondition (and (service_exists ?s))\n  :effect (and (service_enabled ?s))\n)\n\n(:action disable_service\n  :parameters (?s - service)\n  :precondition (and (service_exists ?s))\n  :effect (and (not (service_enabled ?s)))\n)\n\n(:action start_service\n  :parameters (?s - service)\n  :precondition (and (service_exists ?s))\n  :effect (and (service_running ?s))\n)\n\n(:action stop_service\n  :parameters (?s - service)\n  :precondition (and (service_exists ?s))\n  :effect (and (not (service_running ?s)))\n)\n\n(:action apply_configuration\n  :parameters (?s - service ?f - configuration_file)\n  :precondition (and (service_exists ?s) (configures ?f ?s))\n  :effect (and (config_applied ?s))\n)\n\n(:action install_package\n  :parameters (?p - package)\n  :precondition (and (not (package_installed ?p)))\n  :effect (and (package_installed ?p))\n)\n\n(:action configure_package\n  :parameters (?p - package)\n  :precondition (and (package_installed ?p))\n  :effect (and (package_configured ?p))\n)\n\n(:action enable_package\n  :parameters (?p - package)\n  :precondition (and (package_installed ?p))\n  :effect (and (package_enabled ?p))\n)\n\n(:action revert_package\n  :parameters (?p - package)\n  :precondition (and (package_installed ?p))\n  :effect (and (package_reverted ?p))\n)\n```",
+    "error": null,
+    "generation_time": 18.732601165771484
   },
   {
     "worker_name": "privilege_escalation_agent",
     "group_name": "privilege_escalation",
-    "types": [],
+    "types": [
+      {
+        "name": "user",
+        "parent": "object",
+        "source": "privilege_escalation_agent"
+      }
+    ],
     "predicates": [
       {
-        "name": "has_user_privilege",
+        "name": "can_escalate",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "privilege_escalation_agent"
+      },
+      {
+        "name": "is_sudoer",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "privilege_escalation_agent"
+      },
+      {
+        "name": "has_sudo_access",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "source": "privilege_escalation_agent"
+      },
+      {
+        "name": "sudo_command_executed",
         "parameters": [
           [
             "u",
             "user"
           ],
           [
-            "p",
-            "object"
-          ]
-        ],
-        "source": "privilege_escalation_agent"
-      },
-      {
-        "name": "sudo_command_exists",
-        "parameters": [
-          [
-            "sc",
-            "object"
-          ]
-        ],
-        "source": "privilege_escalation_agent"
-      },
-      {
-        "name": "sudo_command_executable",
-        "parameters": [
-          [
-            "sc",
-            "object"
-          ]
-        ],
-        "source": "privilege_escalation_agent"
-      },
-      {
-        "name": "sudo_command_readable",
-        "parameters": [
-          [
-            "sc",
-            "object"
-          ]
-        ],
-        "source": "privilege_escalation_agent"
-      },
-      {
-        "name": "sudo_command_writable",
-        "parameters": [
-          [
-            "sc",
+            "cmd",
             "object"
           ]
         ],
@@ -593,6 +1092,44 @@
       }
     ],
     "actions": [
+      {
+        "name": "grant_sudo_access",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "preconditions": [
+          "(user_exists ?u)"
+        ],
+        "effects": [
+          "(is_sudoer ?u)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "privilege_escalation_agent"
+      },
+      {
+        "name": "revoke_sudo_access",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ]
+        ],
+        "preconditions": [
+          "(is_sudoer ?u)"
+        ],
+        "effects": [
+          "(not (is_sudoer ?u))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "privilege_escalation_agent"
+      },
       {
         "name": "execute_sudo_command",
         "parameters": [
@@ -601,78 +1138,42 @@
             "user"
           ],
           [
-            "sc",
+            "cmd",
             "object"
           ]
         ],
         "preconditions": [
-          "(user_exists ?u)",
-          "(sudo_command_exists ?sc)",
-          "(file_readable ?sc)",
+          "(is_sudoer ?u)",
           "(can_escalate ?u)"
         ],
         "effects": [
-          "(executed_as_root )"
+          "(sudo_command_executed ?u ?cmd)"
         ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "privilege_escalation_agent"
-      },
-      {
-        "name": "revoke_user_privilege",
-        "parameters": [
-          [
-            "u",
-            "user"
-          ],
-          [
-            "p",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(user_exists ?u)",
-          "(user_has_privilege ?u ?p)"
-        ],
-        "effects": [
-          "(not (has_user_privilege ?u ?p))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "privilege_escalation_agent"
-      },
-      {
-        "name": "grant_user_privilege",
-        "parameters": [
-          [
-            "u",
-            "user"
-          ],
-          [
-            "p",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(user_exists ?u)"
-        ],
-        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
         "source_worker": "privilege_escalation_agent"
       }
     ],
-    "raw_pddl": " :(types\n  user_privilege - object\n  sudo_command - string\n)\n\n(:predicates\n  (has_user_privilege ?u - user ?p - object)\n  (sudo_command_exists ?sc - object)\n  (sudo_command_executable ?sc - object)\n  (sudo_command_readable ?sc - object)\n  (sudo_command_writable ?sc - object)\n)\n\n(:action execute_sudo_command\n  :parameters (?u - user ?sc - object)\n  :precondition (and (user_exists ?u) (sudo_command_exists ?sc) (file_readable ?sc) (can_escalate ?u))\n  :effect (and (executed_as_root )) (has_user_privilege ?u 'executed_sudo_command'))\n)\n\n(:action revoke_user_privilege\n  :parameters (?u - user ?p - object)\n  :precondition (and (user_exists ?u) (user_has_privilege ?u ?p))\n  :effect (and (not (has_user_privilege ?u ?p)))\n)\n\n(:action grant_user_privilege\n  :parameters (?u - user ?p - object)\n  :precondition (and (user_exists ?u))\n  :effect (and (has_user_privilege ?u ?p))\n",
+    "raw_pddl": "(:types\n  user - object\n)\n\n(:predicates\n  (can_escalate ?u - user)\n  (is_sudoer ?u - user)\n  (has_sudo_access ?u - user)\n  (sudo_command_executed ?u - user ?cmd - object)\n)\n\n(:action grant_sudo_access\n  :parameters (?u - user)\n  :precondition (and (user_exists ?u))\n  :effect (and (is_sudoer ?u))\n)\n\n(:action revoke_sudo_access\n  :parameters (?u - user)\n  :precondition (and (is_sudoer ?u))\n  :effect (and (not (is_sudoer ?u)))\n)\n\n(:action execute_sudo_command\n  :parameters (?u - user ?cmd - object)\n  :precondition (and (is_sudoer ?u) (can_escalate ?u))\n  :effect (and (sudo_command_executed ?u ?cmd))\n)",
     "error": null,
-    "generation_time": 11.682029962539673
+    "generation_time": 6.150242328643799
   },
   {
     "worker_name": "file_management_agent",
     "group_name": "file_management",
-    "types": [],
+    "types": [
+      {
+        "name": "file",
+        "parent": "object",
+        "source": "file_management_agent"
+      },
+      {
+        "name": "directory",
+        "parent": "object",
+        "source": "file_management_agent"
+      }
+    ],
     "predicates": [
       {
         "name": "file_exists",
@@ -709,17 +1210,7 @@
         "source": "file_management_agent"
       },
       {
-        "name": "file_is_directory",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "directory_is_empty",
+        "name": "directory_empty",
         "parameters": [
           [
             "d",
@@ -729,37 +1220,21 @@
         "source": "file_management_agent"
       },
       {
-        "name": "file_is_readable",
+        "name": "file_size",
         "parameters": [
           [
             "f",
             "file"
+          ],
+          [
+            "size",
+            "object"
           ]
         ],
         "source": "file_management_agent"
       },
       {
-        "name": "file_is_writable",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_is_executable",
-        "parameters": [
-          [
-            "f",
-            "file"
-          ]
-        ],
-        "source": "file_management_agent"
-      },
-      {
-        "name": "file_is_owned_by",
+        "name": "file_owner",
         "parameters": [
           [
             "f",
@@ -773,7 +1248,7 @@
         "source": "file_management_agent"
       },
       {
-        "name": "file_is_group_owned_by",
+        "name": "file_group",
         "parameters": [
           [
             "f",
@@ -785,62 +1260,62 @@
           ]
         ],
         "source": "file_management_agent"
+      },
+      {
+        "name": "file_permissions",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "perm",
+            "object"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file_symlink_target",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "target",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
       }
     ],
     "actions": [
       {
-        "name": "copy_file",
+        "name": "create_file",
         "parameters": [
           [
-            "src_file",
-            "file"
-          ],
-          [
-            "dest_file",
+            "f",
             "file"
           ]
         ],
-        "preconditions": [
-          "(file_exists ?src_file)",
-          "(directory_exists (parent ?dest_file))"
-        ],
-        "effects": [
-          "(not (file_exists ?dest_file))",
-          "(file_exists ?dest_file)",
-          "(file_in_directory ?dest_file ?src_file)",
-          "(not (file_is_same_as ?src_file ?dest_file))"
-        ],
+        "preconditions": [],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
         "source_worker": "file_management_agent"
       },
       {
-        "name": "move_file",
+        "name": "delete_file",
         "parameters": [
           [
-            "src_file",
-            "file"
-          ],
-          [
-            "dest_dir",
-            "directory"
-          ],
-          [
-            "dest_file",
+            "f",
             "file"
           ]
         ],
-        "preconditions": [
-          "(file_exists ?src_file)",
-          "(directory_exists ?dest_dir)"
-        ],
-        "effects": [
-          "(not (file_exists ?src_file))",
-          "(file_exists ?dest_file)",
-          "(file_in_directory ?dest_dir ?src_file)",
-          "(not (file_is_same_as ?src_file ?dest_file))"
-        ],
+        "preconditions": [],
+        "effects": [],
         "command_template": "",
         "requires_root": false,
         "source_utility": "",
@@ -850,23 +1325,21 @@
         "name": "rename_file",
         "parameters": [
           [
-            "src_file",
+            "old_f",
             "file"
           ],
           [
-            "new_name",
-            "object"
+            "new_f",
+            "file"
           ]
         ],
         "preconditions": [
-          "(file_exists ?src_file)",
-          "(not (file_exists (rename ?src_file ?new_name)))"
+          "(file_exists ?old_f)",
+          "(not (file_exists ?new_f))"
         ],
         "effects": [
-          "(not (file_exists ?src_file))",
-          "(file_exists (rename ?src_file ?new_name))",
-          "(file_in_directory (parent (rename ?src_file ?new_name)) ?src_file)",
-          "(not (file_is_same_as ?src_file (rename ?src_file ?new_name)))"
+          "(not (file_exists ?old_f))",
+          "(file_exists ?new_f)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -877,7 +1350,7 @@
         "name": "create_directory",
         "parameters": [
           [
-            "dir",
+            "d",
             "directory"
           ]
         ],
@@ -892,18 +1365,40 @@
         "name": "delete_directory",
         "parameters": [
           [
-            "dir",
+            "d",
+            "directory"
+          ]
+        ],
+        "preconditions": [
+          "(directory_exists ?d)",
+          "(directory_empty ?d)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "rename_directory",
+        "parameters": [
+          [
+            "old_d",
             "directory"
           ],
           [
-            "file",
-            "file"
+            "new_d",
+            "directory"
           ]
         ],
-        "preconditions": [],
+        "preconditions": [
+          "(directory_exists ?old_d)",
+          "(not (directory_exists ?new_d))",
+          "(directory_empty ?old_d)"
+        ],
         "effects": [
-          "(not (directory_exists ?dir))",
-          "(forall (?file - file) (implies (file_in_directory ?dir ?file) (not (file_exists ?file))))"
+          "(not (directory_exists ?old_d))",
+          "(directory_exists ?new_d)"
         ],
         "command_template": "",
         "requires_root": false,
@@ -911,44 +1406,21 @@
         "source_worker": "file_management_agent"
       },
       {
-        "name": "delete_file",
+        "name": "add_file_to_directory",
         "parameters": [
           [
-            "file",
+            "f",
             "file"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "change_permissions_file",
-        "parameters": [
+          ],
           [
-            "file",
-            "file"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "change_permissions_directory",
-        "parameters": [
-          [
-            "dir",
+            "d",
             "directory"
           ]
         ],
-        "preconditions": [],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(not (file_in_directory ?f ?d))"
+        ],
         "effects": [],
         "command_template": "",
         "requires_root": false,
@@ -956,37 +1428,21 @@
         "source_worker": "file_management_agent"
       },
       {
-        "name": "change_owner_file",
+        "name": "remove_file_from_directory",
         "parameters": [
           [
-            "file",
+            "f",
             "file"
           ],
           [
-            "new_owner",
-            "user"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "change_owner_directory",
-        "parameters": [
-          [
-            "dir",
+            "d",
             "directory"
-          ],
-          [
-            "new_owner",
-            "user"
           ]
         ],
-        "preconditions": [],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(file_in_directory ?f ?d)"
+        ],
         "effects": [],
         "command_template": "",
         "requires_root": false,
@@ -994,371 +1450,112 @@
         "source_worker": "file_management_agent"
       },
       {
-        "name": "change_group_file",
+        "name": "set_file_owner",
         "parameters": [
           [
-            "file",
+            "f",
             "file"
-          ],
-          [
-            "new_group",
-            "group"
-          ]
-        ],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      },
-      {
-        "name": "change_group_directory",
-        "parameters": [],
-        "preconditions": [],
-        "effects": [],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "file_management_agent"
-      }
-    ],
-    "raw_pddl": " :types\n  file - object\n  directory - object\n\n(:predicates)\n(file_exists ?f - file)\n(directory_exists ?d - directory)\n(file_in_directory ?f - file ?d - directory)\n(file_is_directory ?f - file)\n(directory_is_empty ?d - directory)\n(file_is_readable ?f - file)\n(file_is_writable ?f - file)\n(file_is_executable ?f - file)\n(file_is_owned_by ?f - file ?u - user)\n(file_is_group_owned_by ?f - file ?g - group)\n(file_has_permissions ?f - file (read write execute))\n(directory_has_permissions ?d - directory (read write execute))\n\n(:action copy_file\n  :parameters (?src_file - file ?dest_file - file)\n  :precondition (and (file_exists ?src_file) (directory_exists (parent ?dest_file)))\n  :effect (and (not (file_exists ?dest_file)) (file_exists ?dest_file) (file_in_directory ?dest_file ?src_file) (not (file_is_same_as ?src_file ?dest_file))))\n\n(:action move_file\n    :parameters (?src_file - file ?dest_dir - directory ?dest_file - file)\n  :precondition (and (file_exists ?src_file) (directory_exists ?dest_dir))\n  :effect (and (not (file_exists ?src_file)) (file_exists ?dest_file) (file_in_directory ?dest_dir ?src_file) (not (file_is_same_as ?src_file ?dest_file))))\n\n(:action rename_file\n  :parameters (?src_file - file ?new_name - object)\n  :precondition (and (file_exists ?src_file) (not (file_exists (rename ?src_file ?new_name))))\n  :effect (and (not (file_exists ?src_file)) (file_exists (rename ?src_file ?new_name)) (file_in_directory (parent (rename ?src_file ?new_name)) ?src_file) (not (file_is_same_as ?src_file (rename ?src_file ?new_name)))))\n\n(:action create_directory\n  :parameters (?dir - directory)\n  :precondition (not (directory_exists ?dir)))\n  :effect (directory_exists ?dir))\n\n(:action delete_directory\n    :parameters (?dir - directory ?file - file)\n  :precondition (directory_exists ?dir)\n  :effect (and (not (directory_exists ?dir)) (forall (?file - file) (implies (file_in_directory ?dir ?file) (not (file_exists ?file))))))\n\n(:action delete_file\n  :parameters (?file - file)\n  :precondition (file_exists ?file)\n  :effect (not (file_exists ?file)))\n\n(:action change_permissions_file\n  :parameters (?file - file ?permissions - (read write execute))\n  :precondition (file_exists ?file))\n  :effect (file_has_permissions ?file ?permissions))\n\n(:action change_permissions_directory\n  :parameters (?dir - directory ?permissions - (read write execute))\n  :precondition (directory_exists ?dir))\n  :effect (directory_has_permissions ?dir ?permissions))\n\n(:action change_owner_file\n  :parameters (?file - file ?new_owner - user))\n  :precondition (file_exists ?file))\n  :effect (file_is_owned_by ?file ?new_owner))\n\n(:action change_owner_directory\n  :parameters (?dir - directory ?new_owner - user))\n  :precondition (directory_exists ?dir))\n  :effect (directory_is_owned_by ?dir ?new_owner))\n\n(:action change_group_file\n  :parameters (?file - file ?new_group - group)\n  :precondition (file_exists ?file\n  :effect (file_is_group_owned_by ?file ?new_group\n\n(:action change_group_directory\n  :parameters (?dir - directory ?new_group - group\n  :precondition (directory_exists ?dir\n  :effect (directory_is_group_owned_by ?dir ?new_group",
-    "error": null,
-    "generation_time": 33.112648725509644
-  },
-  {
-    "worker_name": "process_management_agent",
-    "group_name": "process_management",
-    "types": [],
-    "predicates": [
-      {
-        "name": "process_exists",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_running",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_terminated",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_paused",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_niceness",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "n",
-            "object"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_priority",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "p",
-            "object"
-          ]
-        ],
-        "source": "process_management_agent"
-      },
-      {
-        "name": "process_owned_by",
-        "parameters": [
-          [
-            "p",
-            "process"
           ],
           [
             "u",
             "user"
           ]
         ],
-        "source": "process_management_agent"
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
       },
       {
-        "name": "process_belongs_to_group",
+        "name": "set_file_group",
         "parameters": [
           [
-            "p",
-            "process"
+            "f",
+            "file"
           ],
           [
             "g",
             "group"
           ]
         ],
-        "source": "process_management_agent"
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
       },
       {
-        "name": "process_has_env_preservation",
+        "name": "set_file_permissions",
         "parameters": [
           [
-            "p",
-            "process"
+            "f",
+            "file"
+          ],
+          [
+            "perm",
+            "object"
           ]
         ],
-        "source": "process_management_agent"
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "create_symlink",
+        "parameters": [
+          [
+            "symlink",
+            "file"
+          ],
+          [
+            "target",
+            "file"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?target)",
+          "(not (file_exists ?symlink))"
+        ],
+        "effects": [
+          "(file_exists ?symlink)",
+          "(file_symlink_target ?symlink ?target)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "delete_symlink",
+        "parameters": [
+          [
+            "symlink",
+            "file"
+          ],
+          [
+            "target",
+            "object"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?symlink)",
+          "(file_symlink_target ?symlink ?target)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
       }
     ],
-    "actions": [
-      {
-        "name": "kill_process",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)"
-        ],
-        "effects": [
-          "(not (process_running ?p))",
-          "(not (process_paused ?p))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "start_process",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)",
-          "(not (process_running ?p))"
-        ],
-        "effects": [
-          "(process_running ?p)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "pause_process",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "preconditions": [
-          "(process_running ?p)"
-        ],
-        "effects": [
-          "(process_paused ?p)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "unpause_process",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "preconditions": [
-          "(process_paused ?p)"
-        ],
-        "effects": [
-          "(not (process_paused ?p))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "change_niceness",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "n",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)",
-          "(integer ?n)"
-        ],
-        "effects": [
-          "(process_niceness ?p ?n)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "change_priority",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "p",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)",
-          "(integer ?p)"
-        ],
-        "effects": [
-          "(process_priority ?p ?p)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "assign_to_group",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "g",
-            "group"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)",
-          "(group_exists ?g)"
-        ],
-        "effects": [
-          "(process_belongs_to_group ?p ?g)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "remove_from_group",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "g",
-            "group"
-          ]
-        ],
-        "preconditions": [
-          "(process_belongs_to_group ?p ?g)"
-        ],
-        "effects": [
-          "(not (process_belongs_to_group ?p ?g))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "set_env_preservation",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ],
-          [
-            "b",
-            "object"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)"
-        ],
-        "effects": [
-          "(requires_env_preservation ?p ?b)"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      },
-      {
-        "name": "unset_env_preservation",
-        "parameters": [
-          [
-            "p",
-            "process"
-          ]
-        ],
-        "preconditions": [
-          "(process_exists ?p)",
-          "(requires_env_preservation ?p true)"
-        ],
-        "effects": [
-          "(not (requires_env_preservation ?p true))"
-        ],
-        "command_template": "",
-        "requires_root": false,
-        "source_utility": "",
-        "source_worker": "process_management_agent"
-      }
-    ],
-    "raw_pddl": " :types\n  process - object\n\n(:predicates\n  (process_exists ?p - process)\n  (process_running ?p - process)\n  (process_terminated ?p - process)\n  (process_paused ?p - process)\n  (process_niceness ?p - process ?n - object)\n  (process_priority ?p - process ?p - object)\n  (process_owned_by ?p - process ?u - user)\n  (process_belongs_to_group ?p - process ?g - group)\n  (process_has_env_preservation ?p - process)\n)\n\n(:action kill_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p))\n  :effect (and (not (process_running ?p)) (not (process_paused ?p))))\n\n(:action start_process\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p) (not (process_running ?p)))\n  :effect (and (process_running ?p)))\n\n(:action pause_process\n  :parameters (?p - process)\n  :precondition (and (process_running ?p))\n  :effect (and (process_paused ?p)))\n\n(:action unpause_process\n  :parameters (?p - process)\n  :precondition (and (process_paused ?p))\n  :effect (and (not (process_paused ?p))))\n\n(:action change_niceness\n  :parameters (?p - process ?n - object)\n  :precondition (and (process_exists ?p) (integer ?n))\n  :effect (and (process_niceness ?p ?n)))\n\n(:action change_priority\n  :parameters (?p - process ?p - object)\n  :precondition (and (process_exists ?p) (integer ?p))\n  :effect (and (process_priority ?p ?p)))\n\n(:action assign_to_group\n  :parameters (?p - process ?g - group)\n  :precondition (and (process_exists ?p) (group_exists ?g))\n  :effect (and (process_belongs_to_group ?p ?g)))\n\n(:action remove_from_group\n  :parameters (?p - process ?g - group)\n  :precondition (and (process_belongs_to_group ?p ?g))\n  :effect (and (not (process_belongs_to_group ?p ?g))))\n\n(:action set_env_preservation\n  :parameters (?p - process ?b - object)\n  :precondition (and (process_exists ?p))\n  :effect (and (requires_env_preservation ?p ?b)))\n\n(:action unset_env_preservation\n  :parameters (?p - process)\n  :precondition (and (process_exists ?p) (requires_env_preservation ?p true))\n  :effect (and (not (requires_env_preservation ?p true))))",
+    "raw_pddl": "(:types\n  file directory - object\n)\n\n(:predicates\n  (file_exists ?f - file)\n  (directory_exists ?d - directory)\n  (file_in_directory ?f - file ?d - directory)\n  (directory_empty ?d - directory)\n  (file_size ?f - file ?size - object)\n  (file_owner ?f - file ?u - user)\n  (file_group ?f - file ?g - group)\n  (file_permissions ?f - file ?perm - object)\n  (file_symlink_target ?f - file ?target - file)\n)\n\n(:action create_file\n  :parameters (?f - file)\n  :precondition (not (file_exists ?f))\n  :effect (file_exists ?f)\n)\n\n(:action delete_file\n  :parameters (?f - file)\n  :precondition (file_exists ?f)\n  :effect (not (file_exists ?f))\n)\n\n(:action rename_file\n  :parameters (?old_f - file ?new_f - file)\n  :precondition (and (file_exists ?old_f) (not (file_exists ?new_f)))\n  :effect (and (not (file_exists ?old_f)) (file_exists ?new_f))\n)\n\n(:action create_directory\n  :parameters (?d - directory)\n  :precondition (not (directory_exists ?d))\n  :effect (directory_exists ?d)\n)\n\n(:action delete_directory\n  :parameters (?d - directory)\n  :precondition (and (directory_exists ?d) (directory_empty ?d))\n  :effect (not (directory_exists ?d))\n)\n\n(:action rename_directory\n  :parameters (?old_d - directory ?new_d - directory)\n  :precondition (and (directory_exists ?old_d) (not (directory_exists ?new_d)) (directory_empty ?old_d))\n  :effect (and (not (directory_exists ?old_d)) (directory_exists ?new_d))\n)\n\n(:action add_file_to_directory\n  :parameters (?f - file ?d - directory)\n  :precondition (and (file_exists ?f) (not (file_in_directory ?f ?d)))\n  :effect (file_in_directory ?f ?d)\n)\n\n(:action remove_file_from_directory\n  :parameters (?f - file ?d - directory)\n  :precondition (and (file_exists ?f) (file_in_directory ?f ?d))\n  :effect (not (file_in_directory ?f ?d))\n)\n\n(:action set_file_owner\n  :parameters (?f - file ?u - user)\n  :precondition (file_exists ?f)\n  :effect (file_owner ?f ?u)\n)\n\n(:action set_file_group\n  :parameters (?f - file ?g - group)\n  :precondition (file_exists ?f)\n  :effect (file_group ?f ?g)\n)\n\n(:action set_file_permissions\n  :parameters (?f - file ?perm - object)\n  :precondition (file_exists ?f)\n  :effect (file_permissions ?f ?perm)\n)\n\n(:action create_symlink\n  :parameters (?symlink - file ?target - file)\n  :precondition (and (file_exists ?target) (not (file_exists ?symlink)))\n  :effect (and (file_exists ?symlink) (file_symlink_target ?symlink ?target))\n)\n\n(:action delete_symlink\n    :parameters (?symlink - file ?target - object)\n  :precondition (and (file_exists ?symlink) (file_symlink_target ?symlink ?target))\n  :effect (not (file_exists ?symlink))\n)",
     "error": null,
-    "generation_time": 22.22531270980835
+    "generation_time": 24.9750759601593
   }
 ]

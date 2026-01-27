@@ -1,7 +1,9 @@
-Extracted predicate 'user_exists' from action body
-Extracted predicate 'file_readable' from action body
-Extracted predicate 'can_escalate' from action body
-Extracted predicate 'user_has_privilege' from action body
-Extracted predicate 'integer' from action body
-Extracted predicate 'group_exists' from action body
-Extracted predicate 'requires_env_preservation' from action body
+Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Unified predicate alias 'installed' → 'package_installed'
+Extracted predicate 'service_exists' from action body
+Merged 2 definitions of action 'install_package'
+Merged 2 definitions of action 'revert_package'
+Merged 2 definitions of action 'configure_package'
+Merged 2 definitions of action 'enable_package'

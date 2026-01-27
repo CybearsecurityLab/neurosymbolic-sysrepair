@@ -1,64 +1,43 @@
- :types
+```pddl
+(:types
   process - object
-
-(:predicates
-  (process_exists ?p - process)
-  (process_running ?p - process)
-  (process_terminated ?p - process)
-  (process_paused ?p - process)
-  (process_niceness ?p - process ?n - integer)
-  (process_priority ?p - process ?p - integer)
-  (process_owned_by ?p - process ?u - user)
-  (process_belongs_to_group ?p - process ?g - group)
-  (process_has_env_preservation ?p - process)
 )
 
-(:action kill_process
-  :parameters (?p - process)
-  :precondition (and (process_exists ?p))
-  :effect (and (not (process_running ?p)) (not (process_paused ?p))))
+(:predicates
+  (running ?p - process)
+  (stopped ?p - process)
+  (has_priority ?p - process ?n - number)
+  (is_niced ?p - process)
+  (is_nohungup ?p - process)
+)
 
 (:action start_process
   :parameters (?p - process)
-  :precondition (and (process_exists ?p) (not (process_running ?p)))
-  :effect (and (process_running ?p)))
+  :precondition (not (running ?p))
+  :effect (running ?p)
+)
 
-(:action pause_process
+(:action stop_process
   :parameters (?p - process)
-  :precondition (and (process_running ?p))
-  :effect (and (process_paused ?p)))
+  :precondition (running ?p)
+  :effect (stopped ?p)
+)
 
-(:action unpause_process
+(:action set_priority
+  :parameters (?p - process ?n - number)
+  :precondition (running ?p)
+  :effect (has_priority ?p ?n)
+)
+
+(:action apply_nice
   :parameters (?p - process)
-  :precondition (and (process_paused ?p))
-  :effect (and (not (process_paused ?p))))
+  :precondition (running ?p)
+  :effect (is_niced ?p)
+)
 
-(:action change_niceness
-  :parameters (?p - process ?n - integer)
-  :precondition (and (process_exists ?p) (integer ?n))
-  :effect (and (process_niceness ?p ?n)))
-
-(:action change_priority
-  :parameters (?p - process ?p - integer)
-  :precondition (and (process_exists ?p) (integer ?p))
-  :effect (and (process_priority ?p ?p)))
-
-(:action assign_to_group
-  :parameters (?p - process ?g - group)
-  :precondition (and (process_exists ?p) (group_exists ?g))
-  :effect (and (process_belongs_to_group ?p ?g)))
-
-(:action remove_from_group
-  :parameters (?p - process ?g - group)
-  :precondition (and (process_belongs_to_group ?p ?g))
-  :effect (and (not (process_belongs_to_group ?p ?g))))
-
-(:action set_env_preservation
-  :parameters (?p - process ?b - boolean)
-  :precondition (and (process_exists ?p))
-  :effect (and (requires_env_preservation ?p ?b)))
-
-(:action unset_env_preservation
+(:action apply_nohangup
   :parameters (?p - process)
-  :precondition (and (process_exists ?p) (requires_env_preservation ?p true))
-  :effect (and (not (requires_env_preservation ?p true))))
+  :precondition (running ?p)
+  :effect (is_nohungup ?p)
+)
+```

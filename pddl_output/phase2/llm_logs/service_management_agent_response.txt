@@ -1,52 +1,77 @@
- :types
-  service-state - enum {enabled, disabled, failed, running}
-  configuration-file - object
+```pddl
+(:types
+  service configuration_file - object
+)
 
 (:predicates
-  (service-exists ?s - service)
-  (service-state ?s - service service-state)
-  (service-configured-file ?s - service configuration-file)
+  (service_enabled ?s - service)
+  (service_running ?s - service)
+  (config_applied ?s - service)
+  (configures ?f - configuration_file ?s - service)
+  (package_installed ?p - package)
+  (package_configured ?p - package)
+  (package_enabled ?p - package)
+  (package_outdated ?p - package)
+  (package_reverted ?p - package)
+  (file_exists ?f - filesystem_object)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_critical ?f - filesystem_object)
+)
+
+(:action enable_service
+  :parameters (?s - service)
+  :precondition (and (service_exists ?s))
+  :effect (and (service_enabled ?s))
+)
+
+(:action disable_service
+  :parameters (?s - service)
+  :precondition (and (service_exists ?s))
+  :effect (and (not (service_enabled ?s)))
 )
 
 (:action start_service
   :parameters (?s - service)
-  :precondition (and (service-exists ?s))
-  :effect (and (not (service-failed ?s)) (not (service-disabled ?s)) (service-running ?s)))
+  :precondition (and (service_exists ?s))
+  :effect (and (service_running ?s))
+)
 
 (:action stop_service
   :parameters (?s - service)
-  :precondition (and (service-exists ?s) (service-running ?s))
-  :effect (and (not (service-running ?s)) (not (service-failed ?s))))
+  :precondition (and (service_exists ?s))
+  :effect (and (not (service_running ?s)))
+)
 
-(:action enable_service
-  :parameters (?s - service)
-  :precondition (and (service-exists ?s))
-  :effect (and (not (service-disabled ?s)) (not (service-failed ?s))))
-
-(:action disable_service
-  :parameters (?s - service)
-  :precondition (and (service-exists ?s))
-  :effect (and (service-disabled ?s)))
-
-(:action reload_service
-  :parameters (?s - service)
-  :precondition (and (service-exists ?s) (service-running ?s))
-  :effect (and (not (service-failed ?s))))
-
-(:action check_service_status
-  :parameters (?s - service)
-  :effect (and (service-state ?s)))
-
-(:action configure_service_file
+(:action apply_configuration
   :parameters (?s - service ?f - configuration_file)
-  :precondition (and (service-exists ?s) (file_exists ?f))
-  :effect (and (service-configured-file ?f ?s)))
+  :precondition (and (service_exists ?s) (configures ?f ?s))
+  :effect (and (config_applied ?s))
+)
 
-(:action revert_service_configuration
-  :parameters (?s - service)
-  :precondition (and (service-exists ?s) (service-configured-file ?f ?s))
-  :effect (and (not (service-configured-file ?f ?s))))
+(:action install_package
+  :parameters (?p - package)
+  :precondition (and (not (package_installed ?p)))
+  :effect (and (package_installed ?p))
+)
 
-(:action check_service_configuration
-  :parameters (?s - service)
-  :effect (and (service-configured-file ?f ?s)))
+(:action configure_package
+  :parameters (?p - package)
+  :precondition (and (package_installed ?p))
+  :effect (and (package_configured ?p))
+)
+
+(:action enable_package
+  :parameters (?p - package)
+  :precondition (and (package_installed ?p))
+  :effect (and (package_enabled ?p))
+)
+
+(:action revert_package
+  :parameters (?p - package)
+  :precondition (and (package_installed ?p))
+  :effect (and (package_reverted ?p))
+)
+```

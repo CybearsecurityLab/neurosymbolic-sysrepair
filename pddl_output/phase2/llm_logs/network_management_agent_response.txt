@@ -1,49 +1,38 @@
- :types
-  interface - object
-  port - object
-  firewall_rule - object
+```pddl
+(:types
+  interface port firewall_rule - object
+)
 
 (:predicates
   (interface_exists ?i - interface)
-  (port_exists ?p - port)
+  (interface_up ?i - interface)
+  (port_allowed ?p - port)
+  (port_open ?p - port)
   (firewall_rule_exists ?r - firewall_rule)
-  (port_assigned_to_interface ?p - port ?i - interface)
-  (firewall_rule_applied_to_port ?r - firewall_rule ?p - port)
-  (traffic_allowed_on_port ?p - port)
+  (traffic_blocked ?r - firewall_rule)
 )
 
-(:action assign_port_to_interface
-  :parameters (?p - port ?i - interface)
-  :precondition (and (interface_exists ?i) (port_exists ?p) (not (port_assigned_to_interface ?p ?i)))
-  :effect (and (port_assigned_to_interface ?p ?i) (not (traffic_blocked ?r)) :for all ?r :where (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))
+(:action configure_interface
+  :parameters (?i - interface)
+  :precondition (and (interface_exists ?i))
+  :effect (and (interface_up ?i))
 )
 
-(:action apply_firewall_rule
-  :parameters (?r - firewall_rule ?p - port)
-  :precondition (and (firewall_rule_exists ?r) (port_exists ?p) (not (firewall_rule_applied_to_port ?r ?p)))
-  :effect (and (firewall_rule_applied_to_port ?r ?p) (traffic_allowed_on_port ?p))
-)
-
-(:action block_traffic_on_port
+(:action open_port
   :parameters (?p - port)
-  :precondition (port_exists ?p)
-  :effect (traffic_blocked (make_firewall_rule ?r) :for some ?r :where (firewall_rule_applied_to_port ?r ?p))
+  :precondition (and (port_allowed ?p))
+  :effect (and (port_open ?p))
 )
 
-(:action remove_firewall_rule_from_port
-  :parameters (?r - firewall_rule ?p - port)
-  :precondition (and (firewall_rule_exists ?r) (firewall_rule_applied_to_port ?r ?p))
-  :effect (not (firewall_rule_applied_to_port ?r ?p))
+(:action create_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (and (not (firewall_rule_exists ?r)))
+  :effect (and (firewall_rule_exists ?r))
 )
 
-(:action enable_interface
-  :parameters (?i - interface)
-  :precondition (interface_exists ?i)
-  :effect (interface_up ?i)
+(:action block_traffic
+  :parameters (?r - firewall_rule)
+  :precondition (and (firewall_rule_exists ?r))
+  :effect (and (traffic_blocked ?r))
 )
-
-(:action disable_interface
-  :parameters (?i - interface)
-  :precondition (interface_exists ?i)
-  :effect (not (interface_up ?i))
-)
+```
