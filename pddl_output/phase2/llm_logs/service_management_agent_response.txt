@@ -1,77 +1,82 @@
 ```pddl
-(:types
-  service configuration_file - object
+(define (problem service-management)
+  (:domain systemd)
+  (:objects
+    sshd - service
+    nginx - service
+    sshd-config - configuration_file
+    nginx-config - configuration_file
+  )
+  (:init
+    (service_exists sshd)
+    (service_exists nginx)
+    (file_exists sshd-config)
+    (file_exists nginx-config)
+    (configures sshd-config sshd)
+    (configures nginx-config nginx)
+    (service_enabled sshd)
+    (not (service_running sshd))
+    (not (service_enabled nginx))
+    (not (service_running nginx))
+  )
+  (:goal
+    (and
+      (service_running sshd)
+      (service_enabled nginx)
+      (config_applied nginx)
+    )
+  )
 )
+```
 
-(:predicates
-  (service_enabled ?s - service)
-  (service_running ?s - service)
-  (config_applied ?s - service)
-  (configures ?f - configuration_file ?s - service)
-  (package_installed ?p - package)
-  (package_configured ?p - package)
-  (package_enabled ?p - package)
-  (package_outdated ?p - package)
-  (package_reverted ?p - package)
-  (file_exists ?f - filesystem_object)
-  (file_readable ?f - filesystem_object)
-  (file_writable ?f - filesystem_object)
-  (file_executable ?f - filesystem_object)
-  (file_owned_by ?f - filesystem_object ?u - user)
-  (file_critical ?f - filesystem_object)
-)
-
-(:action enable_service
-  :parameters (?s - service)
-  :precondition (and (service_exists ?s))
-  :effect (and (service_enabled ?s))
-)
-
-(:action disable_service
-  :parameters (?s - service)
-  :precondition (and (service_exists ?s))
-  :effect (and (not (service_enabled ?s)))
-)
-
-(:action start_service
-  :parameters (?s - service)
-  :precondition (and (service_exists ?s))
-  :effect (and (service_running ?s))
-)
-
-(:action stop_service
-  :parameters (?s - service)
-  :precondition (and (service_exists ?s))
-  :effect (and (not (service_running ?s)))
-)
-
-(:action apply_configuration
-  :parameters (?s - service ?f - configuration_file)
-  :precondition (and (service_exists ?s) (configures ?f ?s))
-  :effect (and (config_applied ?s))
-)
-
-(:action install_package
-  :parameters (?p - package)
-  :precondition (and (not (package_installed ?p)))
-  :effect (and (package_installed ?p))
-)
-
-(:action configure_package
-  :parameters (?p - package)
-  :precondition (and (package_installed ?p))
-  :effect (and (package_configured ?p))
-)
-
-(:action enable_package
-  :parameters (?p - package)
-  :precondition (and (package_installed ?p))
-  :effect (and (package_enabled ?p))
-)
-
-(:action revert_package
-  :parameters (?p - package)
-  :precondition (and (package_installed ?p))
-  :effect (and (package_reverted ?p))
+```pddl
+(define (domain systemd)
+  (:requirements :strips :typing)
+  (:types
+    service configuration_file
+  )
+  (:predicates
+    (service_exists ?s - service)
+    (service_running ?s - service)
+    (service_enabled ?s - service)
+    (config_applied ?s - service)
+    (file_exists ?f - configuration_file)
+    (configures ?f - configuration_file ?s - service)
+  )
+  (:action start-service
+    :parameters (?s - service)
+    :precondition (and (service_exists ?s) (not (service_running ?s)))
+    :effect (service_running ?s)
+  )
+  (:action stop-service
+    :parameters (?s - service)
+    :precondition (and (service_exists ?s) (service_running ?s))
+    :effect (not (service_running ?s))
+  )
+  (:action restart-service
+    :parameters (?s - service)
+    :precondition (and (service_exists ?s) (service_running ?s))
+    :effect (and (not (service_running ?s)) (service_running ?s))
+  )
+  (:action enable-service
+    :parameters (?s - service)
+    :precondition (service_exists ?s)
+    :effect (service_enabled ?s)
+  )
+  (:action disable-service
+    :parameters (?s - service)
+    :precondition (and (service_exists ?s) (service_enabled ?s))
+    :effect (not (service_enabled ?s))
+  )
+  (:action apply-configuration
+    :parameters (?f - configuration_file ?s - service)
+    :precondition (and (file_exists ?f) (configures ?f ?s))
+    :effect (config_applied ?s)
+  )
+  (:action reload-service
+    :parameters (?s - service)
+    :precondition (and (service_exists ?s) (service_running ?s) (config_applied ?s))
+    :effect (and (not (config_applied ?s)) (config_applied ?s))
+  )
 )
 ```

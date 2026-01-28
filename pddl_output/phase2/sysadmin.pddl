@@ -32,456 +32,74 @@
 
   ;; Predicates
   (:predicates
-    (available ?p - package)
-    (can_escalate ?u - user)
     (config_applied ?s - service)
-    (configured ?p - package)
     (configures ?f - configuration_file ?s - service)
-    (directory_empty ?d - directory)
-    (directory_exists ?d - directory)
-    (enabled ?p - package)
-    (file_critical ?f - filesystem_object)
-    (file_executable ?f - filesystem_object)
-    (file_exists ?f - filesystem_object)
-    (file_group ?f - file ?g - group)
-    (file_in_directory ?f - file ?d - directory)
-    (file_owned_by ?f - filesystem_object ?u - user)
-    (file_owner ?f - file ?u - user)
-    (file_permissions ?f - file ?perm - object)
-    (file_readable ?f - filesystem_object)
-    (file_size ?f - file ?size - object)
-    (file_symlink_target ?f - file ?target - file)
-    (file_writable ?f - filesystem_object)
-    (firewall_rule_exists ?r - firewall_rule)
-    (group_exists ?g - group)
-    (has_priority ?p - process ?n - object)
-    (has_sudo_access ?u - user)
-    (interface_exists ?i - interface)
-    (interface_up ?i - interface)
-    (is_niced ?p - process)
-    (is_nohungup ?p - process)
-    (is_sudoer ?u - user)
-    (member_of ?u - user ?g - group)
-    (outdated ?p - package)
-    (package_configured ?p - package)
-    (package_enabled ?p - package)
-    (package_installed ?p - package)
-    (package_outdated ?p - package)
-    (package_reverted ?p - package)
-    (port_allowed ?p - port)
-    (port_open ?p - port)
-    (removed ?p - package)
-    (reverted ?p - package)
-    (running ?p - process)
+    (directory ?d - directory)
+    (file ?f - file)
+    (file_exists ?f - configuration_file)
+    (group ?g - group)
+    (link ?l - file ?t - file)
+    (mode ?m - object)
+    (owner ?o - object)
+    (package_installed ?p - object)
+    (package_outdated ?p - object)
     (service_enabled ?s - service)
-    (service_exists ?s - object)
+    (service_exists ?s - service)
     (service_running ?s - service)
-    (stopped ?p - process)
-    (sudo_command_executed ?u - user ?cmd - object)
-    (traffic_blocked ?r - firewall_rule)
-    (upgradable ?p - package)
-    (user_exists ?u - user)
     (network_available)
+    (can_escalate ?u - user)
   )
 
-  ;; Action: add_file_to_directory
-  (:action add_file_to_directory
-    :parameters (?f - file ?d - directory)
-    :precondition (and
-      (file_exists ?f)
-      (not (file_in_directory ?f ?d))
-    )
-    :effect (and)
-  )
-
-  ;; Action: apply_configuration
-  (:action apply_configuration
-    :parameters (?s - service ?f - configuration_file)
-    :precondition (and
-      (service_exists ?s)
-      (configures ?f ?s)
-    )
-    :effect (and
-      (config_applied ?s)
-    )
-  )
-
-  ;; Action: apply_nice
-  (:action apply_nice
-    :parameters (?p - process)
+  ;; Action: change
+  (:action change
+    :parameters (?g - group ?o - object ?x - object)
     :precondition (and)
-    :effect (and)
+    :effect (and
+      (owner ?x ?o)
+      (group ?x ?g)
+    )
   )
 
-  ;; Action: apply_nohangup
-  (:action apply_nohangup
-    :parameters (?p - process)
+  ;; Action: make
+  (:action make
+    :parameters (?d - directory ?m - object)
     :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: block_traffic
-  (:action block_traffic
-    :parameters (?r - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?r)
-    )
-    :effect (and)
-  )
-
-  ;; Action: configure_interface
-  (:action configure_interface
-    :parameters (?i - interface)
-    :precondition (and
-      (interface_exists ?i)
-    )
     :effect (and
-      (interface_up ?i)
+      (directory ?d)
+      (mode ?d ?m)
     )
   )
 
-  ;; Action: configure_package
-  (:action configure_package
-    :parameters (?p - package)
-    :precondition (and
-      (package_installed ?p)
-    )
-    :effect (and
-      (package_configured ?p)
-    )
-  )
-
-  ;; Action: create_directory
-  (:action create_directory
-    :parameters (?d - directory)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: create_file
-  (:action create_file
-    :parameters (?f - file)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: create_firewall_rule
-  (:action create_firewall_rule
-    :parameters (?r - firewall_rule)
-    :precondition (and
-      (not (firewall_rule_exists ?r))
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-    )
-  )
-
-  ;; Action: create_group
-  (:action create_group
-    :parameters (?g - group)
-    :precondition (and
-      (not (group_exists ?g))
-    )
-    :effect (and)
-  )
-
-  ;; Action: create_symlink
-  (:action create_symlink
-    :parameters (?symlink - file ?target - file)
-    :precondition (and
-      (file_exists ?target)
-      (not (file_exists ?symlink))
-    )
-    :effect (and
-      (file_exists ?symlink)
-      (file_symlink_target ?symlink ?target)
-    )
-  )
-
-  ;; Action: create_user
-  (:action create_user
-    :parameters (?u - user ?g - group)
-    :precondition (and
-      (not (user_exists ?u))
-    )
-    :effect (and
-      (user_exists ?u)
-      (member_of ?u ?g)
-    )
-  )
-
-  ;; Action: delete_directory
-  (:action delete_directory
-    :parameters (?d - directory)
-    :precondition (and
-      (directory_exists ?d)
-      (directory_empty ?d)
-    )
-    :effect (and)
-  )
-
-  ;; Action: delete_file
-  (:action delete_file
-    :parameters (?f - file)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: delete_group
-  (:action delete_group
-    :parameters (?g - group)
-    :precondition (and
-      (group_exists ?g)
-    )
-    :effect (and)
-  )
-
-  ;; Action: delete_symlink
-  (:action delete_symlink
-    :parameters (?symlink - file ?target - object)
-    :precondition (and
-      (file_exists ?symlink)
-      (file_symlink_target ?symlink ?target)
-    )
-    :effect (and)
-  )
-
-  ;; Action: delete_user
-  (:action delete_user
-    :parameters (?u - user)
-    :precondition (and
-      (user_exists ?u)
-    )
-    :effect (and)
-  )
-
-  ;; Action: disable_service
-  (:action disable_service
+  ;; Action: restart
+  (:action restart
     :parameters (?s - service)
     :precondition (and
       (service_exists ?s)
+      (service_running ?s)
     )
     :effect (and
-      (not (service_enabled ?s))
-    )
-  )
-
-  ;; Action: enable_package
-  (:action enable_package
-    :parameters (?p - package)
-    :precondition (and
-      (package_installed ?p)
-    )
-    :effect (and
-      (package_enabled ?p)
-    )
-  )
-
-  ;; Action: enable_service
-  (:action enable_service
-    :parameters (?s - service)
-    :precondition (and
-      (service_exists ?s)
-    )
-    :effect (and
-      (service_enabled ?s)
-    )
-  )
-
-  ;; Action: execute_sudo_command
-  (:action execute_sudo_command
-    :parameters (?u - user ?cmd - object)
-    :precondition (and
-      (is_sudoer ?u)
-      (can_escalate ?u)
-    )
-    :effect (and
-      (sudo_command_executed ?u ?cmd)
-    )
-  )
-
-  ;; Action: grant_sudo_access
-  (:action grant_sudo_access
-    :parameters (?u - user)
-    :precondition (and
-      (user_exists ?u)
-    )
-    :effect (and
-      (is_sudoer ?u)
-    )
-  )
-
-  ;; Action: install_package
-  (:action install_package
-    :parameters (?p - package ?r - repository)
-    :precondition (and
-      (not (package_installed ?p))
-      (available ?p)
-      (not (installed ?p))
-    )
-    :effect (and
-      (package_installed ?p)
-    )
-  )
-
-  ;; Action: modify_user
-  (:action modify_user
-    :parameters (?u - user ?g - group)
-    :precondition (and
-      (user_exists ?u)
-    )
-    :effect (and
-      (member_of ?u ?g)
-    )
-  )
-
-  ;; Action: open_port
-  (:action open_port
-    :parameters (?p - port)
-    :precondition (and
-      (port_allowed ?p)
-    )
-    :effect (and
-      (port_open ?p)
-    )
-  )
-
-  ;; Action: remove_file_from_directory
-  (:action remove_file_from_directory
-    :parameters (?f - file ?d - directory)
-    :precondition (and
-      (file_exists ?f)
-      (file_in_directory ?f ?d)
-    )
-    :effect (and)
-  )
-
-  ;; Action: remove_package
-  (:action remove_package
-    :parameters (?p - package)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: rename_directory
-  (:action rename_directory
-    :parameters (?old_d - directory ?new_d - directory)
-    :precondition (and
-      (directory_exists ?old_d)
-      (not (directory_exists ?new_d))
-      (directory_empty ?old_d)
-    )
-    :effect (and
-      (not (directory_exists ?old_d))
-      (directory_exists ?new_d)
-    )
-  )
-
-  ;; Action: rename_file
-  (:action rename_file
-    :parameters (?old_f - file ?new_f - file)
-    :precondition (and
-      (file_exists ?old_f)
-      (not (file_exists ?new_f))
-    )
-    :effect (and
-      (not (file_exists ?old_f))
-      (file_exists ?new_f)
-    )
-  )
-
-  ;; Action: revert_package
-  (:action revert_package
-    :parameters (?p - package)
-    :precondition (and
-      (package_installed ?p)
-    )
-    :effect (and)
-  )
-
-  ;; Action: revoke_sudo_access
-  (:action revoke_sudo_access
-    :parameters (?u - user)
-    :precondition (and
-      (is_sudoer ?u)
-    )
-    :effect (and
-      (not (is_sudoer ?u))
-    )
-  )
-
-  ;; Action: set_file_group
-  (:action set_file_group
-    :parameters (?f - file ?g - group)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: set_file_owner
-  (:action set_file_owner
-    :parameters (?f - file ?u - user)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: set_file_permissions
-  (:action set_file_permissions
-    :parameters (?f - file ?perm - object)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: set_priority
-  (:action set_priority
-    :parameters (?p - process ?n - object)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: start_process
-  (:action start_process
-    :parameters (?p - process)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: start_service
-  (:action start_service
-    :parameters (?s - service)
-    :precondition (and
-      (service_exists ?s)
-    )
-    :effect (and
+      (not (service_running ?s))
       (service_running ?s)
     )
   )
 
-  ;; Action: stop_process
-  (:action stop_process
-    :parameters (?p - process)
+  ;; Action: send
+  (:action send
+    :parameters (?p - package ?s - service)
     :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: stop_service
-  (:action stop_service
-    :parameters (?s - service)
-    :precondition (and
-      (service_exists ?s)
-    )
     :effect (and
-      (not (service_running ?s))
+      (not (process-running ?p))
     )
   )
 
-  ;; Action: update_package
-  (:action update_package
-    :parameters (?p - package)
-    :precondition (and
-      (installed ?p)
-      (upgradable ?p)
+  ;; Action: start
+  (:action start
+    :parameters (?cmd - directory ?p - package ?pr - package)
+    :precondition (and)
+    :effect (and
+      (process-running ?p)
+      (process-priority ?p ?pr)
     )
-    :effect (and)
   )
 
 )

@@ -1,28 +1,12 @@
-(:types
-  user - object
+Here are the PDDL actions for privilege management, leveraging existing predicates and types:
+
+```lisp
+(:action apply_sudoers_config
+  :parameters (?cf - configuration_file ?s - service)
+  :precondition (and (file_exists ?cf) (service_exists ?s) (configures ?cf ?s))
+  :effect (config_applied ?s)
 )
 
-(:predicates
-  (can_escalate ?u - user)
-  (is_sudoer ?u - user)
-  (has_sudo_access ?u - user)
-  (sudo_command_executed ?u - user ?cmd - string)
-)
-
-(:action grant_sudo_access
-  :parameters (?u - user)
-  :precondition (and (user_exists ?u))
-  :effect (and (is_sudoer ?u))
-)
-
-(:action revoke_sudo_access
-  :parameters (?u - user)
-  :precondition (and (is_sudoer ?u))
-  :effect (and (not (is_sudoer ?u)))
-)
-
-(:action execute_sudo_command
-  :parameters (?u - user ?cmd - string)
-  :precondition (and (is_sudoer ?u) (can_escalate ?u))
-  :effect (and (sudo_command_executed ?u ?cmd))
-)
+(:action grant_sudo_privilege
+  :parameters (?u - user ?s - service)
+  :precondition (and (user_exists ?u) (config_applied ?s

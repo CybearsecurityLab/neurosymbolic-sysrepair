@@ -1,42 +1,21 @@
 ```pddl
-(:types
-  user group - object
-)
-
-(:predicates
-  (user_exists ?u - user)
-  (group_exists ?g - group)
-  (member_of ?u - user ?g - group)
-  (can_escalate ?u - user)
-)
-
-(:action create_user
-  :parameters (?u - user ?g - group)
-  :precondition (and (not (user_exists ?u)))
-  :effect (and (user_exists ?u) (member_of ?u ?g))
-)
-
-(:action modify_user
-  :parameters (?u - user ?g - group)
-  :precondition (and (user_exists ?u))
-  :effect (and (member_of ?u ?g))
-)
-
-(:action delete_user
-  :parameters (?u - user)
-  :precondition (and (user_exists ?u))
-  :effect (not (user_exists ?u))
-)
-
-(:action create_group
-  :parameters (?g - group)
-  :precondition (and (not (group_exists ?g)))
-  :effect (group_exists ?g)
-)
-
-(:action delete_group
-  :parameters (?g - group)
-  :precondition (and (group_exists ?g))
-  :effect (not (group_exists ?g))
-)
-```
+(define (problem user-group-management)
+  (:domain user-group-management)
+  (:objects
+    user1 user2 - user
+    group1 group2 - group
+    home1 home2 - directory
+  )
+  (:init
+    (not (user-exists user1))
+    (not (user-exists user2))
+    (not (group-exists group1))
+    (not (group-exists group2))
+    (not (home-directory-exists home1))
+    (not (home-directory-exists home2))
+  )
+  (:goal
+    (and
+      (user-exists user1)
+      (home-directory-exists home1)
+      (user

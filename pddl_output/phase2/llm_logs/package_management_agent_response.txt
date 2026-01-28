@@ -1,50 +1,22 @@
-(:types
-  package repository - object
+```pddl
+(define (domain package-management)
+  (:types
+    package repository - object
+  )
+  (:action install-package
+    :parameters (?p - package)
+    :precondition (not (package_installed ?p))
+    :effect (package_installed ?p)
+  )
+  (:action remove-package
+    :parameters (?p - package)
+    :precondition (package_installed ?p)
+    :effect (not (package_installed ?p))
+  )
+  (:action upgrade-package
+    :parameters (?p - package)
+    :precondition (and (package_installed ?p) (package_outdated ?p))
+    :effect (not (package_outdated ?p))
+  )
 )
-
-(:predicates
-  (installed ?p - package)
-  (available ?p - package)
-  (upgradable ?p - package)
-  (outdated ?p - package)
-  (reverted ?p - package)
-  (configured ?p - package)
-  (enabled ?p - package)
-  (removed ?p - package)
-)
-
-(:action install_package
-  :parameters (?p - package ?r - repository)
-  :precondition (and (available ?p) (not (installed ?p)))
-  :effect (installed ?p)
-)
-
-(:action remove_package
-  :parameters (?p - package)
-  :precondition (installed ?p)
-  :effect (removed ?p)
-)
-
-(:action update_package
-  :parameters (?p - package)
-  :precondition (and (installed ?p) (upgradable ?p))
-  :effect (installed ?p)
-)
-
-(:action revert_package
-  :parameters (?p - package)
-  :precondition (installed ?p)
-  :effect (reverted ?p)
-)
-
-(:action configure_package
-  :parameters (?p - package)
-  :precondition (installed ?p)
-  :effect (configured ?p)
-)
-
-(:action enable_package
-  :parameters (?p - package)
-  :precondition (installed ?p)
-  :effect (enabled ?p)
-)
+```

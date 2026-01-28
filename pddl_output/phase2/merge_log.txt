@@ -1,9 +1,27 @@
-Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
-Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
-Unified predicate alias 'installed' → 'package_installed'
-Extracted predicate 'service_exists' from action body
-Merged 2 definitions of action 'install_package'
-Merged 2 definitions of action 'revert_package'
-Merged 2 definitions of action 'configure_package'
-Merged 2 definitions of action 'enable_package'
+Predicate 'owner' arity mismatch: 1 vs 2
+Predicate 'group' arity mismatch: 1 vs 2
+Predicate 'mode' arity mismatch: 1 vs 2
+Extracted predicate 'package_installed' from action body
+Extracted predicate 'package_outdated' from action body
+Rejected action 'install': Action has no effects
+Rejected action 'remove': Action has no effects
+Rejected action 'upgrade': Action has no effects
+Rejected action 'start': Action has no effects
+Rejected action 'stop': Action has no effects
+Rejected action 'enable': Action has no effects
+Rejected action 'disable': Action has no effects
+Rejected action 'apply': Action has no effects
+Rejected action 'reload': Action has no effects
+Rejected action 'change': Action has no effects
+Rejected action 'create': Action has no effects
+Rejected action 'enable': Action has no effects
+Rejected action 'disable': Action has no effects
+Rejected action 'add': Action has no effects
+Rejected action 'delete': Action has no effects
+Rejected action 'apply': Action has no effects
+Rejected action 'set': Action has no effects
+Rejected action 'reload': Action has no effects
+Rejected action 'adjust': Action has no effects
+Rejected action 'run': Action has no effects
+Rejected action 'apply_sudoers_config': Action has no effects
+Rejected action 'grant_sudo_privilege': Action has no effects
