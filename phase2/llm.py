@@ -350,24 +350,53 @@ class MockLLMInterface(LLMInterface):
 
 
 def get_llm_interface(
-    config: Optional[LLMConfig] = None, use_mock: bool = False
+    config: Optional[LLMConfig] = None,
+    use_mock: bool = False,
+    backend: str = "auto",
 ) -> LLMInterface:
     """
     Factory function to get the appropriate LLM interface.
 
     Args:
         config: LLM configuration
-        use_mock: If True, return mock interface
+        use_mock: If True, return mock interface (deprecated, use backend="mock")
+        backend: Backend to use - "auto", "vllm", "ollama", or "mock"
 
     Returns:
         LLMInterface instance
     """
+    # Handle legacy use_mock parameter
     if use_mock:
-        logger.info("Using MockLLM interface")
-        return MockLLMInterface(config)
+        backend = "mock"
 
     config = config or LLMConfig()
 
+    # Explicit backend selection
+    if backend == "mock":
+        logger.info("Using MockLLM interface")
+        return MockLLMInterface(config)
+
+    if backend == "vllm":
+        vllm = VLLMInterface(config)
+        if vllm.is_available():
+            logger.info(f"Using vLLM interface at {config.base_url}")
+            return vllm
+        else:
+            raise RuntimeError(
+                f"vLLM backend requested but not available at {config.base_url}"
+            )
+
+    if backend == "ollama":
+        ollama = OllamaInterface(config)
+        if ollama.is_available():
+            logger.info(f"Using Ollama interface at {ollama.base_url}")
+            return ollama
+        else:
+            raise RuntimeError(
+                f"Ollama backend requested but not available at {ollama.base_url}"
+            )
+
+    # Auto-detection mode (default)
     # Try vLLM first
     vllm = VLLMInterface(config)
     if vllm.is_available():

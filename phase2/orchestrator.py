@@ -49,6 +49,7 @@ class Phase2Orchestrator:
         use_mock_llm: bool = False,
         output_dir: str = "./pddl_output",
         reuse_phase1_actions: bool = True,
+        backend: str = "auto",
     ):
         self.hardware = hardware_config or HardwareConfig.detect()
         self.llm_config = llm_config or LLMConfig()
@@ -58,7 +59,7 @@ class Phase2Orchestrator:
         self.reuse_phase1_actions = reuse_phase1_actions
 
         # Initialize LLM interface
-        self.llm = get_llm_interface(self.llm_config, use_mock=use_mock_llm)
+        self.llm = get_llm_interface(self.llm_config, use_mock=use_mock_llm, backend=backend)
 
         # =================================================================
         # Build known predicates from Phase 1 + base predicates

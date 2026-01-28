@@ -46,7 +46,13 @@ def main():
     parser.add_argument(
         "--mock-llm",
         action="store_true",
-        help="Use mock LLM for testing without GPU"
+        help="Use mock LLM for testing without GPU (deprecated: use --backend mock)"
+    )
+    parser.add_argument(
+        "--backend",
+        choices=["auto", "vllm", "ollama", "mock"],
+        default="auto",
+        help="LLM backend to use: auto (detect), vllm, ollama, or mock"
     )
     parser.add_argument(
         "--phase1-state",
@@ -73,6 +79,13 @@ def main():
         "--no-reuse-actions",
         action="store_true",
         help="Force regeneration of all actions (ignore Phase 1 actions)"
+    )
+    parser.add_argument(
+        "--workers",
+        "-w",
+        type=int,
+        default=None,
+        help="Number of parallel workers (default: auto-detect based on hardware)"
     )
 
     args = parser.parse_args()
@@ -107,6 +120,9 @@ def main():
 
     # Configure hardware
     hardware = HardwareConfig.detect()
+    if args.workers is not None:
+        hardware.max_parallel_workers = args.workers
+        logger.info(f"Using {args.workers} parallel workers (CLI override)")
     llm_config = LLMConfig(model_name=args.model)
 
     # Launch vLLM if requested
@@ -127,6 +143,9 @@ def main():
         # Run orchestrator with full Phase 1 state
         # =================================================================
 
+        # Determine backend (--mock-llm takes precedence for backwards compatibility)
+        backend = "mock" if args.mock_llm else args.backend
+
         orchestrator = Phase2Orchestrator(
             hardware_config=hardware,
             llm_config=llm_config,
@@ -134,6 +153,7 @@ def main():
             use_mock_llm=args.mock_llm,
             output_dir=args.output_dir,
             reuse_phase1_actions=reuse_actions,
+            backend=backend,
         )
 
         results = orchestrator.run()
