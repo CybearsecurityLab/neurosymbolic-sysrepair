@@ -438,32 +438,6 @@
         }
       },
       {
-        "name": "process_cupsd",
-        "original_name": "cupsd",
-        "type": "process",
-        "properties": {
-          "cmdline": "/usr/sbin/cupsd -l",
-          "gid": "0",
-          "name": "cupsd",
-          "pid": "1063135",
-          "state": "S",
-          "uid": "0"
-        }
-      },
-      {
-        "name": "process_cups-browsed",
-        "original_name": "cups-browsed",
-        "type": "process",
-        "properties": {
-          "cmdline": "/usr/sbin/cups-browsed",
-          "gid": "114",
-          "name": "cups-browsed",
-          "pid": "1063138",
-          "state": "S",
-          "uid": "115"
-        }
-      },
-      {
         "name": "process_accounts-daemon",
         "original_name": "accounts-daemon",
         "type": "process",
@@ -552,6 +526,32 @@
           "pid": "116",
           "state": "S",
           "uid": "0"
+        }
+      },
+      {
+        "name": "process_cupsd",
+        "original_name": "cupsd",
+        "type": "process",
+        "properties": {
+          "cmdline": "/usr/sbin/cupsd -l",
+          "gid": "0",
+          "name": "cupsd",
+          "pid": "1161671",
+          "state": "S",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "process_cups-browsed",
+        "original_name": "cups-browsed",
+        "type": "process",
+        "properties": {
+          "cmdline": "/usr/sbin/cups-browsed",
+          "gid": "114",
+          "name": "cups-browsed",
+          "pid": "1161674",
+          "state": "S",
+          "uid": "115"
         }
       },
       {
@@ -2422,6 +2422,18 @@
         }
       },
       {
+        "name": "service_logrotate_service",
+        "original_name": "logrotate.service",
+        "type": "service",
+        "properties": {
+          "active_state": "inactive",
+          "fragment_path": "/usr/lib/systemd/system/logrotate.service",
+          "id": "logrotate.service",
+          "load_state": "loaded",
+          "sub_state": "dead"
+        }
+      },
+      {
         "name": "service_systemd-initctl_service",
         "original_name": "systemd-initctl.service",
         "type": "service",
@@ -3768,6 +3780,15 @@
         }
       },
       {
+        "name": "package_logrotate",
+        "original_name": "logrotate",
+        "type": "package",
+        "properties": {
+          "name": "logrotate",
+          "version": "3.21.0-2build1"
+        }
+      },
+      {
         "name": "package_networkd-dispatcher",
         "original_name": "networkd-dispatcher",
         "type": "package",
@@ -3995,6 +4016,160 @@
     ],
     "configuration_file": [
       {
+        "name": "configuration_file__etc_adduser_conf",
+        "original_name": "/etc/adduser.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "adduser.conf",
+          "gid": "0",
+          "path": "/etc/adduser.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_apg_conf",
+        "original_name": "/etc/apg.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "apg.conf",
+          "gid": "0",
+          "path": "/etc/apg.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_brltty_conf",
+        "original_name": "/etc/brltty.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "brltty.conf",
+          "gid": "0",
+          "path": "/etc/brltty.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_ca-certificates_conf",
+        "original_name": "/etc/ca-certificates.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "ca-certificates.conf",
+          "gid": "0",
+          "path": "/etc/ca-certificates.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_debconf_conf",
+        "original_name": "/etc/debconf.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "debconf.conf",
+          "gid": "0",
+          "path": "/etc/debconf.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_deluser_conf",
+        "original_name": "/etc/deluser.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "deluser.conf",
+          "gid": "0",
+          "path": "/etc/deluser.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_dhcpcd_conf",
+        "original_name": "/etc/dhcpcd.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "dhcpcd.conf",
+          "gid": "0",
+          "path": "/etc/dhcpcd.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_e2scrub_conf",
+        "original_name": "/etc/e2scrub.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "e2scrub.conf",
+          "gid": "0",
+          "path": "/etc/e2scrub.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_fprintd_conf",
+        "original_name": "/etc/fprintd.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "fprintd.conf",
+          "gid": "0",
+          "path": "/etc/fprintd.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_fuse_conf",
+        "original_name": "/etc/fuse.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "fuse.conf",
+          "gid": "0",
+          "path": "/etc/fuse.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_gai_conf",
+        "original_name": "/etc/gai.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "gai.conf",
+          "gid": "0",
+          "path": "/etc/gai.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_gssapi_mech_conf",
+        "original_name": "/etc/gssapi_mech.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "gssapi_mech.conf",
+          "gid": "0",
+          "path": "/etc/gssapi_mech.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_hdparm_conf",
+        "original_name": "/etc/hdparm.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "hdparm.conf",
+          "gid": "0",
+          "path": "/etc/hdparm.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_host_conf",
+        "original_name": "/etc/host.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "host.conf",
+          "gid": "0",
+          "path": "/etc/host.conf",
+          "uid": "0"
+        }
+      },
+      {
         "name": "configuration_file__etc_incron_conf",
         "original_name": "/etc/incron.conf",
         "type": "configuration_file",
@@ -4017,6 +4192,105 @@
         }
       },
       {
+        "name": "configuration_file__etc_krb5_conf",
+        "original_name": "/etc/krb5.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "krb5.conf",
+          "gid": "0",
+          "path": "/etc/krb5.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_ld_so_conf",
+        "original_name": "/etc/ld.so.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "ld.so.conf",
+          "gid": "0",
+          "path": "/etc/ld.so.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_libao_conf",
+        "original_name": "/etc/libao.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "libao.conf",
+          "gid": "0",
+          "path": "/etc/libao.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_libaudit_conf",
+        "original_name": "/etc/libaudit.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "libaudit.conf",
+          "gid": "0",
+          "path": "/etc/libaudit.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_locale_conf",
+        "original_name": "/etc/locale.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "locale.conf",
+          "gid": "0",
+          "path": "/etc/locale.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_logrotate_conf",
+        "original_name": "/etc/logrotate.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "logrotate.conf",
+          "gid": "0",
+          "path": "/etc/logrotate.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_mke2fs_conf",
+        "original_name": "/etc/mke2fs.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "mke2fs.conf",
+          "gid": "0",
+          "path": "/etc/mke2fs.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_nftables_conf",
+        "original_name": "/etc/nftables.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "nftables.conf",
+          "gid": "0",
+          "path": "/etc/nftables.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_nsswitch_conf",
+        "original_name": "/etc/nsswitch.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "nsswitch.conf",
+          "gid": "0",
+          "path": "/etc/nsswitch.conf",
+          "uid": "0"
+        }
+      },
+      {
         "name": "configuration_file__etc_oddjobd_conf",
         "original_name": "/etc/oddjobd.conf",
         "type": "configuration_file",
@@ -4028,6 +4302,28 @@
         }
       },
       {
+        "name": "configuration_file__etc_pam_conf",
+        "original_name": "/etc/pam.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "pam.conf",
+          "gid": "0",
+          "path": "/etc/pam.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_pnm2ppa_conf",
+        "original_name": "/etc/pnm2ppa.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "pnm2ppa.conf",
+          "gid": "0",
+          "path": "/etc/pnm2ppa.conf",
+          "uid": "0"
+        }
+      },
+      {
         "name": "configuration_file__etc_rsyslog_conf",
         "original_name": "/etc/rsyslog.conf",
         "type": "configuration_file",
@@ -4035,6 +4331,149 @@
           "filename": "rsyslog.conf",
           "gid": "0",
           "path": "/etc/rsyslog.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_rygel_conf",
+        "original_name": "/etc/rygel.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "rygel.conf",
+          "gid": "0",
+          "path": "/etc/rygel.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_sensors3_conf",
+        "original_name": "/etc/sensors3.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "sensors3.conf",
+          "gid": "0",
+          "path": "/etc/sensors3.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_smi_conf",
+        "original_name": "/etc/smi.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "smi.conf",
+          "gid": "0",
+          "path": "/etc/smi.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_sudo_conf",
+        "original_name": "/etc/sudo.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "sudo.conf",
+          "gid": "0",
+          "path": "/etc/sudo.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_sudo_logsrvd_conf",
+        "original_name": "/etc/sudo_logsrvd.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "sudo_logsrvd.conf",
+          "gid": "0",
+          "path": "/etc/sudo_logsrvd.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_sysctl_conf",
+        "original_name": "/etc/sysctl.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "sysctl.conf",
+          "gid": "0",
+          "path": "/etc/sysctl.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_ts_conf",
+        "original_name": "/etc/ts.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "ts.conf",
+          "gid": "0",
+          "path": "/etc/ts.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_ucf_conf",
+        "original_name": "/etc/ucf.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "ucf.conf",
+          "gid": "0",
+          "path": "/etc/ucf.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_updatedb_conf",
+        "original_name": "/etc/updatedb.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "updatedb.conf",
+          "gid": "0",
+          "path": "/etc/updatedb.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_usb_modeswitch_conf",
+        "original_name": "/etc/usb_modeswitch.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "usb_modeswitch.conf",
+          "gid": "0",
+          "path": "/etc/usb_modeswitch.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_vconsole_conf",
+        "original_name": "/etc/vconsole.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "vconsole.conf",
+          "gid": "0",
+          "path": "/etc/vconsole.conf",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_vdpau_wrapper_cfg",
+        "original_name": "/etc/vdpau_wrapper.cfg",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "vdpau_wrapper.cfg",
+          "gid": "0",
+          "path": "/etc/vdpau_wrapper.cfg",
+          "uid": "0"
+        }
+      },
+      {
+        "name": "configuration_file__etc_xattr_conf",
+        "original_name": "/etc/xattr.conf",
+        "type": "configuration_file",
+        "properties": {
+          "filename": "xattr.conf",
+          "gid": "0",
+          "path": "/etc/xattr.conf",
           "uid": "0"
         }
       }
@@ -4345,20 +4784,6 @@
     {
       "name": "process_running",
       "arguments": [
-        "process_cupsd"
-      ],
-      "value": true
-    },
-    {
-      "name": "process_running",
-      "arguments": [
-        "process_cups-browsed"
-      ],
-      "value": true
-    },
-    {
-      "name": "process_running",
-      "arguments": [
         "process_accounts-daemon"
       ],
       "value": true
@@ -4402,6 +4827,20 @@
       "name": "process_running",
       "arguments": [
         "process_kauditd"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_running",
+      "arguments": [
+        "process_cupsd"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_running",
+      "arguments": [
+        "process_cups-browsed"
       ],
       "value": true
     },
@@ -6243,6 +6682,34 @@
       "name": "service_enabled",
       "arguments": [
         "service_postfix_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "service_exists",
+      "arguments": [
+        "service_logrotate_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "service_running",
+      "arguments": [
+        "service_logrotate_service"
+      ],
+      "value": false
+    },
+    {
+      "name": "service_failed",
+      "arguments": [
+        "service_logrotate_service"
+      ],
+      "value": false
+    },
+    {
+      "name": "service_enabled",
+      "arguments": [
+        "service_logrotate_service"
       ],
       "value": true
     },
@@ -9105,6 +9572,13 @@
     {
       "name": "package_installed",
       "arguments": [
+        "package_logrotate"
+      ],
+      "value": true
+    },
+    {
+      "name": "package_installed",
+      "arguments": [
         "package_networkd-dispatcher"
       ],
       "value": true
@@ -9280,6 +9754,202 @@
     {
       "name": "file_exists",
       "arguments": [
+        "configuration_file__etc_adduser_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_adduser_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_apg_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_apg_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_brltty_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_brltty_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_ca-certificates_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_ca-certificates_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_debconf_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_debconf_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_deluser_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_deluser_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_dhcpcd_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_dhcpcd_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_e2scrub_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_e2scrub_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_fprintd_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_fprintd_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_fuse_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_fuse_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_gai_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_gai_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_gssapi_mech_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_gssapi_mech_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_hdparm_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_hdparm_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_host_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_host_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
         "configuration_file__etc_incron_conf"
       ],
       "value": true
@@ -9308,6 +9978,132 @@
     {
       "name": "file_exists",
       "arguments": [
+        "configuration_file__etc_krb5_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_krb5_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_ld_so_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_ld_so_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_libao_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_libao_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_libaudit_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_libaudit_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_locale_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_locale_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_logrotate_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_logrotate_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_mke2fs_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_mke2fs_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_nftables_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_nftables_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_nsswitch_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_nsswitch_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
         "configuration_file__etc_oddjobd_conf"
       ],
       "value": true
@@ -9316,6 +10112,34 @@
       "name": "file_critical",
       "arguments": [
         "configuration_file__etc_oddjobd_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_pam_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_pam_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_pnm2ppa_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_pnm2ppa_conf"
       ],
       "value": false
     },
@@ -9332,6 +10156,2667 @@
         "configuration_file__etc_rsyslog_conf"
       ],
       "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_rygel_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_rygel_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_sensors3_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_sensors3_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_smi_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_smi_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_sudo_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_sudo_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_sudo_logsrvd_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_sudo_logsrvd_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_sysctl_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_sysctl_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_ts_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_ts_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_ucf_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_ucf_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_updatedb_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_updatedb_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_usb_modeswitch_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_usb_modeswitch_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_vconsole_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_vconsole_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_vdpau_wrapper_cfg"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_vdpau_wrapper_cfg"
+      ],
+      "value": false
+    },
+    {
+      "name": "file_exists",
+      "arguments": [
+        "configuration_file__etc_xattr_conf"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_critical",
+      "arguments": [
+        "configuration_file__etc_xattr_conf"
+      ],
+      "value": false
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tmpfiles-clean_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_anydesk_service",
+        "package_anydesk"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-repart_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-networkd-wait-online_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-backlight_backlight_nvidia_0_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-ask-password-wall_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-journald_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-journal-flush_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_rsyslog_service",
+        "package_rsyslog"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_cups-browsed_service",
+        "package_cups-browsed"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_kerneloops_service",
+        "package_kerneloops"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_osqueryd_service",
+        "package_osquery"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-pcrphase_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-resolved_service",
+        "package_systemd-resolved"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tmpfiles-setup-dev-early_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-user-sessions_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_plymouth-quit-wait_service",
+        "package_plymouth"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-pam_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-fsck_dev-disk-by_x2duuid-f84e_x2dead2_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_plymouth-read-write_service",
+        "package_plymouth"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_ssh_service",
+        "package_ssh-import-id"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_openvpn_service",
+        "package_openvpn"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_seeded_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-sysext_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-logind_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-rfkill_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_apparmor_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-autofs_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_dbus_service",
+        "package_dbus"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-udevd_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_upower_service",
+        "package_upower"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-suspend_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_postfix_service",
+        "package_postfix"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_logrotate_service",
+        "package_logrotate"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-initctl_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-sysctl_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tpm2-setup_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-modules-load_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-vconsole-setup_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tmpfiles-setup-dev_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-fsckd_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_xrdp-sesman_service",
+        "package_xrdp"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_core-fixup_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-firstboot_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_gdm_service",
+        "package_gdm3"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_system-shutdown_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-pcrphase-sysinit_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-pstore_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_postfix_-_service",
+        "package_postfix"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_incron_service",
+        "package_incron"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tpm2-setup-early_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-suspend-then-hibernate_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-soft-reboot_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-hibernate_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_colord_service",
+        "package_colord"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_plymouth-start_service",
+        "package_plymouth"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-ask-password-plymouth_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_lm-sensors_service",
+        "package_lm-sensors"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-binfmt_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-udev-settle_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-networkd_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sysstat-summary_service",
+        "package_sysstat"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_oddjobd_service",
+        "package_oddjob"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_fwupd_service",
+        "package_fwupd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-hwdb-update_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sysstat-collect_service",
+        "package_sysstat"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-quotacheck_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-pac_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-nss_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-hibernate-resume_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_autoimport_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_power-profiles-daemon_service",
+        "package_power-profiles-daemon"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_recovery-chooser-trigger_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-udev-trigger_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-oomd_service",
+        "package_systemd-oomd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_ubuntu-fan_service",
+        "package_ubuntu-fan"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_plymouth-quit_service",
+        "package_plymouth"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-sudo_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-pcrmachine_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-update-utmp-runlevel_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_apparmor_service",
+        "package_apparmor"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-battery-check_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_avahi-daemon_service",
+        "package_avahi-daemon"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_cron_service",
+        "package_cron"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_gnome-remote-desktop_service",
+        "package_gnome-remote-desktop"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_xrdp_service",
+        "package_xrdp"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-journal-catalog-update_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_auditd_service",
+        "package_auditd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_udisks2_service",
+        "package_udisks2"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-timesyncd_service",
+        "package_systemd-timesyncd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-remount-fs_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-bsod_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-random-seed_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_switcheroo-control_service",
+        "package_switcheroo-control"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_tailscaled_service",
+        "package_tailscale"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_console-setup_service",
+        "package_console-setup"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_cups_service",
+        "package_cups"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_plymouth-switch-root_service",
+        "package_plymouth"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sysstat_service",
+        "package_sysstat"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_fwupd-refresh_service",
+        "package_fwupd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-fsck_dev-disk-by_x2duuid-494638c4_x2d4d70_x2d4d12_x2db520_x2d52bfb646ce41_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_apport-autoreport_service",
+        "package_apport"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_networkd-dispatcher_service",
+        "package_networkd-dispatcher"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_snap-repair_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-tmpfiles-setup_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_snapd_failure_service",
+        "package_snapd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_kmod-static-nodes_service",
+        "package_kmod"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-hybrid-sleep_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-ask-password-console_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_unattended-upgrades_service",
+        "package_unattended-upgrades"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-pcrphase-initrd_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_containerd_service",
+        "package_containerd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-sysusers_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_apport_service",
+        "package_apport"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-update-done_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_docker_service",
+        "package_docker_io"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-update-utmp_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-machine-id-commit_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_polkit_service",
+        "package_polkitd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_rtkit-daemon_service",
+        "package_rtkit"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_sssd-ssh_service",
+        "package_sssd"
+      ],
+      "value": true
+    },
+    {
+      "name": "depends_on",
+      "arguments": [
+        "service_systemd-fsck-root_service",
+        "package_systemd"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_rsyslog_conf",
+        "service_rsyslog_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_kerneloops_conf",
+        "service_kerneloops_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_logrotate_conf",
+        "service_logrotate_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_incron_conf",
+        "service_incron_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_oddjobd_conf",
+        "service_oddjobd_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "configures",
+      "arguments": [
+        "configuration_file__etc_incron_conf",
+        "service_cron_service"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_root",
+        "group_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_sync",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user__apt",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_nobody",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_dhcpcd",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_syslog",
+        "group_syslog"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_syslog",
+        "group_adm"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_usbmux",
+        "group_plugdev"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_kernoops",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_dnsmasq",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_cups-pk-helper",
+        "group_lpadmin"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_cups-browsed",
+        "group_lpadmin"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_gnome-initial-setup",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_administrator"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_adm"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_cdrom"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_sudo"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_dip"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_plugdev"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_users"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_administrator",
+        "group_lpadmin"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_sshd",
+        "group_nogroup"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_emmanuelli",
+        "group_emmanuelli"
+      ],
+      "value": true
+    },
+    {
+      "name": "member_of",
+      "arguments": [
+        "user_emmanuelli",
+        "group_users"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_adduser_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_apg_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_brltty_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_ca-certificates_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_debconf_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_deluser_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_dhcpcd_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_e2scrub_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_fprintd_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_fuse_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_gai_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_gssapi_mech_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_hdparm_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_host_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_incron_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_kerneloops_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_krb5_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_ld_so_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_libao_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_libaudit_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_locale_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_logrotate_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_mke2fs_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_nftables_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_nsswitch_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_oddjobd_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_pam_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_pnm2ppa_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_rsyslog_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_rygel_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_sensors3_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_smi_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_sudo_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_sudo_logsrvd_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_sysctl_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_ts_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_ucf_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_updatedb_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_usb_modeswitch_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_vconsole_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_vdpau_wrapper_cfg",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "file_owned_by",
+      "arguments": [
+        "configuration_file__etc_xattr_conf",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "can_escalate",
+      "arguments": [
+        "user_administrator"
+      ],
+      "value": true
+    },
+    {
+      "name": "port_bound_by",
+      "arguments": [
+        "port_6_4701",
+        "process_code_1"
+      ],
+      "value": true
+    },
+    {
+      "name": "port_bound_by",
+      "arguments": [
+        "port_6_3291",
+        "process_code"
+      ],
+      "value": true
+    },
+    {
+      "name": "port_bound_by",
+      "arguments": [
+        "port_6_8000",
+        "process_python"
+      ],
+      "value": true
+    },
+    {
+      "name": "port_bound_by",
+      "arguments": [
+        "port_0_0",
+        "process_code_2"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_systemd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-modeset_kthread_q",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-modeset_deferred_close_kthread_q",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_rsyslogd",
+        "user_syslog"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-drm_timeline-63",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_networkmanager",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_wpa_supplicant",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_94-nvidia",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_queue",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_modemmanager",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_accounts-daemon",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_cron",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_systemd-logind",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kdevtmpfs",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kauditd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_cupsd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_cups-browsed",
+        "user_cups-browsed"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_khungtaskd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_oom_reaper",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kcompactd0",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_ksmd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_khugepaged",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_9-acpi",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_95-nvidia",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_queue_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_oddjobd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_tailscaled",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_unattended-upgr",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_anydesk",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_containerd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sshd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_xrdp-sesman",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_30-dmar4-prq",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kswapd0",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_ecryptfs-kthread",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_hwrng",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_gdm3",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_global_queue",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_deferred_release_queue",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_tools_event_queue",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_upowerd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kthreadd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_dockerd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kerneloops",
+        "user_kernoops"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_kerneloops_1",
+        "user_kernoops"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_osqueryd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_osqueryd_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_59-enp1s0",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_master",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_0",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_2",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_3",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_containerd-shim",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_containerd-shim_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_4",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_5",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_node",
+        "user_dhcpcd"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_startup_sh",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_pool_workqueue_release",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_6",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_7",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_docker-proxy",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_docker-proxy_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_scsi_eh_8",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_usb-storage",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_jbd2_sda-8",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_62-pciehp",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_docker-proxy_2",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_docker-proxy_3",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_ollama",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_jbd2_nvme0n1p4-8",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sssd_pac",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sssd_be",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_snapd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sssd_nss",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sssd_pam",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_gdm-session-wor",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-drm_timeline-54",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-drm_timeline-55",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_vidmem_lazy_free",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_gpu1_bh",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_gpu1_kc",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_vidmem_lazy_free_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_gpu2_bh",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_uvm_gpu2_kc",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_psimon",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_systemd-journal",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_fwupd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_systemd-udevd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_psimon_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_83-mei_me",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_irq_84-idxd-misc",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nvidia-drm_timeline-5e",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_jbd2_nvme0n1p1-8",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_auditd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_audit_prune_tree",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_queue_2",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_queue_3",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_open_q",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_nv_open_q_1",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_networkd-dispat",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_incrond",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_power-profiles-",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_sssd",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_switcheroo-cont",
+        "user_root"
+      ],
+      "value": true
+    },
+    {
+      "name": "process_owned_by",
+      "arguments": [
+        "process_udisksd",
+        "user_root"
+      ],
+      "value": true
     }
   ],
   "relationships": {
@@ -9471,6 +12956,10 @@
       {
         "service": "service_postfix_service",
         "package": "package_postfix"
+      },
+      {
+        "service": "service_logrotate_service",
+        "package": "package_logrotate"
       },
       {
         "service": "service_systemd-initctl_service",
@@ -9839,6 +13328,10 @@
         "service": "service_kerneloops_service"
       },
       {
+        "config": "configuration_file__etc_logrotate_conf",
+        "service": "service_logrotate_service"
+      },
+      {
         "config": "configuration_file__etc_incron_conf",
         "service": "service_incron_service"
       },
@@ -9949,9 +13442,805 @@
         "group": "group_users"
       }
     ],
+    "file_owned_by": [
+      {
+        "file": "configuration_file__etc_adduser_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_apg_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_brltty_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_ca-certificates_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_debconf_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_deluser_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_dhcpcd_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_e2scrub_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_fprintd_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_fuse_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_gai_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_gssapi_mech_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_hdparm_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_host_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_incron_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_kerneloops_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_krb5_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_ld_so_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_libao_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_libaudit_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_locale_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_logrotate_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_mke2fs_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_nftables_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_nsswitch_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_oddjobd_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_pam_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_pnm2ppa_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_rsyslog_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_rygel_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_sensors3_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_smi_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_sudo_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_sudo_logsrvd_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_sysctl_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_ts_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_ucf_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_updatedb_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_usb_modeswitch_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_vconsole_conf",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_vdpau_wrapper_cfg",
+        "user": "user_root"
+      },
+      {
+        "file": "configuration_file__etc_xattr_conf",
+        "user": "user_root"
+      }
+    ],
+    "file_owned_by_group": [
+      {
+        "file": "configuration_file__etc_adduser_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_apg_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_brltty_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_ca-certificates_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_debconf_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_deluser_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_dhcpcd_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_e2scrub_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_fprintd_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_fuse_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_gai_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_gssapi_mech_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_hdparm_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_host_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_incron_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_kerneloops_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_krb5_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_ld_so_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_libao_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_libaudit_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_locale_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_logrotate_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_mke2fs_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_nftables_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_nsswitch_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_oddjobd_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_pam_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_pnm2ppa_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_rsyslog_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_rygel_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_sensors3_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_smi_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_sudo_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_sudo_logsrvd_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_sysctl_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_ts_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_ucf_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_updatedb_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_usb_modeswitch_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_vconsole_conf",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_vdpau_wrapper_cfg",
+        "group": "group_root"
+      },
+      {
+        "file": "configuration_file__etc_xattr_conf",
+        "group": "group_root"
+      }
+    ],
     "can_escalate": [
       {
         "user": "user_administrator"
+      }
+    ],
+    "binds": [
+      {
+        "port": "port_6_4701",
+        "process": "process_code_1"
+      },
+      {
+        "port": "port_6_3291",
+        "process": "process_code"
+      },
+      {
+        "port": "port_6_8000",
+        "process": "process_python"
+      },
+      {
+        "port": "port_0_0",
+        "process": "process_code_2"
+      }
+    ],
+    "owned_by": [
+      {
+        "process": "process_systemd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia-modeset_kthread_q",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia-modeset_deferred_close_kthread_q",
+        "user": "user_root"
+      },
+      {
+        "process": "process_rsyslogd",
+        "user": "user_syslog"
+      },
+      {
+        "process": "process_nvidia-drm_timeline-63",
+        "user": "user_root"
+      },
+      {
+        "process": "process_networkmanager",
+        "user": "user_root"
+      },
+      {
+        "process": "process_wpa_supplicant",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_94-nvidia",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_queue",
+        "user": "user_root"
+      },
+      {
+        "process": "process_modemmanager",
+        "user": "user_root"
+      },
+      {
+        "process": "process_accounts-daemon",
+        "user": "user_root"
+      },
+      {
+        "process": "process_cron",
+        "user": "user_root"
+      },
+      {
+        "process": "process_systemd-logind",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kdevtmpfs",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kauditd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_cupsd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_cups-browsed",
+        "user": "user_cups-browsed"
+      },
+      {
+        "process": "process_khungtaskd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_oom_reaper",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kcompactd0",
+        "user": "user_root"
+      },
+      {
+        "process": "process_ksmd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_khugepaged",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_9-acpi",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_95-nvidia",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_queue_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_oddjobd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_tailscaled",
+        "user": "user_root"
+      },
+      {
+        "process": "process_unattended-upgr",
+        "user": "user_root"
+      },
+      {
+        "process": "process_anydesk",
+        "user": "user_root"
+      },
+      {
+        "process": "process_containerd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sshd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_xrdp-sesman",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_30-dmar4-prq",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kswapd0",
+        "user": "user_root"
+      },
+      {
+        "process": "process_ecryptfs-kthread",
+        "user": "user_root"
+      },
+      {
+        "process": "process_hwrng",
+        "user": "user_root"
+      },
+      {
+        "process": "process_gdm3",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_global_queue",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_deferred_release_queue",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_tools_event_queue",
+        "user": "user_root"
+      },
+      {
+        "process": "process_upowerd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kthreadd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_dockerd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_kerneloops",
+        "user": "user_kernoops"
+      },
+      {
+        "process": "process_kerneloops_1",
+        "user": "user_kernoops"
+      },
+      {
+        "process": "process_osqueryd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_osqueryd_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_59-enp1s0",
+        "user": "user_root"
+      },
+      {
+        "process": "process_master",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_0",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_2",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_3",
+        "user": "user_root"
+      },
+      {
+        "process": "process_containerd-shim",
+        "user": "user_root"
+      },
+      {
+        "process": "process_containerd-shim_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_4",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_5",
+        "user": "user_root"
+      },
+      {
+        "process": "process_node",
+        "user": "user_dhcpcd"
+      },
+      {
+        "process": "process_startup_sh",
+        "user": "user_root"
+      },
+      {
+        "process": "process_pool_workqueue_release",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_6",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_7",
+        "user": "user_root"
+      },
+      {
+        "process": "process_docker-proxy",
+        "user": "user_root"
+      },
+      {
+        "process": "process_docker-proxy_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_scsi_eh_8",
+        "user": "user_root"
+      },
+      {
+        "process": "process_usb-storage",
+        "user": "user_root"
+      },
+      {
+        "process": "process_jbd2_sda-8",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_62-pciehp",
+        "user": "user_root"
+      },
+      {
+        "process": "process_docker-proxy_2",
+        "user": "user_root"
+      },
+      {
+        "process": "process_docker-proxy_3",
+        "user": "user_root"
+      },
+      {
+        "process": "process_ollama",
+        "user": "user_root"
+      },
+      {
+        "process": "process_jbd2_nvme0n1p4-8",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sssd_pac",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sssd_be",
+        "user": "user_root"
+      },
+      {
+        "process": "process_snapd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sssd_nss",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sssd_pam",
+        "user": "user_root"
+      },
+      {
+        "process": "process_gdm-session-wor",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia-drm_timeline-54",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia-drm_timeline-55",
+        "user": "user_root"
+      },
+      {
+        "process": "process_vidmem_lazy_free",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_gpu1_bh",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_gpu1_kc",
+        "user": "user_root"
+      },
+      {
+        "process": "process_vidmem_lazy_free_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_gpu2_bh",
+        "user": "user_root"
+      },
+      {
+        "process": "process_uvm_gpu2_kc",
+        "user": "user_root"
+      },
+      {
+        "process": "process_psimon",
+        "user": "user_root"
+      },
+      {
+        "process": "process_systemd-journal",
+        "user": "user_root"
+      },
+      {
+        "process": "process_fwupd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_systemd-udevd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_psimon_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_83-mei_me",
+        "user": "user_root"
+      },
+      {
+        "process": "process_irq_84-idxd-misc",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nvidia-drm_timeline-5e",
+        "user": "user_root"
+      },
+      {
+        "process": "process_jbd2_nvme0n1p1-8",
+        "user": "user_root"
+      },
+      {
+        "process": "process_auditd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_audit_prune_tree",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_queue_2",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_queue_3",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_open_q",
+        "user": "user_root"
+      },
+      {
+        "process": "process_nv_open_q_1",
+        "user": "user_root"
+      },
+      {
+        "process": "process_networkd-dispat",
+        "user": "user_root"
+      },
+      {
+        "process": "process_incrond",
+        "user": "user_root"
+      },
+      {
+        "process": "process_power-profiles-",
+        "user": "user_root"
+      },
+      {
+        "process": "process_sssd",
+        "user": "user_root"
+      },
+      {
+        "process": "process_switcheroo-cont",
+        "user": "user_root"
+      },
+      {
+        "process": "process_udisksd",
+        "user": "user_root"
       }
     ]
   },
@@ -9960,8 +14249,8 @@
     "group_count": 12,
     "process_count": 113,
     "port_count": 18,
-    "service_count": 135,
-    "package_count": 45,
-    "configuration_file_count": 4
+    "service_count": 136,
+    "package_count": 46,
+    "configuration_file_count": 42
   }
 }
