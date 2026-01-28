@@ -342,10 +342,12 @@ class Phase1Orchestrator:
             filepath = os.path.join(self.output_dir, "phase1_statep2.json")
 
         # Create a dictionary with the required keys
+        serialized_actions = self._serialize_actions()
         phase2_state = {
             "objects": self.state.get("objects", {}),
             "predicates": self.state.get("predicates", []),
             "relationships": self.state.get("relationships", {}),
+            "actions": serialized_actions,
             "statistics": {
                 f"{obj_type}_count": len(objs)
                 for obj_type, objs in self.state.get("objects", {}).items()
