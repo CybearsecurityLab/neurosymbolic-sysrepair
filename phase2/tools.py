@@ -227,7 +227,7 @@ class DocumentationExtractor:
                     {
                         "short": short_opt,
                         "long": long_opt,
-                        "description": description[:100],  # Truncate
+                        "description": description[:300],  # Truncate
                     }
                 )
 
@@ -356,5 +356,5 @@ class SystemIntrospector:
             "is_sudo_rs": "sudo-rs" in variant_info,
             "is_uutils": "uutils" in variant_info,
             "os_version": version_id,
-            "raw_variant": variant_info
+            "raw_variant": variant_info,
         }
