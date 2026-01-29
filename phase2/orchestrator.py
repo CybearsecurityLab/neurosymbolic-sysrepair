@@ -1,48 +1,110 @@
+"""
+phase2/orchestrator.py
+
+Main orchestrator for Phase 2: Parallel Synthesis.
+Updated to use full Phase 1 state including actions, predicates, and relationships.
+"""
+
 import json
 import time
 import logging
 import subprocess
 from pathlib import Path
 from typing import Optional
+import sys
+import os
 
-from .config import HardwareConfig, LLMConfig
-from .llm import get_llm_interface
-from .supervisor import SupervisorAgent
-from .merger import MergerAgent
-from .repair import PDDLValidator
-from .models import PartialPDDLDomain
+# Add parent directory to path for common imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common.models import Phase1State, ActionSchema
+from common.predicates import get_base_predicates
+
+from phase2.config import HardwareConfig, LLMConfig
+from phase2.llm import get_llm_interface
+from phase2.supervisor import SupervisorAgent
+from phase2.merger import MergerAgent
+from phase2.repair import PDDLValidator
+from phase2.models import PartialPDDLDomain
 
 logger = logging.getLogger("Phase2.Orchestrator")
+
 
 class Phase2Orchestrator:
     """
     Main orchestrator for Phase 2: Parallel Synthesis.
     Coordinates Map and Reduce phases.
+
+    Updated to:
+    - Accept full Phase1State (objects, predicates, actions, relationships)
+    - Reuse Phase 1 actions instead of regenerating
+    - Pass known predicates to workers
     """
 
     def __init__(
         self,
         hardware_config: Optional[HardwareConfig] = None,
         llm_config: Optional[LLMConfig] = None,
-        osquery_data: Optional[dict] = None,
+        phase1_state: Optional[Phase1State] = None,
         use_mock_llm: bool = False,
         output_dir: str = "./pddl_output",
+        reuse_phase1_actions: bool = True,
+        backend: str = "auto",
     ):
         self.hardware = hardware_config or HardwareConfig.detect()
         self.llm_config = llm_config or LLMConfig()
-        self.osquery_data = osquery_data or {}
+        self.phase1_state = phase1_state or Phase1State()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.reuse_phase1_actions = reuse_phase1_actions
 
         # Initialize LLM interface
-        self.llm = get_llm_interface(self.llm_config, use_mock=use_mock_llm)
+        self.llm = get_llm_interface(self.llm_config, use_mock=use_mock_llm, backend=backend)
 
-        # Initialize components
+        # =================================================================
+        # Build known predicates from Phase 1 + base predicates
+        # =================================================================
+        self.known_predicates = self._build_known_predicates()
+        
+        # =================================================================
+        # Get Phase 1 actions for reuse
+        # =================================================================
+        # =================================================================
+        # STRICT SEPARATION OF CONCERNS
+        # Phase 1 = Discovery (Objects/Predicates)
+        # Phase 2 = Generation (Actions)
+        # =================================================================
+        self.phase1_actions = []
+
+        # Check if Phase 1 actually has actions to offer
+        has_legacy_actions = self.phase1_state and self.phase1_state.actions
+
+        if reuse_phase1_actions and has_legacy_actions:
+            self.phase1_actions = self.phase1_state.get_actions()
+            logger.warning(
+                f"⚠️  LOOPHOLE ACTIVE: Reusing {len(self.phase1_actions)} Phase 1 actions. "
+                "This bypasses rigorous Phase 2 documentation parsing."
+            )
+        elif has_legacy_actions:
+            # The Critical Fix: Explicitly discarding Phase 1 actions
+            count = len(self.phase1_state.actions)
+            logger.info(
+                f"🛡️  Roadmap Enforcement: Discarding {count} Phase 1 actions. "
+                "Phase 2 will regenerate them from Man pages to ensure validity."
+            )
+            # We explicitly do NOT load them into self.phase1_actions
+        else:
+            logger.info("Phase 1 state contains no actions. Pure Phase 2 generation enabled.")
+
+        # Initialize components with Phase 1 context
         self.supervisor = SupervisorAgent(
             llm=self.llm,
             hardware_config=self.hardware,
-            osquery_data=self.osquery_data,
+            phase1_state=self.phase1_state,
+            phase1_actions=self.phase1_actions,
+            known_predicates=self.known_predicates,
             output_dir=str(self.output_dir),
+            reuse_phase1_actions=reuse_phase1_actions,
         )
         self.merger = MergerAgent(llm=self.llm)
         self.validator = PDDLValidator()
@@ -50,6 +112,29 @@ class Phase2Orchestrator:
         # Results
         self.partial_domains: list[PartialPDDLDomain] = []
         self.unified_domain: str = ""
+
+    def _build_known_predicates(self) -> list[str]:
+        """
+        Build list of known predicates from:
+        1. Base predicates (from shared common module)
+        2. Phase 1 extracted predicates
+        """
+        # Start with base predicates
+        known = set(get_base_predicates())
+        
+        # Add predicates from Phase 1 state
+        for pred in self.phase1_state.predicates:
+            pred_name = pred.get("name", "")
+            args = pred.get("arguments", [])
+            # Reconstruct predicate format
+            if pred_name:
+                if args:
+                    # We don't have types in the state, so use generic format
+                    known.add(f"({pred_name} ?arg)")
+                else:
+                    known.add(f"({pred_name})")
+        
+        return sorted(list(known))
 
     def run(self) -> dict:
         """Execute the complete Phase 2 pipeline."""
@@ -75,6 +160,20 @@ class Phase2Orchestrator:
         print(f"  CPUs: {self.hardware.num_cpus}")
         print(f"  Parallel Workers: {self.hardware.max_parallel_workers}")
         print(f"\nLLM: {self.llm_config.model_name}")
+        
+        # =================================================================
+        # Report Phase 1 integration status
+        # =================================================================
+        print(f"\nPhase 1 Integration:")
+        print(f"  Objects: {sum(len(v) for v in self.phase1_state.objects.values())}")
+        print(f"  Predicates: {len(self.phase1_state.predicates)}")
+        print(f"  Actions: {len(self.phase1_actions)} (reuse: {self.reuse_phase1_actions})")
+        print(f"  Known predicates: {len(self.known_predicates)}")
+        
+        results["statistics"]["phase1_objects"] = sum(len(v) for v in self.phase1_state.objects.values())
+        results["statistics"]["phase1_predicates"] = len(self.phase1_state.predicates)
+        results["statistics"]["phase1_actions"] = len(self.phase1_actions)
+        results["statistics"]["known_predicates"] = len(self.known_predicates)
 
         try:
             # MAP PHASE
@@ -92,6 +191,17 @@ class Phase2Orchestrator:
             )
             results["statistics"]["total_actions"] = sum(
                 len(d.actions) for d in successful
+            )
+            
+            # Count reused vs new actions
+            reused_count = sum(
+                1 for d in successful 
+                for a in d.actions 
+                if getattr(a, 'source_worker', '') == 'phase1_reuse'
+            )
+            results["statistics"]["actions_reused_from_phase1"] = reused_count
+            results["statistics"]["actions_generated_new"] = (
+                results["statistics"]["total_actions"] - reused_count
             )
 
             # REDUCE PHASE
@@ -163,19 +273,20 @@ class Phase2Orchestrator:
             f"{len(self.merger.unified_actions)} unified"
         )
         print(
+            f"    - Reused from Phase 1: {results['statistics'].get('actions_reused_from_phase1', 0)}"
+        )
+        print(
+            f"    - Generated new: {results['statistics'].get('actions_generated_new', 0)}"
+        )
+        print(
             f"  Validation: {'PASSED' if results['validation_passed'] else 'WARNINGS'}"
         )
 
         return results
 
-def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subprocess.Popen:
-    """
-    Launch vLLM server for LLM inference.
 
-    For 2x L40S with 48GB each:
-    - Can run Llama-3.1-70B with tensor parallelism
-    - Or run multiple instances of smaller models
-    """
+def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subprocess.Popen:
+    """Launch vLLM server for LLM inference."""
     cmd = [
         "python",
         "-m",
@@ -198,10 +309,9 @@ def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subproces
 
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    # Wait for server to be ready
     import time
 
-    for _ in range(60):  # Wait up to 60 seconds
+    for _ in range(60):
         try:
             import urllib.request
 

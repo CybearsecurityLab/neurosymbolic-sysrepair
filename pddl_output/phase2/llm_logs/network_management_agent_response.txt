@@ -1,0 +1,70 @@
+```lisp
+(define (domain network-firewall-management)
+  (:requirements :strips :typing)
+  (:types
+    firewall-rule-type
+    protocol-type
+    network-interface
+  )
+  (:constants
+    allow deny reject limit - firewall-rule-type
+    tcp udp icmp - protocol-type
+  )
+  (:predicates
+    (firewall-enabled?)
+    (firewall-rule-applied? ?type - firewall-rule-type ?port - integer ?protocol - protocol-type)
+    (network-interface-configured? ?interface - network-interface)
+    (netplan-setting-applied? ?interface - network-interface ?key - string ?value - string)
+  )
+  (:action enable-firewall
+    :effect (firewall-enabled?)
+  )
+  (:action disable-firewall
+    :effect (not (firewall-enabled?))
+  )
+  (:action add-firewall-rule
+    :parameters (?type - firewall-rule-type ?port - integer ?protocol - protocol-type)
+    :effect (firewall-rule-applied? ?type ?port ?protocol)
+  )
+  (:action delete-firewall-rule
+    :parameters (?type - firewall-rule-type ?port - integer ?protocol - protocol-type)
+    :precondition (firewall-rule-applied? ?type ?port ?protocol)
+    :effect (not (firewall-rule-applied? ?type ?port ?protocol))
+  )
+  (:action apply-netplan-configuration
+    :parameters (?interface - network-interface)
+    :effect (network-interface-configured? ?interface)
+  )
+  (:action set-netplan-setting
+    :parameters (?interface - network-interface ?key - string ?value - string)
+    :effect (netplan-setting-applied? ?interface ?key ?value)
+  )
+  (:action reload-firewall
+    :precondition (firewall-enabled?)
+    :effect (and (not (firewall-enabled?)) (firewall-enabled?))
+  )
+)
+```
+
+**Explanation:**
+
+1. **Types & Constants**:
+   - Defined `firewall-rule-type` (allow, deny, reject, limit) and `protocol-type` (tcp, udp, icmp) for structured parameter typing.
+   - `network-interface` type represents system interfaces like eth0/wlan0.
+
+2. **Predicates**:
+   - `firewall-enabled?`: Tracks if the firewall is active.
+   - `firewall-rule-applied?`: Indicates if a specific rule (type, port, protocol) exists.
+   - `network-interface-configured?`: Marks if an interface has been configured.
+   - `netplan-setting-applied?`: Tracks applied Netplan settings (key-value pairs).
+
+3. **Actions**:
+   - **Firewall Management**:
+     - `enable-firewall`/`disable-firewall`: Toggle firewall status.
+     - `add-firewall-rule`/`delete-firewall-rule`: Manage specific rules with type, port, and protocol.
+     - `reload-firewall`: Recreates the firewall state (precondition ensures it's only called when active).
+   - **Netplan Configuration**:
+     - `apply-netplan-configuration`: Marks an interface as configured.
+     - `set-netplan-setting`: Applies specific configuration settings to an interface.
+
+This domain models core functionalities of ufw, netplan, and iptables while avoiding duplication of existing actions. It uses typed parameters and structured predicates to ensure clarity and modularity.

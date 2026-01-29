@@ -1,0 +1,85 @@
+```pddl
+(define (problem file-system-problem)
+  (:domain file-system)
+  (:objects
+    home - directory
+    user1 user2 - owner
+    group1 group2 - group
+    file1 file2 - file
+    dir1 dir2 - directory
+    mode1 mode2 - mode
+    link1 link2 - file
+  )
+  (:init
+    (directory home)
+    (owner user1)
+    (owner user2)
+    (group group1)
+    (group group2)
+    (mode mode1)
+    (mode mode2)
+    (file file1)
+    (file file2)
+    (directory dir1)
+    (directory dir2)
+    (owner file1 user1)
+    (group file1 group1)
+    (mode file1 mode1)
+    (owner dir1 user1)
+    (group dir1 group1)
+    (mode dir1 mode1)
+  )
+  (:goal
+    (and
+      (directory dir2)
+      (mode dir2 mode2)
+      (owner dir2 user2)
+      (group dir2 group2)
+      (file link1)
+      (link link1 dir2)
+      (type link1 symbolic)
+    )
+  )
+)
+```
+
+```pddl
+(define (domain file-system)
+  (:requirements :strips :typing)
+  (:types
+    directory file owner group mode
+  )
+  (:predicates
+    (directory ?d - directory)
+    (file ?f - file)
+    (owner ?o - owner)
+    (group ?g - group)
+    (mode ?m - mode)
+    (owner ?x - file ?o - owner)
+    (group ?x - file ?g - group)
+    (mode ?x - file ?m - mode)
+    (link ?l - file ?t - file)
+    (type ?l - file ?t - {hard symbolic})
+  )
+  (:action make-directory
+    :parameters (?d - directory ?m - mode)
+    :precondition (not (directory ?d))
+    :effect (and (directory ?d) (mode ?d ?m))
+  )
+  (:action change-mode
+    :parameters (?x - file ?m - mode)
+    :precondition (or (file ?x) (directory ?x))
+    :effect (mode ?x ?m)
+  )
+  (:action change-owner-group
+    :parameters (?x - file ?o - owner ?g - group)
+    :precondition (or (file ?x) (directory ?x))
+    :effect (and (owner ?x ?o) (group ?x ?g))
+  )
+  (:action create-link
+    :parameters (?t - file ?l - file ?type - {hard symbolic})
+    :precondition (and (or (file ?t) (directory ?t)) (not (file ?l)))
+    :effect (and (file ?l) (link ?l ?t) (type ?l ?type))
+  )
+)
+```

@@ -1,0 +1,82 @@
+```lisp
+(define problem process-management
+  (:domain process-control)
+  (:objects
+    p1 p2 p3 - process
+    cmd1 cmd2 - command
+    sigterm sigkill - signal-type
+    priority1 priority2 - priority-level
+  )
+  (:init
+    (not (process-running p1))
+    (not (process-running p2))
+    (not (process-running p3))
+  )
+  (:goal
+    (and
+      (process-running p1)
+      (process-priority p1 priority1)
+      (process-ignores-hup p1)
+      (not (process-running p2))
+    )
+  )
+)
+```
+
+```lisp
+(define domain process-control
+  (:requirements :strips :typing)
+  (:types
+    process command signal-type priority-level
+  )
+  (:predicates
+    (process-running ?p - process)
+    (process-priority ?p - process ?pr - priority-level)
+    (process-ignores-hup ?p - process)
+  )
+  (:action send-signal-to-process
+    :parameters (?p - process ?s - signal-type)
+    :precondition (process-running ?p)
+    :effect (and (not (process-running ?p)))
+  )
+  (:action adjust-process-priority
+    :parameters (?p - process ?pr - priority-level)
+    :precondition (process-running ?p)
+    :effect (process-priority ?p ?pr)
+  )
+  (:action start-process-with-nice
+    :parameters (?cmd - command ?pr - priority-level ?p - process)
+    :precondition (not (process-running ?p))
+    :effect (and (process-running ?p) (process-priority ?p ?pr))
+  )
+  (:action run-process-with-nohup
+    :parameters (?cmd - command ?p - process)
+    :precondition (not (process-running ?p))
+    :effect (and (process-running ?p) (process-ignores-hup ?p))
+  )
+)
+```
+
+**Explanation:**
+
+1. **Types**:
+   - `process`: Represents running processes (e.g., `p1`, `p2`).
+   - `command`: Applications or scripts to execute (e.g., `cmd1`).
+   - `signal-type`: Signals like `SIGTERM` or `SIGKILL`.
+   - `priority-level`: Numeric values for process priority (e.g., `priority1`).
+
+2. **Predicates**:
+   - `process-running`: Tracks if a process is active.
+   - `process-priority`: Associates a process with its scheduling priority.
+   - `process-ignores-hup`: Indicates a process is configured to ignore hangup signals.
+
+3. **Actions**:
+   - **`send-signal-to-process`**: Stops a running process (models `kill`/`pkill`).
+   - **`adjust-process-priority`**: Changes a running process's priority (models `renice`).
+   - **`start-process-with-nice`**: Launches a new process with a specified priority (models `nice`).
+   - **`run-process-with-nohup`**: Starts a process that ignores HUP signals (models `nohup`).
+
+4. **Key Design Choices**:
+   - Processes are predefined objects (e.g., `p1`, `p2`), avoiding dynamic object creation.
+   - Actions manipulate process states (running, priority, HUP handling) rather than creating new processes.
+   - `priority-level` and `signal-type` are typed to enforce domain-specific constraints.

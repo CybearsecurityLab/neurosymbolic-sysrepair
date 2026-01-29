@@ -1,0 +1,373 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   object, package, service, user, group, file, directory, configuration_file,
+   port, interface, firewall_rule, process, repository, filesystem_object,
+   system_user, human_user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Generate PDDL domain components for: Network configuration and firewall
+Target PDDL types: interface, port, firewall_rule
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?arg)  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?arg)  (configures ?f - configuration_file ?s - service)  (depends_on ?arg)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?arg)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?arg)  (file_exists ?f - filesystem_object)  (file_owned_by ?arg)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?arg)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?arg)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_bound_by ?arg)  (port_open ?arg)  (port_open ?p - port)  (process_owned_by ?arg)  (process_running ?arg)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?arg)  (service_enabled ?s - service)  (service_exists ?arg)  (service_exists ?s - service)  (service_failed ?arg)  (service_failed ?s - service)  (service_running ?arg)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?arg)  (user_critical ?u - user)  (user_exists ?arg)  ... and 3 more
+
+=== SYSTEM DOCUMENTATION ===
+
+--- ip ---
+=== HELP OUTPUT ===
+Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }
+       ip [ -force ] -batch filename
+where  OBJECT := { address | addrlabel | amt | fou | help | ila | ioam | l2tp |
+                   link | macsec | maddress | monitor | mptcp | mroute | mrule |
+                   neighbor | neighbour | netconf | netns | nexthop | ntable |
+                   ntbl | route | rule | sr | tap | tcpmetrics |
+                   token | tunnel | tuntap | vrf | xfrm }
+       OPTIONS := { -V[ersion] | -s[tatistics] | -d[etails] | -r[esolve] |
+                    -h[uman-readable] | -iec | -j[son] | -p[retty] |
+                    -f[amily] { inet | inet6 | mpls | bridge | link } |
+                    -4 | -6 | -M | -B | -0 |
+                    -l[oops] { maximum-addr-flush-attempts } | -br[ief] |
+                    -o[neline] | -t[imestamp] | -ts[hort] | -b[atch] [filename] |
+                    -rc[vbuf] [size] | -n[etns] name | -N[umeric] | -a[ll] |
+                    -c[olor]}
+
+
+
+--- netplan ---
+=== HELP OUTPUT ===
+usage: /usr/sbin/netplan  [-h] [--debug]  ...
+
+Network configuration in YAML
+
+options:
+  -h, --help  show this help message and exit
+  --debug     Enable debug messages
+
+Available commands:
+  
+    help      Show this help message
+    apply     Apply current netplan config to running system
+    generate  Generate backend specific configuration files from
+              /etc/netplan/*.yaml
+    get       Get a setting by specifying a nested key like
+              "ethernets.eth0.addresses", or "all"
+    info      Show available features
+    ip        Retrieve IP information from the system
+    set       Add new setting by specifying a dotted key=value pair like
+              ethernets.eth0.dhcp4=true
+    rebind    Rebind SR-IOV virtual functions of given physical functions to
+              their driver
+    status    Query networking state of the running system
+    try       Try to apply a new netplan config to running system, with
+              automatic rollback
+
+
+
+--- ufw ---
+=== HELP OUTPUT ===
+
+Usage: ufw COMMAND
+
+Commands:
+ enable                          enables the firewall
+ disable                         disables the firewall
+ default ARG                     set default policy
+ logging LEVEL                   set logging to LEVEL
+ allow ARGS                      add allow rule
+ deny ARGS                       add deny rule
+ reject ARGS                     add reject rule
+ limit ARGS                      add limit rule
+ delete RULE|NUM                 delete RULE
+ insert NUM RULE                 insert RULE at NUM
+ prepend RULE                    prepend RULE
+ route RULE                      add route RULE
+ route delete RULE|NUM           delete route RULE
+ route insert NUM RULE           insert route RULE at NUM
+ reload                          reload firewall
+ reset                           reset firewall
+ status                          show firewall status
+ status numbered                 show firewall status as numbered list of RULES
+ status verbose                  show verbose firewall status
+ show ARG                        show firewall report
+ version                         display version information
+
+Application profile commands:
+ app list                        list application profiles
+ app info PROFILE                show information on PROFILE
+ app update PROFILE              update PROFILE
+ app default ARG                 set default application policy
+
+
+
+
+--- iptables ---
+=== HELP OUTPUT ===
+iptables v1.8.10 (nf_tables)
+
+Usage: iptables -[ACD] chain rule-specification [options]
+       iptables -I chain [rulenum] rule-specification [options]
+       iptables -R chain rulenum rule-specification [options]
+       iptables -D chain rulenum [options]
+       iptables -[LS] [chain [rulenum]] [options]
+       iptables -[FZ] [chain] [options]
+       iptables -[NX] chain
+       iptables -E old-chain-name new-chain-name
+       iptables -P chain target [options]
+       iptables -h (print this help information)
+
+Commands:
+Either long or short options are allowed.
+  --append  -A chain		Append to chain
+  --check   -C chain		Check for the existence of a rule
+  --delete  -D chain		Delete matching rule from chain
+  --delete  -D chain rulenum
+				Delete rule rulenum (1 = first) from chain
+  --insert  -I chain [rulenum]
+				Insert in chain as rulenum (default 1=first)
+  --replace -R chain rulenum
+				Replace rule rulenum (1 = first) in chain
+  --list    -L [chain [rulenum]]
+				List the rules in a chain or all chains
+  --list-rules -S [chain [rulenum]]
+				Print the rules in a chain or all chains
+  --flush   -F [chain]		Delete all rules in  chain or all chains
+  --zero    -Z [chain [rulenum]]
+				Zero counters in chain or all chains
+  --new     -N chain		Create a new user-defined chain
+  --delete-chain
+            -X [chain]		Delete a user-defined chain
+  --policy  -P chain target
+				Change policy on chain to target
+  --rename-chain
+            -E old-chain new-chain
+				Change chain name, (moving any references)
+
+Options:
+    --ipv4	-4		Nothing (line is ignored by ip6tables-restore)
+    --ipv6	-6		Error (line is ignored by iptables-restore)
+[!] --protocol	-p proto	protocol: by number or name, eg. `tcp'
+[!] --source	-s address[/mask][...]
+				source specification
+[!] --destination -d address[/mask][...]
+				destination specification
+[!] --in-interface -i input name[+]
+				network interface name ([+] for wildcard)
+ --jump	-j target
+				target for rule (ma...
+
+--- ss ---
+=== HELP OUTPUT ===
+Usage: ss [ OPTIONS ]
+       ss [ OPTIONS ] [ FILTER ]
+   -h, --help          this message
+   -V, --version       output version information
+   -n, --numeric       don't resolve service names
+   -r, --resolve       resolve host names
+   -a, --all           display all sockets
+   -l, --listening     display listening sockets
+   -o, --options       show timer information
+   -e, --extended      show detailed socket information
+   -m, --memory        show socket memory usage
+   -p, --processes     show process using socket
+   -T, --threads       show thread using socket
+   -i, --info          show internal TCP information
+       --tipcinfo      show internal tipc socket information
+   -s, --summary       show socket usage summary
+       --tos           show tos and priority information
+       --cgroup        show cgroup information
+   -b, --bpf           show bpf filter socket information
+   -E, --events        continually display sockets as they are destroyed
+   -Z, --context       display task SELinux security contexts
+   -z, --contexts      display task and socket SELinux security contexts
+   -N, --net           switch to the specified network namespace name
+
+   -4, --ipv4          display only IP version 4 sockets
+   -6, --ipv6          display only IP version 6 sockets
+   -0, --packet        display PACKET sockets
+   -t, --tcp           display only TCP sockets
+   -M, --mptcp         display only MPTCP sockets
+   -S, --sctp          display only SCTP sockets
+   -u, --udp           display only UDP sockets
+   -d, --dccp          display only DCCP sockets
+   -w, --raw           display only RAW sockets
+   -x, --unix          display only Unix domain sockets
+       --tipc          display only TIPC sockets
+       --vsock         display only vsock sockets
+       --xdp           display only XDP sockets
+   -f, --family=FAMILY display sockets of type FAMILY
+       FAMILY := {inet|inet6|link|unix|netlink|vsock|tipc|xdp|help}
+
+   -K, --kill          fo...
+
+--- nft ---
+=== HELP OUTPUT ===
+Usage: nft [ options ] [ cmds... ]
+
+Options (general):
+  -h, --help                      Show this help
+  -v, --version                   Show version information
+  -V                              Show extended version information
+
+Options (ruleset input handling):
+  -f, --file <filename>           Read input from <filename>
+  -D, --define <name=value>       Define variable, e.g. --define foo=1.2.3.4
+  -i, --interactive               Read input from interactive CLI
+  -I, --includepath <directory>   Add <directory> to the paths searched for include files. Default is: /etc
+  -c, --check                     Check commands validity without actually applying the changes.
+  -o, --optimize                  Optimize ruleset
+
+Options (ruleset list formatting):
+  -a, --handle                    Output rule handle.
+  -s, --stateless                 Omit stateful information of ruleset.
+  -t, --terse                     Omit contents of sets.
+  -S, --service                   Translate ports to service names as described in /etc/services.
+  -N, --reversedns                Translate IP addresses to names.
+  -u, --guid                      Print UID/GID as defined in /etc/passwd and /etc/group.
+  -n, --numeric                   Print fully numerical output.
+  -y, --numeric-priority          Print chain priority numerically.
+  -p, --numeric-protocol          Print layer 4 protocols numerically.
+  -T, --numeric-time              Print time values numerically.
+
+Options (command output formatting):
+  -e, --echo                      Echo what has been added, inserted or replaced.
+  -j, --json                      Format output in JSON
+  -d, --debug <level [,level...]> Specify debugging level (scanner, parser, eval, netlink, mnl, proto-ctx, segtree, all)
+
+
+
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

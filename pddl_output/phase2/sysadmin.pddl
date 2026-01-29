@@ -7,18 +7,99 @@
 
   (:requirements :strips :typing :negative-preconditions)
 
-  ;; Type Hierarchy
+  ;; Type Hierarchy (from shared common.type_hierarchy)
   (:types
-    filesystem_object firewall_rule group interface package port process repository service user - object
+    ; Base types
+    
+    ; Filesystem types
+    filesystem_object - object
     directory file - filesystem_object
     configuration_file - file
+    
+    ; Execution types
+    process service - object
+    
+    ; Package management types
+    package repository - object
+    
+    ; Access control types
+    group user - object
     human_user system_user - user
+    
+    ; Network types
+    firewall_rule interface port - object
   )
 
   ;; Predicates
   (:predicates
+    (config_applied ?s - service)
+    (configures ?f - configuration_file ?s - service)
+    (directory ?d - directory)
+    (file ?f - file)
+    (file_exists ?f - configuration_file)
+    (group ?g - group)
+    (link ?l - file ?t - file)
+    (mode ?m - object)
+    (owner ?o - object)
+    (package_installed ?p - object)
+    (package_outdated ?p - object)
+    (service_enabled ?s - service)
+    (service_exists ?s - service)
+    (service_running ?s - service)
     (network_available)
     (can_escalate ?u - user)
+  )
+
+  ;; Action: change
+  (:action change
+    :parameters (?g - group ?o - object ?x - object)
+    :precondition (and)
+    :effect (and
+      (owner ?x ?o)
+      (group ?x ?g)
+    )
+  )
+
+  ;; Action: make
+  (:action make
+    :parameters (?d - directory ?m - object)
+    :precondition (and)
+    :effect (and
+      (directory ?d)
+      (mode ?d ?m)
+    )
+  )
+
+  ;; Action: restart
+  (:action restart
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+      (service_running ?s)
+    )
+    :effect (and
+      (not (service_running ?s))
+      (service_running ?s)
+    )
+  )
+
+  ;; Action: send
+  (:action send
+    :parameters (?p - package ?s - service)
+    :precondition (and)
+    :effect (and
+      (not (process-running ?p))
+    )
+  )
+
+  ;; Action: start
+  (:action start
+    :parameters (?cmd - directory ?p - package ?pr - package)
+    :precondition (and)
+    :effect (and
+      (process-running ?p)
+      (process-priority ?p ?pr)
+    )
   )
 
 )

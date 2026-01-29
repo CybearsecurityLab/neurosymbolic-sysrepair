@@ -1,0 +1,22 @@
+```pddl
+(define (domain package-management)
+  (:types
+    package repository - object
+  )
+  (:action install-package
+    :parameters (?p - package)
+    :precondition (not (package_installed ?p))
+    :effect (package_installed ?p)
+  )
+  (:action remove-package
+    :parameters (?p - package)
+    :precondition (package_installed ?p)
+    :effect (not (package_installed ?p))
+  )
+  (:action upgrade-package
+    :parameters (?p - package)
+    :precondition (and (package_installed ?p) (package_outdated ?p))
+    :effect (not (package_outdated ?p))
+  )
+)
+```

@@ -1,0 +1,21 @@
+```pddl
+(define (problem user-group-management)
+  (:domain user-group-management)
+  (:objects
+    user1 user2 - user
+    group1 group2 - group
+    home1 home2 - directory
+  )
+  (:init
+    (not (user-exists user1))
+    (not (user-exists user2))
+    (not (group-exists group1))
+    (not (group-exists group2))
+    (not (home-directory-exists home1))
+    (not (home-directory-exists home2))
+  )
+  (:goal
+    (and
+      (user-exists user1)
+      (home-directory-exists home1)
+      (user

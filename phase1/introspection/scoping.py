@@ -2,7 +2,7 @@ import re
 from collections import defaultdict
 
 from phase1.common.config import AnchorCriteria
-from phase1.common.models import GraphEntity, EntityType
+from common.models import GraphEntity, EntityType
 
 
 class DependencyGraph:
@@ -194,6 +194,12 @@ class ScopeAnalyzer:
 
     def _build_edges(self):
         """Build dependency edges between entities."""
+        # Build lookup maps for efficient relationship building
+        self.gid_to_entity: dict[str, str] = {}
+        for entity in self.graph.get_by_type(EntityType.GROUP):
+            gid = str(entity.original_data.get("gid", ""))
+            self.gid_to_entity[gid] = entity.id
+
         # Port -> Process (binding)
         for entity in self.graph.get_by_type(EntityType.PORT):
             pid = str(entity.original_data.get("pid", ""))
@@ -224,6 +230,15 @@ class ScopeAnalyzer:
             for config in self.graph.get_by_type(EntityType.CONFIG_FILE):
                 if svc_name in config.name.lower():
                     self.graph.add_edge(service.id, config.id, "configured_by")
+
+        # Config File -> User (file_owned_by) and Config File -> Group (file_owned_by_group)
+        for config in self.graph.get_by_type(EntityType.CONFIG_FILE):
+            uid = str(config.original_data.get("uid", ""))
+            gid = str(config.original_data.get("gid", ""))
+            if uid in self.uid_to_entity:
+                self.graph.add_edge(config.id, self.uid_to_entity[uid], "file_owned_by")
+            if gid in self.gid_to_entity:
+                self.graph.add_edge(config.id, self.gid_to_entity[gid], "file_owned_by_group")
 
         # User group membership and sudo
         try:
@@ -366,6 +381,16 @@ class ScopeAnalyzer:
         # Now we use the cached names so relationships point to the correct objects
         reachable_ids = set(entity_id_to_pddl_name.keys())
 
+        # Initialize all relationship types
+        state["relationships"]["depends_on"] = []
+        state["relationships"]["configures"] = []
+        state["relationships"]["member_of"] = []
+        state["relationships"]["file_owned_by"] = []
+        state["relationships"]["file_owned_by_group"] = []
+        state["relationships"]["can_escalate"] = []
+        state["relationships"]["binds"] = []
+        state["relationships"]["owned_by"] = []
+
         for src_id, tgt_id, edge_type in self.graph.edges:
             if src_id in reachable_ids and tgt_id in reachable_ids:
                 src_name = entity_id_to_pddl_name[src_id]
@@ -383,6 +408,22 @@ class ScopeAnalyzer:
                     state["relationships"]["member_of"].append(
                         {"user": src_name, "group": tgt_name}
                     )
+                elif edge_type == "file_owned_by":
+                    state["relationships"]["file_owned_by"].append(
+                        {"file": src_name, "user": tgt_name}
+                    )
+                elif edge_type == "file_owned_by_group":
+                    state["relationships"]["file_owned_by_group"].append(
+                        {"file": src_name, "group": tgt_name}
+                    )
+                elif edge_type == "binds":
+                    state["relationships"]["binds"].append(
+                        {"port": src_name, "process": tgt_name}
+                    )
+                elif edge_type == "owned_by":
+                    state["relationships"]["owned_by"].append(
+                        {"process": src_name, "user": tgt_name}
+                    )
 
         # Add can_escalate relationships
         for entity in self.graph.get_reachable():
@@ -391,6 +432,9 @@ class ScopeAnalyzer:
             ):
                 clean_name = entity_id_to_pddl_name[entity.id]
                 state["relationships"]["can_escalate"].append({"user": clean_name})
+
+        # Add relationship predicates to the predicates list for the problem file
+        self._add_relationship_predicates(state)
 
         return dict(state)
 
@@ -496,6 +540,70 @@ class ScopeAnalyzer:
             predicates.append(
                 {"name": "interface_up", "arguments": [name], "value": has_address}
             )
+
+    def _add_relationship_predicates(self, state: dict):
+        """
+        Convert relationships to PDDL predicates for the problem file.
+        This ensures relationships are represented as ground facts.
+        """
+        predicates = state["predicates"]
+        relationships = state["relationships"]
+
+        # depends_on(service, package) - service depends on package
+        for rel in relationships.get("depends_on", []):
+            predicates.append({
+                "name": "depends_on",
+                "arguments": [rel["service"], rel["package"]],
+                "value": True
+            })
+
+        # configures(config_file, service) - config file configures service
+        for rel in relationships.get("configures", []):
+            predicates.append({
+                "name": "configures",
+                "arguments": [rel["config"], rel["service"]],
+                "value": True
+            })
+
+        # member_of(user, group) - user is member of group
+        for rel in relationships.get("member_of", []):
+            predicates.append({
+                "name": "member_of",
+                "arguments": [rel["user"], rel["group"]],
+                "value": True
+            })
+
+        # file_owned_by(file, user) - file is owned by user
+        for rel in relationships.get("file_owned_by", []):
+            predicates.append({
+                "name": "file_owned_by",
+                "arguments": [rel["file"], rel["user"]],
+                "value": True
+            })
+
+        # can_escalate(user) - user can escalate privileges (sudo)
+        for rel in relationships.get("can_escalate", []):
+            predicates.append({
+                "name": "can_escalate",
+                "arguments": [rel["user"]],
+                "value": True
+            })
+
+        # binds(port, process) - port is bound by process
+        for rel in relationships.get("binds", []):
+            predicates.append({
+                "name": "port_bound_by",
+                "arguments": [rel["port"], rel["process"]],
+                "value": True
+            })
+
+        # owned_by(process, user) - process is owned by user
+        for rel in relationships.get("owned_by", []):
+            predicates.append({
+                "name": "process_owned_by",
+                "arguments": [rel["process"], rel["user"]],
+                "value": True
+            })
 
     def _sanitize_name(self, name: str) -> str:
         if not name:

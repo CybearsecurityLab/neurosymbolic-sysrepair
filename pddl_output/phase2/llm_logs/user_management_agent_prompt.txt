@@ -1,0 +1,367 @@
+=== SYSTEM ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   object, package, service, user, group, file, directory, configuration_file,
+   port, interface, firewall_rule, process, repository, filesystem_object,
+   system_user, human_user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Generate PDDL domain components for: User and group administration
+Target PDDL types: user, group
+
+=== EXISTING PREDICATES (use these) ===Use these predicates when applicable:  (can_escalate ?arg)  (can_escalate ?u - user)  (config_applied ?s - service)  (configures ?arg)  (configures ?f - configuration_file ?s - service)  (depends_on ?arg)  (depends_on ?s - service ?p - package)  (executed_as_root ?pr - process)  (file_critical ?arg)  (file_critical ?f - filesystem_object)  (file_executable ?f - filesystem_object)  (file_exists ?arg)  (file_exists ?f - filesystem_object)  (file_owned_by ?arg)  (file_owned_by ?f - filesystem_object ?u - user)  (file_readable ?f - filesystem_object)  (file_writable ?f - filesystem_object)  (firewall_rule_exists ?r - firewall_rule)  (group_exists ?g - group)  (interface_exists ?i - interface)  (interface_up ?i - interface)  (member_of ?arg)  (member_of ?u - user ?g - group)  (network_available)  (package_configured ?p - package)  (package_enabled ?p - package)  (package_installed ?arg)  (package_installed ?p - package)  (package_outdated ?p - package)  (package_reverted ?p - package)  (port_allowed ?p - port)  (port_bound_by ?arg)  (port_open ?arg)  (port_open ?p - port)  (process_owned_by ?arg)  (process_running ?arg)  (process_running ?pr - process)  (requires_env_preservation ?pr - process)  (service_enabled ?arg)  (service_enabled ?s - service)  (service_exists ?arg)  (service_exists ?s - service)  (service_failed ?arg)  (service_failed ?s - service)  (service_running ?arg)  (service_running ?s - service)  (traffic_blocked ?r - firewall_rule)  (user_critical ?arg)  (user_critical ?u - user)  (user_exists ?arg)  ... and 3 more
+
+=== SYSTEM DOCUMENTATION ===
+
+--- useradd ---
+=== HELP OUTPUT ===
+Usage: useradd [options] LOGIN
+       useradd -D
+       useradd -D [options]
+
+Options:
+      --badname                 do not check for bad names
+  -b, --base-dir BASE_DIR       base directory for the home directory of the
+                                new account
+      --btrfs-subvolume-home    use BTRFS subvolume for home directory
+  -c, --comment COMMENT         GECOS field of the new account
+  -d, --home-dir HOME_DIR       home directory of the new account
+  -D, --defaults                print or change default useradd configuration
+  -e, --expiredate EXPIRE_DATE  expiration date of the new account
+  -f, --inactive INACTIVE       password inactivity period of the new account
+  -F, --add-subids-for-system   add entries to sub[ud]id even when adding a system user
+  -g, --gid GROUP               name or ID of the primary group of the new
+                                account
+  -G, --groups GROUPS           list of supplementary groups of the new
+                                account
+  -h, --help                    display this help message and exit
+  -k, --skel SKEL_DIR           use this alternative skeleton directory
+  -K, --key KEY=VALUE           override /etc/login.defs defaults
+  -l, --no-log-init             do not add the user to the lastlog and
+                                faillog databases
+  -m, --create-home             create the user's home directory
+  -M, --no-create-home          do not create the user's home directory
+  -N, --no-user-group           do not create a group with the same name as
+                                the user
+  -o, --non-unique              allow to create users with duplicate
+                                (non-unique) UID
+  -p, --password PASSWORD       encrypted password of the new account
+  -r, --system                  create a system account
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+  -s, --sh...
+
+--- usermod ---
+=== HELP OUTPUT ===
+Usage: usermod [options] LOGIN
+
+Options:
+  -a, --append                  append the user to the supplemental GROUPS
+                                mentioned by the -G option without removing
+                                the user from other groups
+  -b, --badname                 allow bad names
+  -c, --comment COMMENT         new value of the GECOS field
+  -d, --home HOME_DIR           new home directory for the user account
+  -e, --expiredate EXPIRE_DATE  set account expiration date to EXPIRE_DATE
+  -f, --inactive INACTIVE       set password inactive after expiration
+                                to INACTIVE
+  -g, --gid GROUP               force use GROUP as new primary group
+  -G, --groups GROUPS           new list of supplementary GROUPS
+  -h, --help                    display this help message and exit
+  -l, --login NEW_LOGIN         new value of the login name
+  -L, --lock                    lock the user account
+  -m, --move-home               move contents of the home directory to the
+                                new location (use only with -d)
+  -o, --non-unique              allow using duplicate (non-unique) UID
+  -p, --password PASSWORD       use encrypted password for the new password
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+  -r, --remove                  remove the user from only the supplemental GROUPS
+                                mentioned by the -G option without removing
+                                the user from other groups
+  -R, --root CHROOT_DIR         directory to chroot into
+  -s, --shell SHELL             new login shell for the user account
+  -u, --uid UID                 new UID for the user account
+  -U, --unlock                  unlock the user account
+  -v, --add-subuids FIRST-LAST  add range of subordinate uids
+  -V, --del-subuids FIRST-LAST  remove range of subordinate uids
+  -w, --add-subgids FIRST-LAST  add range of subordinate gids
+  -W, --del-subgids FIRS...
+
+--- userdel ---
+=== HELP OUTPUT ===
+Usage: userdel [options] LOGIN
+
+Options:
+  -f, --force                   force some actions that would fail otherwise
+                                e.g. removal of user still logged in
+                                or files, even if not owned by the user
+  -h, --help                    display this help message and exit
+  -r, --remove                  remove home directory and mail spool
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DIR       prefix directory where are located the /etc/* files
+      --extrausers              Use the extra users database
+  -Z, --selinux-user            remove any SELinux user mapping for the user
+
+
+
+
+--- groupadd ---
+=== HELP OUTPUT ===
+Usage: groupadd [options] GROUP
+
+Options:
+  -f, --force                   exit successfully if the group already exists,
+                                and cancel -g if the GID is already used
+  -g, --gid GID                 use GID for the new group
+  -h, --help                    display this help message and exit
+  -K, --key KEY=VALUE           override /etc/login.defs defaults
+  -o, --non-unique              allow to create groups with duplicate
+                                (non-unique) GID
+  -p, --password PASSWORD       use this encrypted password for the new group
+  -r, --system                  create a system account
+  -R, --root CHROOT_DIR         directory to chroot into
+  -P, --prefix PREFIX_DI        directory prefix
+  -U, --users USERS             list of user members of this group
+      --extrausers              Use the extra users database
+
+
+
+
+--- passwd ---
+=== MAN PAGE ===
+PASSWD(1) User Commands PASSWD(1)
+
+NAME
+ passwd - change user password
+
+SYNOPSIS
+
+ passwd [options] [LOGIN]
+
+DESCRIPTION
+ The passwd command changes passwords for user accounts. A normal user may only change the password for their
+ own account, while the superuser may change the password for any account. passwd also changes the account or
+ associated password validity period.
+
+ Password Changes
+ The user is first prompted for their old password, if one is present. This password is then encrypted and
+ compared against the stored password. The user has only one chance to enter the correct password. The
+ superuser is permitted to bypass this step so that forgotten passwords may be changed.
+
+ After the password has been entered, password aging information is checked to see if the user is permitted to
+ change the password at this time. If not, passwd refuses to change the password and exits.
+
+ The user is then prompted twice for a replacement password. The second entry is compared against the first and
+ both are required to match in order for the password to be changed.
+
+ Then, the password is tested for complexity. As a general guideline, passwords should consist of 6 to 8
+ characters including one or more characters from each of the following sets:
+
+ o lower case alphabetics
+
+ o digits 0 thru 9
+
+ o punctuation marks
+
+ Care must be taken not to include the system default erase or kill characters. passwd will reject any
+ password which is not suitably complex.
+
+ Hints for user passwords
+ The security of a password depends upon the strength of the encryption algorithm and the size of the key
+ space. The legacy UNIX System encryption method is based on the NBS DES algorithm. More recent methods are now
+ recommended (see ENCRYPT_METHOD). The size of the key space depends upon the randomness of the password which
+ is selected.
+
+ Compromises in password security normally result from careless password selection or handling. For this
+ reason, you should not sel...
+
+--- chage ---
+=== MAN PAGE ===
+CHAGE(1) User Commands CHAGE(1)
+
+NAME
+ chage - change user password expiry information
+
+SYNOPSIS
+
+ chage [options] LOGIN
+
+DESCRIPTION
+ The chage command changes the number of days between password changes and the date of the last password
+ change. This information is used by the system to determine when a user must change their password.
+
+OPTIONS
+ The options which apply to the chage command are:
+
+ -d, --lastday LAST_DAY
+ Set the number of days since January 1st, 1970 when the password was last changed. The date may also be
+ expressed in the format YYYY-MM-DD (or the format more commonly used in your area). If the LAST_DAY is set
+ to 0 the user is forced to change his password on the next log on.
+
+ -E, --expiredate EXPIRE_DATE
+ Set the date or number of days since January 1, 1970 on which the user's account will no longer be
+ accessible. The date may also be expressed in the format YYYY-MM-DD (or the format more commonly used in
+ your area). A user whose account is locked must contact the system administrator before being able to use
+ the system again.
+
+ For example the following can be used to set an account to expire in 180 days:
+
+ chage -E $(date -d +180days +%Y-%m-%d)
+
+ Passing the number -1 as the EXPIRE_DATE will remove an account expiration date.
+
+ -h, --help
+ Display help message and exit.
+
+ -i, --iso8601
+ When printing dates, use YYYY-MM-DD format.
+
+ -I, --inactive INACTIVE
+ Set the number of days of inactivity after a password has expired before the account is locked. The
+ INACTIVE option is the number of days of inactivity. A user whose account is locked must contact the
+ system administrator before being able to use the system again.
+
+ Passing the number -1 as the INACTIVE will remove an account's inactivity.
+
+ -l, --list
+ Show account aging information.
+
+ -m, --mindays MIN_DAYS
+ Set the minimum number of days between password changes to MIN_DAYS. A value of zero for this field
+ indicates that the user may change their password at any ti...
+
+
+Generate NEW PDDL types, predicates, and actions. Do NOT duplicate existing actions. Use existing predicates when possible. Output ONLY valid PDDL syntax.

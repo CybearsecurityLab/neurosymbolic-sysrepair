@@ -1,50 +1,774 @@
 [
   {
-    "worker_name": "privilege_agent",
-    "group_name": "privilege",
-    "types": [],
+    "worker_name": "package_management_agent",
+    "group_name": "package_management",
+    "types": [
+      {
+        "name": "package",
+        "parent": "object",
+        "source": "package_management_agent"
+      },
+      {
+        "name": "repository",
+        "parent": "object",
+        "source": "package_management_agent"
+      }
+    ],
     "predicates": [],
-    "actions": [],
-    "generation_time": 7.493327617645264
+    "actions": [
+      {
+        "name": "install",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      },
+      {
+        "name": "remove",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      },
+      {
+        "name": "upgrade",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [
+          "(package_installed ?p)",
+          "(package_outdated ?p)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "package_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(define (domain package-management)\n  (:types\n    package repository - object\n  )\n  (:action install\n    :parameters (?p - package)-package\n    :parameters (?p - package)\n    :precondition (not (package_installed ?p))\n    :effect (package_installed ?p)\n  )\n  (:action remove\n    :parameters (?p - package)-package\n    :parameters (?p - package)\n    :precondition (package_installed ?p)\n    :effect (not (package_installed ?p))\n  )\n  (:action upgrade\n    :parameters (?p - package)-package\n    :parameters (?p - package)\n    :precondition (and (package_installed ?p) (package_outdated ?p))\n    :effect (not (package_outdated ?p))\n  )\n)\n```",
+    "error": null,
+    "generation_time": 78.77480244636536
   },
   {
-    "worker_name": "service_agent",
-    "group_name": "service",
+    "worker_name": "service_management_agent",
+    "group_name": "service_management",
     "types": [],
-    "predicates": [],
-    "actions": [],
-    "generation_time": 8.771658182144165
+    "predicates": [
+      {
+        "name": "service_exists",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "service_running",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "service_enabled",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "config_applied",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "file_exists",
+        "parameters": [
+          [
+            "f",
+            "configuration_file"
+          ]
+        ],
+        "source": "service_management_agent"
+      },
+      {
+        "name": "configures",
+        "parameters": [
+          [
+            "f",
+            "configuration_file"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "source": "service_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "start",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(not (service_running ?s))"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "stop",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(service_running ?s)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "restart",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(service_running ?s)"
+        ],
+        "effects": [
+          "(not (service_running ?s))",
+          "(service_running ?s)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "enable",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "disable",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(service_enabled ?s)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "apply",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?f)",
+          "(configures ?f ?s)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      },
+      {
+        "name": "reload",
+        "parameters": [
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(service_exists ?s)",
+          "(service_running ?s)",
+          "(config_applied ?s)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "service_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(define (problem service-management)\n  (:domain systemd)\n  (:objects\n    sshd - service\n    nginx - service\n    sshd-config - configuration_file\n    nginx-config - configuration_file\n  )\n  (:init\n    (service_exists sshd)\n    (service_exists nginx)\n    (file_exists sshd-config)\n    (file_exists nginx-config)\n    (configures sshd-config sshd)\n    (configures nginx-config nginx)\n    (service_enabled sshd)\n    (not (service_running sshd))\n    (not (service_enabled nginx))\n    (not (service_running nginx))\n  )\n  (:goal\n    (and\n      (service_running sshd)\n      (service_enabled nginx)\n      (config_applied nginx)\n    )\n  )\n)\n```\n\n```pddl\n(define (domain systemd)\n  (:requirements :strips :typing)\n  (:types\n    service configuration_file\n  )\n  (:predicates\n    (service_exists ?s - service)\n    (service_running ?s - service)\n    (service_enabled ?s - service)\n    (config_applied ?s - service)\n    (file_exists ?f - configuration_file)\n    (configures ?f - configuration_file ?s - service)\n  )\n  (:action start\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (and (service_exists ?s) (not (service_running ?s)))\n    :effect (service_running ?s)\n  )\n  (:action stop\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (and (service_exists ?s) (service_running ?s))\n    :effect (not (service_running ?s))\n  )\n  (:action restart\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (and (service_exists ?s) (service_running ?s))\n    :effect (and (not (service_running ?s)) (service_running ?s))\n  )\n  (:action enable\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (service_exists ?s)\n    :effect (service_enabled ?s)\n  )\n  (:action disable\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (and (service_exists ?s) (service_enabled ?s))\n    :effect (not (service_enabled ?s))\n  )\n  (:action apply\n    :parameters (?f - file ?s - service)-configuration\n    :parameters (?f - configuration_file ?s - service)\n    :precondition (and (file_exists ?f) (configures ?f ?s))\n    :effect (config_applied ?s)\n  )\n  (:action reload\n    :parameters (?s - service)-service\n    :parameters (?s - service)\n    :precondition (and (service_exists ?s) (service_running ?s) (config_applied ?s))\n    :effect (and (not (config_applied ?s)) (config_applied ?s))\n  )\n)\n```",
+    "error": null,
+    "generation_time": 93.39540982246399
   },
   {
-    "worker_name": "package_agent",
-    "group_name": "package",
+    "worker_name": "user_management_agent",
+    "group_name": "user_management",
     "types": [],
     "predicates": [],
     "actions": [],
-    "generation_time": 14.673799276351929
+    "raw_pddl": "```pddl\n(define (problem user-group-management)\n  (:domain user-group-management)\n  (:objects\n    user1 user2 - user\n    group1 group2 - group\n    home1 home2 - directory\n  )\n  (:init\n    (not (user-exists user1))\n    (not (user-exists user2))\n    (not (group-exists group1))\n    (not (group-exists group2))\n    (not (home-directory-exists home1))\n    (not (home-directory-exists home2))\n  )\n  (:goal\n    (and\n      (user-exists user1)\n      (home-directory-exists home1)\n      (user))))",
+    "error": null,
+    "generation_time": 178.78166842460632
   },
   {
-    "worker_name": "user_agent",
-    "group_name": "user",
+    "worker_name": "file_management_agent",
+    "group_name": "file_management",
     "types": [],
-    "predicates": [],
-    "actions": [],
-    "generation_time": 15.909733533859253
+    "predicates": [
+      {
+        "name": "directory",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "file",
+        "parameters": [
+          [
+            "f",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "owner",
+        "parameters": [
+          [
+            "o",
+            "object"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "group",
+        "parameters": [
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "mode",
+        "parameters": [
+          [
+            "m",
+            "object"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "owner",
+        "parameters": [
+          [
+            "x",
+            "file"
+          ],
+          [
+            "o",
+            "object"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "group",
+        "parameters": [
+          [
+            "x",
+            "file"
+          ],
+          [
+            "g",
+            "group"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "mode",
+        "parameters": [
+          [
+            "x",
+            "file"
+          ],
+          [
+            "m",
+            "object"
+          ]
+        ],
+        "source": "file_management_agent"
+      },
+      {
+        "name": "link",
+        "parameters": [
+          [
+            "l",
+            "file"
+          ],
+          [
+            "t",
+            "file"
+          ]
+        ],
+        "source": "file_management_agent"
+      }
+    ],
+    "actions": [
+      {
+        "name": "make",
+        "parameters": [
+          [
+            "d",
+            "directory"
+          ],
+          [
+            "m",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(directory ?d)",
+          "(mode ?d ?m)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change",
+        "parameters": [
+          [
+            "m",
+            "object"
+          ],
+          [
+            "x",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "change",
+        "parameters": [
+          [
+            "g",
+            "group"
+          ],
+          [
+            "o",
+            "object"
+          ],
+          [
+            "x",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(owner ?x ?o)",
+          "(group ?x ?g)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      },
+      {
+        "name": "create",
+        "parameters": [
+          [
+            "l",
+            "object"
+          ],
+          [
+            "t",
+            "object"
+          ],
+          [
+            "type",
+            "object"
+          ]
+        ],
+        "preconditions": [
+          "(or (file ?t) (directory ?t))",
+          "(not (file ?l))"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "file_management_agent"
+      }
+    ],
+    "raw_pddl": "```pddl\n(define (problem file-system-problem)\n  (:domain file-system)\n  (:objects\n    home - directory\n    user1 user2 - owner\n    group1 group2 - group\n    file1 file2 - file\n    dir1 dir2 - directory\n    mode1 mode2 - mode\n    link1 link2 - file\n  )\n  (:init\n    (directory home)\n    (owner user1)\n    (owner user2)\n    (group group1)\n    (group group2)\n    (mode mode1)\n    (mode mode2)\n    (file file1)\n    (file file2)\n    (directory dir1)\n    (directory dir2)\n    (owner file1 user1)\n    (group file1 group1)\n    (mode file1 mode1)\n    (owner dir1 user1)\n    (group dir1 group1)\n    (mode dir1 mode1)\n  )\n  (:goal\n    (and\n      (directory dir2)\n      (mode dir2 mode2)\n      (owner dir2 user2)\n      (group dir2 group2)\n      (file link1)\n      (link link1 dir2)\n      (type link1 symbolic)\n    )\n  )\n)\n```\n\n```pddl\n(define (domain file-system)\n  (:requirements :strips :typing)\n  (:types\n    directory file owner group mode\n  )\n  (:predicates\n    (directory ?d - directory)\n    (file ?f - file)\n    (owner ?o - object)\n    (group ?g - group)\n    (mode ?m - object)\n    (owner ?x - file ?o - object)\n    (group ?x - file ?g - group)\n    (mode ?x - file ?m - object)\n    (link ?l - file ?t - file)\n    (type ?l - file ?t - {hard symbolic})\n  )\n  (:action make\n    :parameters (?d - directory ?m - object)-directory\n    :parameters (?d - directory ?m - object)\n    :precondition (not (directory ?d))\n    :effect (and (directory ?d) (mode ?d ?m))\n  )\n  (:action change\n    :parameters (?m - object ?x - object)-mode\n    :parameters (?x - file ?m - object)\n    :precondition (or (file ?x) (directory ?x))\n    :effect (mode ?x ?m)\n  )\n  (:action change\n    :parameters (?g - group ?o - object ?x - object)-owner-group\n    :parameters (?x - file ?o - object ?g - group)\n    :precondition (or (file ?x) (directory ?x))\n    :effect (and (owner ?x ?o) (group ?x ?g))\n  )\n  (:action create\n    :parameters (?l - object ?t - object ?type - object)-link\n    :parameters (?t - file ?l - file ?type - {hard symbolic})\n    :precondition (and (or (file ?t) (directory ?t)) (not (file ?l)))\n    :effect (and (file ?l) (link ?l ?t) (type ?l ?type))\n  )\n)\n```",
+    "error": null,
+    "generation_time": 100.77915143966675
   },
   {
-    "worker_name": "network_agent",
-    "group_name": "network",
+    "worker_name": "network_management_agent",
+    "group_name": "network_management",
     "types": [],
     "predicates": [],
-    "actions": [],
-    "generation_time": 16.98636221885681
+    "actions": [
+      {
+        "name": "enable",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "disable",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "add",
+        "parameters": [
+          [
+            "port",
+            "package"
+          ],
+          [
+            "protocol",
+            "package"
+          ],
+          [
+            "type",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "delete",
+        "parameters": [
+          [
+            "port",
+            "package"
+          ],
+          [
+            "protocol",
+            "package"
+          ],
+          [
+            "type",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "apply",
+        "parameters": [
+          [
+            "interface",
+            "interface"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "set",
+        "parameters": [
+          [
+            "interface",
+            "interface"
+          ],
+          [
+            "key",
+            "object"
+          ],
+          [
+            "value",
+            "object"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      },
+      {
+        "name": "reload",
+        "parameters": [],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "network_management_agent"
+      }
+    ],
+    "raw_pddl": "```lisp\n(define (domain network-firewall-management)\n  (:requirements :strips :typing)\n  (:types\n    firewall-rule-type\n    protocol-type\n    network-interface\n  )\n  (:constants\n    allow deny reject limit - firewall-rule-type\n    tcp udp icmp - protocol-type\n  )\n  (:predicates\n    (firewall-enabled?)\n    (firewall-rule-applied? ?type - object ?port - object ?protocol - object)\n    (network-interface-configured? ?interface - object)\n    (netplan-setting-applied? ?interface - object ?key - object ?value - object)\n  )\n  (:action enable-firewall\n    :effect (firewall-enabled?)\n  )\n  (:action disable-firewall\n    :effect (not (firewall-enabled?))\n  )\n  (:action add\n    :parameters (?port - package ?protocol - package ?type - object)-firewall-rule\n    :parameters (?type - object ?port - object ?protocol - object)\n    :effect (firewall-rule-applied? ?type ?port ?protocol)\n  )\n  (:action delete\n    :parameters (?port - package ?protocol - package ?type - object)-firewall-rule\n    :parameters (?type - object ?port - object ?protocol - object)\n    :precondition (firewall-rule-applied? ?type ?port ?protocol)\n    :effect (not (firewall-rule-applied? ?type ?port ?protocol))\n  )\n  (:action apply\n    :parameters (?interface - interface)-netplan-configuration\n    :parameters (?interface - object)\n    :effect (network-interface-configured? ?interface)\n  )\n  (:action set\n    :parameters (?interface - interface ?key - object ?value - object)-netplan-setting\n    :parameters (?interface - object ?key - object ?value - object)\n    :effect (netplan-setting-applied? ?interface ?key ?value)\n  )\n  (:action reload-firewall\n    :precondition (firewall-enabled?)\n    :effect (and (not (firewall-enabled?)) (firewall-enabled?))\n  )\n)\n```\n\n**Explanation:**\n\n1. **Types & Constants**:\n   - Defined `firewall-rule-type` (allow, deny, reject, limit) and `protocol-type` (tcp, udp, icmp) for structured parameter typing.\n   - `network-interface` type represents system interfaces like eth0/wlan0.\n\n2. **Predicates**:\n   - `firewall-enabled?`: Tracks if the firewall is active.\n   - `firewall-rule-applied?`: Indicates if a specific rule (type, port, protocol) exists.\n   - `network-interface-configured?`: Marks if an interface has been configured.\n   - `netplan-setting-applied?`: Tracks applied Netplan settings (key-value pairs).\n\n3. **Actions**:\n   - **Firewall Management**:\n     - `enable-firewall`/`disable-firewall`: Toggle firewall status.\n     - `add-firewall-rule`/`delete-firewall-rule`: Manage specific rules with type, port, and protocol.\n     - `reload-firewall`: Recreates the firewall state (precondition ensures it's only called when active).\n   - **Netplan Configuration**:\n     - `apply-netplan-configuration`: Marks an interface as configured.\n     - `set-netplan-setting`: Applies specific configuration settings to an interface.\n\nThis domain models core functionalities of ufw, netplan, and iptables while avoiding duplication of existing actions. It uses typed parameters and structured predicates to ensure clarity and modularity.",
+    "error": null,
+    "generation_time": 140.0122685432434
   },
   {
-    "worker_name": "filesystem_agent",
-    "group_name": "filesystem",
+    "worker_name": "process_management_agent",
+    "group_name": "process_management",
     "types": [],
     "predicates": [],
-    "actions": [],
-    "generation_time": 51.07473587989807
+    "actions": [
+      {
+        "name": "send",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(not (process-running ?p))"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "adjust",
+        "parameters": [
+          [
+            "p",
+            "package"
+          ],
+          [
+            "pr",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "start",
+        "parameters": [
+          [
+            "cmd",
+            "directory"
+          ],
+          [
+            "p",
+            "package"
+          ],
+          [
+            "pr",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [
+          "(process-running ?p)",
+          "(process-priority ?p ?pr)"
+        ],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      },
+      {
+        "name": "run",
+        "parameters": [
+          [
+            "cmd",
+            "directory"
+          ],
+          [
+            "p",
+            "package"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "process_management_agent"
+      }
+    ],
+    "raw_pddl": "```lisp\n(define problem process-management\n  (:domain process-control)\n  (:objects\n    p1 p2 p3 - process\n    cmd1 cmd2 - command\n    sigterm sigkill - signal-type\n    priority1 priority2 - priority-level\n  )\n  (:init\n    (not (process-running p1))\n    (not (process-running p2))\n    (not (process-running p3))\n  )\n  (:goal\n    (and\n      (process-running p1)\n      (process-priority p1 priority1)\n      (process-ignores-hup p1)\n      (not (process-running p2))\n    )\n  )\n)\n```\n\n```lisp\n(define domain process-control\n  (:requirements :strips :typing)\n  (:types\n    process command signal-type priority-level\n  )\n  (:predicates\n    (process-running ?p - process)\n    (process-priority ?p - process ?pr - object)\n    (process-ignores-hup ?p - process)\n  )\n  (:action send\n    :parameters (?p - package ?s - service)-signal-to-process\n    :parameters (?p - process ?s - object)\n    :precondition (process-running ?p)\n    :effect (and (not (process-running ?p)))\n  )\n  (:action adjust\n    :parameters (?p - package ?pr - package)-process-priority\n    :parameters (?p - process ?pr - object)\n    :precondition (process-running ?p)\n    :effect (process-priority ?p ?pr)\n  )\n  (:action start\n    :parameters (?cmd - directory ?p - package ?pr - package)-process-with-nice\n    :parameters (?cmd - process ?pr - object ?p - process)\n    :precondition (not (process-running ?p))\n    :effect (and (process-running ?p) (process-priority ?p ?pr))\n  )\n  (:action run\n    :parameters (?cmd - directory ?p - package)-process-with-nohup\n    :parameters (?cmd - process ?p - process)\n    :precondition (not (process-running ?p))\n    :effect (and (process-running ?p) (process-ignores-hup ?p))\n  )\n)\n```\n\n**Explanation:**\n\n1. **Types**:\n   - `process`: Represents running processes (e.g., `p1`, `p2`).\n   - `command`: Applications or scripts to execute (e.g., `cmd1`).\n   - `signal-type`: Signals like `SIGTERM` or `SIGKILL`.\n   - `priority-level`: Numeric values for process priority (e.g., `priority1`).\n\n2. **Predicates**:\n   - `process-running`: Tracks if a process is active.\n   - `process-priority`: Associates a process with its scheduling priority.\n   - `process-ignores-hup`: Indicates a process is configured to ignore hangup signals.\n\n3. **Actions**:\n   - **`send-signal-to-process`**: Stops a running process (models `kill`/`pkill`).\n   - **`adjust-process-priority`**: Changes a running process's priority (models `renice`).\n   - **`start-process-with-nice`**: Launches a new process with a specified priority (models `nice`).\n   - **`run-process-with-nohup`**: Starts a process that ignores HUP signals (models `nohup`).\n\n4. **Key Design Choices**:\n   - Processes are predefined objects (e.g., `p1`, `p2`), avoiding dynamic object creation.\n   - Actions manipulate process states (running, priority, HUP handling) rather than creating new processes.\n   - `priority-level` and `signal-type` are typed to enforce domain-specific constraints.",
+    "error": null,
+    "generation_time": 138.05802416801453
+  },
+  {
+    "worker_name": "privilege_escalation_agent",
+    "group_name": "privilege_escalation",
+    "types": [],
+    "predicates": [],
+    "actions": [
+      {
+        "name": "apply_sudoers_config",
+        "parameters": [
+          [
+            "cf",
+            "configuration_file"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [
+          "(file_exists ?cf)",
+          "(service_exists ?s)",
+          "(configures ?cf ?s)"
+        ],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "privilege_escalation_agent"
+      },
+      {
+        "name": "grant_sudo_privilege",
+        "parameters": [
+          [
+            "u",
+            "user"
+          ],
+          [
+            "s",
+            "service"
+          ]
+        ],
+        "preconditions": [],
+        "effects": [],
+        "command_template": "",
+        "requires_root": false,
+        "source_utility": "",
+        "source_worker": "privilege_escalation_agent"
+      }
+    ],
+    "raw_pddl": "Here are the PDDL actions for privilege management, leveraging existing predicates and types:\n\n```lisp\n(:action apply_sudoers_config\n  :parameters (?cf - configuration_file ?s - service)\n  :precondition (and (file_exists ?cf) (service_exists ?s) (configures ?cf ?s))\n  :effect (config_applied ?s)\n)\n\n(:action grant_sudo_privilege\n  :parameters (?u - user ?s - service)\n  :precondition (and (user_exists ?u) (config_applied ?s)))",
+    "error": null,
+    "generation_time": 178.40104579925537
   }
 ]
