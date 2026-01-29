@@ -21,14 +21,13 @@ from typing import Optional
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.models import ActionSchema
+from common.models import ActionSchema, PDDLType
 from common.pddl_rules import PDDL_SYNTAX_GUIDE
 from common.type_hierarchy import VALID_TYPES, normalize_type
 
-from phase2.models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
+from phase2.models import PartialPDDLDomain, PDDLPredicate, PDDLAction
 from phase2.llm import LLMInterface
 from phase2.tools import DocumentationExtractor
-from phase1.common.config import OSQUERY_MAPPINGS
 
 logger = logging.getLogger("Phase2.Worker")
 
@@ -50,9 +49,7 @@ class WorkerAgent:
 ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
 
 1. VALID TYPES ONLY - Use ONLY these types:
-   object, package, service, user, group, file, directory, configuration_file,
-   port, interface, firewall_rule, process, repository, filesystem_object,
-   system_user, human_user
+   {valid_types_list}
 
    INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
 
@@ -135,7 +132,11 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         3. OS-specific constraints (sudo-rs/uutils for Ubuntu 25.10)
         """
         # Start with the base syntax rules
-        prompt = self.SYSTEM_PROMPT_BASE
+        valid_types = sorted([t.value for t in PDDLType])
+        valid_types_str = ", ".join(valid_types)
+
+        # Inject the dynamic types into the placeholder we created above
+        prompt = self.SYSTEM_PROMPT_BASE.format(valid_types_list=valid_types_str)
 
         # Add the official PDDL syntax guide from common.pddl_rules
         prompt += "\n\n=== OFFICIAL PDDL SYNTAX REFERENCE ===\n"
@@ -169,24 +170,25 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
             prompt += "\n\nVIOLATING THESE CONSTRAINTS WILL CAUSE PLANNER FAILURE."
 
         return prompt
+
     def generate_partial_domain(self) -> PartialPDDLDomain:
         """
         Generate a partial PDDL domain for this worker's utility group.
         Main entry point called by the supervisor.
         """
         start_time = time.time()
-        
+
         result = PartialPDDLDomain(
             worker_name=self.worker_name,
             group_name=self.group_name,
         )
-        
+
         try:
             # =================================================================
             # Step 1: Start with Phase 1 actions if reusing
             # =================================================================
             existing_actions = set()
-            
+
             if self.reuse_phase1_actions and self.phase1_actions:
                 logger.info(
                     f"[{self.worker_name}] Reusing {len(self.phase1_actions)} "
@@ -195,70 +197,75 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
                 converted = self._convert_phase1_actions()
                 result.actions.extend(converted)
                 existing_actions = {a.name for a in converted}
-                
+
                 # Extract types and predicates from reused actions
                 result.types.extend(self._extract_types_from_actions(converted))
-                result.predicates.extend(self._extract_predicates_from_actions(converted))
-            
+                result.predicates.extend(
+                    self._extract_predicates_from_actions(converted)
+                )
+
             # =================================================================
             # Step 2: Fetch documentation for utilities
             # =================================================================
             utilities = self.config.get("utilities", [])
             docs = self.doc_extractor.get_utility_docs(utilities)
-            
+
             # =================================================================
             # Step 3: Build prompt and call LLM for new actions
             # =================================================================
             system_prompt = self._build_system_prompt()
             generation_prompt = self._build_generation_prompt(docs, existing_actions)
-            
+
             # Log the prompt for debugging
             log_file = self.log_dir / f"{self.worker_name}_prompt.txt"
-            log_file.write_text(f"=== SYSTEM ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}")
-            
+            log_file.write_text(
+                f"=== SYSTEM ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
+            )
+
             logger.info(f"[{self.worker_name}] Calling LLM for PDDL generation...")
             raw_response = self.llm.generate(generation_prompt, system_prompt)
-            
+
             # Log the response
             response_log = self.log_dir / f"{self.worker_name}_response.txt"
             response_log.write_text(raw_response)
-            
+
             result.raw_pddl = raw_response
-            
+
             # =================================================================
             # Step 4: Parse LLM output
             # =================================================================
             self._parse_pddl_output(raw_response, result)
-            
+
             logger.info(
                 f"[{self.worker_name}] Generated: "
                 f"{len(result.types)} types, "
                 f"{len(result.predicates)} predicates, "
                 f"{len(result.actions)} actions"
             )
-            
+
         except Exception as e:
             logger.error(f"[{self.worker_name}] Generation failed: {e}")
             result.error = str(e)
-        
+
         result.generation_time = time.time() - start_time
         return result
-
 
     def _convert_phase1_actions(self) -> list[PDDLAction]:
         """Convert Phase 1 ActionSchema objects to Phase 2 PDDLAction objects."""
         converted = []
-        
+
         for action in self.phase1_actions:
             # Convert parameters
             params = []
             for p in action.parameters:
-                if hasattr(p, 'pddl_type'):
-                    type_str = p.pddl_type if isinstance(p.pddl_type, str) else p.pddl_type
+                if hasattr(p, "pddl_type"):
+                    type_str = (
+                        p.pddl_type if isinstance(p.pddl_type, str) else p.pddl_type
+                    )
                 else:
                     type_str = "object"
                 params.append((p.name, type_str))
-            
+
             pddl_action = PDDLAction(
                 name=action.name,
                 parameters=params,
@@ -270,13 +277,11 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
                 source_worker="phase1_reuse",  # Mark as reused
             )
             converted.append(pddl_action)
-        
+
         return converted
 
     def _build_generation_prompt(
-        self, 
-        docs: dict[str, str], 
-        existing_actions: set[str]
+        self, docs: dict[str, str], existing_actions: set[str]
     ) -> str:
         """
         Build the prompt for PDDL generation.
@@ -315,8 +320,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         for utility, doc in docs.items():
             if doc:
-                truncated = doc[:2000] + "..." if len(doc) > 2000 else doc
-                prompt_parts.append(f"\n--- {utility} ---\n{truncated}\n")
+                prompt_parts.append(f"\n--- {utility} ---\n{doc}\n")
 
         # Add osquery context if available
         if self.osquery_data:
@@ -337,68 +341,61 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
     def _extract_types_from_actions(self, actions: list[PDDLAction]) -> list[PDDLType]:
         """Extract type definitions from actions."""
         types = set()
-        
+
         for action in actions:
             for param_name, param_type in action.parameters:
                 if param_type and param_type != "object":
                     types.add(param_type)
-        
+
         return [
-            PDDLType(name=t, parent="object", source=self.worker_name)
-            for t in types
+            PDDLType(name=t, parent="object", source=self.worker_name) for t in types
         ]
 
     def _extract_predicates_from_actions(
-        self, 
-        actions: list[PDDLAction]
+        self, actions: list[PDDLAction]
     ) -> list[PDDLPredicate]:
         """Extract predicate definitions from action preconditions and effects."""
         predicates = {}
-        
+
         for action in actions:
             for cond in action.preconditions + action.effects:
                 pred = self._parse_predicate_from_condition(cond)
                 if pred and pred.name not in predicates:
                     predicates[pred.name] = pred
-        
+
         return list(predicates.values())
 
     def _parse_predicate_from_condition(
-        self, 
-        condition: str
+        self, condition: str
     ) -> Optional[PDDLPredicate]:
         """Parse a predicate definition from a condition string."""
         cond = condition.strip()
-        
+
         # Remove 'not' wrapper
         if cond.startswith("(not"):
             cond = cond[4:].strip().rstrip(")")
-        
+
         # Match (predicate_name ?var1 ?var2 ...)
         match = re.match(r"\((\w+)((?:\s+\?\w+(?:\s*-\s*\w+)?)*)\)", cond)
         if not match:
             return None
-        
+
         pred_name = match.group(1)
-        
+
         # Skip PDDL keywords
         if pred_name in ["and", "or", "not", "exists", "forall", "when"]:
             return None
-        
+
         params_str = match.group(2).strip()
         params = []
-        
+
         param_pattern = r"\?(\w+)(?:\s*-\s*(\w+))?"
         for pm in re.finditer(param_pattern, params_str):
             var_name = pm.group(1)
             var_type = pm.group(2) if pm.group(2) else "object"
             params.append((var_name, var_type))
-        
-        return PDDLPredicate(
-            name=pred_name,
-            parameters=params,
-            source=self.worker_name
-        )
+
+        return PDDLPredicate(name=pred_name, parameters=params, source=self.worker_name)
 
     # =========================================================================
     # PDDL Parsing Methods (from original worker)
@@ -447,16 +444,16 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
     def _extract_sexp_at(self, text: str, start: int) -> Optional[str]:
         """Extract a complete S-expression starting at position."""
-        if start < 0 or start >= len(text) or text[start] != '(':
+        if start < 0 or start >= len(text) or text[start] != "(":
             return None
 
         depth = 0
         end = start
 
         for i, char in enumerate(text[start:], start=start):
-            if char == '(':
+            if char == "(":
                 depth += 1
-            elif char == ')':
+            elif char == ")":
                 depth -= 1
                 if depth == 0:
                     end = i + 1
@@ -511,9 +508,9 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         i = 0
         while i < len(inner):
-            while i < len(inner) and (inner[i].isspace() or inner[i] == ';'):
-                if inner[i] == ';':
-                    while i < len(inner) and inner[i] != '\n':
+            while i < len(inner) and (inner[i].isspace() or inner[i] == ";"):
+                if inner[i] == ";":
+                    while i < len(inner) and inner[i] != "\n":
                         i += 1
                 else:
                     i += 1
@@ -521,7 +518,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
             if i >= len(inner):
                 break
 
-            if inner[i] == '(':
+            if inner[i] == "(":
                 sexp = self._extract_sexp_at(inner, i)
                 if sexp:
                     pred = self._parse_single_predicate(sexp)
@@ -548,7 +545,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         name = tokens[0]
 
-        if name.startswith(':'):
+        if name.startswith(":"):
             return None
 
         params = []
@@ -599,8 +596,8 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         if not match:
             return None
 
-        rest = text[match.end():]
-        paren_pos = rest.find('(')
+        rest = text[match.end() :]
+        paren_pos = rest.find("(")
         if paren_pos == -1:
             return None
 
@@ -615,7 +612,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         inner = cond_sexp.strip()[1:-1].strip()
 
-        if inner.lower().startswith('and'):
+        if inner.lower().startswith("and"):
             inner = inner[3:].strip()
 
             i = 0
@@ -626,7 +623,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
                 if i >= len(inner):
                     break
 
-                if inner[i] == '(':
+                if inner[i] == "(":
                     sexp = self._extract_sexp_at(inner, i)
                     if sexp:
                         # Validate and filter the condition
@@ -651,25 +648,25 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
     # Patterns that indicate INVALID PDDL constructs
     INVALID_PATTERNS = [
-        r'\(assert\s',           # (assert ...) - not valid PDDL
-        r'\(equal\s',            # (equal ?x ?y) - not valid PDDL
-        r'\(create_process\s',   # functions not allowed
-        r'\(strcat\s',           # string operations not allowed
-        r'\(concat\s',           # string operations not allowed
-        r'\(member\s',           # list operations not allowed
-        r'\(implies\s',          # use (when) instead in effects
-        r'\(imply\s',            # use (when) instead in effects
-        r"'[^']*'",              # single-quoted string literals
-        r'"[^"]*"',              # double-quoted string literals
-        r'\(\s*\)',              # empty parentheses
-        r'\)\s*\(\s*\(',         # malformed )((
-        r'\)\(\(',               # malformed )((
+        r"\(assert\s",  # (assert ...) - not valid PDDL
+        r"\(equal\s",  # (equal ?x ?y) - not valid PDDL
+        r"\(create_process\s",  # functions not allowed
+        r"\(strcat\s",  # string operations not allowed
+        r"\(concat\s",  # string operations not allowed
+        r"\(member\s",  # list operations not allowed
+        r"\(implies\s",  # use (when) instead in effects
+        r"\(imply\s",  # use (when) instead in effects
+        r"'[^']*'",  # single-quoted string literals
+        r'"[^"]*"',  # double-quoted string literals
+        r"\(\s*\)",  # empty parentheses
+        r"\)\s*\(\s*\(",  # malformed )((
+        r"\)\(\(",  # malformed )((
     ]
 
     # Quantifiers - should not be used in STRIPS
     QUANTIFIER_PATTERNS = [
-        r'\(exists\s',
-        r'\(forall\s',
+        r"\(exists\s",
+        r"\(forall\s",
     ]
 
     def _is_valid_condition(self, condition: str) -> bool:
@@ -695,17 +692,19 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
                 return False
 
         # Check for balanced parentheses
-        if cond.count('(') != cond.count(')'):
+        if cond.count("(") != cond.count(")"):
             logger.debug(f"Unbalanced parentheses in: {cond[:50]}")
             return False
 
         # Check for malformed starts (should start with '(' or be empty after stripping)
-        if not cond.startswith('('):
+        if not cond.startswith("("):
             return False
 
         return True
 
-    def _validate_and_normalize_action(self, action: PDDLAction) -> Optional[PDDLAction]:
+    def _validate_and_normalize_action(
+        self, action: PDDLAction
+    ) -> Optional[PDDLAction]:
         """
         Validate and normalize an action, fixing common LLM errors.
         Returns None if the action is fundamentally broken.
@@ -748,10 +747,12 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         return action
 
-    def _condition_uses_only_declared_vars(self, condition: str, declared_vars: set[str]) -> bool:
+    def _condition_uses_only_declared_vars(
+        self, condition: str, declared_vars: set[str]
+    ) -> bool:
         """Check that all variables in a condition are declared in parameters."""
         # Find all ?variable references
-        var_pattern = r'\?(\w+)'
+        var_pattern = r"\?(\w+)"
         found_vars = {f"?{m.group(1)}" for m in re.finditer(var_pattern, condition)}
 
         # Check if all found vars are declared

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.models import Phase1State, ActionSchema
 
-from phase2.config import HardwareConfig, UTILITY_GROUPS
+from phase2.config import HardwareConfig, get_utility_groups
 from phase2.models import PartialPDDLDomain
 from phase2.llm import LLMInterface
 from phase2.worker import WorkerAgent
@@ -57,12 +57,16 @@ class SupervisorAgent:
         self.partial_domains: list[PartialPDDLDomain] = []
         self.log_dir = Path(output_dir) / "llm_logs"
         self.reuse_phase1_actions = reuse_phase1_actions
-        
+
         # Build utility -> actions mapping for quick lookup
         self._actions_by_utility = self._build_actions_index()
         self.os_capabilities = SystemIntrospector.get_os_capabilities()
-        if self.os_capabilities['is_sudo_rs']:
-            logger.info("⚠️  Security Mode: sudo-rs detected. Enforcing strict flag validation.")
+        self.utility_groups = get_utility_groups()
+
+        if self.os_capabilities["is_sudo_rs"]:
+            logger.info(
+                "⚠️  Security Mode: sudo-rs detected. Enforcing strict flag validation."
+            )
 
     def _build_actions_index(self) -> dict[str, list[ActionSchema]]:
         """Build index of Phase 1 actions by source utility."""
@@ -84,7 +88,8 @@ class SupervisorAgent:
     def _prewarm_doc_cache(self):
         """Fetch all docs sequentially before parallel execution."""
         all_utilities = []
-        for config in UTILITY_GROUPS.values():
+        for name, config in self.utility_groups.items():
+            logger.info(f"  {name}: {config['utilities']}")
             all_utilities.extend(config["utilities"])
 
         logger.info(
@@ -116,7 +121,7 @@ class SupervisorAgent:
 
         # Create worker tasks
         worker_configs = [
-            (group_name, config) for group_name, config in UTILITY_GROUPS.items()
+            (group_name, config) for group_name, config in self.utility_groups.items()
         ]
 
         # Report Phase 1 action distribution
@@ -140,7 +145,7 @@ class SupervisorAgent:
                 group_actions = []
                 if self.reuse_phase1_actions:
                     group_actions = self._get_actions_for_group(config)
-                
+
                 # Get relevant osquery data for this group
                 osquery_data = self._get_osquery_data_for_group(config)
 
@@ -173,8 +178,9 @@ class SupervisorAgent:
                     else:
                         # Count reused vs new actions
                         reused = sum(
-                            1 for a in result.actions 
-                            if getattr(a, 'source_worker', '') == 'phase1_reuse'
+                            1
+                            for a in result.actions
+                            if getattr(a, "source_worker", "") == "phase1_reuse"
                         )
                         new = len(result.actions) - reused
                         logger.info(
@@ -204,9 +210,9 @@ class SupervisorAgent:
     def _get_osquery_data_for_group(self, group_config: dict) -> dict:
         """Extract osquery data relevant to a utility group."""
         osquery_data = {}
-        
+
         for table in group_config.get("osquery_tables", []):
             if table in self.phase1_state.objects:
                 osquery_data[table] = self.phase1_state.objects[table]
-        
+
         return osquery_data
