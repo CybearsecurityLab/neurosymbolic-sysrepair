@@ -3,62 +3,81 @@ phase2/config.py
 
 Configuration for Phase 2: Parallel Synthesis.
 Defines utility groups, hardware detection, and LLM settings.
+Updated to dynamically discover installed utilities and valid osquery tables.
 """
 
 import os
-from dataclasses import dataclass
+import re
+import sys
+import json
 import shutil
 import psutil
 import subprocess
-from typing import Optional
-from common.models import Phase1State
+from pathlib import Path
+from dataclasses import dataclass
+from typing import Optional, TYPE_CHECKING, Set
+
+if TYPE_CHECKING:
+    from common.models import Phase1State
 
 # =============================================================================
-# Utility Groups for Worker Distribution
+# Utility Group Definitions (Templates)
 # =============================================================================
+# These define the logical groups and the regex patterns to find their tools.
+# Actual utilities are populated at runtime by scanning the system.
 
-UTILITY_GROUP_CANDIDATES = {
+UTILITY_TEMPLATES = {
     "package_management": {
         "description": "Package installation, removal, and updates",
-        "utilities": ["apt", "apt-get", "dpkg", "snap", "flatpak"],
+        "pattern": r"^(apt|apt-get|dpkg|snap|flatpak|pip|npm|dnf|yum|rpm)$",
         "pddl_focus": ["package", "repository"],
-        "osquery_tables": ["deb_packages", "apt_sources"],
+        "osquery_candidates": [
+            "deb_packages",
+            "apt_sources",
+            "rpm_packages",
+            "npm_packages",
+        ],
     },
     "service_management": {
-        "description": "Service lifecycle and configuration",
-        "utilities": ["systemctl", "service", "journalctl"],
+        "description": "Service lifecycle and system configuration",
+        "pattern": r"^(systemctl|service|journalctl|timedatectl|hostnamectl|localectl|sysctl)$",
         "pddl_focus": ["service", "configuration_file"],
-        "osquery_tables": ["systemd_units"],
+        "osquery_candidates": ["systemd_units", "services", "startup_items"],
     },
     "user_management": {
         "description": "User and group administration",
-        "utilities": ["useradd", "usermod", "userdel", "groupadd", "passwd", "chage"],
+        "pattern": r"^(useradd|usermod|userdel|groupadd|groupmod|groupdel|passwd|chage|id|whoami)$",
         "pddl_focus": ["user", "group"],
-        "osquery_tables": ["users", "groups", "user_groups"],
+        "osquery_candidates": ["users", "groups", "user_groups", "shadow"],
     },
     "file_management": {
-        "description": "File and directory operations",
-        "utilities": ["cp", "mv", "rm", "mkdir", "chmod", "chown", "ln"],
-        "pddl_focus": ["file", "directory"],
-        "osquery_tables": ["file"],
+        "description": "File and directory operations (including ACLs)",
+        "pattern": r"^(cp|mv|rm|mkdir|chmod|chown|ln|touch|ls|setfacl|getfacl|stat)$",
+        "pddl_focus": ["file", "directory", "filesystem_object"],
+        "osquery_candidates": ["file"],
     },
     "network_management": {
-        "description": "Network configuration and firewall",
-        "utilities": ["ip", "netplan", "ufw", "iptables", "ss", "nft"],
+        "description": "Network configuration, firewall, and routing",
+        "pattern": r"^(ip|netplan|ufw|iptables|ip6tables|ss|nft|firewall-cmd|nmcli|route)$",
         "pddl_focus": ["interface", "port", "firewall_rule"],
-        "osquery_tables": ["interface_addresses", "listening_ports", "iptables"],
+        "osquery_candidates": [
+            "interface_addresses",
+            "listening_ports",
+            "iptables",
+            "routes",
+        ],
     },
     "process_management": {
         "description": "Process control and monitoring",
-        "utilities": ["kill", "pkill", "nice", "renice", "nohup"],
+        "pattern": r"^(kill|pkill|nice|renice|nohup|pgrep|top|ps)$",
         "pddl_focus": ["process"],
-        "osquery_tables": ["processes"],
+        "osquery_candidates": ["processes"],
     },
     "privilege_escalation": {
-        "description": "Privilege management (sudo-rs for Ubuntu 25.10)",
-        "utilities": ["sudo", "su", "visudo"],
+        "description": "Privilege management (sudo/doas)",
+        "pattern": r"^(sudo|su|visudo|doas)$",
         "pddl_focus": ["user"],
-        "osquery_tables": ["sudoers"],
+        "osquery_candidates": ["sudoers"],
     },
 }
 
@@ -67,28 +86,10 @@ UTILITY_GROUP_CANDIDATES = {
 # =============================================================================
 
 
-def discover_available_utilities(candidates: list[str]) -> list[str]:
-    """
-    Check which utilities from a candidate list are actually installed.
-    Uses shutil.which() to find executables in PATH.
-    """
-    available = []
-    for utility in candidates:
-        path = shutil.which(utility)
-        if path:
-            available.append(utility)
-    return available
-
-
-def discover_all_system_commands() -> set[str]:
-    """
-    Discover ALL available commands on the system.
-    Useful for finding utilities you didn't know about.
-    """
-    commands = set()
-
-    # Method 1: Scan standard binary directories
-    bin_dirs = [
+def _get_search_paths() -> list[Path]:
+    """Get list of standard binary directories to scan."""
+    # Use standard paths + PATH environment variable
+    standard_paths = [
         "/usr/bin",
         "/usr/sbin",
         "/bin",
@@ -96,45 +97,44 @@ def discover_all_system_commands() -> set[str]:
         "/usr/local/bin",
         "/usr/local/sbin",
     ]
+    env_paths = os.environ.get("PATH", "").split(os.pathsep)
 
-    for dir_path in bin_dirs:
+    unique_paths = set()
+    for p in standard_paths + env_paths:
+        if p and os.path.isdir(p):
+            unique_paths.add(Path(p).resolve())
+
+    return list(unique_paths)
+
+
+def _scan_system_binaries() -> Set[str]:
+    """
+    Scan all directories in PATH to find all available executable names.
+    Returns a set of unique command names (e.g., {'ls', 'grep', 'apt'}).
+    """
+    found_binaries = set()
+    search_paths = _get_search_paths()
+
+    for path in search_paths:
         try:
-            import os
+            for entry in path.iterdir():
+                if entry.is_file() and os.access(entry, os.X_OK):
+                    found_binaries.add(entry.name)
+        except (PermissionError, OSError):
+            continue
 
-            if os.path.isdir(dir_path):
-                for entry in os.listdir(dir_path):
-                    full_path = os.path.join(dir_path, entry)
-                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-                        commands.add(entry)
-        except PermissionError:
-            pass
-
-    return commands
+    return found_binaries
 
 
-def get_installed_packages() -> list[str]:
+def check_osquery_tables() -> Set[str]:
     """
-    Get list of installed package names via dpkg.
+    Query local osqueryi to find which tables actually exist.
     """
     try:
-        result = subprocess.run(
-            ["dpkg-query", "-f", "${Package}\n", "-W"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode == 0:
-            return result.stdout.strip().split("\n")
-    except Exception:
-        pass
-    return []
+        # Check if osqueryi is installed first
+        if not shutil.which("osqueryi"):
+            return set()
 
-
-def check_osquery_tables() -> list[str]:
-    """
-    Discover which osquery tables are actually available.
-    """
-    try:
         result = subprocess.run(
             [
                 "osqueryi",
@@ -146,13 +146,11 @@ def check_osquery_tables() -> list[str]:
             timeout=10,
         )
         if result.returncode == 0:
-            import json
-
             data = json.loads(result.stdout)
-            return [row["name"] for row in data]
+            return {row["name"] for row in data}
     except Exception:
         pass
-    return []
+    return set()
 
 
 # =============================================================================
@@ -162,7 +160,7 @@ def check_osquery_tables() -> list[str]:
 
 def build_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
     """
-    Build utility groups with only ACTUALLY INSTALLED utilities.
+    Build utility groups by matching installed binaries against regex patterns.
 
     Args:
         phase1_state: Optional Phase 1 state object. If provided, 'pddl_focus'
@@ -170,46 +168,48 @@ def build_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
                       in the discovered system objects.
     """
     validated_groups = {}
-    available_osquery_tables = set(check_osquery_tables())
 
-    for group_name, config in UTILITY_GROUP_CANDIDATES.items():
-        # Filter to only installed utilities
-        available_utilities = discover_available_utilities(config["utilities"])
+    # 1. Get resources (Executables and Tables)
+    available_binaries = _scan_system_binaries()
+    available_osquery_tables = check_osquery_tables()
 
-        if not available_utilities:
-            # Skip groups with no available utilities
+    for group_name, template in UTILITY_TEMPLATES.items():
+        # Match installed binaries against the group's pattern
+        pattern = re.compile(template["pattern"])
+        matched_utilities = sorted(
+            [bin_name for bin_name in available_binaries if pattern.match(bin_name)]
+        )
+
+        if not matched_utilities:
+            # Skip groups where no relevant tools are installed
             continue
 
-        # Filter to only available osquery tables
-        available_tables = [
-            t for t in config.get("osquery_tables", []) if t in available_osquery_tables
+        # Filter osquery tables to those that actually exist
+        valid_tables = [
+            t for t in template["osquery_candidates"] if t in available_osquery_tables
         ]
 
-        # --- DYNAMIC PDDL FOCUS FIX ---
-        # If Phase 1 state is available, filter pddl_focus types to those
-        # that actually exist in the system.
-        pddl_focus = config["pddl_focus"]
+        # Dynamic PDDL Focus: Filter based on Phase 1 extraction results
+        pddl_focus = template["pddl_focus"]
         if phase1_state and hasattr(phase1_state, "objects"):
             pddl_focus = [
                 t
                 for t in pddl_focus
                 if t in phase1_state.objects and phase1_state.objects[t]
             ]
-        # ------------------------------
 
         validated_groups[group_name] = {
-            "description": config["description"],
-            "utilities": available_utilities,
+            "description": template["description"],
+            "utilities": matched_utilities,
             "pddl_focus": pddl_focus,
-            "osquery_tables": available_tables,
+            "osquery_tables": valid_tables,
         }
 
     return validated_groups
 
 
-# For backwards compatibility, but now it's dynamic
 def get_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
-    """Get validated utility groups. Call this instead of using UTILITY_GROUPS directly."""
+    """Get validated utility groups. Call this instead of using constants directly."""
     return build_utility_groups(phase1_state)
 
 
@@ -241,8 +241,6 @@ class HardwareConfig:
 
         # Detect GPUs (try nvidia-smi)
         try:
-            import subprocess
-
             result = subprocess.run(
                 [
                     "nvidia-smi",
@@ -256,7 +254,6 @@ class HardwareConfig:
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")
                 config.num_gpus = len(lines)
-                # Parse memory from first GPU
                 if lines:
                     parts = lines[0].split(",")
                     if len(parts) >= 2:
@@ -265,15 +262,18 @@ class HardwareConfig:
             pass
 
         # Calculate max parallel workers
+        # Use length of defined templates as the upper bound
+        num_groups = len(UTILITY_TEMPLATES)
+
         if config.num_gpus > 0:
             # GPU-based: limited by VRAM for LLM inference
             config.max_parallel_workers = min(
-                config.num_gpus * 2,  # 2 workers per GPU with batching
-                len(UTILITY_GROUP_CANDIDATES),
+                config.num_gpus * 2,
+                num_groups,
             )
         else:
             # CPU-based: limited by RAM and CPU cores
-            workers_by_ram = int(config.total_ram_gb / 4)  # ~4GB per worker
+            workers_by_ram = int(config.total_ram_gb / 4)
             workers_by_cpu = config.num_cpus // 2
             config.max_parallel_workers = max(1, min(workers_by_ram, workers_by_cpu, 4))
 
@@ -291,7 +291,7 @@ class LLMConfig:
 
     model_name: str = "mistralai/Mistral-7B-Instruct-v0.3"
     base_url: str = "http://localhost:8000/v1"
-    api_key: str = "dummy"  # vLLM doesn't require real key
+    api_key: str = "dummy"
     max_tokens: int = 4096
     temperature: float = 0.1
     tensor_parallel_size: int = 1

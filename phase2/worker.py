@@ -173,74 +173,75 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
     def generate_partial_domain(self) -> PartialPDDLDomain:
         """
-        Generate a partial PDDL domain for this worker's utility group.
-        Main entry point called by the supervisor.
+        Generate PDDL using chunked documentation processing.
         """
         start_time = time.time()
-
         result = PartialPDDLDomain(
             worker_name=self.worker_name,
             group_name=self.group_name,
         )
 
         try:
-            # =================================================================
-            # Step 1: Start with Phase 1 actions if reusing
-            # =================================================================
+            # Step 1: Reuse Phase 1 actions
             existing_actions = set()
-
             if self.reuse_phase1_actions and self.phase1_actions:
                 logger.info(
-                    f"[{self.worker_name}] Reusing {len(self.phase1_actions)} "
-                    f"Phase 1 actions"
+                    f"[{self.worker_name}] Reusing {len(self.phase1_actions)} Phase 1 actions"
                 )
                 converted = self._convert_phase1_actions()
                 result.actions.extend(converted)
                 existing_actions = {a.name for a in converted}
 
-                # Extract types and predicates from reused actions
+                # Extract types/predicates from reused actions
                 result.types.extend(self._extract_types_from_actions(converted))
                 result.predicates.extend(
                     self._extract_predicates_from_actions(converted)
                 )
 
-            # =================================================================
-            # Step 2: Fetch documentation for utilities
-            # =================================================================
+            # Step 2: Iterate through Utilities AND Chunks
             utilities = self.config.get("utilities", [])
-            docs = self.doc_extractor.get_utility_docs(utilities)
-
-            # =================================================================
-            # Step 3: Build prompt and call LLM for new actions
-            # =================================================================
             system_prompt = self._build_system_prompt()
-            generation_prompt = self._build_generation_prompt(docs, existing_actions)
 
-            # Log the prompt for debugging
-            log_file = self.log_dir / f"{self.worker_name}_prompt.txt"
-            log_file.write_text(
-                f"=== SYSTEM ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
-            )
+            for utility in utilities:
+                logger.info(f"[{self.worker_name}] Processing utility: {utility}")
 
-            logger.info(f"[{self.worker_name}] Calling LLM for PDDL generation...")
-            raw_response = self.llm.generate(generation_prompt, system_prompt)
+                # Use the new chunking method from tools.py
+                chunk_generator = self.doc_extractor.get_chunked_docs(utility)
 
-            # Log the response
-            response_log = self.log_dir / f"{self.worker_name}_response.txt"
-            response_log.write_text(raw_response)
+                for i, doc_chunk in enumerate(chunk_generator):
+                    logger.debug(
+                        f"[{self.worker_name}] Processing chunk {i + 1} for {utility}"
+                    )
 
-            result.raw_pddl = raw_response
+                    generation_prompt = self._build_chunk_prompt(
+                        utility, doc_chunk, existing_actions
+                    )
 
-            # =================================================================
-            # Step 4: Parse LLM output
-            # =================================================================
-            self._parse_pddl_output(raw_response, result)
+                    # Log prompt
+                    log_file = (
+                        self.log_dir
+                        / f"{self.worker_name}_{utility}_chunk{i}_prompt.txt"
+                    )
+                    log_file.write_text(
+                        f"=== SYS ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
+                    )
+
+                    # Call LLM
+                    raw_response = self.llm.generate(generation_prompt, system_prompt)
+
+                    # Log response
+                    resp_log = (
+                        self.log_dir
+                        / f"{self.worker_name}_{utility}_chunk{i}_response.txt"
+                    )
+                    resp_log.write_text(raw_response)
+
+                    # Parse and Merge results
+                    self._parse_pddl_output(raw_response, result)
 
             logger.info(
-                f"[{self.worker_name}] Generated: "
-                f"{len(result.types)} types, "
-                f"{len(result.predicates)} predicates, "
-                f"{len(result.actions)} actions"
+                f"[{self.worker_name}] Total Generated: {len(result.actions)} actions "
+                f"({len(result.predicates)} predicates)"
             )
 
         except Exception as e:
@@ -249,6 +250,40 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         result.generation_time = time.time() - start_time
         return result
+
+    def _build_chunk_prompt(
+        self, utility: str, doc_chunk: str, existing_actions: set[str]
+    ) -> str:
+        """Build a prompt for a specific documentation chunk."""
+        prompt = (
+            f"Analyze this documentation segment for the utility '{utility}'. "
+            f"Generate PDDL actions ONLY for the flags/commands found in this specific segment.\n\n"
+        )
+
+        prompt += f"=== DOCUMENTATION SEGMENT ({utility}) ===\n{doc_chunk}\n\n"
+
+        # Add context (predicates and existing actions)
+        if self.known_predicates:
+            prompt += "=== PREFERRED PREDICATES ===\n"
+            prompt += "\n".join([f"  {p}" for p in self.known_predicates[:20]])
+            prompt += "\n  (use these if applicable)\n\n"
+
+        if existing_actions:
+            prompt += "=== EXISTING ACTIONS (DO NOT DUPLICATE) ===\n"
+            # Only show relevant actions to save tokens
+            relevant = [a for a in existing_actions if utility in a or len(a) < 15]
+            prompt += ", ".join(relevant[:30])
+            prompt += "\n\n"
+
+        prompt += (
+            "TASK:\n"
+            "1. Identify new actions described in the documentation segment.\n"
+            "2. Generate (:action ...) blocks for them.\n"
+            "3. Generate (:predicates ...) used in your actions.\n"
+            "4. Do NOT regenerate actions listed above.\n"
+            "5. If no actionable commands are in this segment, output nothing.\n"
+        )
+        return prompt
 
     def _convert_phase1_actions(self) -> list[PDDLAction]:
         """Convert Phase 1 ActionSchema objects to Phase 2 PDDLAction objects."""
@@ -402,18 +437,29 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
     # =========================================================================
 
     def _parse_pddl_output(self, raw: str, result: PartialPDDLDomain):
-        """Parse LLM output into structured PDDL components."""
+        """
+        Parse LLM output into structured PDDL components.
+        Updated to APPEND results (fix for chunking overwrite bug).
+        """
         raw = self._strip_markdown(raw)
 
         # Extract types block
         types_block = self._extract_block(raw, "types")
         if types_block:
-            result.types = self._parse_types(types_block)
+            # FIX: Use extend() instead of assignment (=) to keep previous chunks' data
+            result.types.extend(self._parse_types(types_block))
 
         # Extract predicates
         pred_block = self._extract_block(raw, "predicates")
         if pred_block:
-            result.predicates = self._parse_predicates(pred_block)
+            # FIX: Append new predicates only if they don't exist (deduplication)
+            new_preds = self._parse_predicates(pred_block)
+            existing_names = {p.name for p in result.predicates}
+
+            for p in new_preds:
+                if p.name not in existing_names:
+                    result.predicates.append(p)
+                    existing_names.add(p.name)
 
         # Extract actions with validation
         action_starts = [

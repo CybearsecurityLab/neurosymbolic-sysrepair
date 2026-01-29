@@ -61,7 +61,7 @@ class SupervisorAgent:
         # Build utility -> actions mapping for quick lookup
         self._actions_by_utility = self._build_actions_index()
         self.os_capabilities = SystemIntrospector.get_os_capabilities()
-        self.utility_groups = get_utility_groups()
+        self.utility_groups = get_utility_groups(self.phase1_state)
 
         if self.os_capabilities["is_sudo_rs"]:
             logger.info(
