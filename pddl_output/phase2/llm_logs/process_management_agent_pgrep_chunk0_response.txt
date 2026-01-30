@@ -1,0 +1,96 @@
+To model the behavior of the `pgrep` command (or similar process querying tools) in a declarative logic-based system like PDDL, we need to define new predicates and actions that reflect the ability to query processes based on various attributes. These actions represent the system's ability to perform queries and the resulting knowledge gained from those queries.
+
+---
+
+### ✅ **New Predicates**
+
+We introduce the following predicates to describe process-related facts:
+
+```lisp
+(process_exists ?p - process)
+(process_effective_user ?p - process ?u - user)
+(process_real_user ?p - process ?u - user)
+(process_group ?p - process ?g - group)
+(process_parent ?p - process ?pp - process)
+(process_session ?p - process ?s - session)
+(process_terminal ?p - process ?t - terminal)
+(process_command_line_matches ?p - process ?pattern)
+(process_name_matches ?p - process ?pattern)
+(process_state ?p - process ?state)
+(process_cgroup ?p - process ?cgroup)
+(process_namespace ?p - process ?ns)
+```
+
+---
+
+### ✅ **New Actions**
+
+Each action corresponds to a specific `pgrep` option and models the system's ability to query processes based on that attribute.
+
+```lisp
+(:action find-processes-by-effective-user
+ :parameters (?u - user)
+ :precondition (user_exists ?u)
+ :effect (and (process_exists ?p) (process_effective_user ?p ?u)))
+
+(:action find-processes-by-real-user
+ :parameters (?u - user)
+ :precondition (user_exists ?u)
+ :effect (and (process_exists ?p) (process_real_user ?p ?u)))
+
+(:action find-processes-by-group
+ :parameters (?g - group)
+ :precondition (group_exists ?g)
+ :effect (and (process_exists ?p) (process_group ?p ?g)))
+
+(:action find-processes-by-parent
+ :parameters (?pp - process)
+ :precondition (process_exists ?pp)
+ :effect (and (process_exists ?p) (process_parent ?p ?pp)))
+
+(:action find-processes-by-session
+ :parameters (?s - session)
+ :precondition (session_exists ?s)
+ :effect (and (process_exists ?p) (process_session ?p ?s)))
+
+(:action find-processes-by-terminal
+ :parameters (?t - terminal)
+ :precondition (terminal_exists ?t)
+ :effect (and (process_exists ?p) (process_terminal ?p ?t)))
+
+(:action find-processes-by-command-line
+ :parameters (?pattern)
+ :precondition (none)
+ :effect (and (process_exists ?p) (process_command_line_matches ?p ?pattern)))
+
+(:action find-processes-by-exact-name
+ :parameters (?pattern)
+ :precondition (none)
+ :effect (and (process_exists ?p) (process_name_matches ?p ?pattern)))
+
+(:action find-processes-by-state
+ :parameters (?state)
+ :precondition (none)
+ :effect (and (process_exists ?p) (process_state ?p ?state)))
+
+(:action find-processes-by-cgroup
+ :parameters (?cgroup)
+ :precondition (none)
+ :effect (and (process_exists ?p) (process_cgroup ?p ?cgroup)))
+
+(:action find-processes-by-namespace
+ :parameters (?ns)
+ :precondition (none)
+ :effect (and (process_exists ?p) (process_namespace ?p ?ns)))
+```
+
+---
+
+### 🧠 **Explanation**
+
+- **Predicates** describe the state of the system after a query is executed. For example, `process_effective_user` indicates that a process has a specific effective user.
+- **Actions** model the execution of a query (like `pgrep -u` or `pgrep -f`) and the resulting knowledge (i.e., the system now "knows" which processes match the query).
+- **Preconditions** ensure that the query is valid (e.g., the user or group must exist).
+- **Effects** are the new facts added to the system state after the query is executed.
+
+This structure allows the system to simulate the behavior of querying processes based on various attributes, which is essential for modeling process management or monitoring systems in a declarative logic framework.

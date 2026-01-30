@@ -1,0 +1,55 @@
+(:predicates 
+  (networking_enabled)
+  (wifi_enabled)
+  (wwan_enabled)
+  (connection_active ?c - connection)
+  (interface_exists ?i - interface)
+)
+
+(:action enable-networking
+  :effect (networking_enabled)
+)
+
+(:action disable-networking
+  :precondition (networking_enabled)
+  :effect (not (networking_enabled))
+)
+
+(:action enable-wifi
+  :effect (wifi_enabled)
+)
+
+(:action disable-wifi
+  :precondition (wifi_enabled)
+  :effect (not (wifi_enabled))
+)
+
+(:action enable-wwan
+  :effect (wwan_enabled)
+)
+
+(:action disable-wwan
+  :precondition (wwan_enabled)
+  :effect (not (wwan_enabled))
+)
+
+(:action enable-all-radios
+  :effect (and (wifi_enabled) (wwan_enabled))
+)
+
+(:action disable-all-radios
+  :precondition (and (wifi_enabled) (wwan_enabled))
+  :effect (and (not (wifi_enabled)) (not (wwan_enabled)))
+)
+
+(:action activate-connection
+  :parameters (?c - connection ?i - interface)
+  :precondition (interface_exists ?i)
+  :effect (connection_active ?c)
+)
+
+(:action deactivate-connection
+  :parameters (?c - connection)
+  :precondition (connection_active ?c)
+  :effect (not (connection_active ?c))
+)

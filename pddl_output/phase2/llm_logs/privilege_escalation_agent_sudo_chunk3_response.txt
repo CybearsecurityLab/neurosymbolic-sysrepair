@@ -1,0 +1,25 @@
+```lisp
+(:action sudo_edit_file
+ :parameters (?f - filesystem_object ?target_user - user ?invoking_user - user)
+ :precondition (and (file_exists ?f)
+                    (file_owned_by ?f ?target_user)
+                    (not (file_writable ?f ?invoking_user)))
+ :effect (edited ?f))
+```
+
+**Explanation:**  
+- **Action Name:** `sudo_edit_file`  
+- **Parameters:**  
+  - `?f`: The file to be edited.  
+  - `?target_user`: The user who owns the file and is allowed to edit it.  
+  - `?invoking_user`: The user executing the `sudoedit` command.  
+
+**Preconditions:**  
+1. The file `?f` must exist (`file_exists ?f`).  
+2. The file `?f` must be owned by `?target_user` (`file_owned_by ?f ?target_user`).  
+3. The file `?f` must **not** be writable by the `?invoking_user` (`not (file_writable ?f ?invoking_user)`), ensuring security constraints from the documentation are enforced.  
+
+**Effect:**  
+- The file `?f` is marked as edited (`edited ?f`), though this predicate is not explicitly defined in the preferred list. If restricted to existing predicates, the effect could omit `edited ?f` and focus solely on the preconditions.  
+
+This action models the secure editing of a file via `sudoedit`, aligning with the documentation's emphasis on ownership and writability checks.

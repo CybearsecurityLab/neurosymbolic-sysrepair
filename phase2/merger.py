@@ -25,12 +25,9 @@ from common.type_hierarchy import (
     generate_types_pddl,
 )
 from common.predicates import (
-    PREDICATE_ALIASES,
     get_canonical_predicate_name,
-    generate_predicates_pddl,
 )
 from common.pddl_sanitizer import PDDLSanitizer, PDDL_RESERVED_KEYWORDS
-from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 from phase2.models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from phase2.llm import LLMInterface
@@ -180,7 +177,7 @@ class MergerAgent:
                 logger.warning(f"    - {e}")
 
             # 2. Re-prompt LLM with errors
-            logger.info(f"    → Triggering LLM repair...")
+            logger.info("    → Triggering LLM repair...")
             domain_pddl = self._llm_repair(domain_pddl, errors)
 
         # Final check
@@ -600,7 +597,7 @@ class MergerAgent:
             if action.source_utility:
                 lines.append(f"  ;; Source: {action.source_utility}")
             if getattr(action, 'source_worker', '') == 'phase1_reuse':
-                lines.append(f"  ;; Reused from Phase 1")
+                lines.append("  ;; Reused from Phase 1")
 
             lines.append(f"  (:action {action.name}")
 

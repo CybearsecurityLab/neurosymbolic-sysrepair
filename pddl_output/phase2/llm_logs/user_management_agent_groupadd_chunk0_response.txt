@@ -1,0 +1,9 @@
+```lisp
+(:predicates
+  (group_exists ?g - group))
+
+(:action create_group
+ :parameters (?g - group)
+ :precondition (not (group_exists ?g))
+ :effect (group_exists ?g))
+```

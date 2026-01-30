@@ -1,0 +1,83 @@
+To model the behavior of the `pkill` command in PDDL, we need to define actions that represent sending signals to processes based on specific criteria. The key is to capture the core functionality of `pkill`—sending signals to processes—while incorporating filters such as process name, user, and signal type.
+
+---
+
+### **New Predicates**
+
+We introduce the following new predicates to support the actions:
+
+1. **`(process_exists ?p - process)`**  
+   Indicates that a process `?p` is currently running.
+
+2. **`(process_name_matches ?p - process ?name - object)`**  
+   Indicates that the process `?p` has a name that matches the string `?name`.
+
+3. **`(process_effective_user ?p - process ?u - user)`**  
+   Indicates that the effective user of process `?p` is `?u`.
+
+4. **`(signal-sent ?p - process ?signal - object)`**  
+   Indicates that a signal `?signal` has been sent to process `?p`.
+
+---
+
+### **Actions**
+
+#### **1. Send Signal to a Specific Process**
+This action models sending a signal to a specific process by its object reference.
+
+```lisp
+(:action send-signal-to-process
+  :parameters (?p - process ?signal - object)
+  :precondition (process_exists ?p)
+  :effect (signal-sent ?p ?signal)
+)
+```
+
+**Use Case**: Sending a signal to a known process (e.g., by PID).
+
+---
+
+#### **2. Send Signal to a Process by Name**
+This action models sending a signal to a process based on its name.
+
+```lisp
+(:action send-signal-to-process-by-name
+  :parameters (?p - process ?signal - object ?name - object)
+  :precondition (and (process_exists ?p) (process_name_matches ?p ?name))
+  :effect (signal-sent ?p ?signal)
+)
+```
+
+**Use Case**: Sending a signal to a process named `syslogd` (as in the example: `pkill -HUP syslogd`).
+
+---
+
+#### **3. Send Signal to a Process by Effective User**
+This action models sending a signal to a process based on the effective user of the process.
+
+```lisp
+(:action send-signal-to-process-by-user
+  :parameters (?p - process ?signal - object ?u - user)
+  :precondition (and (process_exists ?p) (process_effective_user ?p ?u))
+  :effect (signal-sent ?p ?signal)
+)
+```
+
+**Use Case**: Sending a signal to all processes owned by a specific user (e.g., `pkill -u alice`).
+
+---
+
+### **Summary**
+
+- **Predicates**:
+  - `(process_exists ?p - process)`
+  - `(process_name_matches ?p - process ?name - object)`
+  - `(process_effective_user ?p - process ?u - user)`
+  - `(signal-sent ?p - process ?signal - object)`
+
+- **Actions**:
+  - `send-signal-to-process`: Send a signal to a specific process.
+  - `send-signal-to-process-by-name`: Send a signal to a process by its name.
+  - `send-signal-to-process-by-user`: Send a signal to a process by its effective user.
+
+These actions and predicates allow modeling the behavior of `pkill` in a PDDL environment, capturing the core functionality of sending signals to processes under various filtering conditions.

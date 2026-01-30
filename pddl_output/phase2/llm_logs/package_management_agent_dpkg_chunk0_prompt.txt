@@ -1,0 +1,355 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'dpkg'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (dpkg) ===
+dpkg(1) dpkg suite dpkg(1)
+
+NAME
+ dpkg - package manager for Debian
+
+SYNOPSIS
+ dpkg [option...] action
+
+WARNING
+ This manual is intended for users wishing to understand dpkg's command line options and package states in more
+ detail than that provided by dpkg --help.
+
+ It should not be used by package maintainers wishing to understand how dpkg will install their packages. The
+ descriptions of what dpkg does when installing and removing packages are particularly inadequate.
+
+... [Header Preserved] ...
+
+ descriptions of what dpkg does when installing and removing packages are particularly inadequate.
+
+DESCRIPTION
+ dpkg is a medium-level tool to install, build, remove and manage Debian packages. The primary and more user-
+ friendly front-end for dpkg as a CLI (command-line interface) is apt(8) and as a TUI (terminal user interface)
+ is aptitude(8). dpkg itself is controlled entirely via command line parameters, which consist of exactly one
+ action and zero or more options. The action-parameter tells dpkg what to do and options control the behavior
+ of the action in some way.
+
+ dpkg can also be used as a front-end to dpkg-deb(1) and dpkg-query(1). The list of supported actions can be
+ found later on in the ACTIONS section. If any such action is encountered dpkg just runs dpkg-deb or dpkg-
+ query with the parameters given to it, but no specific options are currently passed to them, to use any such
+ option the back-ends need to be called directly.
+
+INFORMATION ABOUT PACKAGES
+ dpkg maintains some usable information about available packages. The information is divided in three classes:
+ states, selection states and flags. These values are intended to be changed mainly with dselect.
+
+ Package states
+ not-installed
+ The package is not installed on your system.
+
+ config-files
+ Only the configuration files or the postrm script and the data it needs to remove of the package exist on
+ the system.
+
+ half-installed
+ The installation of the package has been started, but not completed for some reason.
+
+ unpacked
+ The package is unpacked, but not configured.
+
+ half-configured
+ The package is unpacked and configuration has been started, but not yet completed for some reason.
+
+ triggers-awaited
+ The package awaits trigger processing by another package.
+
+ triggers-pending
+ The package has been triggered.
+
+ installed
+ The package is correctly unpacked and configured.
+
+ Package selection states
+ install
+ The package is selected for installation.
+
+ hold
+ A package marked to be on hold is kept on the same version, that is, no automatic new installs, upgrades
+ or removals will be performed on them, unless these actions are requested explicitly, or are permitted to
+ be done automatically with the --force-hold option.
+
+ deinstall
+ The package is selected for deinstallation (i.e. we want to remove all files, except configuration files).
+
+ purge
+ The package is selected to be purged (i.e. we want to remove everything from system directories, even
+ configuration files).
+
+ unknown
+ The package selection is unknown. A package that is also in a not-installed state, and with an ok flag
+ will be forgotten in the next database store.
+
+ Package flags
+ ok A package marked ok is in a known state, but might need further processing.
+
+ reinstreq
+ A package marked reinstreq is broken and requires reinstallation. These packages cannot be removed,
+ unless forced with option --force-remove-reinstreq.
+
+ACTIONS
+ -i, --install package-file...
+ Install the package. If --recursive or -R option is specified, package-file must refer to a directory
+ instead.
+
+ Installation consists of the following steps:
+
+ 1. Extract the control files of the new package.
+
+ 2. If another version of the same package was installed before the new installation, execute prerm script
+ of the old package.
+
+ 3. Run preinst script, if provided by the package.
+
+ 4. Unpack the new files, and at the same time back up the old files, so that if something goes wrong,
+ they can be restored.
+
+ 5. If another version of the same package was installed before the new installation, execute the postrm
+ script of the old package. Note that this script is executed after the preinst script of the new
+ package, because new files are written at the same time old files are removed.
+
+ 6. Configure the package. See --configure for detailed information about how this is done.
+
+ --unpack package-file...
+ Unpack the package, but don't configure it. If --recursive or -R option is specified, package-file must
+ refer to a directory instead.
+
+ Will process triggers for Pre-Depends unless --no-triggers has been specified.
+
+ --configure package...|-a|--pending
+ Configure a package which has been unpacked but not yet configured. If -a or --pending is given instead
+ of package, all unpacked but unconfigured packages are configured.
+
+ To reconfigure a package which has already been configured, try the dpkg-reconfigure(8) command instead
+ (which is part of the debconf project).
+
+ Configuring consists of the following steps:
+
+ 1. Unpack the conffiles, and at the same time back up the old conffiles, so that they can be restored if
+ something goes wrong.
+
+ 2. Run postinst script, if provided by the package.
+
+ Will process triggers unless --no-triggers has been specified.
+
+ --triggers-only package...|-a|--pending
+ Processes only triggers (since dpkg 1.14.17). All pending triggers will be processed. If package names
+ are supplied only those packages' triggers will be processed, exactly once each where necessary. Use of
+ this option may leave packages in the improper triggers-awaited and triggers-pending states. This can be
+ fixed later by running: dpkg --configure --pending.
+
+ -r, --remove package...|-a|--pending
+ Remove an installed package. This removes everything except conffiles and other data cleaned up by the
+ postrm script, which may avoid having to reconfigure the package if it is reinstalled later (conffiles are
+ configuration files that are listed in the DEBIAN/conffiles control file). If there is no
+ DEBIAN/conffiles control file nor DEBIAN/postrm script, this command is equivalent to calling --purge. If
+ -a or --pending is given instead of a package name, then all packages unpacked, but marked to be removed
+ in file /var/lib/dpkg/status, are removed.
+
+ Removing of a package consists of the following steps:
+
+ 1. Run prerm script.
+
+ 2. Remove the installed files.
+
+ 3. Run postrm script.
+
+ Will process triggers unless --no-triggers has been specified.
+
+ -P, --purge package...|-a|--pending
+ Purge an installed or already removed package. This removes everything, including conffiles, and anything
+ else cleaned up from postrm. If -a or --pending is given instead of a package name, then all packages
+ unpacked or removed, but marked to be purged in file /var/lib/dpkg/status, are purged.
+
+ Note: Some configuration files might be unknown to dpkg because they are created and handled separately
+ through the configuration scripts. In that case, dpkg won't remove them by itself, but the package's
+ postrm script (which is called by dpkg), has to take care of their removal during purge. Of course, this
+ only applies to files in system directories, not configuration files written to individual users' home
+ directories.
+
+ Purging of a package consists of the following steps:
+
+ 1. Remove the package, if not already removed. See --remove for detailed information about how this is
+ done.
+
+ 2. Run postrm script.
+
+ Will process triggers unless --no-triggers has been specified.
+
+ -V, --verify [package-name...]
+ Verifies the integrity of package-name or all packages if omitted, by comparing information from the files
+ installed by a package with the files metadata information stored in the dpkg database (since dpkg
+ 1.17.2). The origin of the files metadata information in the database is the binary packages themselves.
+ That metadata gets collected at package unpack time during the installation process.
+
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

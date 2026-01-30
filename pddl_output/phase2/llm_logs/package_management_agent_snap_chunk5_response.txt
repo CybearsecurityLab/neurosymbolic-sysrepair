@@ -1,0 +1,82 @@
+```lisp
+(:predicates
+  (snap_installed ?s - package)
+  (snap_enabled ?s - package)
+  (snap_disabled ?s - package)
+  (connection_exists ?p - interface ?s - interface)
+  (channel_available ?s - package ?ch - channel)
+  (snap_downloaded ?s - package)
+  (snapshot_exists ?snap - snapshot)
+  (config_exists ?s - service ?k - key)
+  (help_available ?cmd - command)
+  (snapshot_file_exists ?snap - snapshot)
+  (change_pending ?ch - change)
+  (assertion_file_exists ?a - assertion)
+)
+
+(:action disable-snap
+  :parameters (?s - package)
+  :precondition (and (snap_installed ?s) (snap_enabled ?s))
+  :effect (and (not (snap_enabled ?s)) (snap_disabled ?s))
+)
+
+(:action disconnect-interface
+  :parameters (?p - interface ?s - interface)
+  :precondition (connection_exists ?p ?s)
+  :effect (not (connection_exists ?p ?s))
+)
+
+(:action download-snap
+  :parameters (?s - package ?ch - channel)
+  :precondition (channel_available ?s ?ch)
+  :effect (snap_downloaded ?s)
+)
+
+(:action enable-snap
+  :parameters (?s - package)
+  :precondition (snap_disabled ?s)
+  :effect (and (not (snap_disabled ?s)) (snap_enabled ?s))
+)
+
+(:action forget-snapshot
+  :parameters (?snap - snapshot)
+  :precondition (snapshot_exists ?snap)
+  :effect (not (snapshot_exists ?snap))
+)
+
+(:action get-config
+  :parameters (?s - service ?k - key)
+  :precondition (config_exists ?s ?k)
+  :effect (config_value_retrieved ?s ?k ?v)
+)
+
+(:action show-help
+  :parameters (?cmd - command)
+  :precondition (help_available ?cmd)
+  :effect (help_shown ?cmd)
+)
+
+(:action import-snapshot
+  :parameters (?snap - snapshot)
+  :precondition (snapshot_file_exists ?snap)
+  :effect (snapshot_imported ?snap)
+)
+
+(:action show-snap-info
+  :parameters (?s - package)
+  :precondition (snap_installed ?s)
+  :effect (snap_info_shown ?s)
+)
+
+(:action abort-change
+  :parameters (?ch - change)
+  :precondition (change_pending ?ch)
+  :effect (change_aborted ?ch)
+)
+
+(:action add-assertion
+  :parameters (?a - assertion)
+  :precondition (assertion_file_exists ?a)
+  :effect (assertion_added ?a)
+)
+```

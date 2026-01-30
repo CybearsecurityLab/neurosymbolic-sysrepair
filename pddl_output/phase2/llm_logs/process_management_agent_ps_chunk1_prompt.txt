@@ -1,0 +1,367 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'ps'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (ps) ===
+PS(1) User Commands PS(1)
+
+NAME
+ ps - report a snapshot of the current processes.
+
+SYNOPSIS
+ ps [options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ (ttys, or screens for text output) can be specified in several forms: /dev/ttyS1, ttyS1, S1. A plain
+ "-" may be used to select processes not attached to any terminal.
+
+ --tty ttylist
+ Select by terminal. Identical to -t and t.
+
+ U userlist
+ Select by effective user ID (EUID) or name. This selects the processes whose effective user name or ID
+ is in userlist. The effective user ID describes the user whose file access permissions are used by the
+ process (see geteuid(2)). Identical to -u and --user.
+
+ -U userlist
+ Select by real user ID (RUID) or name. It selects the processes whose real user name or ID is in the
+ userlist list. The real user ID identifies the user who created the process, see getuid(2).
+
+ -u userlist
+ Select by effective user ID (EUID) or name. This selects the processes whose effective user name or ID
+ is in userlist.
+
+ The effective user ID describes the user whose file access permissions are used by the process (see
+ geteuid(2)). Identical to U and --user.
+
+ --User userlist
+ Select by real user ID (RUID) or name. Identical to -U.
+
+ --user userlist
+ Select by effective user ID (EUID) or name. Identical to -u and U.
+
+OUTPUT FORMAT CONTROL
+ These options are used to choose the information displayed by ps. The output may differ by personality.
+
+ -c Show different scheduler information for the -l option.
+
+ --context
+ Display security context format (for SELinux).
+
+ -f Do full-format listing. This option can be combined with many other UNIX-style options to add
+ additional columns. It also causes the command arguments to be printed. When used with -L, the NLWP
+ (number of threads) and LWP (thread ID) columns will be added. See the c option, the format keyword
+ args, and the format keyword comm.
+
+ -F Extra full format. See the -f option, which -F implies.
+
+ --format format
+ user-defined format. Identical to -o and o.
+
+ j BSD job control format.
+
+ -j Jobs format.
+
+ l Display BSD long format.
+
+ -l Long format. The -y option is often useful with this.
+
+ -M Add a column of security data. Identical to Z (for SELinux).
+
+ O format
+ is preloaded o (overloaded). The BSD O option can act like -O (user-defined output format with some
+ common fields predefined) or can be used to specify sort order. Heuristics are used to determine the
+ behavior of this option. To ensure that the desired behavior is obtained (sorting or formatting),
+ specify the option in some other way (e.g. with -O or --sort). When used as a formatting option, it
+ is identical to -O, with the BSD personality.
+
+ -O format
+ Like -o, but preloaded with some default columns. Identical to -o pid,format,state,tname,time,command
+ or -o pid,format,tname,time,cmd, see -o below.
+
+ o format
+ Specify user-defined format. Identical to -o and --format.
+
+ -o format
+ User-defined format. format is a single argument in the form of a blank-separated or comma-separated
+ list, which offers a way to specify individual output columns. The recognized keywords are described
+ in the STANDARD FORMAT SPECIFIERS section below. Headers may be renamed (ps -o pid,ruser=RealUser -o
+ comm=Command) as desired. If all column headers are empty (ps -o pid= -o comm=) then the header line
+ will not be output. Column width will increase as needed for wide headers; this may be used to widen
+ up columns such as WCHAN (ps -o pid,wchan=WIDE-WCHAN-COLUMN -o comm). Explicit width control (ps opid,
+ wchan:42,cmd) is offered too. The behavior of ps -o pid=X,comm=Y varies with personality; output may
+ be one column named "X,comm=Y" or two columns named "X" and "Y". Use multiple -o options when in
+ doubt. Use the PS_FORMAT environment variable to specify a default as desired; DefSysV and DefBSD are
+ macros that may be used to choose the default UNIX or BSD columns.
+
+ -P Add a column showing psr.
+
+ s Display signal format.
+
+ u Display user-oriented format.
+
+ v Display virtual memory format.
+
+ X Register format.
+
+ -y Do not show flags; show rss in place of addr. This option can only be used with -l.
+
+ Z Add a column of security data. Identical to -M (for SELinux).
+
+OUTPUT MODIFIERS
+ c Show the true command name. This is derived from the name of the executable file, rather than from the
+ argv value. Command arguments and any modifications to them are thus not shown. This option
+ effectively turns the args format keyword into the comm format keyword; it is useful with the -f format
+ option and with the various BSD-style format options, which all normally display the command arguments.
+ See the -f option, the format keyword args, and the format keyword comm.
+
+ --cols n
+ Set screen width.
+
+ --columns n
+ Set screen width.
+
+ --cumulative
+ Include some dead child process data (as a sum with the parent).
+
+ -D format
+ Set the date format of the lstart field to format. This format is parsed by strftime(3) and should be a
+ maximum of 24 characters to not mis-align columns.
+
+ --date-format format
+ Identical to -D.
+
+ e Show the environment after the command.
+
+ f ASCII art process hierarchy (forest).
+
+ --forest
+ ASCII art process tree.
+
+ h No header. (or, one header per screen in the BSD personality). The h option is problematic. Standard
+ BSD ps uses this option to print a header on each page of output, but older Linux ps uses this option
+ to totally disable the header. This version of ps follows the Linux usage of not printing the header
+ unless the BSD personality has been selected, in which case it prints a header on each page of output.
+ Regardless of the current personality, you can use the long options --headers and --no-headers to
+ enable printing headers each page or disable headers entirely, respectively.
+
+ -H Show process hierarchy (forest).
+
+ --headers
+ Repeat header lines, one per page of output.
+
+ k spec Specify sorting order. Sorting syntax is [+|-]key[,[+|-]key[,...]]. Choose a multi-letter key from
+ the STANDARD FORMAT SPECIFIERS section. The "+" is optional since default direction is increasing
+ numerical or lexicographic order. Identical to --sort.
+
+ Examples:
+ ps jaxkuid,-ppid,+pid
+ ps axk comm o comm,args
+ ps kstart_time -ef
+
+ --lines n
+ Set screen height.
+
+ n Numeric output for WCHAN and USER (including all types of UID and GID).
+
+ --no-headers
+ Print no header line at all. --no-heading is an alias for this option.
+
+ O order
+ Sorting order (overloaded). The BSD O option can act like -O (user-defined output format with some
+ common fields predefined) or can be used to specify sort order. Heuristics are used to determine the
+ behavior of this option. To ensure that the desired behavior is obtained (sorting or formatting),
+ specify the option in some other way (e.g. with -O or --sort).
+
+ For sorting, obsolete BSD O option syntax is O[+|-]k1[,[+|-]k2[,...]]. It orders the processes listing
+ according to the multilevel sort specified by the sequence of one-letter short keys k1,k2, ...
+ described in the OBSOLETE SORT KEYS section below. The "+" is currently optional, merely re-iterating
+ the default direction on a key, but may help to distinguish an O sort from an O format. The "-"
+ reverses direction only on the key it precedes.
+
+ --rows n
+ Set screen height.
+
+ S Sum up some information, such as CPU usage, from dead child processes into their parent. This is
+ useful for examining a system where a parent process repeatedly forks off short-lived children to do
+ work.
+
+ --sort spec
+ Specify sorting order. Sorting syntax is [+|-]key[,[+|-]key[,...]]. Choose a multi-letter key from
+ the STANDARD FORMAT SPECIFIERS section. The "+" is optional since default direction is increasing
+ numerical or lexicographic order. Identical to k. For example: ps jax --sort=uid,-ppid,+pid
+
+ --signames
+ Show signal masks using abbreviated signal names and expands the collumn. If the column width cannot
+ show all signals, the column will end with a plus "+". Columns with only a hyphen have no signals.
+
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

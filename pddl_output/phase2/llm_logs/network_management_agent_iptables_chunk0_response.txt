@@ -1,0 +1,60 @@
+Here are the PDDL actions for managing firewall rules based on the commands described in the documentation, using the preferred predicate `firewall_rule_exists`:
+
+---
+
+### **Actions for Firewall Rule Management**
+
+```lisp
+(:action append-firewall-rule
+  :parameters (?r - firewall_rule)
+  :effect (firewall_rule_exists ?r)
+)
+
+(:action delete-firewall-rule
+  :parameters (?r - firewall_rule)
+  :effect (not (firewall_rule_exists ?r))
+)
+
+(:action insert-firewall-rule
+  :parameters (?r - firewall_rule)
+  :effect (firewall_rule_exists ?r)
+)
+
+(:action replace-firewall-rule
+  :parameters (?r - firewall_rule ?old_r - firewall_rule)
+  :effect (and (firewall_rule_exists ?r) (not (firewall_rule_exists ?old_r)))
+)
+```
+
+---
+
+### **Explanation**
+
+1. **`append-firewall-rule`**  
+   - **Command**: `-A` (Append a rule to a chain).  
+   - **Effect**: Adds a new firewall rule (`?r`) to the system, making it exist.  
+   - **Parameters**: The rule (`?r`) to append.  
+
+2. **`delete-firewall-rule`**  
+   - **Command**: `-D` (Delete a rule).  
+   - **Effect**: Removes a firewall rule (`?r`) from the system.  
+   - **Parameters**: The rule (`?r`) to delete.  
+
+3. **`insert-firewall-rule`**  
+   - **Command**: `-I` (Insert a rule at a specific position).  
+   - **Effect**: Adds a new firewall rule (`?r`) to the system.  
+   - **Parameters**: The rule (`?r`) to insert.  
+
+4. **`replace-firewall-rule`**  
+   - **Command**: `-R` (Replace a rule at a specific position).  
+   - **Effect**: Replaces an existing rule (`?old_r`) with a new rule (`?r`).  
+   - **Parameters**: The new rule (`?r`) and the rule to replace (`?old_r`).  
+
+---
+
+### **Notes**
+- **Chains** (e.g., `INPUT`, `OUTPUT`) are not explicitly modeled in the predicates, so they are omitted from the parameters.  
+- **`replace-firewall-rule`** assumes the old rule (`?old_r`) is explicitly provided, which may not always align with real-world usage but is included for completeness.  
+- Actions for `-N` (create a chain) and `-X` (delete a chain) are omitted due to lack of corresponding predicates in the preferred list.  
+
+This model captures the core operations for managing firewall rules using the provided predicate.

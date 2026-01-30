@@ -1,0 +1,13 @@
+(:predicates 
+  (socket_exists ?s - socket)
+  (socket_closed ?s - socket)
+)
+
+(:action kill-sockets
+  :parameters (?s - socket)
+  :precondition (socket_exists ?s)
+  :effect (and 
+            (not (socket_exists ?s)) 
+            (socket_closed ?s)
+          )
+)

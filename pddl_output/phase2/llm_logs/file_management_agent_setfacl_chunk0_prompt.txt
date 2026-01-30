@@ -1,0 +1,334 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'setfacl'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (setfacl) ===
+SETFACL(1) Access Control Lists SETFACL(1)
+
+NAME
+ setfacl - set file access control lists
+
+SYNOPSIS
+ setfacl [-bkndRLPvh] [{-m|-x} acl_spec] [{-M|-X} acl_file] file ...
+
+ setfacl --restore={file|-}
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+DESCRIPTION
+ This utility sets Access Control Lists (ACLs) of files and directories. On the command line, a sequence of
+ commands is followed by a sequence of files (which in turn can be followed by another sequence of commands,
+ ...).
+
+ The -m and -x options expect an ACL on the command line. Multiple ACL entries are separated by comma charac-
+ ters (`,'). The -M and -X options read an ACL from a file or from standard input. The ACL entry format is de-
+ scribed in Section ACL ENTRIES.
+
+ The --set and --set-file options set the ACL of a file or a directory. The previous ACL is replaced. ACL en-
+ tries for this operation must include permissions.
+
+ The -m (--modify) and -M (--modify-file) options modify the ACL of a file or directory. ACL entries for this
+ operation must include permissions.
+
+ The -x (--remove) and -X (--remove-file) options remove ACL entries. It is not an error to remove an entry
+ which does not exist. Only ACL entries without the perms field are accepted as parameters, unless
+ POSIXLY_CORRECT is defined.
+
+ When reading from files using the -M and -X options, setfacl accepts the output getfacl produces. There is at
+ most one ACL entry per line. After a Pound sign (`#'), everything up to the end of the line is treated as a
+ comment.
+
+ If setfacl is used on a file system which does not support ACLs, setfacl operates on the file mode permission
+ bits. If the ACL does not fit completely in the permission bits, setfacl modifies the file mode permission
+ bits to reflect the ACL as closely as possible, writes an error message to standard error, and returns with an
+ exit status greater than 0.
+
+ PERMISSIONS
+ The file owner and processes capable of CAP_FOWNER are granted the right to modify ACLs of a file. This is
+ analogous to the permissions required for accessing the file mode. (On current Linux systems, root is the only
+ user with the CAP_FOWNER capability.)
+
+OPTIONS
+ -b, --remove-all
+ Remove all extended ACL entries. The base ACL entries of the owner, group and others are retained.
+
+ -k, --remove-default
+ Remove the Default ACL. If no Default ACL exists, no warnings are issued.
+
+ -n, --no-mask
+ Do not recalculate the effective rights mask. The default behavior of setfacl is to recalculate the ACL
+ mask entry, unless a mask entry was explicitly given. The mask entry is set to the union of all permis-
+ sions of the owning group, and all named user and group entries. (These are exactly the entries affected
+ by the mask entry).
+
+ --mask
+ Do recalculate the effective rights mask, even if an ACL mask entry was explicitly given. (See the -n op-
+ tion.)
+
+ -d, --default
+ All operations apply to the Default ACL. Regular ACL entries in the input set are promoted to Default ACL
+ entries. Default ACL entries in the input set are discarded. (A warning is issued if that happens).
+
+ --restore={file|-}
+ Restore a permission backup created by `getfacl -R' or similar. All permissions of a complete directory
+ subtree are restored using this mechanism. If the input contains owner comments or group comments, setfacl
+ attempts to restore the owner and owning group. If the input contains flags comments (which define the se-
+ tuid, setgid, and sticky bits), setfacl sets those three bits accordingly; otherwise, it clears them. This
+ option cannot be mixed with other options except `--test'. If the file specified is '-', then it will be
+ read from standard input.
+
+ --test
+ Test mode. Instead of changing the ACLs of any files, the resulting ACLs are listed.
+
+ -R, --recursive
+ Apply operations to all files and directories recursively. This option cannot be mixed with `--restore'.
+
+ -L, --logical
+ Logical walk, follow symbolic links to directories. The default behavior is to follow symbolic link argu-
+ ments, and skip symbolic links encountered in subdirectories. Only effective in combination with -R.
+ This option cannot be mixed with `--restore'.
+
+ -P, --physical
+ Physical walk, do not follow symbolic links to directories. This also skips symbolic link arguments.
+ Only effective in combination with -R. This option cannot be mixed with `--restore'.
+
+ -v, --version
+ Print the version of setfacl and exit.
+
+ -h, --help
+ Print help explaining the command line options.
+
+ -- End of command line options. All remaining parameters are interpreted as file names, even if they start
+ with a dash.
+
+ - If the file name parameter is a single dash, setfacl reads a list of files from standard input.
+
+ ACL ENTRIES
+ The setfacl utility recognizes the following ACL entry formats (blanks inserted for clarity):
+
+ [d[efault]:] [u[ser]:]uid [:perms]
+ Permissions of a named user. Permissions of the file owner if uid is empty.
+
+ [d[efault]:] g[roup]:gid [:perms]
+ Permissions of a named group. Permissions of the owning group if gid is empty.
+
+ [d[efault]:] m[ask][:] [:perms]
+ Effective rights mask
+
+ [d[efault]:] o[ther][:] [:perms]
+ Permissions of others.
+
+ Whitespace between delimiter characters and non-delimiter characters is ignored.
+
+ Proper ACL entries including permissions are used in modify and set operations. (options -m, -M, --set and
+ --set-file). Entries without the perms field are used for deletion of entries (options -x and -X).
+
+ For uid and gid you can specify either a name or a number. Character literals may be specified with a back-
+ slash followed by the 3-digit octal digits corresponding to the ASCII code for the character (e.g., \101 for
+ 'A'). If the name contains a literal backslash followed by 3 digits, the backslash must be escaped (i.e.,
+ \\).
+
+ The perms field is a combination of characters that indicate the read (r), write (w), execute (x) permissions.
+ Dash characters in the perms field (-) are ignored. The character X stands for the execute permission if the
+ file is a directory or already has execute permission for some user. Alternatively, the perms field can de-
+ fine the permissions numerically, as a bit-wise combination of read (4), write (2), and execute (1). Zero
+ perms fields or perms fields that only consist of dashes indicate no permissions.
+
+ AUTOMATICALLY CREATED ENTRIES
+ Initially, files and directories contain only the three base ACL entries for the owner, the group, and others.
+ There are some rules that need to be satisfied in order for an ACL to be valid:
+
+ * The three base entries cannot be removed. There must be exactly one entry of each of these base entry
+ types.
+
+ * Whenever an ACL contains named user entries or named group objects, it must also contain an effective
+ rights mask.
+
+ * Whenever an ACL contains any Default ACL entries, the three Default ACL base entries (default owner, de-
+ fault group, and default others) must also exist.
+
+ * Whenever a Default ACL contains named user entries or named group objects, it must also contain a default
+ effective rights mask.
+
+ To help the user ensure these rules, setfacl creates entries from existing entries under the following condi-
+ tions:
+
+ * If an ACL contains named user or named group entries, and no mask entry exists, a mask entry containing
+ the same permissions as the group entry is created. Unless the -n option is given, the permissions of the
+ mask entry are further adjusted to include the union of all permissions affected by the mask entry. (See
+ the -n option description).
+
+ * If a Default ACL entry is created, and the Default ACL contains no owner, owning group, or others entry, a
+ copy of the ACL owner, owning group, or others entry is added to the Default ACL.
+
+ * If a Default ACL contains named user entries or named group entries, and no mask entry exists, a mask en-
+ try containing the same permissions as the default Default ACL's group entry is added. Unless the -n op-
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

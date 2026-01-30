@@ -1,0 +1,12 @@
+(:predicates 
+  (inspect_entry_exists ?f - configuration_file ?t - string)
+)
+
+(:action add-inspect-entry
+  :parameters (?config - configuration_file ?entry - string)
+  :precondition (and 
+    (file_exists ?config) 
+    (file_writable ?config)
+  )
+  :effect (inspect_entry_exists ?config ?entry)
+)

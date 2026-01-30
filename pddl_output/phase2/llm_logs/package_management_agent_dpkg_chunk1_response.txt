@@ -1,0 +1,87 @@
+```lisp
+(:predicates
+    (available_packages_info_updated ?f - filesystem_object)
+    (available_packages_info_merged ?f - filesystem_object)
+    (available_packages_info_cleared)
+    (package_selections_set ?p - package ?s - state)
+    (package_selections_cleared ?p - package)
+    (package_selected_for_installation ?p - package)
+    (pre_dependency_package_available ?p - package)
+    (architecture_added ?a - architecture)
+    (architecture_removed ?a - architecture)
+    (architecture_printed ?a - architecture)
+    (foreign_architectures_printed ?a - architecture)
+    (feature_supported ?f - feature)
+    (thing_validated ?t - thing)
+    (versions_compared ?v1 - version ?v2 - version ?op - operator)
+)
+
+(:action update-avail-packages
+    :parameters (?f - filesystem_object)
+    :effect (available_packages_info_updated ?f)
+)
+
+(:action merge-avail-packages
+    :parameters (?f - filesystem_object)
+    :effect (available_packages_info_merged ?f)
+)
+
+(:action clear-avail-packages
+    :effect (available_packages_info_cleared)
+)
+
+(:action set-package-selections
+    :parameters (?p - package ?s - state)
+    :effect (package_selections_set ?p ?s)
+)
+
+(:action clear-package-selections
+    :parameters (?p - package)
+    :effect (package_selections_cleared ?p)
+)
+
+(:action find-yet-to-unpack
+    :parameters (?p - package)
+    :effect (package_selected_for_installation ?p)
+)
+
+(:action get-predep-package
+    :parameters (?p - package)
+    :effect (pre_dependency_package_available ?p)
+)
+
+(:action add-architecture
+    :parameters (?a - architecture)
+    :effect (architecture_added ?a)
+)
+
+(:action remove-architecture
+    :parameters (?a - architecture)
+    :effect (architecture_removed ?a)
+)
+
+(:action print-architecture
+    :parameters (?a - architecture)
+    :effect (architecture_printed ?a)
+)
+
+(:action print-foreign-architectures
+    :parameters (?a - architecture)
+    :effect (foreign_architectures_printed ?a)
+)
+
+(:action assert-feature
+    :parameters (?f - feature)
+    :effect (feature_supported ?f)
+)
+
+(:action validate-thing
+    :parameters (?t - thing)
+    :effect (thing_validated ?t)
+)
+
+(:action compare-versions
+    :parameters (?v1 - version ?v2 - version ?op - operator)
+    :effect (versions_compared ?v1 ?v2 ?op)
+)
+```

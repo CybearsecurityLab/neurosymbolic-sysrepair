@@ -21,11 +21,11 @@ from typing import Optional
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.models import ActionSchema, PDDLType
+from common.models import ActionSchema, PDDLType as PDDLTypeEnum
 from common.pddl_rules import PDDL_SYNTAX_GUIDE
 from common.type_hierarchy import VALID_TYPES, normalize_type
 
-from phase2.models import PartialPDDLDomain, PDDLPredicate, PDDLAction
+from phase2.models import PartialPDDLDomain, PDDLPredicate, PDDLAction, PDDLType
 from phase2.llm import LLMInterface
 from phase2.tools import DocumentationExtractor
 
@@ -132,7 +132,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         3. OS-specific constraints (sudo-rs/uutils for Ubuntu 25.10)
         """
         # Start with the base syntax rules
-        valid_types = sorted([t.value for t in PDDLType])
+        valid_types = sorted([t.value for t in PDDLTypeEnum])
         valid_types_str = ", ".join(valid_types)
 
         # Inject the dynamic types into the placeholder we created above

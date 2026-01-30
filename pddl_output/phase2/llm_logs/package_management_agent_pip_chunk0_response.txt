@@ -1,0 +1,65 @@
+Here are the PDDL actions derived from the commands and flags in the documentation, using the provided preferred predicates:
+
+---
+
+### **1. Install a Package**
+```lisp
+(:action install-package
+ :parameters (?p - package ?s - filesystem_object)
+ :precondition (and (file_exists ?s) (not (package_installed ?p)))
+ :effect (package_installed ?p))
+```
+**Description**: Installs a package from a source (e.g., local path, URL, or configuration file). Requires the source to exist and the package to not be installed.
+
+---
+
+### **2. Upgrade a Package**
+```lisp
+(:action upgrade-package
+ :parameters (?p - package)
+ :precondition (package_installed ?p)
+ :effect (package_installed ?p))
+```
+**Description**: Upgrades an already installed package to the latest version. The effect assumes the package remains installed (version is abstracted).
+
+---
+
+### **3. Uninstall a Package**
+```lisp
+(:action uninstall-package
+ :parameters (?p - package)
+ :precondition (package_installed ?p)
+ :effect (not (package_installed ?p)))
+```
+**Description**: Removes an installed package.
+
+---
+
+### **4. Generate Requirements File**
+```lisp
+(:action generate-requirements
+ :parameters (?f - configuration_file)
+ :precondition (and (not (file_exists ?f)) (file_writable ?f))
+ :effect (file_exists ?f))
+```
+**Description**: Creates a requirements file listing installed packages. Requires the file to be non-existent and writable.
+
+---
+
+### **5. Build a Wheel**
+```lisp
+(:action build-wheel
+ :parameters (?p - package ?w - filesystem_object)
+ :precondition (and (package_installed ?p) (not (file_exists ?w)) (file_writable ?w))
+ :effect (file_exists ?w))
+```
+**Description**: Builds a wheel file for an installed package. Requires the package to be installed and the output file to be non-existent and writable.
+
+---
+
+### **Key Notes**
+- **Predicates Used**: `package_installed`, `file_exists`, `file_writable` (from the preferred list).
+- **Abstraction**: Parameters like `?s` (source) and `?w` (wheel file) are typed as `filesystem_object` or `configuration_file` to align with the documentation's flexibility (e.g., local paths, URLs).
+- **No Regeneration**: Actions like `install-package` avoid duplicating existing preferred predicates (e.g., `package_installed`) and focus on new logic.
+
+These actions model the core functionality of the commands while adhering to the constraints and preferred predicates.

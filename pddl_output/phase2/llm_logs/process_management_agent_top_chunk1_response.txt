@@ -1,0 +1,76 @@
+(:predicates 
+  (idle-toggle-enabled)
+  (threads-displayed)
+  (cumulative-time-enabled)
+  (secure-mode-enabled)
+  (single-cpu-display)
+  (user-filter ?u - user)
+  (exclude-user ?e - boolean)
+  (effective-user-filter ?u - user)
+  (output-width ?w - number)
+  (max-iterations ?n - number)
+  (update-delay ?d - number)
+  (sort-field ?f - string)
+  (sort-direction ?d - string)
+  (monitor-pid ?pid - number)
+)
+
+(:action toggle-idle-display
+  :parameters ()
+  :effect (not (idle-toggle-enabled))
+)
+
+(:action toggle-threads-display
+  :parameters ()
+  :effect (not (threads-displayed))
+)
+
+(:action toggle-cumulative-time
+  :parameters ()
+  :effect (not (cumulative-time-enabled))
+)
+
+(:action enable-secure-mode
+  :parameters ()
+  :effect (secure-mode-enabled)
+)
+
+(:action toggle-single-cpu-display
+  :parameters ()
+  :effect (not (single-cpu-display))
+)
+
+(:action set-user-filter
+  :parameters (?u - user ?exclude - boolean)
+  :effect (and (user-filter ?u) (exclude-user ?exclude))
+)
+
+(:action set-effective-user-filter
+  :parameters (?u - user)
+  :effect (effective-user-filter ?u)
+)
+
+(:action set-output-width
+  :parameters (?w - number)
+  :effect (output-width ?w)
+)
+
+(:action set-max-iterations
+  :parameters (?n - number)
+  :effect (max-iterations ?n)
+)
+
+(:action set-update-delay
+  :parameters (?d - number)
+  :effect (update-delay ?d)
+)
+
+(:action set-sort-field
+  :parameters (?f - string ?d - string)
+  :effect (and (sort-field ?f) (sort-direction ?d))
+)
+
+(:action monitor-pid
+  :parameters (?pid - number)
+  :effect (monitor-pid ?pid)
+)

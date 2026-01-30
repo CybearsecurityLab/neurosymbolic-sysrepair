@@ -1,0 +1,3 @@
+The documentation segment for the `top` utility primarily describes display options and process metrics (e.g., CPU time, memory usage, I/O statistics). However, it does not introduce **actionable commands** or system-modifying operations that would require new PDDL actions. The existing preferred predicates (e.g., `(file_exists ?f)`, `(group_exists ?g)`, etc.) already cover system state checks, and the `top` utility itself does not alter system configuration or state. 
+
+Since no new system-modifying commands or flags are described in this segment, **no additional `(:action ...)` blocks are required**.

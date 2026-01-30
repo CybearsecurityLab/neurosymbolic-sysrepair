@@ -1,0 +1,21 @@
+```lisp
+(:predicates
+  (firewall_rule_exists ?r - firewall_rule)
+  (interface_exists ?i - interface))
+
+(:action add-firewall-rule
+ :parameters (?chain - interface ?rule - firewall_rule)
+ :effect (firewall_rule_exists ?rule))
+
+(:action delete-firewall-rule
+ :parameters (?chain - interface ?rule - firewall_rule)
+ :effect (not (firewall_rule_exists ?rule)))
+
+(:action create-chain
+ :parameters (?chain - interface)
+ :effect (interface_exists ?chain))
+
+(:action delete-chain
+ :parameters (?chain - interface)
+ :effect (not (interface_exists ?chain)))
+```

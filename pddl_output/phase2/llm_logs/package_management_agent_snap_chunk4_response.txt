@@ -1,0 +1,45 @@
+```lisp
+(:predicates
+  (assertion_applied ?a - assertion)
+  (alias_configured ?a - alias ?s - snap)
+  (snapshot_checked ?s - snapshot)
+  (interface_connected ?p - plug ?s - slot)
+  (cohort_created ?c - cohort ?s - snap))
+
+(:action ack
+ :parameters (?a - assertion)
+ :effect (assertion_applied ?a))
+
+(:action set-alias
+ :parameters (?s - snap ?a - alias)
+ :effect (alias_configured ?a ?s))
+
+(:action check-snapshot
+ :parameters (?s - snapshot)
+ :effect (snapshot_checked ?s))
+
+(:action connect-interface
+ :parameters (?p - plug ?s - slot)
+ :effect (interface_connected ?p ?s))
+
+(:action create-cohort
+ :parameters (?c - cohort ?s - snap)
+ :effect (cohort_created ?c ?s))
+```
+
+**Explanation:**  
+- **Predicates** are defined to capture the state changes from the `snap` commands.  
+  - `assertion_applied` tracks added assertions.  
+  - `alias_configured` indicates a snap application alias is set.  
+  - `snapshot_checked` marks a snapshot verification.  
+  - `interface_connected` confirms plug-slot connections.  
+  - `cohort_created` signifies a cohort key set for snaps.  
+
+- **Actions** model the commands:  
+  - `ack` applies an assertion.  
+  - `set-alias` configures an alias for a snap.  
+  - `check-snapshot` verifies a snapshot.  
+  - `connect-interface` links a plug to a slot.  
+  - `create-cohort` generates a cohort for a snap.  
+
+Each action uses parameters relevant to the command's functionality, ensuring alignment with the documented behavior.

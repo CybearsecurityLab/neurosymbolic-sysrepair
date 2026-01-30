@@ -1,0 +1,356 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'userdel'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (userdel) ===
+USERDEL(8) System Management Commands USERDEL(8)
+
+NAME
+ userdel - delete a user account and related files
+
+SYNOPSIS
+
+ userdel [options] LOGIN
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+DESCRIPTION
+ userdel is a low level utility for removing users. On Debian, administrators should usually use deluser(8)
+ instead.
+
+ The userdel command modifies the system account files, deleting all entries that refer to the user name LOGIN.
+ The named user must exist.
+
+OPTIONS
+ The options which apply to the userdel command are:
+
+ -f, --force
+ This option forces the removal of the user account, even if the user is still logged in. It also forces
+ userdel to remove the user's home directory and mail spool, even if another user uses the same home
+ directory or if the mail spool is not owned by the specified user. If USERGROUPS_ENAB is defined to yes in
+ /etc/login.defs and if a group exists with the same name as the deleted user, then this group will be
+ removed, even if it is still the primary group of another user.
+
+ Note: This option is dangerous and may leave your system in an inconsistent state.
+
+ -h, --help
+ Display help message and exit.
+
+ -r, --remove
+ Files in the user's home directory will be removed along with the home directory itself and the user's
+ mail spool. Files located in other file systems will have to be searched for and deleted manually.
+
+ The mail spool is defined by the MAIL_DIR variable in the login.defs file.
+
+ -R, --root CHROOT_DIR
+ Apply changes in the CHROOT_DIR directory and use the configuration files from the CHROOT_DIR directory.
+ Only absolute paths are supported.
+
+ -P, --prefix PREFIX_DIR
+ Apply changes in the PREFIX_DIR directory and use the configuration files from the PREFIX_DIR directory.
+ This option does not chroot and is intended for preparing a cross-compilation target. Some limitations:
+ NIS and LDAP users/groups are not verified. PAM authentication is using the host files. No SELINUX
+ support.
+
+ -Z, --selinux-user
+ Remove any SELinux user mapping for the user's login.
+
+CONFIGURATION
+ The following configuration variables in /etc/login.defs change the behavior of this tool:
+
+ MAIL_DIR (string)
+ The mail spool directory. This is needed to manipulate the mailbox when its corresponding user account is
+ modified or deleted. If not specified, a compile-time default is used. The parameter CREATE_MAIL_SPOOL in
+ /etc/default/useradd determines whether the mail spool should be created.
+
+ MAIL_FILE (string)
+ Defines the location of the users mail spool files relatively to their home directory.
+
+ The MAIL_DIR and MAIL_FILE variables are used by useradd, usermod, and userdel to create, move, or delete the
+ user's mail spool.
+
+ MAX_MEMBERS_PER_GROUP (number)
+ Maximum members per group entry. When the maximum is reached, a new group entry (line) is started in
+ /etc/group (with the same name, same password, and same GID).
+
+ The default value is 0, meaning that there are no limits in the number of members in a group.
+
+ This feature (split group) permits to limit the length of lines in the group file. This is useful to make
+ sure that lines for NIS groups are not larger than 1024 characters.
+
+ If you need to enforce such limit, you can use 25.
+
+ Note: split groups may not be supported by all tools (even in the Shadow toolsuite). You should not use
+ this variable unless you really need it.
+
+ USERDEL_CMD (string)
+ If defined, this command is run when removing a user. It should remove any at/cron/print jobs etc. owned
+ by the user to be removed (passed as the first argument).
+
+ The return code of the script is not taken into account.
+
+ Here is an example script, which removes the user's cron, at and print jobs:
+
+ #! /bin/sh
+
+ # Check for the required argument.
+ if [ $# != 1 ]; then
+ echo "Usage: $0 username"
+ exit 1
+ fi
+
+ # Remove cron jobs.
+ crontab -r -u $1
+
+ # Remove at jobs.
+ # Note that it will remove any jobs owned by the same UID,
+ # even if it was shared by a different username.
+ AT_SPOOL_DIR=/var/spool/cron/atjobs
+ find $AT_SPOOL_DIR -name "[^.]*" -type f -user $1 -delete \;
+
+ # Remove print jobs.
+ lprm $1
+
+ # All done.
+ exit 0
+
+ USERGROUPS_ENAB (boolean)
+ If set to yes, userdel will remove the user's group if it contains no more members, and useradd will
+ create by default a group with the name of the user.
+
+FILES
+ /etc/group
+ Group account information.
+
+ /etc/login.defs
+ Shadow password suite configuration.
+
+ /etc/passwd
+ User account information.
+
+ /etc/shadow
+ Secure user account information.
+
+ /etc/shadow-maint/userdel-pre.d/*, /etc/shadow-maint/userdel-post.d/*
+ Run-part files to execute during user deletion. The environment variable ACTION will be populated with
+ userdel and SUBJECT with the username. userdel-pre.d will be executed prior to any user deletion.
+ userdel-post.d will execute after user deletion. If a script exits non-zero then execution will terminate.
+
+ /etc/subgid
+ Per user subordinate group IDs.
+
+ /etc/subuid
+ Per user subordinate user IDs.
+
+EXIT VALUES
+ The userdel command exits with the following values:
+
+ 0
+ success
+
+ 1
+ can't update password file
+
+ 2
+ invalid command syntax
+
+ 6
+ specified user doesn't exist
+
+ 8
+ user currently logged in
+
+ 10
+ can't update group file
+
+ 12
+ can't remove home directory
+
+CAVEATS
+ userdel will not allow you to remove an account if there are running processes which belong to this account.
+ In that case, you may have to kill those processes or lock the user's password or account and remove the
+ account later. The -f option can force the deletion of this account.
+
+ You should manually check all file systems to ensure that no files remain owned by this user.
+
+ You may not remove any NIS attributes on a NIS client. This must be performed on the NIS server.
+
+ If USERGROUPS_ENAB is defined to yes in /etc/login.defs, userdel will delete the group with the same name as
+ the user. To avoid inconsistencies in the passwd and group databases, userdel will check that this group is
+ not used as a primary group for another user, and will just warn without deleting the group otherwise. The -f
+ option can force the deletion of this group.
+
+SEE ALSO
+ chfn(1), chsh(1), passwd(1), login.defs(5), gpasswd(8), groupadd(8), groupdel(8), groupmod(8), subgid(5),
+ subuid(5), useradd(8), usermod(8).
+
+shadow-utils 4.13 05/30/2024 USERDEL(8)
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

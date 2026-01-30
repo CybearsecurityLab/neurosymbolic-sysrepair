@@ -1,0 +1,340 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'sudo'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (sudo) ===
+SUDO(8) System Manager's Manual SUDO(8)
+
+NAME
+ sudo, sudoedit -- execute a command as another user
+
+SYNOPSIS
+ sudo -h | -K | -k | -V
+ sudo -v [-ABkNnS] [-g group] [-h host] [-p prompt] [-u user]
+ sudo -l [-ABkNnS] [-g group] [-h host] [-p prompt] [-U user] [-u user] [command [arg ...]]
+ sudo [-ABbEHnPS] [-C num] [-D directory] [-g group] [-h host] [-p prompt] [-R directory] [-r role] [-t type]
+ [-T timeout] [-u user] [VAR=value] [-i | -s] [command [arg ...]]
+ sudoedit [-ABkNnS] [-C num] [-D directory] [-g group] [-h host] [-p prompt] [-R directory] [-r role] [-t type]
+ [-T timeout] [-u user] file ...
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ logging plugins. See the sudo.conf(5) manual for details of the /etc/sudo.conf file and the sudo_plugin(5)
+ manual for more information about the sudo plugin architecture.
+
+EXIT VALUE
+ Upon successful execution of a command, the exit status from sudo will be the exit status of the program that
+ was executed. If the command terminated due to receipt of a signal, sudo will send itself the same signal
+ that terminated the command.
+
+ If the -l option was specified without a command, sudo will exit with a value of 0 if the user is allowed to
+ run sudo and they authenticated successfully (as required by the security policy). If a command is specified
+ with the -l option, the exit value will only be 0 if the command is permitted by the security policy, other-
+ wise it will be 1.
+
+ If there is an authentication failure, a configuration/permission problem, or if the given command cannot be
+ executed, sudo exits with a value of 1. In the latter case, the error string is printed to the standard er-
+ ror. If sudo cannot stat(2) one or more entries in the user's PATH, an error is printed to the standard er-
+ ror. (If the directory does not exist or if it is not really a directory, the entry is ignored and no error
+ is printed.) This should not happen under normal circumstances. The most common reason for stat(2) to return
+ "permission denied" is if you are running an automounter and one of the directories in your PATH is on a ma-
+ chine that is currently unreachable.
+
+SECURITY NOTES
+ sudo tries to be safe when executing external commands.
+
+ To prevent command spoofing, sudo checks "." and "" (both denoting current directory) last when searching for
+ a command in the user's PATH (if one or both are in the PATH). Depending on the security policy, the user's
+ PATH environment variable may be modified, replaced, or passed unchanged to the program that sudo executes.
+
+ Users should never be granted sudo privileges to execute files that are writable by the user or that reside in
+ a directory that is writable by the user. If the user can modify or replace the command there is no way to
+ limit what additional commands they can run.
+
+ By default, sudo will only log the command it explicitly runs. If a user runs a command such as `sudo su' or
+ `sudo sh', subsequent commands run from that shell are not subject to sudo's security policy. The same is
+ true for commands that offer shell escapes (including most editors). If I/O logging is enabled, subsequent
+ commands will have their input and/or output logged, but there will not be traditional logs for those
+ commands. Because of this, care must be taken when giving users access to commands via sudo to verify that the
+ command does not inadvertently give the user an effective root shell. For information on ways to address
+ this, see the Preventing shell escapes section in sudoers(5).
+
+ To prevent the disclosure of potentially sensitive information, sudo disables core dumps by default while it
+ is executing (they are re-enabled for the command that is run). This historical practice dates from a time
+ when most operating systems allowed set-user-ID processes to dump core by default. To aid in debugging sudo
+ crashes, you may wish to re-enable core dumps by setting "disable_coredump" to false in the sudo.conf(5) file
+ as follows:
+
+ Set disable_coredump false
+
+ See the sudo.conf(5) manual for more information.
+
+ENVIRONMENT
+ sudo utilizes the following environment variables. The security policy has control over the actual content of
+ the command's environment.
+
+ EDITOR Default editor to use in -e (sudoedit) mode if neither SUDO_EDITOR nor VISUAL is set.
+
+ MAIL Set to the mail spool of the target user when the -i option is specified, or when env_reset
+ is enabled in sudoers (unless MAIL is present in the env_keep list).
+
+ HOME Set to the home directory of the target user when the -i or -H options are specified, when
+ the -s option is specified and set_home is set in sudoers, when always_set_home is enabled in
+ sudoers, or when env_reset is enabled in sudoers and HOME is not present in the env_keep
+ list.
+
+ LOGNAME Set to the login name of the target user when the -i option is specified, when the
+ set_logname option is enabled in sudoers, or when the env_reset option is enabled in sudoers
+ (unless LOGNAME is present in the env_keep list).
+
+ PATH May be overridden by the security policy.
+
+ SHELL Used to determine shell to run with -s option.
+
+ SUDO_ASKPASS Specifies the path to a helper program used to read the password if no terminal is available
+ or if the -A option is specified.
+
+ SUDO_COMMAND Set to the command run by sudo, including any args. The args are truncated at 4096 characters
+ to prevent a potential execution error.
+
+ SUDO_EDITOR Default editor to use in -e (sudoedit) mode.
+
+ SUDO_GID Set to the group-ID of the user who invoked sudo.
+
+ SUDO_PROMPT Used as the default password prompt unless the -p option was specified.
+
+ SUDO_PS1 If set, PS1 will be set to its value for the program being run.
+
+ SUDO_UID Set to the user-ID of the user who invoked sudo.
+
+ SUDO_USER Set to the login name of the user who invoked sudo.
+
+ USER Set to the same value as LOGNAME, described above.
+
+ VISUAL Default editor to use in -e (sudoedit) mode if SUDO_EDITOR is not set.
+
+FILES
+ /etc/sudo.conf sudo front-end configuration
+
+EXAMPLES
+ The following examples assume a properly configured security policy.
+
+ To get a file listing of an unreadable directory:
+
+ $ sudo ls /usr/local/protected
+
+ To list the home directory of user yaz on a machine where the file system holding ~yaz is not exported as
+ root:
+
+ $ sudo -u yaz ls ~yaz
+
+ To edit the index.html file as user www:
+
+ $ sudoedit -u www ~www/htdocs/index.html
+
+ To view system logs only accessible to root and users in the adm group:
+
+ $ sudo -g adm more /var/log/syslog
+
+ To run an editor as jim with a different primary group:
+
+ $ sudoedit -u jim -g audio ~jim/sound.txt
+
+ To shut down a machine:
+
+ $ sudo shutdown -r +15 "quick reboot"
+
+ To make a usage listing of the directories in the /home partition. The commands are run in a sub-shell to al-
+ low the `cd' command and file redirection to work.
+
+ $ sudo sh -c "cd /home ; du -s * | sort -rn > USAGE"
+
+DIAGNOSTICS
+ Error messages produced by sudo include:
+
+ editing files in a writable directory is not permitted
+ By default, sudoedit does not permit editing a file when any of the parent directories are writable by
+ the invoking user. This avoids a race condition that could allow the user to overwrite an arbitrary
+ file. See the sudoedit_checkdir option in sudoers(5) for more information.
+
+ editing symbolic links is not permitted
+ By default, sudoedit does not follow symbolic links when opening files. See the sudoedit_follow option
+ in sudoers(5) for more information.
+
+ effective uid is not 0, is sudo installed setuid root?
+ sudo was not run with root privileges. The sudo binary must be owned by the root user and have the set-
+ user-ID bit set. Also, it must not be located on a file system mounted with the `nosuid' option or on
+ an NFS file system that maps uid 0 to an unprivileged uid.
+
+ effective uid is not 0, is sudo on a file system with the 'nosuid' option set or an NFS file system without
+ root privileges?
+ sudo was not run with root privileges. The sudo binary has the proper owner and permissions but it
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

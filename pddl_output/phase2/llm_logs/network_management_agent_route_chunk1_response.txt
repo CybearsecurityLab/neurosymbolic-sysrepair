@@ -1,0 +1,18 @@
+```lisp
+(:predicates
+  (route_exists ?target - object ?gateway - object ?interface - interface)
+  (interface_exists ?interface - interface)
+)
+
+(:action add_route
+  :parameters (?target - object ?gateway - object ?interface - interface)
+  :precondition (interface_exists ?interface)
+  :effect (route_exists ?target ?gateway ?interface)
+)
+
+(:action delete_route
+  :parameters (?target - object ?gateway - object ?interface - interface)
+  :precondition (interface_exists ?interface)
+  :effect (not (route_exists ?target ?gateway ?interface))
+)
+```

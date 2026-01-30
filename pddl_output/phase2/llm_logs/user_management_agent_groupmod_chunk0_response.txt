@@ -1,0 +1,48 @@
+```lisp
+(:predicates
+    (group_exists ?g - group)
+    (group_has_gid ?g - group ?gid - object)
+    (group_named ?g - group ?name - object)
+    (user_in_group ?u - user ?g - group)
+    (group_password_set ?g - group ?password - object)
+    (config_applied_in ?dir - directory)
+    (file_exists ?f - filesystem_object)
+    (user_exists ?u - user)
+)
+
+(:action groupmod_change_gid
+    :parameters (?g - group ?new_gid - object)
+    :precondition (and (group_exists ?g))
+    :effect (and (group_has_gid ?g ?new_gid))
+)
+
+(:action groupmod_change_name
+    :parameters (?old_group - group ?new_name - object)
+    :precondition (and (group_exists ?old_group))
+    :effect (and (group_named ?old_group ?new_name))
+)
+
+(:action groupmod_append_users
+    :parameters (?g - group ?u - user)
+    :precondition (and (group_exists ?g) (user_exists ?u))
+    :effect (and (user_in_group ?u ?g))
+)
+
+(:action groupmod_set_password
+    :parameters (?g - group ?password - object)
+    :precondition (and (group_exists ?g))
+    :effect (and (group_password_set ?g ?password))
+)
+
+(:action groupmod_set_root_dir
+    :parameters (?dir - directory)
+    :precondition (and (file_exists ?dir))
+    :effect (and (config_applied_in ?dir))
+)
+
+(:action groupmod_set_prefix_dir
+    :parameters (?dir - directory)
+    :precondition (and (file_exists ?dir))
+    :effect (and (config_applied_in ?dir))
+)
+```

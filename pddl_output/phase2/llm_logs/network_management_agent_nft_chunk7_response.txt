@@ -1,0 +1,33 @@
+```lisp
+(:predicates 
+  (firewall_rule_exists ?r - firewall_rule)
+  (interface_exists ?i - interface)
+  (conntrack_state_applied ?r - firewall_rule ?s - ct_state)
+  (dccp_pkttype_applied ?r - firewall_rule ?t - dccp_pkttype)
+  (meta_interface_applied ?r - firewall_rule ?i - interface ?dir - direction)
+)
+
+(:action add-conntrack-rule
+  :parameters (?r - firewall_rule ?s - ct_state)
+  :precondition (and (not (firewall_rule_exists ?r)) 
+                     (interface_exists "eth0"))
+  :effect (and (firewall_rule_exists ?r)
+               (conntrack_state_applied ?r ?s))
+)
+
+(:action add-dccp-rule
+  :parameters (?r - firewall_rule ?t - dccp_pkttype)
+  :precondition (and (not (firewall_rule_exists ?r)) 
+                     (interface_exists "eth0"))
+  :effect (and (firewall_rule_exists ?r)
+               (dccp_pkttype_applied ?r ?t))
+)
+
+(:action add-meta-interface-rule
+  :parameters (?r - firewall_rule ?i - interface ?dir - direction)
+  :precondition (and (not (firewall_rule_exists ?r)) 
+                     (interface_exists ?i))
+  :effect (and (firewall_rule_exists ?r)
+               (meta_interface_applied ?r ?i ?dir))
+)
+```

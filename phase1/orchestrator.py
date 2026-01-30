@@ -18,7 +18,8 @@ from typing import Optional
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.models import Phase1State, ActionSchema
+from enum import Enum
+from common.models import Phase1State, ActionSchema, PDDLType
 from common.predicates import get_base_predicates
 
 from phase1.common.config import MODEL
@@ -27,6 +28,14 @@ from phase1.introspection.extractor import SystemStateExtractor
 from phase1.mining.manpage_parser import create_hybrid_parser
 from phase1.pddl.generator import PDDLGenerator
 from phase1.pddl.validator import PDDLValidator
+
+
+class EnumEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles Enum types."""
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
 
 
 class Phase1Orchestrator:
@@ -322,7 +331,7 @@ class Phase1Orchestrator:
         )
 
         with open(filepath, "w") as f:
-            f.write(phase1_state.to_json(indent=2))
+            json.dump(phase1_state.to_dict(), f, indent=2, cls=EnumEncoder)
 
         log(f"  ✓ Saved Phase 1 state to {filepath}")
         return filepath
@@ -355,7 +364,7 @@ class Phase1Orchestrator:
         }
 
         with open(filepath, "w") as f:
-            json.dump(phase2_state, f, indent=2)
+            json.dump(phase2_state, f, indent=2, cls=EnumEncoder)
 
         log(f"  ✓ Saved Phase 2 compatible state to {filepath}")
         return filepath

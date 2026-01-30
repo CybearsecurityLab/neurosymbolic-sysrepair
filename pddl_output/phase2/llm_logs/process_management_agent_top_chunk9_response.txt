@@ -1,0 +1,67 @@
+```lisp
+(:predicates
+  (window_task_visible ?w - object)
+  (alternate_display_mode_active)
+  (current_window ?w - object)
+  (can_scroll_up ?w - object)
+  (can_scroll_down ?w - object)
+  (can_scroll_left ?w - object)
+  (can_scroll_right ?w - object)
+  (scroll_position_changed ?w - object)
+  (scroll_position_home ?w - object)
+  (scroll_position_end ?w - object)
+  (scroll_coordinates_displayed)
+  (search_string_set ?s - object)
+  (search_next_occurrence ?s - object))
+
+(:action toggle_window_task_visibility
+  :parameters (?w - object)
+  :effect (window_task_visible ?w))
+
+(:action toggle_alternate_display_mode
+  :effect (alternate_display_mode_active))
+
+(:action change_current_window
+  :parameters (?new_window - object)
+  :effect (current_window ?new_window))
+
+(:action scroll_up
+  :parameters (?w - object)
+  :precondition (can_scroll_up ?w)
+  :effect (and (not (can_scroll_up ?w)) (scroll_position_changed ?w)))
+
+(:action scroll_down
+  :parameters (?w - object)
+  :precondition (can_scroll_down ?w)
+  :effect (and (not (can_scroll_down ?w)) (scroll_position_changed ?w)))
+
+(:action scroll_left
+  :parameters (?w - object)
+  :precondition (can_scroll_left ?w)
+  :effect (and (not (can_scroll_left ?w)) (scroll_position_changed ?w)))
+
+(:action scroll_right
+  :parameters (?w - object)
+  :precondition (can_scroll_right ?w)
+  :effect (and (not (can_scroll_right ?w)) (scroll_position_changed ?w)))
+
+(:action jump_to_home
+  :parameters (?w - object)
+  :effect (scroll_position_home ?w))
+
+(:action jump_to_end
+  :parameters (?w - object)
+  :effect (scroll_position_end ?w))
+
+(:action toggle_scroll_coordinates
+  :effect (scroll_coordinates_displayed))
+
+(:action set_search_string
+  :parameters (?s - object)
+  :effect (search_string_set ?s))
+
+(:action find_next_occurrence
+  :parameters (?s - object)
+  :precondition (search_string_set ?s)
+  :effect (search_next_occurrence ?s))
+```

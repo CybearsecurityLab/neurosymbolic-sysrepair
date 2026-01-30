@@ -1,0 +1,13 @@
+```lisp
+(:action touch-file
+  :parameters (?f - filesystem_object)
+  :precondition (and)
+  :effect (and (file_exists ?f))
+)
+
+(:action touch-file-no-create
+  :parameters (?f - filesystem_object)
+  :precondition (file_exists ?f)
+  :effect (and (file_exists ?f))
+)
+```

@@ -1,0 +1,395 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'ufw'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (ufw) ===
+UFW:(8) May 2023 UFW:(8)
+
+NAME
+ ufw - program for managing a netfilter firewall
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+DESCRIPTION
+ This program is for managing a Linux firewall and aims to provide an easy to use interface for the user.
+
+USAGE
+ ufw [--dry-run] enable|disable|reload
+
+ ufw [--dry-run] default allow|deny|reject [incoming|outgoing|routed]
+
+ ufw [--dry-run] logging on|off|LEVEL
+
+ ufw [--dry-run] reset
+
+ ufw [--dry-run] status [verbose|numbered]
+
+ ufw [--dry-run] show REPORT
+
+ ufw [--dry-run] [delete] [insert NUM] [prepend] allow|deny|reject|limit [in|out] [log|log-all] [ PORT[/PROTO-
+ COL] | APPNAME ] [comment COMMENT]
+
+ ufw [--dry-run] [rule] [delete] [insert NUM] [prepend] allow|deny|reject|limit [in|out [on INTERFACE]]
+ [log|log-all] [proto PROTOCOL] [from ADDRESS [port PORT | app APPNAME ]] [to ADDRESS [port PORT | app APPNAME
+ ]] [comment COMMENT]
+
+ ufw [--dry-run] route [delete] [insert NUM] [prepend] allow|deny|reject|limit [in|out on INTERFACE]
+ [log|log-all] [proto PROTOCOL] [from ADDRESS [port PORT | app APPNAME]] [to ADDRESS [port PORT | app APPNAME]]
+ [comment COMMENT]
+
+ ufw [--dry-run] [--force] delete NUM
+
+ ufw [--dry-run] app list|info|default|update
+
+OPTIONS
+ --version
+ show program's version number and exit
+
+ -h, --help
+ show help message and exit
+
+ --dry-run
+ don't modify anything, just show the changes
+
+ enable reloads firewall and enables firewall on boot.
+
+ disable
+ unloads firewall and disables firewall on boot
+
+ reload reloads firewall
+
+ default allow|deny|reject DIRECTION
+ change the default policy for traffic going DIRECTION, where DIRECTION is one of incoming, outgoing or
+ routed. Note that existing rules will have to be migrated manually when changing the default policy.
+ See RULE SYNTAX for more on deny and reject.
+
+ logging on|off|LEVEL
+ toggle logging. Logged packets use the LOG_KERN syslog facility. Systems configured for rsyslog support
+ may also log to /var/log/ufw.log. Specifying a LEVEL turns logging on for the specified LEVEL. The de-
+ fault log level is 'low'. See LOGGING for details.
+
+ reset Disables and resets firewall to installation defaults. Can also give the --force option to perform the
+ reset without confirmation.
+
+ status show status of firewall and ufw managed rules. Use status verbose for extra information. In the status
+ output, 'Anywhere' is synonymous with 'any', 0.0.0.0/0 (IPv4) and ::/0 (IPv6). Note that when using
+ status, there is a subtle difference when reporting interfaces. For example, if the following rules are
+ added:
+
+ ufw allow in on eth0 from 192.168.0.0/16
+ ufw allow out on eth1 to 10.0.0.0/8
+ ufw route allow in on eth0 out on eth1 to 10.0.0.0/8 from 192.168.0.0/16
+ ufw limit 2222/tcp comment 'SSH port'
+
+ ufw status will output:
+
+ To Action From
+ -- ------ ----
+ Anywhere on eth0 ALLOW 192.168.0.0/16
+ 10.0.0.0/8 ALLOW OUT Anywhere on eth1
+ 10.0.0.0/8 on eth1 ALLOW FWD 192.168.0.0/16 on eth0
+ Anywhere LIMIT Anywhere # SSH port
+
+ For the input and output rules, the interface is reported relative to the firewall system as an end-
+ point, whereas with route rules, the interface is reported relative to the direction packets flow
+ through the firewall.
+
+ show REPORT
+ display information about the running firewall. See REPORTS
+
+ allow ARGS
+ add allow rule. See RULE SYNTAX
+
+ deny ARGS
+ add deny rule. See RULE SYNTAX
+
+ reject ARGS
+ add reject rule. See RULE SYNTAX
+
+ limit ARGS
+ add limit rule. See RULE SYNTAX
+
+ delete RULE|NUM
+ deletes the corresponding RULE
+
+ insert NUM RULE
+ insert the corresponding RULE as rule number NUM
+
+ prepend RULE
+ prepend the corresponding RULE to the top of the ruleset
+
+RULE SYNTAX
+ Users can specify rules using either a simple syntax or a full syntax. The simple syntax only specifies the
+ port and optionally the protocol to be allowed or denied on the host.
+
+ Both syntaxes support specifying a comment for the rule. For existing rules, specifying a different comment
+ updates the comment and specifying '' removes the comment (note, 'insert' and 'prepend' cannot be used to up-
+ date the comment).
+
+ Example rules using the simple syntax:
+
+ ufw allow 53
+
+ This rule will allow tcp and udp port 53 to any address on this host. To specify a protocol, append '/proto-
+ col' to the port. For example:
+
+ ufw allow 25/tcp
+
+ This will allow tcp port 25 to any address on this host. ufw will also check /etc/services for the port and
+ protocol if specifying a service by name. Eg:
+
+ ufw allow smtp
+
+ ufw supports both ingress and egress filtering and users may optionally specify a direction of either in or
+ out for either incoming or outgoing traffic. If no direction is supplied, the rule applies to incoming traf-
+ fic. Eg:
+
+ ufw allow in http
+ ufw reject out smtp
+ ufw reject telnet comment 'telnet is unencrypted'
+
+ Users can also use a fuller syntax, specifying the source and destination addresses and ports. This syntax is
+ loosely based on OpenBSD's PF syntax. For example:
+
+ ufw deny proto tcp to any port 80
+
+ This will deny all traffic to tcp port 80 on this host. Another example:
+
+ ufw deny proto tcp from 10.0.0.0/8 to 192.168.0.1 port 25
+
+ This will deny all traffic from the RFC1918 Class A network to tcp port 25 with the address 192.168.0.1.
+
+ ufw deny proto tcp from 2001:db8::/32 to any port 25
+
+ This will deny all traffic from the IPv6 2001:db8::/32 to tcp port 25 on this host. IPv6 must be enabled in
+ /etc/default/ufw for IPv6 firewalling to work.
+
+ ufw deny in on eth0 to 224.0.0.1 proto igmp
+
+ This will deny all igmp traffic to 224.0.0.1 on the eth0 interface.
+
+ ufw allow in on eth0 to 192.168.0.1 proto gre
+
+ This will allow all gre traffic to 192.168.0.1 on the eth0 interface.
+
+ ufw allow proto tcp from any to any port 80,443,8080:8090 comment 'web app'
+
+ The above will allow all traffic to tcp ports 80, 443 and 8080-8090 inclusive and adds a comment for the rule.
+ When specifying multiple ports, the ports list must be numeric, cannot contain spaces and must be modified as
+ a whole. Eg, in the above example you cannot later try to delete just the '443' port. You cannot specify more
+ than 15 ports (ranges count as 2 ports, so the port count in the above example is 4).
+
+ ufw supports several different protocols. The following are valid in any rule and enabled when the protocol is
+ not specified:
+
+ tcp
+ udp
+
+ The following have certain restrictions and are not enabled when the protocol is not specified:
+
+ ah valid without port number
+ esp valid without port number
+ gre valid without port number
+ vrrp valid without port number
+ ipv6 valid for IPv4 addresses and without port number
+ igmp valid for IPv4 addresses and without port number
+
+ Rules for traffic not destined for the host itself but instead for traffic that should be routed/forwarded
+ through the firewall should specify the route keyword before the rule (routing rules differ significantly from
+ PF syntax and instead take into account netfilter FORWARD chain conventions). For example:
+
+ ufw route allow in on eth1 out on eth2
+
+ This will allow all traffic routed to eth2 and coming in on eth1 to traverse the firewall.
+
+ ufw route allow in on eth0 out on eth1 to 12.34.45.67 port 80 proto tcp
+
+ This rule allows any packets coming in on eth0 to traverse the firewall out on eth1 to tcp port 80 on
+ 12.34.45.67.
+
+ In addition to routing rules and policy, you must also setup IP forwarding. This may be done by setting the
+ following in /etc/ufw/sysctl.conf:
+
+ net/ipv4/ip_forward=1
+ net/ipv6/conf/default/forwarding=1
+ net/ipv6/conf/all/forwarding=1
+
+ then restarting the firewall:
+
+ ufw disable
+ ufw enable
+
+ Be aware that setting kernel tunables is operating system specific and ufw sysctl settings may be overridden.
+ See the sysctl manual page for details.
+
+ ufw supports connection rate limiting, which is useful for protecting against brute-force login attacks. When
+ a limit rule is used, ufw will normally allow the connection but will deny connections if an IP address at-
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

@@ -1,0 +1,77 @@
+To model the creation of firewall rules based on specific header expressions in the `nft` commands described in the documentation, we define three distinct actions. Each action corresponds to a specific example in the documentation that adds a rule matching a particular header field. The actions are designed to reflect the structure of the commands and utilize the existing predicate `(firewall_rule_exists ?r - firewall_rule)`.
+
+---
+
+### **PDDL Actions**
+
+#### **1. Add GRE IP Destination Address Rule**
+This action adds a firewall rule that matches the destination IP address in a GRE-encapsulated IP header.
+
+```lisp
+(:action add-gre-ip-daddr-rule
+  :parameters (?r - firewall_rule ?ip - string)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+```
+
+- **Parameters**:
+  - `?r`: The firewall rule to be added.
+  - `?ip`: The destination IP address to match (e.g., `"9.9.9.9"`).
+- **Effect**: The rule `?r` is marked as existing.
+
+---
+
+#### **2. Add GENEVE TCP Destination Port Rule**
+This action adds a firewall rule that matches the destination TCP port in a GENEVE-encapsulated TCP header.
+
+```lisp
+(:action add-geneve-tcp-dport-rule
+  :parameters (?r - firewall_rule ?port - integer)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+```
+
+- **Parameters**:
+  - `?r`: The firewall rule to be added.
+  - `?port`: The destination TCP port to match (e.g., `80`).
+- **Effect**: The rule `?r` is marked as existing.
+
+---
+
+#### **3. Add GRETAP TCP Destination Port Rule**
+This action adds a firewall rule that matches the destination TCP port in a GRETAP-encapsulated TCP header.
+
+```lisp
+(:action add-gretap-tcp-dport-rule
+  :parameters (?r - firewall_rule ?port - integer)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+```
+
+- **Parameters**:
+  - `?r`: The firewall rule to be added.
+  - `?port`: The destination TCP port to match (e.g., `80`).
+- **Effect**: The rule `?r` is marked as existing.
+
+---
+
+### **Key Considerations**
+- **Generalization**: Each action is tailored to a specific header field (e.g., GRE IP `daddr`, GENEVE TCP `dport`). This ensures clarity and alignment with the examples in the documentation.
+- **Parameter Types**: Parameters are typed appropriately (e.g., `string` for IP addresses, `integer` for ports) to reflect the data being matched.
+- **Precondition**: Ensures the rule does not already exist before adding it.
+- **Effect**: Marks the rule as existing, leveraging the `firewall_rule_exists` predicate.
+
+---
+
+### **Example Usage**
+To model the command `netdev filter ingress gre ip daddr 9.9.9.9 counter`, you would invoke:
+
+```lisp
+(add-gre-ip-daddr-rule r1 "9.9.9.9")
+```
+
+Where `r1` is a unique identifier for the firewall rule.
+
+---
+
+This approach captures the specific actions described in the documentation while adhering to the structure and constraints of PDDL.

@@ -1,0 +1,72 @@
+(:predicates 
+    (tcp_sport_rule ?r - firewall_rule ?p - inet_service)
+    (tcp_dport_rule ?r - firewall_rule ?p - inet_service)
+    (tcp_sequence_rule ?r - firewall_rule ?s - integer)
+    (tcp_ackseq_rule ?r - firewall_rule ?a - integer)
+    (tcp_flags_rule ?r - firewall_rule ?f - tcp_flag)
+    (udp_sport_rule ?r - firewall_rule ?p - inet_service)
+    (udp_dport_rule ?r - firewall_rule ?p - inet_service)
+    (sctp_sport_rule ?r - firewall_rule ?p - inet_service)
+    (sctp_dport_rule ?r - firewall_rule ?p - inet_service)
+    (sctp_vtag_rule ?r - firewall_rule ?v - integer)
+)
+
+(:action add_tcp_sport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (tcp_sport_rule ?r ?p)
+)
+
+(:action add_tcp_dport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (tcp_dport_rule ?r ?p)
+)
+
+(:action add_tcp_sequence_rule
+    :parameters (?r - firewall_rule ?s - integer)
+    :precondition (firewall_rule_exists ?r)
+    :effect (tcp_sequence_rule ?r ?s)
+)
+
+(:action add_tcp_ackseq_rule
+    :parameters (?r - firewall_rule ?a - integer)
+    :precondition (firewall_rule_exists ?r)
+    :effect (tcp_ackseq_rule ?r ?a)
+)
+
+(:action add_tcp_flags_rule
+    :parameters (?r - firewall_rule ?f - tcp_flag)
+    :precondition (firewall_rule_exists ?r)
+    :effect (tcp_flags_rule ?r ?f)
+)
+
+(:action add_udp_sport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (udp_sport_rule ?r ?p)
+)
+
+(:action add_udp_dport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (udp_dport_rule ?r ?p)
+)
+
+(:action add_sctp_sport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (sctp_sport_rule ?r ?p)
+)
+
+(:action add_sctp_dport_rule
+    :parameters (?r - firewall_rule ?p - inet_service)
+    :precondition (firewall_rule_exists ?r)
+    :effect (sctp_dport_rule ?r ?p)
+)
+
+(:action add_sctp_vtag_rule
+    :parameters (?r - firewall_rule ?v - integer)
+    :precondition (firewall_rule_exists ?r)
+    :effect (sctp_vtag_rule ?r ?v)
+)

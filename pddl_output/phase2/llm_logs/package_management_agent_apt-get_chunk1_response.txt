@@ -1,0 +1,73 @@
+```lisp
+(:predicates
+  (package_installed ?p - package)
+  (file_exists ?f - filesystem_object)
+  (package_downloaded ?p - package)
+  (package_file_exists ?f - filesystem_object)
+  (package_file_removed ?f - filesystem_object)
+  (apt_list_file_exists ?f - filesystem_object)
+  (apt_list_file_removed ?f - filesystem_object)
+  (broken_dependency_exists ?p - package)
+  (package_cache_updated)
+  (dependency_satisfied ?d - dependency)
+  (package_automatically_installed ?p - package)
+  (package_removed ?p - package)
+  (config_file_removed ?f - filesystem_object)
+  (changelog_downloaded ?p - package)
+  (index_target_info_displayed ?t - index_target)
+  (index_target_exists ?t - index_target))
+
+(:action build-dep
+  :parameters (?p - package)
+  :precondition (and (file_exists ?p) (not (package_installed ?p)))
+  :effect (package_installed ?p))
+
+(:action satisfy
+  :parameters (?d - dependency)
+  :precondition (not (dependency_satisfied ?d))
+  :effect (dependency_satisfied ?d))
+
+(:action check
+  :precondition (not (package_cache_updated))
+  :effect (and (package_cache_updated) (forall (?p - package) (not (broken_dependency_exists ?p)))))
+
+(:action download
+  :parameters (?p - package)
+  :precondition (file_exists ?p)
+  :effect (package_downloaded ?p))
+
+(:action clean
+  :parameters (?f - filesystem_object)
+  :precondition (package_file_exists ?f)
+  :effect (package_file_removed ?f))
+
+(:action autoclean
+  :parameters (?f - filesystem_object)
+  :precondition (and (package_file_exists ?f) (not (package_needed ?f)))
+  :effect (package_file_removed ?f))
+
+(:action distclean
+  :parameters (?f - filesystem_object)
+  :precondition (and (apt_list_file_exists ?f) (not (security_file ?f)))
+  :effect (apt_list_file_removed ?f))
+
+(:action autoremove
+  :parameters (?p - package)
+  :precondition (and (package_automatically_installed ?p) (not (package_needed ?p)))
+  :effect (package_removed ?p))
+
+(:action autopurge
+  :parameters (?p - package)
+  :precondition (and (package_automatically_installed ?p) (not (package_needed ?p)))
+  :effect (and (package_removed ?p) (config_file_removed ?p)))
+
+(:action changelog
+  :parameters (?p - package)
+  :precondition (package_installed ?p)
+  :effect (changelog_downloaded ?p))
+
+(:action indextargets
+  :parameters (?t - index_target)
+  :precondition (index_target_exists ?t)
+  :effect (index_target_info_displayed ?t))
+```

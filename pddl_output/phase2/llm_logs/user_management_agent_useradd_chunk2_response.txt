@@ -1,0 +1,79 @@
+```pddl
+(define (problem user-management)
+  (:domain user-management)
+  (:init 
+    (group_exists g1)
+    (group_exists g2)
+    (user_exists u1)
+    (user_exists u2)
+    (file_exists /etc/default/useradd)
+    (config_applied /etc/default/useradd)
+  )
+  (:goal 
+    (and 
+      (user_exists new_user)
+      (user_in_group new_user g1)
+      (home_directory_exists new_user)
+      (home_directory_umask_set new_user 0755)
+      (usergroup_creation_enabled new_user)
+    )
+  )
+)
+```
+
+```pddl
+(define (domain user-management)
+  (:requirements :strips :typing)
+  (:types 
+    user group filesystem_object config_file
+  )
+  (:predicates 
+    (user_exists ?u - user)
+    (group_exists ?g - group)
+    (user_in_group ?u - user ?g - group)
+    (file_exists ?f - filesystem_object)
+    (home_directory_exists ?u - user)
+    (home_directory_umask_set ?u - user ?umask - filesystem_object)
+    (config_applied ?c - config_file)
+    (usergroup_creation_enabled ?u - user)
+  )
+  (:action create_user
+    :parameters (?u - user ?g - group)
+    :precondition (and (group_exists ?g))
+    :effect (and 
+      (user_exists ?u)
+      (user_in_group ?u ?g)
+      (home_directory_exists ?u)
+    )
+  )
+  (:action set_user_umask
+    :parameters (?u - user ?umask - filesystem_object)
+    :precondition (user_exists ?u)
+    :effect (home_directory_umask_set ?u ?umask)
+  )
+  (:action enable_user_group_creation
+    :parameters (?u - user)
+    :effect (usergroup_creation_enabled ?u)
+  )
+  (:action configure_usergroup_creation
+    :parameters (?c - config_file)
+    :precondition (file_exists ?c)
+    :effect (config_applied ?c)
+  )
+)
+```
+
+**Explanation:**
+
+1. **Domain Definition**:
+   - **Types**: `user`, `group`, `filesystem_object`, and `config_file` are defined to categorize entities.
+   - **Predicates**: 
+     - `user_exists`, `group_exists`, and `file_exists` are used to track the existence of users, groups, and files.
+     - `user_in_group` tracks group membership.
+     - `home_directory_exists` and `home_directory_umask_set` manage user home directories and their permissions.
+     - `config_applied` and `usergroup_creation_enabled` handle configuration settings for user group creation.
+
+2. **Actions**:
+   - **`create_user`**: Creates a user in a specified group, ensuring the group exists. Effects include user existence, group membership, and home directory creation.
+   - **`set_user_umask`**: Sets the UMASK for a user's home directory, requiring the user to exist.
+   - **`enable_user_group_creation`**: Enables automatic group creation for a user (based on `USERGROUPS_ENAB` configuration).

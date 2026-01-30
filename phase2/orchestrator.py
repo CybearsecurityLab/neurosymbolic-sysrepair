@@ -17,7 +17,7 @@ import os
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.models import Phase1State, ActionSchema
+from common.models import Phase1State
 from common.predicates import get_base_predicates
 
 from phase2.config import HardwareConfig, LLMConfig
@@ -152,7 +152,7 @@ class Phase2Orchestrator:
         print("\n" + "=" * 70)
         print("PHASE 2: PARALLEL SYNTHESIS (MAP-REDUCE)")
         print("=" * 70)
-        print(f"\nHardware Configuration:")
+        print("\nHardware Configuration:")
         print(
             f"  GPUs: {self.hardware.num_gpus}x (detected @ {self.hardware.gpu_memory_gb:.1f}GB)"
         )
@@ -164,7 +164,7 @@ class Phase2Orchestrator:
         # =================================================================
         # Report Phase 1 integration status
         # =================================================================
-        print(f"\nPhase 1 Integration:")
+        print("\nPhase 1 Integration:")
         print(f"  Objects: {sum(len(v) for v in self.phase1_state.objects.values())}")
         print(f"  Predicates: {len(self.phase1_state.predicates)}")
         print(f"  Actions: {len(self.phase1_actions)} (reuse: {self.reuse_phase1_actions})")
@@ -309,7 +309,6 @@ def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subproces
 
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    import time
 
     for _ in range(60):
         try:

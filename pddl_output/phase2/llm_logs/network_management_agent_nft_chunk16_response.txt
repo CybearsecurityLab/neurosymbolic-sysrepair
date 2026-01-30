@@ -1,0 +1,44 @@
+(:predicates 
+  (jump_configured ?r - firewall_rule ?t - firewall_rule)
+  (goto_configured ?r - firewall_rule ?t - firewall_rule)
+  (payload_set ?r - firewall_rule ?e - string ?v - string)
+  (tcp_mss_set ?r - firewall_rule ?size - string)
+  (log_configured ?r - firewall_rule ?prefix - string ?level - string ?group - string ?snaplen - string ?threshold - string ?flags - string)
+  (reject_configured ?r - firewall_rule ?type - string)
+)
+
+(:action jump_to_chain
+  :parameters (?rule - firewall_rule ?target - firewall_rule)
+  :precondition (firewall_rule_exists ?rule) (firewall_rule_exists ?target)
+  :effect (jump_configured ?rule ?target)
+)
+
+(:action goto_chain
+  :parameters (?rule - firewall_rule ?target - firewall_rule)
+  :precondition (firewall_rule_exists ?rule) (firewall_rule_exists ?target)
+  :effect (goto_configured ?rule ?target)
+)
+
+(:action set_payload_value
+  :parameters (?rule - firewall_rule ?expression - string ?value - string)
+  :precondition (firewall_rule_exists ?rule)
+  :effect (payload_set ?rule ?expression ?value)
+)
+
+(:action configure_tcp_mss
+  :parameters (?rule - firewall_rule ?size - string)
+  :precondition (firewall_rule_exists ?rule)
+  :effect (tcp_mss_set ?rule ?size)
+)
+
+(:action configure_logging
+  :parameters (?rule - firewall_rule ?prefix - string ?level - string ?group - string ?snaplen - string ?threshold - string ?flags - string)
+  :precondition (firewall_rule_exists ?rule)
+  :effect (log_configured ?rule ?prefix ?level ?group ?snaplen ?threshold ?flags)
+)
+
+(:action reject_packet
+  :parameters (?rule - firewall_rule ?reject_type - string)
+  :precondition (firewall_rule_exists ?rule)
+  :effect (reject_configured ?rule ?reject_type)
+)

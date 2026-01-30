@@ -1,0 +1,336 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'top'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (top) ===
+TOP(1) User Commands TOP(1)
+
+NAME
+ top - display Linux processes
+
+SYNOPSIS
+ top [options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ The Inode of the namespace used to isolate hostname and NIS domain name. UTS simply means "UNIX Time-
+ sharing System".
+
+ vMj -- Major Page Fault Count Delta
+ The number of major page faults that have occurred since the last update (see nMaj).
+
+ vMn -- Minor Page Fault Count Delta
+ The number of minor page faults that have occurred since the last update (see nMin).
+
+ 3b. MANAGING Fields
+ After pressing the interactive command `f' (Fields Management) you will be presented with a screen showing: 1)
+ the `current' window name; 2) the designated sort field; 3) all fields in their current order along with
+ descriptions. Entries marked with an asterisk are the currently displayed fields, screen width permitting.
+
+ o As the on screen instructions indicate, you navigate among the fields with the Up and Down arrow keys.
+ The PgUp, PgDn, Home and End keys can also be used to quickly reach the first or last available field.
+
+ o The Right arrow key selects a field for repositioning and the Left arrow key or the <Enter> key commits
+ that field's placement.
+
+ o The `d' key or the <Space> bar toggles a field's display status, and thus the presence or absence of
+ the asterisk.
+
+ o The `s' key designates a field as the sort field. See topic 4c. TASK AREA Commands, SORTING for
+ additional information regarding your selection of a sort field.
+
+ o The `a' and `w' keys can be used to cycle through all available windows and the `q' or <Esc> keys exit
+ Fields Management.
+
+ The Fields Management screen can also be used to change the `current' window/field group in either full-screen
+ mode or alternate-display mode. Whatever was targeted when `q' or <Esc> was pressed will be made current as
+ you return to the top display. See topic 5. ALTERNATE-DISPLAY Provisions and the `g' interactive command for
+ insight into `current' windows and field groups.
+
+ Note: Any window that has been scrolled horizontally will be reset if any field changes are made via the
+ Fields Management screen. Any vertical scrolled position, however, will not be affected. See topic 5c.
+ SCROLLING a Window for additional information regarding vertical and horizontal scrolling.
+
+4. INTERACTIVE Commands
+ Listed below is a brief index of commands within categories. Some commands appear more than once -- their
+ meaning or scope may vary depending on the context in which they are issued.
+
+ 4a. Global-Commands
+ <Ent/Sp> ?, =, 0,
+ A, B, d, E, e, g, H, h, I, k, q, r, s, W, X, Y, Z,
+ ^G, ^K, ^N, ^P, ^U, ^L, ^R
+ 4b. Summary-Area-Commands
+ C, l, t, m, 1, 2, 3, 4, 5, !
+ 4c. Task-Area-Commands
+ Appearance: b, J, j, x, y, z
+ Content: c, F, f, O, o, S, U, u, V, v, ^E
+ Size: #, i, n
+ Sorting: <, >, f, R
+ 4d. Color-Mapping
+ <Ret>, a, B, b, H, M, q, S, T, w, z, 0 - 7
+ 5b. Commands-for-Windows
+ -, _, =, +, A, a, G, g, w
+ 5c. Scrolling-a-Window
+ C, Up, Dn, Left, Right, PgUp, PgDn, Home, End
+ 5d. Searching-in-a-Window
+ L, &
+ 5e. Filtering-in-a-Window
+ O, o, ^O, =, +
+
+ 4a. GLOBAL Commands
+ The global interactive commands are always available in both full-screen mode and alternate-display mode.
+ However, some of these interactive commands are not available when running in Secure mode.
+
+ If you wish to know in advance whether or not your top has been secured, simply ask for help and view the
+ system summary on the second line.
+
+ <Enter> or <Space> :Refresh-Display
+ These commands awaken top and following receipt of any input the entire display will be repainted.
+ They also force an update of any hotplugged cpu or physical memory changes.
+
+ Use either of these keys if you have a large delay interval and wish to see current status,
+
+ ? | h :Help
+ There are two help levels available. The first will provide a reminder of all the basic interactive
+ commands. If top is secured, that screen will be abbreviated.
+
+ Typing `h' or `?' on that help screen will take you to help for those interactive commands applicable
+ to alternate-display mode.
+
+ = :Exit-Display-Limits
+ Removes restrictions on what is shown. This command will reverse any `i' (idle tasks), `n' (max
+ tasks), `v' (hide children) and `F' focus commands that might be active. It also provides for an exit
+ from PID monitoring, User filtering, Other filtering, Locate processing and Combine Cpus mode.
+
+ Additionally, if the window has been scrolled it will be reset with this command.
+
+ 0 :Zero-Suppress toggle
+ This command determines whether zeros are shown or suppressed for many of the fields in a task window.
+ Fields like UID, GID, NI, PR or P are not affected by this toggle.
+
+ A :Alternate-Display-Mode toggle
+ This command will switch between full-screen mode and alternate-display mode. See topic 5.
+ ALTERNATE-DISPLAY Provisions and the `g' interactive command for insight into `current' windows and
+ field groups.
+
+ B :Bold-Disable/Enable toggle
+ This command will influence use of the bold terminfo capability and alters both the summary area and
+ task area for the `current' window. While it is intended primarily for use with dumb terminals, it can
+ be applied anytime.
+
+ Note: When this toggle is On and top is operating in monochrome mode, the entire display will appear as
+ normal text. Thus, unless the `x' and/or `y' toggles are using reverse for emphasis, there will be no
+ visual confirmation that they are even on.
+
+ * d | s :Change-Delay-Time-interval
+ You will be prompted to enter the delay time, in seconds, between display updates.
+
+ Fractional seconds are honored, but a negative number is not allowed. Entering 0 causes (nearly)
+ continuous updates, with an unsatisfactory display as the system and tty driver try to keep up with
+ top's demands. The delay value is inversely proportional to system loading, so set it with care.
+
+ If at any time you wish to know the current delay time, simply ask for help and view the system summary
+ on the second line.
+
+ E :Enforce-Summary-Memory-Scale in Summary Area
+ With this command you can cycle through the available summary area memory scaling which ranges from KiB
+ (kibibytes or 1,024 bytes) through EiB (exbibytes or 1,152,921,504,606,846,976 bytes).
+
+ If you see a `+' between a displayed number and the following label, it means that top was forced to
+ truncate some portion of that number. By raising the scaling factor, such truncation can be avoided.
+
+ e :Enforce-Task-Memory-Scale in Task Area
+ With this command you can cycle through the available task area memory scaling which ranges from KiB
+ (kibibytes or 1,024 bytes) through PiB (pebibytes or 1,125,899,906,842,624 bytes).
+
+ While top will try to honor the selected target range, additional scaling might still be necessary in
+ order to accommodate current values. If you wish to see a more homogeneous result in the memory
+ columns, raising the scaling range will usually accomplish that goal. Raising it too high, however, is
+ likely to produce an all zero result which cannot be suppressed with the `0' interactive command.
+
+ g :Choose-Another-Window/Field-Group
+ You will be prompted to enter a number between 1 and 4 designating the field group which should be made
+ the `current' window. You will soon grow comfortable with these 4 windows, especially after
+ experimenting with alternate-display mode.
+
+ H :Threads-mode toggle
+ When this toggle is On, individual threads will be displayed for all processes in all visible task
+ windows. Otherwise, top displays a summation of all threads in each process.
+
+ I :Irix/Solaris-Mode toggle
+ When operating in Solaris mode (`I' toggled Off), a task's cpu usage will be divided by the total
+ number of CPUs. After issuing this command, you'll be told the new state of this toggle.
+
+ * k :Kill-a-task
+ You will be prompted for a PID and then the signal to send.
+
+ Entering no PID or a negative number will be interpreted as the default shown in the prompt (the first
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

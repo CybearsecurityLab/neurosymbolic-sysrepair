@@ -1,0 +1,11 @@
+```lisp
+(:predicates
+  (selinux_user_mapped ?u - user ?seuser - user)
+)
+
+(:action modify-selinux-user
+  :parameters (?u - user ?seuser - user)
+  :precondition (user_exists ?u)
+  :effect (selinux_user_mapped ?u ?seuser)
+)
+```

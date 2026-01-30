@@ -1,0 +1,27 @@
+```lisp
+(:predicates
+  (user_exists ?u - user)
+  (command_executed ?c - command ?u - user)
+  (environment_set ?u - user)
+  (home_directory_changed ?u - user)
+  (pty_created ?u - user)
+)
+
+(:action execute-command
+  :parameters (?u - user ?c - command)
+  :precondition (and (user_exists ?u) (file_executable ?c))
+  :effect (command_executed ?c ?u)
+)
+
+(:action start-login-shell
+  :parameters (?u - user ?s - filesystem_object)
+  :precondition (and (user_exists ?u) (file_executable ?s))
+  :effect (and (environment_set ?u) (home_directory_changed ?u))
+)
+
+(:action create-pty-session
+  :parameters (?u - user)
+  :precondition (user_exists ?u)
+  :effect (pty_created ?u)
+)
+```

@@ -1,0 +1,23 @@
+(:predicates 
+  (firewall_rule_exists ?r - firewall_rule)
+)
+
+(:action create-vxlan-tcp-rule
+ :parameters (?r - firewall_rule ?port - integer)
+ :effect (firewall_rule_exists ?r)
+)
+
+(:action create-arp-header-rule
+ :parameters (?r - firewall_rule ?htype - integer ?ptype - integer ?hlen - integer ?plen - integer ?operation - integer ?saddr - integer ?daddr - integer)
+ :effect (firewall_rule_exists ?r)
+)
+
+(:action create-raw-payload-rule
+ :parameters (?r - firewall_rule ?base - symbol ?offset - integer ?length - integer ?port1 - integer ?port2 - integer)
+ :effect (firewall_rule_exists ?r)
+)
+
+(:action create-extension-header-rule
+ :parameters (?r - firewall_rule ?header - symbol)
+ :effect (firewall_rule_exists ?r)
+)

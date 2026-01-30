@@ -8,7 +8,6 @@ Updated to dynamically discover installed utilities and valid osquery tables.
 
 import os
 import re
-import sys
 import json
 import shutil
 import psutil

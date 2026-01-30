@@ -1,0 +1,20 @@
+```lisp
+(:predicates
+  (secret_agent_registered)
+  (polkit_agent_registered))
+
+(:action register-secret-agent
+  :parameters ()
+  :precondition (and)
+  :effect (secret_agent_registered))
+
+(:action register-polkit-agent
+  :parameters ()
+  :precondition (and)
+  :effect (polkit_agent_registered))
+
+(:action register-all-agents
+  :parameters ()
+  :precondition (and)
+  :effect (and (secret_agent_registered) (polkit_agent_registered)))
+```

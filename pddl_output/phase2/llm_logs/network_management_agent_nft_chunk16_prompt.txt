@@ -1,0 +1,388 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'nft'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (nft) ===
+NFT(8) NFT(8)
+
+NAME
+ nft - Administration tool of the nftables framework for packet filtering and classification
+
+SYNOPSIS
+ nft [ -nNscaeSupyjtT ] [ -I directory ] [ -f filename | -i | cmd ...]
+ nft -h
+ nft -v
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ following the queue verdict.
+
+ continue Continue ruleset evaluation with the
+ next rule. This is the default
+ behaviour in case a rule issues no
+ verdict.
+
+ return Return from the current chain and
+ continue evaluation at the next rule in
+ the last chain. If issued in a base
+ chain, it is equivalent to the base
+ chain policy.
+
+ jump chain Continue evaluation at the first rule
+ in chain. The current position in the
+ ruleset is pushed to a call stack and
+ evaluation will continue there when the
+ new chain is entirely evaluated or a
+ return verdict is issued. In case an
+ absolute verdict is issued by a rule in
+ the chain, ruleset evaluation
+ terminates immediately and the specific
+ action is taken.
+
+ goto chain Similar to jump, but the current
+ position is not pushed to the call
+ stack, meaning that after the new chain
+ evaluation will continue at the last
+ chain instead of the one containing the
+ goto statement.
+
+ Using verdict statements.
+
+ # process packets from eth0 and the internal network in from_lan
+ # chain, drop all packets from eth0 with different source addresses.
+
+ filter input iif eth0 ip saddr 192.168.0.0/24 jump from_lan
+ filter input iif eth0 drop
+
+ PAYLOAD STATEMENT
+ payload_expression set value
+
+ The payload statement alters packet content. It can be used for example to set ip DSCP (diffserv) header field
+ or ipv6 flow labels.
+
+ route some packets instead of bridging.
+
+ # redirect tcp:http from 192.160.0.0/16 to local machine for routing instead of bridging
+ # assumes 00:11:22:33:44:55 is local MAC address.
+ bridge input meta iif eth0 ip saddr 192.168.0.0/16 tcp dport 80 meta pkttype set unicast ether daddr set 00:11:22:33:44:55
+
+ Set IPv4 DSCP header field.
+
+ ip forward ip dscp set 42
+
+ EXTENSION HEADER STATEMENT
+ extension_header_expression set value
+
+ The extension header statement alters packet content in variable-sized headers. This can currently be used to
+ alter the TCP Maximum segment size of packets, similar to the TCPMSS target in iptables.
+
+ change tcp mss.
+
+ tcp flags syn tcp option maxseg size set 1360
+ # set a size based on route information:
+ tcp flags syn tcp option maxseg size set rt mtu
+
+ You can also remove tcp options via reset keyword.
+
+ remove tcp option.
+
+ tcp flags syn reset tcp option sack-perm
+
+ LOG STATEMENT
+ log [prefix quoted_string] [level syslog-level] [flags log-flags]
+ log group nflog_group [prefix quoted_string] [queue-threshold value] [snaplen size]
+ log level audit
+
+ The log statement enables logging of matching packets. When this statement is used from a rule, the Linux
+ kernel will print some information on all matching packets, such as header fields, via the kernel log (where
+ it can be read with dmesg(1) or read in the syslog).
+
+ In the second form of invocation (if nflog_group is specified), the Linux kernel will pass the packet to
+ nfnetlink_log which will send the log through a netlink socket to the specified group. One userspace process
+ may subscribe to the group to receive the logs, see man(8) ulogd for the Netfilter userspace log daemon and
+ libnetfilter_log documentation for details in case you would like to develop a custom program to digest your
+ logs.
+
+ In the third form of invocation (if level audit is specified), the Linux kernel writes a message into the
+ audit buffer suitably formatted for reading with auditd. Therefore no further formatting options (such as
+ prefix or flags) are allowed in this mode.
+
+ This is a non-terminating statement, so the rule evaluation continues after the packet is logged.
+
+ Table 64. log statement options
+ +-----------------+------------------------------+------------------------------+
+ | Keyword | Description | Type |
+ +-----------------+------------------------------+------------------------------+
+ | | | |
+ | prefix | Log message prefix | quoted string |
+ +-----------------+------------------------------+------------------------------+
+ | | | |
+ | level | Syslog level of logging | string: emerg, alert, crit, |
+ | | | err, warn [default], notice, |
+ | | | info, debug, audit |
+ +-----------------+------------------------------+------------------------------+
+ | | | |
+ | group | NFLOG group to send messages | unsigned integer (16 bit) |
+ | | to | |
+ +-----------------+------------------------------+------------------------------+
+ | | | |
+ | snaplen | Length of packet payload to | unsigned integer (32 bit) |
+ | | include in netlink message | |
+ +-----------------+------------------------------+------------------------------+
+ | | | |
+ | queue-threshold | Number of packets to queue | unsigned integer (32 bit) |
+ | | inside the kernel before | |
+ | | sending them to userspace | |
+ +-----------------+------------------------------+------------------------------+
+
+ Table 65. log-flags
+ +--------------+-----------------------------------------+
+ | Flag | Description |
+ +--------------+-----------------------------------------+
+ | | |
+ | tcp sequence | Log TCP sequence numbers. |
+ +--------------+-----------------------------------------+
+ | | |
+ | tcp options | Log options from the TCP packet header. |
+ +--------------+-----------------------------------------+
+ | | |
+ | ip options | Log options from the IP/IPv6 packet |
+ | | header. |
+ +--------------+-----------------------------------------+
+ | | |
+ | skuid | Log the userid of the process which |
+ | | generated the packet. |
+ +--------------+-----------------------------------------+
+ | | |
+ | ether | Decode MAC addresses and protocol. |
+ +--------------+-----------------------------------------+
+ | | |
+ | all | Enable all log flags listed above. |
+ +--------------+-----------------------------------------+
+
+ Using log statement.
+
+ # log the UID which generated the packet and ip options
+ ip filter output log flags skuid flags ip options
+
+ # log the tcp sequence numbers and tcp options from the TCP packet
+ ip filter output log flags tcp sequence,options
+
+ # enable all supported log flags
+ ip6 filter output log flags all
+
+ REJECT STATEMENT
+ reject [ with REJECT_WITH ]
+
+ REJECT_WITH := icmp icmp_code |
+ icmpv6 icmpv6_code |
+ icmpx icmpx_code |
+ tcp reset
+
+ A reject statement is used to send back an error packet in response to the matched packet otherwise it is
+ equivalent to drop so it is a terminating statement, ending rule traversal. This statement is only valid in
+ base chains using the input, forward or output hooks, and user-defined chains which are only called from those
+ chains.
+
+ Table 66. different ICMP reject variants are meant for use in different table families
+ +---------+--------+-------------+
+ | Variant | Family | Type |
+ +---------+--------+-------------+
+ | | | |
+ | icmp | ip | icmp_code |
+ +---------+--------+-------------+
+ | | | |
+ | icmpv6 | ip6 | icmpv6_code |
+ +---------+--------+-------------+
+ | | | |
+ | icmpx | inet | icmpx_code |
+ +---------+--------+-------------+
+
+ For a description of the different types and a list of supported keywords refer to DATA TYPES section above.
+ The common default reject value is port-unreachable.
+
+ Note that in bridge family, reject statement is only allowed in base chains which hook into input or
+ prerouting.
+
+ COUNTER STATEMENT
+ A counter statement sets the hit count of packets along with the number of bytes.
+
+ counter packets number bytes number
+ counter { packets number | bytes number }
+
+ CONNTRACK STATEMENT
+ The conntrack statement can be used to set the conntrack mark and conntrack labels.
+
+ ct {mark | event | label | zone} set value
+
+ The ct statement sets meta data associated with a connection. The zone id has to be assigned before a
+ conntrack lookup takes place, i.e. this has to be done in prerouting and possibly output (if locally generated
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

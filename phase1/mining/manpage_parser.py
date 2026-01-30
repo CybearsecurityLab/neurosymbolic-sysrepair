@@ -132,7 +132,7 @@ Skip read-only or query commands.
             )
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status != 200:
-                    log(f"  LLM: Ollama server not responding")
+                    log("  LLM: Ollama server not responding")
                     return False
 
                 # Parse available models
@@ -152,7 +152,7 @@ Skip read-only or query commands.
                 return True
 
         except ImportError:
-            log(f"  LLM: langextract not installed (pip install langextract)")
+            log("  LLM: langextract not installed (pip install langextract)")
             return False
         except Exception as e:
             log(f"  LLM extraction disabled: {e}")

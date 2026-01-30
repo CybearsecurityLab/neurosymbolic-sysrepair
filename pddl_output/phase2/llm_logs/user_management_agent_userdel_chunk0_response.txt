@@ -1,0 +1,54 @@
+```lisp
+(define (problem user_deletion)
+  (:domain user_management)
+  (:objects
+    user1 - user
+    home_dir1 - filesystem_object
+    mail_dir1 - filesystem_object
+    group1 - group
+  )
+  (:init
+    (user_exists user1)
+    (file_exists home_dir1)
+    (file_exists mail_dir1)
+    (group_exists group1)
+    (selinux_user_mapping_exists user1)
+  )
+  (:goal
+    (and
+      (not (user_exists user1))
+      (not (file_exists home_dir1))
+      (not (file_exists mail_dir1))
+      (not (group_exists group1))
+      (not (selinux_user_mapping_exists user1))
+    )
+  )
+)
+```
+
+```lisp
+(define (domain user_management)
+  (:requirements :strips)
+  (:predicates
+    (user_exists ?u - user)
+    (file_exists ?f - filesystem_object)
+    (group_exists ?g - group)
+    (selinux_user_mapping_exists ?u - user)
+  )
+  (:action delete_user_force
+    :parameters (?u - user ?home - filesystem_object ?mail - filesystem_object ?g - group)
+    :precondition (and (user_exists ?u) (file_exists ?home) (file_exists ?mail) (group_exists ?g))
+    :effect (and (not (user_exists ?u)) (not (file_exists ?home)) (not (file_exists ?mail)) (not (group_exists ?g)))
+  )
+  (:action delete_user_home_and_mail
+    :parameters (?u - user ?home - filesystem_object ?mail - filesystem_object)
+    :precondition (and (user_exists ?u) (file_exists ?home) (file_exists ?mail))
+    :effect (and (not (file_exists ?home)) (not (file_exists ?mail)))
+  )
+  (:action remove_selinux_user_mapping
+    :parameters (?u - user)
+    :precondition (user_exists ?u)
+    :effect (not (selinux_user_mapping_exists ?u))
+  )
+)
+```

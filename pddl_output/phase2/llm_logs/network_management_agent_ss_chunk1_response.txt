@@ -1,0 +1,21 @@
+```lisp
+(:predicates
+  (socket_tables_queried ?tables - object)
+  (tcp_dump_performed ?f - filesystem_object)
+  (filter_applied ?f - filesystem_object))
+
+(:action query-socket-tables
+  :parameters (?tables - object)
+  :precondition (and)
+  :effect (socket_tables_queried ?tables))
+
+(:action dump-tcp-sockets
+  :parameters (?f - filesystem_object)
+  :precondition (file_exists ?f)
+  :effect (tcp_dump_performed ?f))
+
+(:action apply-filter
+  :parameters (?f - filesystem_object)
+  :precondition (file_exists ?f)
+  :effect (filter_applied ?f))
+```

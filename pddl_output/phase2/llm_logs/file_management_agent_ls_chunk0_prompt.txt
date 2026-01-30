@@ -1,0 +1,402 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'ls'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (ls) ===
+LS(1) User Commands LS(1)
+
+NAME
+ ls - list directory contents
+
+SYNOPSIS
+ ls [OPTION]... [FILE]...
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+DESCRIPTION
+ List information about the FILEs (the current directory by default). Sort entries alphabetically if none of
+ -cftuvSUX nor --sort is specified.
+
+ Mandatory arguments to long options are mandatory for short options too.
+
+ -a, --all
+ do not ignore entries starting with .
+
+ -A, --almost-all
+ do not list implied . and ..
+
+ --author
+ with -l, print the author of each file
+
+ -b, --escape
+ print C-style escapes for nongraphic characters
+
+ --block-size=SIZE
+ with -l, scale sizes by SIZE when printing them; e.g., '--block-size=M'; see SIZE format below
+
+ -B, --ignore-backups
+ do not list implied entries ending with ~
+
+ -c with -lt: sort by, and show, ctime (time of last change of file status information); with -l: show
+ ctime and sort by name; otherwise: sort by ctime, newest first
+
+ -C list entries by columns
+
+ --color[=WHEN]
+ color the output WHEN; more info below
+
+ -d, --directory
+ list directories themselves, not their contents
+
+ -D, --dired
+ generate output designed for Emacs' dired mode
+
+ -f list all entries in directory order
+
+ -F, --classify[=WHEN]
+ append indicator (one of */=>@|) to entries WHEN
+
+ --file-type
+ likewise, except do not append '*'
+
+ --format=WORD
+ across -x, commas -m, horizontal -x, long -l, single-column -1, verbose -l, vertical -C
+
+ --full-time
+ like -l --time-style=full-iso
+
+ -g like -l, but do not list owner
+
+ --group-directories-first
+ group directories before files; can be augmented with a --sort option, but any use of --sort=none (-U)
+ disables grouping
+
+ -G, --no-group
+ in a long listing, don't print group names
+
+ -h, --human-readable
+ with -l and -s, print sizes like 1K 234M 2G etc.
+
+ --si likewise, but use powers of 1000 not 1024
+
+ -H, --dereference-command-line
+ follow symbolic links listed on the command line
+
+ --dereference-command-line-symlink-to-dir
+ follow each command line symbolic link that points to a directory
+
+ --hide=PATTERN
+ do not list implied entries matching shell PATTERN (overridden by -a or -A)
+
+ --hyperlink[=WHEN]
+ hyperlink file names WHEN
+
+ --indicator-style=WORD
+ append indicator with style WORD to entry names: none (default), slash (-p), file-type (--file-type),
+ classify (-F)
+
+ -i, --inode
+ print the index number of each file
+
+ -I, --ignore=PATTERN
+ do not list implied entries matching shell PATTERN
+
+ -k, --kibibytes
+ default to 1024-byte blocks for file system usage; used only with -s and per directory totals
+
+ -l use a long listing format
+
+ -L, --dereference
+ when showing file information for a symbolic link, show information for the file the link references
+ rather than for the link itself
+
+ -m fill width with a comma separated list of entries
+
+ -n, --numeric-uid-gid
+ like -l, but list numeric user and group IDs
+
+ -N, --literal
+ print entry names without quoting
+
+ -o like -l, but do not list group information
+
+ -p, --indicator-style=slash
+ append / indicator to directories
+
+ -q, --hide-control-chars
+ print ? instead of nongraphic characters
+
+ --show-control-chars
+ show nongraphic characters as-is (the default, unless program is 'ls' and output is a terminal)
+
+ -Q, --quote-name
+ enclose entry names in double quotes
+
+ --quoting-style=WORD
+ use quoting style WORD for entry names: literal, locale, shell, shell-always, shell-escape, shell-es-
+ cape-always, c, escape (overrides QUOTING_STYLE environment variable)
+
+ -r, --reverse
+ reverse order while sorting
+
+ -R, --recursive
+ list subdirectories recursively
+
+ -s, --size
+ print the allocated size of each file, in blocks
+
+ -S sort by file size, largest first
+
+ --sort=WORD
+ sort by WORD instead of name: none (-U), size (-S), time (-t), version (-v), extension (-X), width
+
+ --time=WORD
+ select which timestamp used to display or sort; access time (-u): atime, access, use; metadata change
+ time (-c): ctime, status; modified time (default): mtime, modification; birth time: birth, creation;
+
+ with -l, WORD determines which time to show; with --sort=time, sort by WORD (newest first)
+
+ --time-style=TIME_STYLE
+ time/date format with -l; see TIME_STYLE below
+
+ -t sort by time, newest first; see --time
+
+ -T, --tabsize=COLS
+ assume tab stops at each COLS instead of 8
+
+ -u with -lt: sort by, and show, access time; with -l: show access time and sort by name; otherwise: sort
+ by access time, newest first
+
+ -U do not sort; list entries in directory order
+
+ -v natural sort of (version) numbers within text
+
+ -w, --width=COLS
+ set output width to COLS. 0 means no limit
+
+ -x list entries by lines instead of by columns
+
+ -X sort alphabetically by entry extension
+
+ -Z, --context
+ print any security context of each file
+
+ --zero end each output line with NUL, not newline
+
+ -1 list one file per line
+
+ --help display this help and exit
+
+ --version
+ output version information and exit
+
+ The SIZE argument is an integer and optional unit (example: 10K is 10*1024). Units are K,M,G,T,P,E,Z,Y,R,Q
+ (powers of 1024) or KB,MB,... (powers of 1000). Binary prefixes can be used, too: KiB=K, MiB=M, and so on.
+
+ The TIME_STYLE argument can be full-iso, long-iso, iso, locale, or +FORMAT. FORMAT is interpreted like in
+ date(1). If FORMAT is FORMAT1<newline>FORMAT2, then FORMAT1 applies to non-recent files and FORMAT2 to recent
+ files. TIME_STYLE prefixed with 'posix-' takes effect only outside the POSIX locale. Also the TIME_STYLE en-
+ vironment variable sets the default style to use.
+
+ The WHEN argument defaults to 'always' and can also be 'auto' or 'never'.
+
+ Using color to distinguish file types is disabled both by default and with --color=never. With --color=auto,
+ ls emits color codes only when standard output is connected to a terminal. The LS_COLORS environment variable
+ can change the settings. Use the dircolors(1) command to set it.
+
+ Exit status:
+ 0 if OK,
+
+ 1 if minor problems (e.g., cannot access subdirectory),
+
+ 2 if serious trouble (e.g., cannot access command-line argument).
+
+AUTHOR
+ Written by Richard M. Stallman and David MacKenzie.
+
+REPORTING BUGS
+ GNU coreutils online help: <https://www.gnu.org/software/coreutils/>
+ Report any translation bugs to <https://translationproject.org/team/>
+
+COPYRIGHT
+ Copyright (C) 2023 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3 or later
+ <https://gnu.org/licenses/gpl.html>.
+ This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent per-
+ mitted by law.
+
+SEE ALSO
+ dircolors(1)
+
+ Full documentation <https://www.gnu.org/software/coreutils/ls>
+ or available locally via: info '(coreutils) ls invocation'
+
+GNU coreutils 9.4 June 2025 LS(1)
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

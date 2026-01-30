@@ -1,0 +1,19 @@
+(:predicates 
+  (uses_numgen ?r - firewall_rule)
+  (uses_jhash ?r - firewall_rule)
+  (uses_symhash ?r - firewall_rule))
+
+(:action add-numgen-rule
+  :parameters (?r - firewall_rule ?mode - string ?mod - integer ?offset - integer ?mapping - string)
+  :precondition (not (uses_numgen ?r))
+  :effect (uses_numgen ?r))
+
+(:action add-jhash-rule
+  :parameters (?r - firewall_rule ?expr - string ?mod - integer ?seed - integer ?offset - integer ?mapping - string)
+  :precondition (not (uses_jhash ?r))
+  :effect (uses_jhash ?r))
+
+(:action add-symhash-rule
+  :parameters (?r - firewall_rule ?mod - integer ?offset - integer ?mapping - string)
+  :precondition (not (uses_symhash ?r))
+  :effect (uses_symhash ?r))

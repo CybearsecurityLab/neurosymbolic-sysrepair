@@ -1,0 +1,28 @@
+```lisp
+(:predicates
+  (user_password_exists ?u - user)
+  (user_password_deleted ?u - user)
+  (user_password_expired ?u - user)
+  (user_password_locked ?u - user)
+  (user_password_unlocked ?u - user))
+
+(:action delete_password
+  :parameters (?u - user)
+  :precondition (user_password_exists ?u)
+  :effect (and (not (user_password_exists ?u)) (user_password_deleted ?u)))
+
+(:action expire_password
+  :parameters (?u - user)
+  :precondition (user_password_exists ?u)
+  :effect (user_password_expired ?u))
+
+(:action lock_password
+  :parameters (?u - user)
+  :precondition (and (user_password_exists ?u) (not (user_password_locked ?u)))
+  :effect (user_password_locked ?u))
+
+(:action unlock_password
+  :parameters (?u - user)
+  :precondition (user_password_locked ?u)
+  :effect (and (not (user_password_locked ?u)) (user_password_unlocked ?u)))
+```

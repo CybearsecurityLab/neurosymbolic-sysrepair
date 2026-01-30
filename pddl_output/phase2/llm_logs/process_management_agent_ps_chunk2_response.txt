@@ -1,0 +1,34 @@
+```lisp
+(:predicates
+  (help_section_printed ?s - object)
+  (threads_displayed)
+  (version_displayed)
+  (debug_info_printed)
+  (format_specifiers_listed)
+)
+
+(:action print_help_section
+ :parameters (?section - object)
+ :effect (help_section_printed ?section)
+)
+
+(:action display_threads
+ :parameters ()
+ :effect (threads_displayed)
+)
+
+(:action print_version
+ :parameters ()
+ :effect (version_displayed)
+)
+
+(:action print_debug_info
+ :parameters ()
+ :effect (debug_info_printed)
+)
+
+(:action list_format_specifiers
+ :parameters ()
+ :effect (format_specifiers_listed)
+)
+```

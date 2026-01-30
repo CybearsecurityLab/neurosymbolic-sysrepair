@@ -1,0 +1,337 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'dpkg'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (dpkg) ===
+dpkg(1) dpkg suite dpkg(1)
+
+NAME
+ dpkg - package manager for Debian
+
+SYNOPSIS
+ dpkg [option...] action
+
+WARNING
+ This manual is intended for users wishing to understand dpkg's command line options and package states in more
+ detail than that provided by dpkg --help.
+
+ It should not be used by package maintainers wishing to understand how dpkg will install their packages. The
+ descriptions of what dpkg does when installing and removing packages are particularly inadequate.
+
+... [Header Preserved] ...
+
+ Do not perform safe I/O operations when unpacking (since dpkg 1.15.8.6). Currently this implies not
+ performing file system syncs before file renames, which is known to cause substantial performance
+ degradation on some file systems, unfortunately the ones that require the safe I/O on the first place
+ due to their unreliable behaviour causing zero-length files on abrupt system crashes.
+
+ Note: For ext4, the main offender, consider using instead the mount option nodelalloc, which will fix
+ both the performance degradation and the data safety issues, the latter by making the file system not
+ produce zero-length files on abrupt system crashes with any software not doing syncs before atomic
+ renames.
+
+ Warning: Using this option might improve performance at the cost of losing data, use with care.
+
+ script-chrootless:
+ Run maintainer scripts without chroot(2)ing into instdir even if the package does not support this mode
+ of operation (since dpkg 1.18.5).
+
+ Warning: This can destroy your host system, use with extreme care.
+
+ architecture:
+ Process even packages with wrong or no architecture.
+
+ bad-version:
+ Process even packages with wrong versions (since dpkg 1.16.1).
+
+ bad-path:
+ PATH is missing important programs, so problems are likely.
+
+ not-root:
+ Try to (de)install things even when not root.
+
+ bad-verify:
+ Install a package even if it fails authenticity check.
+
+ --ignore-depends=package,...
+ Ignore dependency-checking for specified packages (actually, checking is performed, but only warnings
+ about conflicts are given, nothing else). This affects the Pre-Depends, Depends and Breaks fields.
+
+ --no-act, --dry-run, --simulate
+ Do everything which is supposed to be done, but don't write any changes. This is used to see what would
+ happen with the specified action, without actually modifying anything.
+
+ Be sure to give --no-act before the action-parameter, or you might end up with undesirable results (e.g.
+ dpkg --purge foo --no-act will first purge package "foo" and then try to purge package "--no-act", even
+ though you probably expected it to actually do nothing).
+
+ -R, --recursive
+ Recursively handle all regular files matching pattern *.deb found at specified directories and all of its
+ subdirectories. This can be used with -i, -A, --install, --unpack and --record-avail actions.
+
+ -G Don't install a package if a newer version of the same package is already installed. This is an alias of
+ --refuse-downgrade.
+
+ --admindir=dir
+ Set the administrative directory to directory. This directory contains many files that give information
+ about status of installed or uninstalled packages, etc. Defaults to <</var/lib/dpkg>> if DPKG_ADMINDIR
+ has not been set.
+
+ --instdir=dir
+ Set the installation directory, which refers to the directory where packages are to be installed. instdir
+ is also the directory passed to chroot(2) before running package's installation scripts, which means that
+ the scripts see instdir as a root directory. Defaults to <</>>.
+
+ --root=dir
+ Set the root directory to directory, which sets the installation directory to <<dir>> and the
+ administrative directory to <<dir/var/lib/dpkg>>.
+
+ -O, --selected-only
+ Only process the packages that are selected for installation. The actual marking is done with dselect or
+ by dpkg, when it handles packages. For example, when a package is removed, it will be marked selected for
+ deinstallation.
+
+ -E, --skip-same-version
+ Don't install the package if the same version and architecture of the package is already installed.
+
+ Since dpkg 1.21.10, the architecture is also taken into account, which makes it possible to cross-grade
+ packages or install additional co-installable instances with the same version, but different architecture.
+
+ --pre-invoke=command
+ --post-invoke=command
+ Set an invoke hook command to be run via "sh -c" before or after the dpkg run for the unpack, configure,
+ install, triggers-only, remove and purge actions (since dpkg 1.15.4), and add-architecture and remove-
+ architecture actions (since dpkg 1.17.19). This option can be specified multiple times. The order the
+ options are specified is preserved, with the ones from the configuration files taking precedence. The
+ environment variable DPKG_HOOK_ACTION is set for the hooks to the current dpkg action.
+
+ Note: Front-ends might call dpkg several times per invocation, which might run the hooks more times than
+ expected.
+
+ --path-exclude=glob-pattern
+ --path-include=glob-pattern
+ Set glob-pattern as a path filter, either by excluding or re-including previously excluded paths matching
+ the specified patterns during install (since dpkg 1.15.8).
+
+ Warning: Take into account that depending on the excluded paths you might completely break your system,
+ use with caution.
+
+ The glob patterns use the same wildcards used in the shell, were `*' matches any sequence of characters,
+ including the empty string and also `/'. For example, <</usr/*/READ*>> matches
+ <</usr/share/doc/package/README>>. As usual, `?' matches any single character (again, including `/').
+ And `[' starts a character class, which can contain a list of characters, ranges and complementations.
+ See glob(7) for detailed information about globbing. Note: The current implementation might re-include
+ more directories and symlinks than needed, in particular when there is a more specific re-inclusion, to be
+ on the safe side and avoid possible unpack failures; future work might fix this.
+
+ This can be used to remove all paths except some particular ones; a typical case is:
+
+ --path-exclude=/usr/share/doc/*
+ --path-include=/usr/share/doc/*/copyright
+
+ to remove all documentation files except the copyright files.
+
+ These two options can be specified multiple times, and interleaved with each other. Both are processed in
+ the given order, with the last rule that matches a file name making the decision.
+
+ The filters are applied when unpacking the binary packages, and as such only have knowledge of the type of
+ object currently being filtered (e.g. a normal file or a directory) and have not visibility of what
+ objects will come next. Because these filters have side effects (in contrast to find(1) filters),
+ excluding an exact pathname that happens to be a directory object like /usr/share/doc will not have the
+ desired result, and only that pathname will be excluded (which could be automatically reincluded if the
+ code sees the need). Any subsequent files contained within that directory will fail to unpack.
+
+ Hint: make sure the globs are not expanded by your shell.
+
+ --verify-format format-name
+ Sets the output format for the --verify command (since dpkg 1.17.2).
+
+ The only currently supported output format is rpm, which consists of a line for every path that failed any
+ check. These lines have the following format:
+
+ missing [c] pathname [(error-message)]
+ ??5?????? [c] pathname
+
+ The first 9 characters are used to report the checks result, either a literal missing when the file is not
+ present or its metadata cannot be fetched, or one of the following special characters that report the
+ result for each check:
+
+ `?' Implies the check could not be done (lack of support, file permissions, etc).
+
+ `.' Implies the check passed.
+
+ `A-Za-z0-9'
+ Implies a specific check failed. The following positions and alphanumeric characters are currently
+ supported:
+
+ 1 `?'
+ These checks are currently not supported, will always be `?'.
+
+ 2 `M'
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

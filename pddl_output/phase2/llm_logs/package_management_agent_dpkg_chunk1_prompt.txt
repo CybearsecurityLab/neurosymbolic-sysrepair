@@ -1,0 +1,351 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'dpkg'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (dpkg) ===
+dpkg(1) dpkg suite dpkg(1)
+
+NAME
+ dpkg - package manager for Debian
+
+SYNOPSIS
+ dpkg [option...] action
+
+WARNING
+ This manual is intended for users wishing to understand dpkg's command line options and package states in more
+ detail than that provided by dpkg --help.
+
+ It should not be used by package maintainers wishing to understand how dpkg will install their packages. The
+ descriptions of what dpkg does when installing and removing packages are particularly inadequate.
+
+... [Header Preserved] ...
+
+ Currently the only functional check performed is an md5sum verification of the file contents against the
+ stored value in the files database. It will only get checked if the database contains the file md5sum.
+ To check for any missing metadata in the database, the --audit command can be used. This is only an
+ integrity check and should not be considered as any kind of security verification.
+
+ The output format is selectable with the --verify-format option, which by default uses the rpm format, but
+ that might change in the future, and as such, programs parsing this command output should be explicit
+ about the format they expect.
+
+ -C, --audit [package-name...]
+ Performs database sanity and consistency checks for package-name or all packages if omitted (per package
+ checks since dpkg 1.17.10). For example, searches for packages that have been installed only partially on
+ your system or that have missing, wrong or obsolete control data or files. dpkg will suggest what to do
+ with them to get them fixed.
+
+ --update-avail [Packages-file]
+ --merge-avail [Packages-file]
+ Update dpkg's and dselect's idea of which packages are available. With action --merge-avail, old
+ information is combined with information from Packages-file. With action --update-avail, old information
+ is replaced with the information in the Packages-file. The Packages-file distributed with Debian is
+ simply named <<Packages>>. If the Packages-file argument is missing or named <<->> then it will be read
+ from standard input (since dpkg 1.17.7). dpkg keeps its record of available packages in
+ /var/lib/dpkg/available.
+
+ A simpler one-shot command to retrieve and update the available file is dselect update. Note that this
+ file is mostly useless if you don't use dselect but an APT-based frontend: APT has its own system to keep
+ track of available packages.
+
+ -A, --record-avail package-file...
+ Update dpkg and dselect's idea of which packages are available with information from the package package-
+ file. If --recursive or -R option is specified, package-file must refer to a directory instead.
+
+ --forget-old-unavail
+ Now obsolete and a no-op as dpkg will automatically forget uninstalled unavailable packages (since dpkg
+ 1.15.4), but only those that do not contain user information such as package selections.
+
+ --clear-avail
+ Erase the existing information about what packages are available.
+
+ --get-selections [package-name-pattern...]
+ Get list of package selections, and write it to stdout. Without a pattern, non-installed packages (i.e.
+ those which have been previously purged) will not be shown.
+
+ --set-selections
+ Set package selections using file read from stdin. This file should be in the format "package state",
+ where state is one of install, hold, deinstall or purge. Blank lines and comment lines beginning with `#'
+ are also permitted.
+
+ The available file needs to be up-to-date for this command to be useful, otherwise unknown packages will
+ be ignored with a warning. See the --update-avail and --merge-avail commands for more information.
+
+ --clear-selections
+ Set the requested state of every non-essential package to deinstall (since dpkg 1.13.18). This is
+ intended to be used immediately before --set-selections, to deinstall any packages not in list given to
+ --set-selections.
+
+ --yet-to-unpack
+ Searches for packages selected for installation, but which for some reason still haven't been installed.
+
+ Note: This command makes use of both the available file and the package selections.
+
+ --predep-package
+ Print a single package which is the target of one or more relevant pre-dependencies and has itself no
+ unsatisfied pre-dependencies.
+
+ If such a package is present, output it as a Packages file entry, which can be massaged as appropriate.
+
+ Note: This command makes use of both the available file and the package selections.
+
+ Returns 0 when a package is printed, 1 when no suitable package is available and 2 on error.
+
+ --add-architecture architecture
+ Add architecture to the list of architectures for which packages can be installed without using
+ --force-architecture (since dpkg 1.16.2). The architecture dpkg is built for (i.e. the output of
+ --print-architecture) is always part of that list.
+
+ --remove-architecture architecture
+ Remove architecture from the list of architectures for which packages can be installed without using
+ --force-architecture (since dpkg 1.16.2). If the architecture is currently in use in the database then
+ the operation will be refused, except if --force-architecture is specified. The architecture dpkg is
+ built for (i.e. the output of --print-architecture) can never be removed from that list.
+
+ --print-architecture
+ Print architecture of packages dpkg installs (for example, "i386").
+
+ --print-foreign-architectures
+ Print a newline-separated list of the extra architectures dpkg is configured to allow packages to be
+ installed for (since dpkg 1.16.2).
+
+ --assert-help
+ Give help about the --assert-feature options (since dpkg 1.21.0).
+
+ --assert-feature
+ Asserts that dpkg supports the requested feature. Returns 0 if the feature is fully supported, 1 if the
+ feature is known but dpkg cannot provide support for it yet, and 2 if the feature is unknown. The current
+ list of assertable features is:
+
+ support-predepends
+ Supports the Pre-Depends field (since dpkg 1.1.0).
+
+ working-epoch
+ Supports epochs in version strings (since dpkg 1.4.0.7).
+
+ long-filenames
+ Supports long filenames in deb(5) archives (since dpkg 1.4.1.17).
+
+ multi-conrep
+ Supports multiple Conflicts and Replaces (since dpkg 1.4.1.19).
+
+ multi-arch
+ Supports multi-arch fields and semantics (since dpkg 1.16.2).
+
+ versioned-provides
+ Supports versioned Provides (since dpkg 1.17.11).
+
+ protected-field
+ Supports the Protected field (since dpkg 1.20.1).
+
+ --validate-thing string
+ Validate that the thing string has a correct syntax (since dpkg 1.18.16). Returns 0 if the string is
+ valid, 1 if the string is invalid but might be accepted in lax contexts, and 2 if the string is invalid.
+ The current list of validatable things is:
+
+ pkgname
+ Validates the given package name (since dpkg 1.18.16).
+
+ trigname
+ Validates the given trigger name (since dpkg 1.18.16).
+
+ archname
+ Validates the given architecture name (since dpkg 1.18.16).
+
+ version
+ Validates the given version (since dpkg 1.18.16).
+
+ --compare-versions ver1 op ver2
+ Compare version numbers, where op is a binary operator. dpkg returns true (0) if the specified condition
+ is satisfied, and false (1) otherwise. There are two groups of operators, which differ in how they treat
+ an empty ver1 or ver2. These treat an empty version as earlier than any version: lt le eq ne ge gt.
+ These treat an empty version as later than any version: lt-nl le-nl ge-nl gt-nl. These are provided only
+ for compatibility with control file syntax: < << <= = >= >> >. The < and > operators are obsolete and
+ should not be used, due to confusing semantics. To illustrate: 0.1 < 0.1 evaluates to true.
+
+ -?, --help
+ Display a brief help message.
+
+ --force-help
+ Give help about the --force-thing options.
+
+ -Dh, --debug=help
+ Give help about debugging options.
+
+ --version
+ Display dpkg version information.
+
+ When used with --robot, the output will be the program version number in a dotted numerical format, with
+ no newline.
+
+ dpkg-deb actions
+ See dpkg-deb(1) for more information about the following actions, and other actions and options not
+ exposed by the dpkg front-end.
+
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

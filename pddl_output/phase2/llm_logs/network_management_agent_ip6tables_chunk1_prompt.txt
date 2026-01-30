@@ -1,0 +1,325 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'ip6tables'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (ip6tables) ===
+IPTABLES(8) iptables 1.8.10 IPTABLES(8)
+
+NAME
+ iptables/ip6tables -- administration tool for IPv4/IPv6 packet filtering and NAT
+
+SYNOPSIS
+ iptables [-t table] {-A|-C|-D|-V} chain rule-specification
+
+ ip6tables [-t table] {-A|-C|-D|-V} chain rule-specification
+
+ iptables [-t table] -I chain [rulenum] rule-specification
+
+ iptables [-t table] -R chain rulenum rule-specification
+
+ iptables [-t table] -D chain rulenum
+
+ iptables [-t table] -S [chain [rulenum]]
+
+ iptables [-t table] {-F|-L|-Z} [chain [rulenum]] [options...]
+
+ iptables [-t table] -N chain
+
+ iptables [-t table] -X [chain]
+
+ iptables [-t table] -P chain target
+
+ iptables [-t table] -E old-chain-name new-chain-name
+
+ rule-specification = [matches...] [target]
+
+ match = -m matchname [per-match-options]
+
+ target = -j targetname [per-target-options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ Delete the chain specified. There must be no references to the chain. If there are, you must delete
+ or replace the referring rules before the chain can be deleted. The chain must be empty, i.e. not con-
+ tain any rules. If no argument is given, it will delete all empty chains in the table. Empty builtin
+ chains can only be deleted with iptables-nft.
+
+ -P, --policy chain target
+ Set the policy for the built-in (non-user-defined) chain to the given target. The policy target must
+ be either ACCEPT or DROP.
+
+ -E, --rename-chain old-chain new-chain
+ Rename the user specified chain to the user supplied name. This is cosmetic, and has no effect on the
+ structure of the table.
+
+ -h Help. Give a (currently very brief) description of the command syntax.
+
+ PARAMETERS
+ The following parameters make up a rule specification (as used in the add, delete, insert, replace and append
+ commands).
+
+ -4, --ipv4
+ This option has no effect in iptables and iptables-restore. If a rule using the -4 option is inserted
+ with (and only with) ip6tables-restore, it will be silently ignored. Any other uses will throw an er-
+ ror. This option allows IPv4 and IPv6 rules in a single rule file for use with both iptables-restore
+ and ip6tables-restore.
+
+ -6, --ipv6
+ If a rule using the -6 option is inserted with (and only with) iptables-restore, it will be silently
+ ignored. Any other uses will throw an error. This option allows IPv4 and IPv6 rules in a single rule
+ file for use with both iptables-restore and ip6tables-restore. This option has no effect in ip6tables
+ and ip6tables-restore.
+
+ [!] -p, --protocol protocol
+ The protocol of the rule or of the packet to check. The specified protocol can be one of tcp, udp, ud-
+ plite, icmp, icmpv6, esp, ah, sctp, mh or the special keyword "all", or it can be a numeric value, rep-
+ resenting one of these protocols or a different one. A protocol name from /etc/protocols is also al-
+ lowed. A "!" argument before the protocol inverts the test. The number zero is equivalent to all.
+ "all" will match with all protocols and is taken as default when this option is omitted. Note that, in
+ ip6tables, IPv6 extension headers except esp are not allowed. esp and ipv6-nonext can be used with
+ Kernel version 2.6.11 or later. The number zero is equivalent to all, which means that you cannot test
+ the protocol field for the value 0 directly. To match on a HBH header, even if it were the last, you
+ cannot use -p 0, but always need -m hbh.
+
+ [!] -s, --source address[/mask][,...]
+ Source specification. Address can be either a network name, a hostname, a network IP address (with
+ /mask), or a plain IP address. Hostnames will be resolved once only, before the rule is submitted to
+ the kernel. Please note that specifying any name to be resolved with a remote query such as DNS is a
+ really bad idea. The mask can be either an ipv4 network mask (for iptables) or a plain number, speci-
+ fying the number of 1's at the left side of the network mask. Thus, an iptables mask of 24 is equiva-
+ lent to 255.255.255.0. A "!" argument before the address specification inverts the sense of the ad-
+ dress. The flag --src is an alias for this option. Multiple addresses can be specified, but this will
+ expand to multiple rules (when adding with -A), or will cause multiple rules to be deleted (with -D).
+
+ [!] -d, --destination address[/mask][,...]
+ Destination specification. See the description of the -s (source) flag for a detailed description of
+ the syntax. The flag --dst is an alias for this option.
+
+ -m, --match match
+ Specifies a match to use, that is, an extension module that tests for a specific property. The set of
+ matches make up the condition under which a target is invoked. Matches are evaluated first to last as
+ specified on the command line and work in short-circuit fashion, i.e. if one extension yields false,
+ evaluation will stop.
+
+ -j, --jump target
+ This specifies the target of the rule; i.e., what to do if the packet matches it. The target can be a
+ user-defined chain (other than the one this rule is in), one of the special builtin targets which de-
+ cide the fate of the packet immediately, or an extension (see MATCH AND TARGET EXTENSIONS below). If
+ this option is omitted in a rule (and -g is not used), then matching the rule will have no effect on
+ the packet's fate, but the counters on the rule will be incremented.
+
+ -g, --goto chain
+ This specifies that the processing should continue in a user specified chain. Unlike with the --jump
+ option, RETURN will not continue processing in this chain but instead in the chain that called us via
+ --jump.
+
+ [!] -i, --in-interface name
+ Name of an interface via which a packet was received (only for packets entering the INPUT, FORWARD and
+ PREROUTING chains). When the "!" argument is used before the interface name, the sense is inverted.
+ If the interface name ends in a "+", then any interface which begins with this name will match. If
+ this option is omitted, any interface name will match.
+
+ [!] -o, --out-interface name
+ Name of an interface via which a packet is going to be sent (for packets entering the FORWARD, OUTPUT
+ and POSTROUTING chains). When the "!" argument is used before the interface name, the sense is in-
+ verted. If the interface name ends in a "+", then any interface which begins with this name will
+ match. If this option is omitted, any interface name will match.
+
+ [!] -f, --fragment
+ This means that the rule only refers to second and further IPv4 fragments of fragmented packets. Since
+ there is no way to tell the source or destination ports of such a packet (or ICMP type), such a packet
+ will not match any rules which specify them. When the "!" argument precedes the "-f" flag, the rule
+ will only match head fragments, or unfragmented packets. This option is IPv4 specific, it is not avail-
+ able in ip6tables.
+
+ -c, --set-counters packets bytes
+ This enables the administrator to initialize the packet and byte counters of a rule (during INSERT, AP-
+ PEND, REPLACE operations).
+
+ OTHER OPTIONS
+ The following additional options can be specified:
+
+ -v, --verbose
+ Verbose output. This option makes the list command show the interface name, the rule options (if any),
+ and the TOS masks. The packet and byte counters are also listed, with the suffix 'K', 'M' or 'G' for
+ 1000, 1,000,000 and 1,000,000,000 multipliers respectively (but see the -x flag to change this). For
+ appending, insertion, deletion and replacement, this causes detailed information on the rule or rules
+ to be printed. -v may be specified multiple times to possibly emit more detailed debug statements:
+ Specified twice, iptables-legacy will dump table info and entries in libiptc, iptables-nft dumps rules
+ in netlink (VM code) presentation. Specified three times, iptables-nft will also dump any netlink mes-
+ sages sent to kernel.
+
+ -V, --version
+ Show program version and the kernel API used.
+
+ -w, --wait [seconds]
+ Wait for the xtables lock. To prevent multiple instances of the program from running concurrently, an
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

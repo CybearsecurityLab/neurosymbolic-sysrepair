@@ -1,0 +1,39 @@
+(:action apply-ct-zone-rule
+ :parameters (?interface - interface ?zone - integer)
+ :precondition (interface_exists ?interface)
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-notrack-rule
+ :parameters ()
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-meta-mark-rule
+ :parameters (?mark - integer)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-limit-rule
+ :parameters (?rate - integer ?burst - integer)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-snat-rule
+ :parameters (?address - string ?port - integer ?flags - symbol)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-dnat-rule
+ :parameters (?address - string ?port - integer ?flags - symbol)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-masquerade-rule
+ :parameters (?port - integer ?flags - symbol)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))
+
+(:action apply-redirect-rule
+ :parameters (?port - integer ?flags - symbol)
+ :precondition ()
+ :effect (firewall_rule_exists ?r - firewall_rule))

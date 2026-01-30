@@ -1,0 +1,395 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'nft'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (nft) ===
+NFT(8) NFT(8)
+
+NAME
+ nft - Administration tool of the nftables framework for packet filtering and classification
+
+SYNOPSIS
+ nft [ -nNscaeSupyjtT ] [ -I directory ] [ -f filename | -i | cmd ...]
+ nft -h
+ nft -v
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ | | 0 and 6. Strings are matched |
+ | | case-insensitively, and a full match is |
+ | | not expected (e.g. "Mon" would match |
+ | | "Monday"). When an integer is given, 0 |
+ | | is Sunday and 6 is Saturday. |
+ +---------------+-----------------------------------------+
+ | | |
+ | hour | A string representing an hour in |
+ | | 24-hour format. Seconds can optionally |
+ | | be specified. For example, 17:00 and |
+ | | 17:00:00 would be equivalent. |
+ +---------------+-----------------------------------------+
+
+ Using meta expressions.
+
+ # qualified meta expression
+ filter output meta oif eth0
+ filter forward meta iifkind { "tun", "veth" }
+
+ # unqualified meta expression
+ filter output oif eth0
+
+ # incoming packet was subject to ipsec processing
+ raw prerouting meta ipsec exists accept
+
+ SOCKET EXPRESSION
+ socket {transparent | mark | wildcard}
+ socket cgroupv2 level NUM
+
+ Socket expression can be used to search for an existing open TCP/UDP socket and its attributes that can be
+ associated with a packet. It looks for an established or non-zero bound listening socket (possibly with a
+ non-local address). You can also use it to match on the socket cgroupv2 at a given ancestor level, e.g. if the
+ socket belongs to cgroupv2 a/b, ancestor level 1 checks for a matching on cgroup a and ancestor level 2 checks
+ for a matching on cgroup b.
+
+ Table 32. Available socket attributes
+ +-------------+------------------------------+-----------------+
+ | Name | Description | Type |
+ +-------------+------------------------------+-----------------+
+ | | | |
+ | transparent | Value of the IP_TRANSPARENT | boolean (1 bit) |
+ | | socket option in the found | |
+ | | socket. It can be 0 or 1. | |
+ +-------------+------------------------------+-----------------+
+ | | | |
+ | mark | Value of the socket mark | mark |
+ | | (SOL_SOCKET, SO_MARK). | |
+ +-------------+------------------------------+-----------------+
+ | | | |
+ | wildcard | Indicates whether the socket | boolean (1 bit) |
+ | | is wildcard-bound (e.g. | |
+ | | 0.0.0.0 or ::0). | |
+ +-------------+------------------------------+-----------------+
+ | | | |
+ | cgroupv2 | cgroup version 2 for this | cgroupv2 |
+ | | socket (path from | |
+ | | /sys/fs/cgroup) | |
+ +-------------+------------------------------+-----------------+
+
+ Using socket expression.
+
+ # Mark packets that correspond to a transparent socket. "socket wildcard 0"
+ # means that zero-bound listener sockets are NOT matched (which is usually
+ # exactly what you want).
+ table inet x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ socket transparent 1 socket wildcard 0 mark set 0x00000001 accept
+ }
+ }
+
+ # Trace packets that corresponds to a socket with a mark value of 15
+ table inet x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ socket mark 0x0000000f nftrace set 1
+ }
+ }
+
+ # Set packet mark to socket mark
+ table inet x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ tcp dport 8080 mark set socket mark
+ }
+ }
+
+ # Count packets for cgroupv2 "user.slice" at level 1
+ table inet x {
+ chain y {
+ type filter hook input priority filter; policy accept;
+ socket cgroupv2 level 1 "user.slice" counter
+ }
+ }
+
+ OSF EXPRESSION
+ osf [ttl {loose | skip}] {name | version}
+
+ The osf expression does passive operating system fingerprinting. This expression compares some data (Window
+ Size, MSS, options and their order, DF, and others) from packets with the SYN bit set.
+
+ Table 33. Available osf attributes
+ +---------+-------------------------------+--------+
+ | Name | Description | Type |
+ +---------+-------------------------------+--------+
+ | | | |
+ | ttl | Do TTL checks on the packet | string |
+ | | to determine the operating | |
+ | | system. | |
+ +---------+-------------------------------+--------+
+ | | | |
+ | version | Do OS version checks on the | |
+ | | packet. | |
+ +---------+-------------------------------+--------+
+ | | | |
+ | name | Name of the OS signature to | string |
+ | | match. All signatures can be | |
+ | | found at pf.os file. Use | |
+ | | "unknown" for OS signatures | |
+ | | that the expression could not | |
+ | | detect. | |
+ +---------+-------------------------------+--------+
+
+ Available ttl values.
+
+ If no TTL attribute is passed, make a true IP header and fingerprint TTL true comparison. This generally works for LANs.
+
+ * loose: Check if the IP header's TTL is less than the fingerprint one. Works for globally-routable addresses.
+ * skip: Do not compare the TTL at all.
+
+ Using osf expression.
+
+ # Accept packets that match the "Linux" OS genre signature without comparing TTL.
+ table inet x {
+ chain y {
+ type filter hook input priority filter; policy accept;
+ osf ttl skip name "Linux"
+ }
+ }
+
+ FIB EXPRESSIONS
+ fib {saddr | daddr | mark | iif | oif} [. ...] {oif | oifname | type}
+
+ A fib expression queries the fib (forwarding information base) to obtain information such as the output
+ interface index a particular address would use. The input is a tuple of elements that is used as input to the
+ fib lookup functions.
+
+ Table 34. fib expression specific types
+ +---------+------------------------+------------------+
+ | Keyword | Description | Type |
+ +---------+------------------------+------------------+
+ | | | |
+ | oif | Output interface index | integer (32 bit) |
+ +---------+------------------------+------------------+
+ | | | |
+ | oifname | Output interface name | string |
+ +---------+------------------------+------------------+
+ | | | |
+ | type | Address type | fib_addrtype |
+ +---------+------------------------+------------------+
+
+ Use nft describe fib_addrtype to get a list of all address types.
+
+ Using fib expressions.
+
+ # drop packets without a reverse path
+ filter prerouting fib saddr . iif oif missing drop
+
+ In this example, 'saddr . iif' looks up routing information based on the source address and the input interface.
+ oif picks the output interface index from the routing information.
+ If no route was found for the source address/input interface combination, the output interface index is zero.
+ In case the input interface is specified as part of the input key, the output interface index is always the same as the input interface index or zero.
+ If only 'saddr oif' is given, then oif can be any interface index or zero.
+
+ # drop packets to address not configured on incoming interface
+ filter prerouting fib daddr . iif type != { local, broadcast, multicast } drop
+
+ # perform lookup in a specific 'blackhole' table (0xdead, needs ip appropriate ip rule)
+ filter prerouting meta mark set 0xdead fib daddr . mark type vmap { blackhole : drop, prohibit : jump prohibited, unreachable : drop }
+
+ ROUTING EXPRESSIONS
+ rt [ip | ip6] {classid | nexthop | mtu | ipsec}
+
+ A routing expression refers to routing data associated with a packet.
+
+ Table 35. Routing expression types
+ +---------+-----------------------------+---------------------+
+ | Keyword | Description | Type |
+ +---------+-----------------------------+---------------------+
+ | | | |
+ | classid | Routing realm | realm |
+ +---------+-----------------------------+---------------------+
+ | | | |
+ | nexthop | Routing nexthop | ipv4_addr/ipv6_addr |
+ +---------+-----------------------------+---------------------+
+ | | | |
+ | mtu | TCP maximum segment size of | integer (16 bit) |
+ | | route | |
+ +---------+-----------------------------+---------------------+
+ | | | |
+ | ipsec | route via ipsec tunnel or | boolean |
+ | | transport | |
+ +---------+-----------------------------+---------------------+
+
+ Table 36. Routing expression specific types
+ +-------+---------------------------------------+
+ | Type | Description |
+ +-------+---------------------------------------+
+ | | |
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

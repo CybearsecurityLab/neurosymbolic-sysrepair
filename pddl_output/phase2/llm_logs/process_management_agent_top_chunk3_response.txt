@@ -1,0 +1,6 @@
+The documentation segment for the `top` utility primarily describes **read-only process monitoring fields** (e.g., `PID`, `PR`, `NI`, `RES`, `OOMs`, etc.) and does not introduce any **actionable commands** or **state-modifying flags** (e.g., no flags for starting/stopping processes, modifying configurations, or altering system settings). 
+
+Since the task requires generating new `(:action ...)` blocks only for **newly identified actions** not already covered by the preferred predicates, and no such actions exist in this segment, the output is:
+
+```
+```

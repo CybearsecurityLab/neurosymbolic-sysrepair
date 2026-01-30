@@ -1,0 +1,392 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'nft'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (nft) ===
+NFT(8) NFT(8)
+
+NAME
+ nft - Administration tool of the nftables framework for packet filtering and classification
+
+SYNOPSIS
+ nft [ -nNscaeSupyjtT ] [ -I directory ] [ -f filename | -i | cmd ...]
+ nft -h
+ nft -v
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ | random | In kernel 5.0 and newer this is the |
+ | | same as fully-random. In earlier |
+ | | kernels the port mapping will be |
+ | | randomized using a seeded MD5 hash mix |
+ | | using source and destination address |
+ | | and destination port. |
+ +--------------+----------------------------------------+
+ | | |
+ | fully-random | If used then port mapping is generated |
+ | | based on a 32-bit pseudo-random |
+ | | algorithm. |
+ +--------------+----------------------------------------+
+
+ Using NAT statements.
+
+ # create a suitable table/chain setup for all further examples
+ add table nat
+ add chain nat prerouting { type nat hook prerouting priority dstnat; }
+ add chain nat postrouting { type nat hook postrouting priority srcnat; }
+
+ # translate source addresses of all packets leaving via eth0 to address 1.2.3.4
+ add rule nat postrouting oif eth0 snat to 1.2.3.4
+
+ # redirect all traffic entering via eth0 to destination address 192.168.1.120
+ add rule nat prerouting iif eth0 dnat to 192.168.1.120
+
+ # translate source addresses of all packets leaving via eth0 to whatever
+ # locally generated packets would use as source to reach the same destination
+ add rule nat postrouting oif eth0 masquerade
+
+ # redirect incoming TCP traffic for port 22 to port 2222
+ add rule nat prerouting tcp dport 22 redirect to :2222
+
+ # inet family:
+ # handle ip dnat:
+ add rule inet nat prerouting dnat ip to 10.0.2.99
+ # handle ip6 dnat:
+ add rule inet nat prerouting dnat ip6 to fe80::dead
+ # this masquerades both ipv4 and ipv6:
+ add rule inet nat postrouting meta oif ppp0 masquerade
+
+ Advanced NAT examples.
+
+ # map prefixes in one network to that of another, e.g. 10.141.11.4 is mangled to 192.168.2.4,
+ # 10.141.11.5 is mangled to 192.168.2.5 and so on.
+ add rule nat postrouting snat ip prefix to ip saddr map { 10.141.11.0/24 : 192.168.2.0/24 }
+
+ # map a source address, source port combination to a pool of destination addresses and ports:
+ add rule nat postrouting dnat to ip saddr . tcp dport map { 192.168.1.2 . 80 : 10.141.10.2-10.141.10.5 . 8888-8999 }
+
+ # The above example generates the following NAT expression:
+ #
+ # [ nat dnat ip addr_min reg 1 addr_max reg 10 proto_min reg 9 proto_max reg 11 ]
+ #
+ # which expects to obtain the following tuple:
+ # IP address (min), source port (min), IP address (max), source port (max)
+ # to be obtained from the map. The given addresses and ports are inclusive.
+
+ # This also works with named maps and in combination with both concatenations and ranges:
+ table ip nat {
+ map ipportmap {
+ typeof ip saddr : interval ip daddr . tcp dport
+ flags interval
+ elements = { 192.168.1.2 : 10.141.10.1-10.141.10.3 . 8888-8999, 192.168.2.0/24 : 10.141.11.5-10.141.11.20 . 8888-8999 }
+ }
+
+ chain prerouting {
+ type nat hook prerouting priority dstnat; policy accept;
+ ip protocol tcp dnat ip to ip saddr map @ipportmap
+ }
+ }
+
+ @ipportmap maps network prefixes to a range of hosts and ports.
+ The new destination is taken from the range provided by the map element.
+ Same for the destination port.
+
+ Note the use of the "interval" keyword in the typeof description.
+ This is required so nftables knows that it has to ask for twice the
+ amount of storage for each key-value pair in the map.
+
+ ": ipv4_addr . inet_service" would allow associating one address and one port
+ with each key. But for this case, for each key, two addresses and two ports
+ (The minimum and maximum values for both) have to be stored.
+
+ TPROXY STATEMENT
+ Tproxy redirects the packet to a local socket without changing the packet header in any way. If any of the
+ arguments is missing the data of the incoming packet is used as parameter. Tproxy matching requires another
+ rule that ensures the presence of transport protocol header is specified.
+
+ tproxy to address:port
+ tproxy to {address | :port}
+
+ This syntax can be used in ip/ip6 tables where network layer protocol is obvious. Either IP address or port
+ can be specified, but at least one of them is necessary.
+
+ tproxy {ip | ip6} to address[:port]
+ tproxy to :port
+
+ This syntax can be used in inet tables. The ip/ip6 parameter defines the family the rule will match. The
+ address parameter must be of this family. When only port is defined, the address family should not be
+ specified. In this case the rule will match for both families.
+
+ Table 72. tproxy attributes
+ +---------+--------------------------------------+
+ | Name | Description |
+ +---------+--------------------------------------+
+ | | |
+ | address | IP address the listening socket with |
+ | | IP_TRANSPARENT option is bound to. |
+ +---------+--------------------------------------+
+ | | |
+ | port | Port the listening socket with |
+ | | IP_TRANSPARENT option is bound to. |
+ +---------+--------------------------------------+
+
+ Example ruleset for tproxy statement.
+
+ table ip x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ tcp dport ntp tproxy to 1.1.1.1
+ udp dport ssh tproxy to :2222
+ }
+ }
+ table ip6 x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ tcp dport ntp tproxy to [dead::beef]
+ udp dport ssh tproxy to :2222
+ }
+ }
+ table inet x {
+ chain y {
+ type filter hook prerouting priority mangle; policy accept;
+ tcp dport 321 tproxy to :ssh
+ tcp dport 99 tproxy ip to 1.1.1.1:999
+ udp dport 155 tproxy ip6 to [dead::beef]:smux
+ }
+ }
+
+ SYNPROXY STATEMENT
+ This statement will process TCP three-way-handshake parallel in netfilter context to protect either local or
+ backend system. This statement requires connection tracking because sequence numbers need to be translated.
+
+ synproxy [mss mss_value] [wscale wscale_value] [SYNPROXY_FLAGS]
+
+ Table 73. synproxy statement attributes
+ +--------+-----------------------------------------+
+ | Name | Description |
+ +--------+-----------------------------------------+
+ | | |
+ | mss | Maximum segment size announced to |
+ | | clients. This must match the backend. |
+ +--------+-----------------------------------------+
+ | | |
+ | wscale | Window scale announced to clients. This |
+ | | must match the backend. |
+ +--------+-----------------------------------------+
+
+ Table 74. synproxy statement flags
+ +-----------+-----------------------------------------+
+ | Flag | Description |
+ +-----------+-----------------------------------------+
+ | | |
+ | sack-perm | Pass client selective acknowledgement |
+ | | option to backend (will be disabled if |
+ | | not present). |
+ +-----------+-----------------------------------------+
+ | | |
+ | timestamp | Pass client timestamp option to backend |
+ | | (will be disabled if not present, also |
+ | | needed for selective acknowledgement |
+ | | and window scaling). |
+ +-----------+-----------------------------------------+
+
+ Example ruleset for synproxy statement.
+
+ Determine tcp options used by backend, from an external system
+
+ tcpdump -pni eth0 -c 1 'tcp[tcpflags] == (tcp-syn|tcp-ack)'
+ port 80 &
+ telnet 192.0.2.42 80
+ 18:57:24.693307 IP 192.0.2.42.80 > 192.0.2.43.48757:
+ Flags [S.], seq 360414582, ack 788841994, win 14480,
+ options [mss 1460,sackOK,
+ TS val 1409056151 ecr 9690221,
+ nop,wscale 9],
+ length 0
+
+ Switch tcp_loose mode off, so conntrack will mark out-of-flow packets as state INVALID.
+
+ echo 0 > /proc/sys/net/netfilter/nf_conntrack_tcp_loose
+
+ Make SYN packets untracked.
+
+ table ip x {
+ chain y {
+ type filter hook prerouting priority raw; policy accept;
+ tcp flags syn notrack
+ }
+ }
+
+ Catch UNTRACKED (SYN packets) and INVALID (3WHS ACK packets) states and send
+ them to SYNPROXY. This rule will respond to SYN packets with SYN+ACK
+ syncookies, create ESTABLISHED for valid client response (3WHS ACK packets) and
+ drop incorrect cookies. Flags combinations not expected during 3WHS will not
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

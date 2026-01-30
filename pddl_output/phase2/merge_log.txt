@@ -1,27 +1,79 @@
-Predicate 'owner' arity mismatch: 1 vs 2
-Predicate 'group' arity mismatch: 1 vs 2
-Predicate 'mode' arity mismatch: 1 vs 2
-Extracted predicate 'package_installed' from action body
-Extracted predicate 'package_outdated' from action body
-Rejected action 'install': Action has no effects
-Rejected action 'remove': Action has no effects
-Rejected action 'upgrade': Action has no effects
-Rejected action 'start': Action has no effects
-Rejected action 'stop': Action has no effects
-Rejected action 'enable': Action has no effects
-Rejected action 'disable': Action has no effects
-Rejected action 'apply': Action has no effects
-Rejected action 'reload': Action has no effects
-Rejected action 'change': Action has no effects
-Rejected action 'create': Action has no effects
-Rejected action 'enable': Action has no effects
-Rejected action 'disable': Action has no effects
-Rejected action 'add': Action has no effects
-Rejected action 'delete': Action has no effects
-Rejected action 'apply': Action has no effects
-Rejected action 'set': Action has no effects
-Rejected action 'reload': Action has no effects
-Rejected action 'adjust': Action has no effects
-Rejected action 'run': Action has no effects
-Rejected action 'apply_sudoers_config': Action has no effects
-Rejected action 'grant_sudo_privilege': Action has no effects
+Extracted predicate 'allow_unauthenticated' from action body
+Extracted predicate 'allow_insecure_repositories' from action body
+Extracted predicate 'allow_releaseinfo_change' from action body
+Extracted predicate 'show_progress' from action body
+Extracted predicate 'add_source_file' from action body
+Extracted predicate 'fail_on_error' from action body
+Extracted predicate 'run_update' from action body
+Extracted predicate 'use_config_file' from action body
+Extracted predicate 'set_config_option' from action body
+Extracted predicate 'help_shown' from action body
+Extracted predicate 'snap_info_shown' from action body
+Extracted predicate 'service_exists' from action body
+Extracted predicate 'file_executable' from action body
+Extracted predicate 'setuid_bit_set' from action body
+Extracted predicate 'setgid_bit_set' from action body
+Extracted predicate 'sticky_bit_set' from action body
+Extracted predicate 'flowtable_exists' from action body
+Extracted predicate 'ct_helper_exists' from action body
+Extracted predicate 'ct_timeout_exists' from action body
+Extracted predicate 'counter_exists' from action body
+Extracted predicate 'quota_exists' from action body
+Extracted predicate 'limit_exists' from action body
+Extracted predicate 'ct_expectation_configured' from action body
+Extracted predicate 'counter_configured' from action body
+Extracted predicate 'quota_configured' from action body
+Extracted predicate 'can_configure_firewall' from action body
+Extracted predicate 'process_exists' from action body
+Extracted predicate 'edited' from action body
+Extracted predicate 'file_permissions' from action body
+Merged 3 definitions of action 'build'
+Merged 8 definitions of action 'check'
+Merged 3 definitions of action 'download'
+Merged 3 definitions of action 'ignore'
+Merged 5 definitions of action 'allow'
+Merged 3 definitions of action 'show'
+Merged 3 definitions of action 'update'
+Merged 18 definitions of action 'set'
+Merged 3 definitions of action 'install'
+Merged 12 definitions of action 'remove'
+Merged 2 definitions of action 'verify'
+Merged 2 definitions of action 'clear'
+Merged 2 definitions of action 'get'
+Merged 28 definitions of action 'add'
+Merged 2 definitions of action 'print'
+Merged 10 definitions of action 'disable'
+Merged 10 definitions of action 'enable'
+Merged 2 definitions of action 'generate'
+Merged 2 definitions of action 'abort_change'
+Merged 3 definitions of action 'abort'
+Merged 2 definitions of action 'connect'
+Merged 2 definitions of action 'disconnect'
+Merged 2 definitions of action 'forget'
+Merged 11 definitions of action 'create'
+Merged 2 definitions of action 'import'
+Merged 10 definitions of action 'delete'
+Merged 2 definitions of action 'modify'
+Merged 2 definitions of action 'change'
+Merged 6 definitions of action 'copy'
+Merged 3 definitions of action 'retrieve'
+Merged 3 definitions of action 'move'
+Merged 2 definitions of action 'touch'
+Merged 2 definitions of action 'bring'
+Merged 2 definitions of action 'append'
+Merged 3 definitions of action 'insert'
+Merged 3 definitions of action 'replace'
+Merged 2 definitions of action 'delete_firewall_rule'
+Merged 2 definitions of action 'set_chain_policy'
+Merged 2 definitions of action 'rename_chain'
+Merged 3 definitions of action 'netplan'
+Merged 3 definitions of action 'destroy'
+Merged 2 definitions of action 'add_counter'
+Merged 2 definitions of action 'add_quota'
+Merged 4 definitions of action 'apply'
+Merged 3 definitions of action 'monitor'
+Merged 2 definitions of action 'reload'
+Merged 2 definitions of action 'create_wifi_connection'
+Merged 3 definitions of action 'register'
+Merged 2 definitions of action 'sudo_edit_file'
+Merged 2 definitions of action 'enforce'

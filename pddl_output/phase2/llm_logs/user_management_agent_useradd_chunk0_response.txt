@@ -1,0 +1,61 @@
+```lisp
+(:predicates
+  (user_exists ?u - user)
+  (user_primary_group ?u - user ?g - group)
+  (user_supplementary_groups ?u - user ?g - group)
+  (user_has_password ?u - user)
+  (user_is_system ?u - user)
+  (user_account_expired ?u - user ?date - date)
+  (user_password_inactive ?u - user ?days - integer)
+  (file_exists ?f - filesystem_object)
+  (group_exists ?g - group)
+)
+
+(:action create_home_directory
+  :parameters (?u - user ?h - filesystem_object)
+  :precondition (and (user_exists ?u) (not (file_exists ?h)))
+  :effect (file_exists ?h)
+)
+
+(:action delete_home_directory
+  :parameters (?u - user ?h - filesystem_object)
+  :precondition (and (user_exists ?u) (file_exists ?h))
+  :effect (not (file_exists ?h))
+)
+
+(:action set_primary_group
+  :parameters (?u - user ?g - group)
+  :precondition (and (user_exists ?u) (group_exists ?g))
+  :effect (user_primary_group ?u ?g)
+)
+
+(:action add_supplementary_groups
+  :parameters (?u - user ?g - group)
+  :precondition (and (user_exists ?u) (group_exists ?g))
+  :effect (user_supplementary_groups ?u ?g)
+)
+
+(:action set_user_password
+  :parameters (?u - user)
+  :precondition (user_exists ?u)
+  :effect (user_has_password ?u)
+)
+
+(:action create_system_user
+  :parameters (?u - user)
+  :precondition (not (user_exists ?u))
+  :effect (and (user_exists ?u) (user_is_system ?u))
+)
+
+(:action set_account_expiry
+  :parameters (?u - user ?date - date)
+  :precondition (user_exists ?u)
+  :effect (user_account_expired ?u ?date)
+)
+
+(:action set_password_inactive
+  :parameters (?u - user ?days - integer)
+  :precondition (user_exists ?u)
+  :effect (user_password_inactive ?u ?days)
+)
+```

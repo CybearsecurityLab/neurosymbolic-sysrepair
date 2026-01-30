@@ -1,0 +1,42 @@
+```lisp
+(:predicates
+  (package_installed ?p - package)
+  (package_selected ?p - package)
+  (selections_saved ?f - configuration_file)
+  (file_exists ?f - configuration_file))
+
+(:action install-package
+  :parameters (?p - package ?f - configuration_file)
+  :precondition (and (file_exists ?f) (not (package_installed ?p)))
+  :effect (and (package_installed ?p) (not (file_exists ?f))))
+
+(:action remove-package
+  :parameters (?p - package)
+  :precondition (package_installed ?p)
+  :effect (not (package_installed ?p)))
+
+(:action get-selections
+  :parameters (?f - configuration_file)
+  :precondition (file_exists ?f)
+  :effect (selections_saved ?f))
+
+(:action set-selections
+  :parameters (?f - configuration_file)
+  :precondition (selections_saved ?f)
+  :effect (forall (?p - package) (when (package_selected ?p) (package_installed ?p))))
+```
+
+**Explanation:**  
+- **Predicates:**  
+  - `package_installed`: Tracks if a package is installed.  
+  - `package_selected`: Tracks if a package is marked for installation/removal in selections.  
+  - `selections_saved`: Indicates a file contains saved package selections.  
+  - `file_exists`: Ensures the package file or selection file is present.  
+
+- **Actions:**  
+  1. `install-package`: Installs a package from a `.deb` file, consuming the file and marking the package as installed.  
+  2. `remove-package`: Removes an installed package, unmarking it as installed.  
+  3. `get-selections`: Saves current package selections (e.g., `dpkg --get-selections`) to a file.  
+  4. `set-selections`: Applies saved selections from a file to mark packages as selected/installed.  
+
+**Note:** The `set-selections` action uses a `forall` construct to abstractly model applying selections to multiple packages, though PDDL typically requires explicit handling of such logic. This assumes the file contains valid selections for all relevant packages.

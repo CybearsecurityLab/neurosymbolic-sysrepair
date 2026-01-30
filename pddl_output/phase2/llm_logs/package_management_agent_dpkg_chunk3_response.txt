@@ -1,0 +1,53 @@
+```lisp
+(:predicates
+  (simulation_mode_enabled)
+  (admin_directory_set ?d - directory)
+  (installation_directory_set ?d - directory)
+  (ignore_dependency ?p - package)
+  (path_excluded ?p - path)
+  (path_included ?p - path)
+  (recursive_processing_enabled)
+)
+
+(:action enable_simulation_mode
+  :parameters ()
+  :precondition (not (simulation_mode_enabled))
+  :effect (simulation_mode_enabled)
+)
+
+(:action set_admin_directory
+  :parameters (?d - directory)
+  :precondition (not (admin_directory_set ?d))
+  :effect (admin_directory_set ?d)
+)
+
+(:action set_installation_directory
+  :parameters (?d - directory)
+  :precondition (not (installation_directory_set ?d))
+  :effect (installation_directory_set ?d)
+)
+
+(:action enable_recursive_processing
+  :parameters ()
+  :precondition (not (recursive_processing_enabled))
+  :effect (recursive_processing_enabled)
+)
+
+(:action ignore_dependency_check
+  :parameters (?p - package)
+  :precondition (not (ignore_dependency ?p))
+  :effect (ignore_dependency ?p)
+)
+
+(:action exclude_path
+  :parameters (?p - path)
+  :precondition (not (path_excluded ?p))
+  :effect (path_excluded ?p)
+)
+
+(:action include_path
+  :parameters (?p - path)
+  :precondition (and (path_excluded ?p) (not (path_included ?p)))
+  :effect (and (not (path_excluded ?p)) (path_included ?p))
+)
+```

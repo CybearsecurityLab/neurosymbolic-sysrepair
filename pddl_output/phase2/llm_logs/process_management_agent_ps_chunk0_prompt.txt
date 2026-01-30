@@ -1,0 +1,363 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'ps'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (ps) ===
+PS(1) User Commands PS(1)
+
+NAME
+ ps - report a snapshot of the current processes.
+
+SYNOPSIS
+ ps [options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+DESCRIPTION
+ ps displays information about a selection of the active processes. If you want a repetitive update of the
+ selection and the displayed information, use top instead.
+
+ This version of ps accepts several kinds of options:
+
+ 1 UNIX options, which may be grouped and must be preceded by a dash.
+ 2 BSD options, which may be grouped and must not be used with a dash.
+ 3 GNU long options, which are preceded by two dashes.
+
+ Options of different types may be freely mixed, but conflicts can appear. There are some synonymous options,
+ which are functionally identical, due to the many standards and ps implementations that this ps is compatible
+ with.
+
+ By default, ps selects all processes with the same effective user ID (euid=EUID) as the current user and
+ associated with the same terminal as the invoker. It displays the process ID (pid=PID), the terminal
+ associated with the process (tname=TTY), the cumulated CPU time in [DD-]hh:mm:ss format (time=TIME), and the
+ executable name (ucmd=CMD). Output is unsorted by default.
+
+ The use of BSD-style options will add process state (stat=STAT) to the default display and show the command
+ args (args=COMMAND) instead of the executable name. You can override this with the PS_FORMAT environment
+ variable. The use of BSD-style options will also change the process selection to include processes on other
+ terminals (TTYs) that are owned by you; alternately, this may be described as setting the selection to be the
+ set of all processes filtered to exclude processes owned by other users or not on a terminal. These effects
+ are not considered when options are described as being "identical" below, so -M will be considered identical
+ to Z and so on.
+
+ Except as described below, process selection options are additive. The default selection is discarded, and
+ then the selected processes are added to the set of processes to be displayed. A process will thus be shown
+ if it meets any of the given selection criteria.
+
+EXAMPLES
+ To see every process on the system using standard syntax:
+ ps -e
+ ps -ef
+ ps -eF
+ ps -ely
+
+ To see every process on the system using BSD syntax:
+ ps ax
+ ps axu
+
+ To print a process tree:
+ ps -ejH
+ ps axjf
+
+ To get info about threads:
+ ps -eLf
+ ps axms
+
+ To get security info:
+ ps -eo euser,ruser,suser,fuser,f,comm,label
+ ps axZ
+ ps -eM
+
+ To see every process running as root (real & effective ID) in user format:
+ ps -U root -u root u
+
+ To see every process with a user-defined format:
+ ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
+ ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,comm
+ ps -Ao pid,tt,user,fname,tmout,f,wchan
+
+ Print only the process IDs of syslogd:
+ ps -C syslogd -o pid=
+
+ Print only the name of PID 42:
+ ps -q 42 -o comm=
+
+SIMPLE PROCESS SELECTION
+ a Lift the BSD-style "only yourself" restriction, which is imposed upon the set of all processes when
+ some BSD-style (without "-") options are used or when the ps personality setting is BSD-like. The set
+ of processes selected in this manner is in addition to the set of processes selected by other means.
+ An alternate description is that this option causes ps to list all processes with a terminal (tty), or
+ to list all processes when used together with the x option.
+
+ -A Select all processes. Identical to -e.
+
+ -a Select all processes except both session leaders (see getsid(2)) and processes not associated with a
+ terminal.
+
+ -d Select all processes except session leaders.
+
+ --deselect
+ Select all processes except those that fulfill the specified conditions (negates the selection).
+ Identical to -N.
+
+ -e Select all processes. Identical to -A.
+
+ g Really all, even session leaders. This flag is obsolete and may be discontinued in a future release.
+ It is normally implied by the a flag, and is only useful when operating in the sunos4 personality.
+
+ -N Select all processes except those that fulfill the specified conditions (negates the selection).
+ Identical to --deselect.
+
+ T Select all processes associated with this terminal. Identical to the t option without any argument.
+
+ r Restrict the selection to only running processes.
+
+ x Lift the BSD-style "must have a tty" restriction, which is imposed upon the set of all processes when
+ some BSD-style (without "-") options are used or when the ps personality setting is BSD-like. The set
+ of processes selected in this manner is in addition to the set of processes selected by other means.
+ An alternate description is that this option causes ps to list all processes owned by you (same EUID as
+ ps), or to list all processes when used together with the a option.
+
+PROCESS SELECTION BY LIST
+ These options accept a single argument in the form of a blank-separated or comma-separated list. They can be
+ used multiple times. For example: ps -p "1 2" -p 3,4
+
+ 123 Identical to --pid 123.
+
+ +123 Identical to --sid 123.
+
+ -123 Select by process group ID (PGID).
+
+ -C cmdlist
+ Select by command name. This selects the processes whose executable name is given in cmdlist. NOTE:
+ The command name is not the same as the command line. Previous versions of procps and the kernel
+ truncated this command name to 15 characters. This limitation is no longer present in both. If you
+ depended on matching only 15 characters, you may no longer get a match.
+
+ -G grplist
+ Select by real group ID (RGID) or name. This selects the processes whose real group name or ID is in
+ the grplist list. The real group ID identifies the group of the user who created the process, see
+ getgid(2).
+
+ -g grplist
+ Select by session OR by effective group name. Selection by session is specified by many standards, but
+ selection by effective group is the logical behavior that several other operating systems use. This ps
+ will select by session when the list is completely numeric (as sessions are). Group ID numbers will
+ work only when some group names are also specified. See the -s and --group options.
+
+ --Group grplist
+ Select by real group ID (RGID) or name. Identical to -G.
+
+ --group grplist
+ Select by effective group ID (EGID) or name. This selects the processes whose effective group name or
+ ID is in grplist. The effective group ID describes the group whose file access permissions are used by
+ the process (see getegid(2)). The -g option is often an alternative to --group.
+
+ p pidlist
+ Select by process ID. Identical to -p and --pid.
+
+ -p pidlist
+ Select by PID. This selects the processes whose process ID numbers appear in pidlist. Identical to p
+ and --pid.
+
+ --pid pidlist
+ Select by process ID. Identical to -p and p.
+
+ --ppid pidlist
+ Select by parent process ID. This selects the processes with a parent process ID in pidlist. That is,
+ it selects processes that are children of those listed in pidlist.
+
+ q pidlist
+ Select by process ID (quick mode). Identical to -q and --quick-pid.
+
+ -q pidlist
+ Select by PID (quick mode). This selects the processes whose process ID numbers appear in pidlist.
+ With this option ps reads the necessary info only for the pids listed in the pidlist and doesn't apply
+ additional filtering rules. The order of pids is unsorted and preserved. No additional selection
+ options, sorting and forest type listings are allowed in this mode. Identical to q and --quick-pid.
+
+ --quick-pid pidlist
+ Select by process ID (quick mode). Identical to -q and q.
+
+ -s sesslist
+ Select by session ID. This selects the processes with a session ID specified in sesslist.
+
+ --sid sesslist
+ Select by session ID. Identical to -s.
+
+ t ttylist
+ Select by tty. Nearly identical to -t and --tty, but can also be used with an empty ttylist to
+ indicate the terminal associated with ps. Using the T option is considered cleaner than using t with
+ an empty ttylist.
+
+ -t ttylist
+ Select by tty. This selects the processes associated with the terminals given in ttylist. Terminals
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

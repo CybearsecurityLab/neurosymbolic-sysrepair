@@ -1,0 +1,11 @@
+```lisp
+(:predicates
+  (process_immune_to_hangup ?pr - process))
+
+(:action run-nohup-command
+  :parameters (?cmd - process ?output-file - file)
+  :precondition (and (file_executable ?cmd) (file_writable ?output-file))
+  :effect (and (process_exists ?cmd) 
+               (process_immune_to_hangup ?cmd) 
+               (file_exists ?output-file)))
+```

@@ -1,0 +1,339 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'top'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (top) ===
+TOP(1) User Commands TOP(1)
+
+NAME
+ top - display Linux processes
+
+SYNOPSIS
+ top [options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ Establishing a filter requires: 1) a field name; 2) an operator; and 3) a selection value, as a minimum. This
+ is the most complex of top's user input requirements so, when you make a mistake, command recall will be your
+ friend. Remember the Up/Down arrow keys or their aliases when prompted for input.
+
+ Filter Basics
+
+ 1. field names are case sensitive and spelled as in the header
+
+ 2. selection values need not comprise the full displayed field
+
+ 3. a selection is either case insensitive or sensitive to case
+
+ 4. the default is inclusion, prepending `!' denotes exclusions
+
+ 5. multiple selection criteria can be applied to a task window
+
+ 6. inclusion and exclusion criteria can be used simultaneously
+
+ 7. the 1 equality and 2 relational filters can be freely mixed
+
+ 8. separate unique filters are maintained for each task window
+
+ If a field is not turned on or is not currently in view, then your selection criteria will not affect the
+ display. Later, should a filtered field become visible, the selection criteria will then be applied.
+
+ Keyboard Summary
+
+ O :Other-Filter (upper case)
+ You will be prompted to establish a case sensitive filter.
+
+ o :Other-Filter (lower case)
+ You will be prompted to establish a filter that ignores case when matching.
+
+ ^O :Show-Active-Filters (Ctrl key + `o')
+ This can serve as a reminder of which filters are active in the `current' window. A summary will be
+ shown on the message line until you press the <Enter> key.
+
+ = :Reset-Filtering in current window
+ This clears all of your selection criteria in the `current' window. It also has additional impact so
+ please see topic 4a. GLOBAL Commands.
+
+ + :Reset-Filtering in all windows
+ This clears the selection criteria in all windows, assuming you are in alternate-display mode. As with
+ the `=' interactive command, it too has additional consequences so you might wish to see topic 5b.
+ COMMANDS for Windows.
+
+ Input Requirements
+
+ When prompted for selection criteria, the data you provide must take one of two forms. There are 3
+ required pieces of information, with a 4th as optional. These examples use spaces for clarity but your
+ input generally would not.
+ #1 #2 #3 ( required )
+ Field-Name ? include-if-value
+ ! Field-Name ? exclude-if-value
+ #4 ( optional )
+
+ Items #1, #3 and #4 should be self-explanatory. Item #2 represents both a required delimiter and the
+ operator which must be one of either equality (`=') or relation (`<' or `>').
+
+ The `=' equality operator requires only a partial match and that can reduce your `if-value' input
+ requirements. The `>' or `<' relational operators always employ string comparisons, even with numeric
+ fields. They are designed to work with a field's default justification and with homogeneous data. When
+ some field's numeric amounts have been subjected to scaling while others have not, that data is no longer
+ homogeneous.
+
+ If you establish a relational filter and you have changed the default Numeric or Character justification,
+ that filter is likely to fail. When a relational filter is applied to a memory field and you have not
+ changed the scaling, it may produce misleading results. This happens, for example, because `100.0m' (MiB)
+ would appear greater than `1.000g' (GiB) when compared as strings.
+
+ If your filtered results appear suspect, simply altering justification or scaling may yet achieve the
+ desired objective. See the `j', `J' and `e' interactive commands for additional information.
+
+ Potential Problems
+
+ These GROUP filters could produce the exact same results or the second one might not display anything at
+ all, just a blank task window.
+ GROUP=root ( only the same results when )
+ GROUP=ROOT ( invoked via lower case `o' )
+
+ Either of these RES filters might yield inconsistent and/or misleading results, depending on the current
+ memory scaling factor. Or both filters could produce the exact same results.
+ RES>9999 ( only the same results when )
+ !RES<10000 ( memory scaling is at `KiB' )
+
+ This nMin filter illustrates a problem unique to scalable fields. This particular field can display a
+ maximum of 4 digits, beyond which values are automatically scaled to KiB or above. So while amounts
+ greater than 9999 exist, they will appear as 2.6m, 197k, etc.
+ nMin>9999 ( always a blank task window )
+
+ Potential Solutions
+
+ These examples illustrate how Other Filtering can be creatively applied to achieve almost any desired
+ result. Single quotes are sometimes shown to delimit the spaces which are part of a filter or to represent
+ a request for status (^O) accurately. But if you used them with if-values in real life, no matches would
+ be found.
+
+ Assuming field nTH is displayed, the first filter will result in only multi-threaded processes being shown.
+ It also reminds us that a trailing space is part of every displayed field. The second filter achieves the
+ exact same results with less typing.
+ !nTH=` 1 ' ( ` for clarity only )
+ nTH>1 ( same with less i/p )
+
+ With Forest View mode active and the COMMAND column in view, this filter effectively collapses child
+ processes so that just 3 levels are shown.
+ !COMMAND=` `- ' ( ` for clarity only )
+
+ The final two filters appear as in response to the status request key (^O). In reality, each filter would
+ have required separate input. The PR example shows the two concurrent filters necessary to display tasks
+ with priorities of 20 or more, since some might be negative. Then by exploiting trailing spaces, the nMin
+ series of filters could achieve the failed `9999' objective discussed above.
+ `PR>20' + `!PR=-' ( 2 for right result )
+ `!nMin=0 ' + `!nMin=1 ' + `!nMin=2 ' + `!nMin=3 ' ...
+
+6. FILES
+ 6a. PERSONAL Configuration File
+ This file is created or updated via the `W' interactive command.
+
+ The legacy version is written as `$HOME/.your-name-4-top' + `rc' with a leading period.
+
+ A newly created configuration file is written as procps/your-name-4-top' + `rc' without a leading period. The
+ procps directory will be subordinate to either $XDG_CONFIG_HOME when set as an absolute path or the
+ $HOME/.config directory.
+
+ While not intended to be edited manually, here is the general layout:
+ global # line 1: the program name/alias notation
+ " # line 2: id,altscr,irixps,delay,curwin
+ per ea # line a: winname,fieldscur
+ window # line b: winflags,sortindx,maxtasks,etc
+ " # line c: summclr,msgsclr,headclr,taskclr
+ global # line 15: additional miscellaneous settings
+ " # any remaining lines are devoted to optional
+ " # active `other filters' discussed in section 5e above
+ " # plus `inspect' entries discussed in section 6b below
+
+ If a valid absolute path to the rcfile cannot be established, customizations made to a running top will be
+ impossible to preserve.
+
+ 6b. ADDING INSPECT Entries
+ To exploit the `Y' interactive command, you must add entries at the end of the top personal configuration
+ file. Such entries simply reflect a file to be read or command/pipeline to be executed whose results will
+ then be displayed in a separate scrollable, searchable window.
+
+ If you don't know the location or name of your top rcfile, use the `W' interactive command to rewrite it and
+ note those details.
+
+ Inspect entries can be added with a redirected echo or by editing the configuration file. Redirecting an echo
+ risks overwriting the rcfile should it replace (>) rather than append (>>) to that file. Conversely, when
+ using an editor care must be taken not to corrupt existing lines, some of which could contain unprintable data
+ or unusual characters depending on the top version under which that configuration file was saved.
+
+ Those Inspect entries beginning with a `#' character are ignored, regardless of content. Otherwise they
+ consist of the following 3 elements, each of which must be separated by a tab character (thus 2 `\t' total):
+
+ .type: literal `file' or `pipe'
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

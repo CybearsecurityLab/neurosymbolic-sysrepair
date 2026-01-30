@@ -1,0 +1,19 @@
+```lisp
+(:predicates
+  (interface_exists ?i - interface)
+  (interface_up ?i - interface)
+  (interface_down ?i - interface)
+)
+
+(:action bring-up-interface
+  :parameters (?i - interface)
+  :precondition (and (interface_exists ?i) (not (interface_up ?i)))
+  :effect (and (interface_up ?i) (not (interface_down ?i)))
+)
+
+(:action bring-down-interface
+  :parameters (?i - interface)
+  :precondition (and (interface_exists ?i) (interface_up ?i))
+  :effect (and (interface_down ?i) (not (interface_up ?i)))
+)
+```

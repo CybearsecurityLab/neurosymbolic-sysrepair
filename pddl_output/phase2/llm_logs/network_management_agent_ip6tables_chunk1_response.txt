@@ -1,0 +1,29 @@
+```lisp
+(:predicates
+  (firewall_rule_exists ?r - firewall_rule))
+
+(:action delete_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (firewall_rule_exists ?r)
+  :effect (not (firewall_rule_exists ?r)))
+
+(:action append_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+
+(:action insert_firewall_rule
+  :parameters (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+
+(:action replace_firewall_rule
+  :parameters (?old - firewall_rule ?new - firewall_rule)
+  :precondition (and (firewall_rule_exists ?old) (not (firewall_rule_exists ?new)))
+  :effect (and (not (firewall_rule_exists ?old)) (firewall_rule_exists ?new)))
+
+(:action set_chain_policy
+  :parameters (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (firewall_rule_exists ?r))
+```

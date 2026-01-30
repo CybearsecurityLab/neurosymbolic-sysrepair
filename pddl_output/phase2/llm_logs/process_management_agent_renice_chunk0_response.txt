@@ -1,0 +1,17 @@
+```lisp
+(:predicates
+  (process_priority_set ?pr - process)
+  (user_priority_set ?u - user)
+  (can_escalate ?u - user)
+  (file_exists ?pr - process))
+
+(:action opportunities
+  :parameters (?pr - process ?u - user)
+  :precondition (and (can_escalate ?u) (file_exists ?pr))
+  :effect (process_priority_set ?pr))
+
+(:action adjust_user_priority
+  :parameters (?u - user)
+  :precondition (can_escalate ?u)
+  :effect (user_priority_set ?u))
+```

@@ -1,0 +1,41 @@
+```lisp
+(:predicates
+  (nat_rule_exists ?r - firewall_rule)
+  (nat_type ?r - firewall_rule ?t - nat_type) ; snat/dnat
+  (nat_hook ?r - firewall_rule ?h - hook_point) ; prerouting/postrouting
+  (nat_map ?r - firewall_rule ?m - nat_map)
+
+  (tproxy_rule_exists ?r - firewall_rule)
+  (tproxy_address ?r - firewall_rule ?a - ip_address)
+  (tproxy_port ?r - firewall_rule ?p - port_number)
+  (tproxy_family ?r - firewall_rule ?f - address_family) ; ip/ip6/inet
+
+  (synproxy_rule_exists ?r - firewall_rule)
+  (synproxy_mss ?r - firewall_rule ?m - mss_value)
+  (synproxy_wscale ?r - firewall_rule ?w - wscale_value)
+  (synproxy_flags ?r - firewall_rule ?fl - synproxy_flags))
+
+(:action add_nat_rule
+  :parameters (?r - firewall_rule ?t - nat_type ?h - hook_point ?m - nat_map)
+  :precondition (and (not (nat_rule_exists ?r)) (can_configure_firewall))
+  :effect (and (nat_rule_exists ?r)
+               (nat_type ?r ?t)
+               (nat_hook ?r ?h)
+               (nat_map ?r ?m)))
+
+(:action add_tproxy_rule
+  :parameters (?r - firewall_rule ?a - ip_address ?p - port_number ?f - address_family)
+  :precondition (and (not (tproxy_rule_exists ?r)) (can_configure_firewall))
+  :effect (and (tproxy_rule_exists ?r)
+               (tproxy_address ?r ?a)
+               (tproxy_port ?r ?p)
+               (tproxy_family ?r ?f)))
+
+(:action add_synproxy_rule
+  :parameters (?r - firewall_rule ?m - mss_value ?w - wscale_value ?fl - synproxy_flags)
+  :precondition (and (not (synproxy_rule_exists ?r)) (can_configure_firewall))
+  :effect (and (synproxy_rule_exists ?r)
+               (synproxy_mss ?r ?m)
+               (synproxy_wscale ?r ?w)
+               (synproxy_flags ?r ?fl)))
+```

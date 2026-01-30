@@ -1,0 +1,53 @@
+```pddl
+(:predicates
+  (undefined_alias ?a - object)
+  (unused_alias ?a - object)
+  (cycle_in_alias ?a - object)
+  (backup_file_ignored ?f - filesystem_object)
+  (file_with_dot_ignored ?f - filesystem_object)
+  (unknown_defaults_entry ?e - object)
+  (strict_mode_enabled)
+)
+
+(:action enable-strict-mode
+  :parameters ()
+  :precondition (and)
+  :effect (strict_mode_enabled)
+)
+
+(:action check-undefined-alias
+  :parameters (?a - object)
+  :precondition (and)
+  :effect (undefined_alias ?a)
+)
+
+(:action check-unused-alias
+  :parameters (?a - object)
+  :precondition (and)
+  :effect (unused_alias ?a)
+)
+
+(:action check-cycle-in-alias
+  :parameters (?a - object)
+  :precondition (and)
+  :effect (cycle_in_alias ?a)
+)
+
+(:action ignore-backup-file
+  :parameters (?f - filesystem_object)
+  :precondition (and)
+  :effect (backup_file_ignored ?f)
+)
+
+(:action ignore-file-with-dot
+  :parameters (?f - filesystem_object)
+  :precondition (and)
+  :effect (file_with_dot_ignored ?f)
+)
+
+(:action unknown-defaults
+  :parameters (?e - object)
+  :precondition (and)
+  :effect (unknown_defaults_entry ?e)
+)
+```

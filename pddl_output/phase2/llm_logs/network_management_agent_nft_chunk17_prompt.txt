@@ -1,0 +1,372 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'nft'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (nft) ===
+NFT(8) NFT(8)
+
+NAME
+ nft - Administration tool of the nftables framework for packet filtering and classification
+
+SYNOPSIS
+ nft [ -nNscaeSupyjtT ] [ -I directory ] [ -f filename | -i | cmd ...]
+ nft -h
+ nft -v
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ packets need to be placed in a distinct zone), with a hook priority of raw (-300).
+
+ Unlike iptables, where the helper assignment happens in the raw table, the helper needs to be assigned after a
+ conntrack entry has been found, i.e. it will not work when used with hook priorities equal or before -200.
+
+ Table 67. Conntrack statement types
+ +---------+-----------------------------+---------------------------+
+ | Keyword | Description | Value |
+ +---------+-----------------------------+---------------------------+
+ | | | |
+ | event | conntrack event bits | bitmask, integer (32 bit) |
+ +---------+-----------------------------+---------------------------+
+ | | | |
+ | helper | name of ct helper object to | quoted string |
+ | | assign to the connection | |
+ +---------+-----------------------------+---------------------------+
+ | | | |
+ | mark | Connection tracking mark | mark |
+ +---------+-----------------------------+---------------------------+
+ | | | |
+ | label | Connection tracking label | label |
+ +---------+-----------------------------+---------------------------+
+ | | | |
+ | zone | conntrack zone | integer (16 bit) |
+ +---------+-----------------------------+---------------------------+
+
+ save packet nfmark in conntrack.
+
+ ct mark set meta mark
+
+ set zone mapped via interface.
+
+ table inet raw {
+ chain prerouting {
+ type filter hook prerouting priority raw;
+ ct zone set iif map { "eth1" : 1, "veth1" : 2 }
+ }
+ chain output {
+ type filter hook output priority raw;
+ ct zone set oif map { "eth1" : 1, "veth1" : 2 }
+ }
+ }
+
+ restrict events reported by ctnetlink.
+
+ ct event set new,related,destroy
+
+ NOTRACK STATEMENT
+ The notrack statement allows one to disable connection tracking for certain packets.
+
+ notrack
+
+ Note that for this statement to be effective, it has to be applied to packets before a conntrack lookup
+ happens. Therefore, it needs to sit in a chain with either prerouting or output hook and a hook priority of
+ -300 (raw) or less.
+
+ See SYNPROXY STATEMENT for an example usage.
+
+ META STATEMENT
+ A meta statement sets the value of a meta expression. The existing meta fields are: priority, mark, pkttype,
+ nftrace.
+
+ meta {mark | priority | pkttype | nftrace | broute} set value
+
+ A meta statement sets meta data associated with a packet.
+
+ Table 68. Meta statement types
+ +----------+----------------------------+-----------+
+ | Keyword | Description | Value |
+ +----------+----------------------------+-----------+
+ | | | |
+ | priority | TC packet priority | tc_handle |
+ +----------+----------------------------+-----------+
+ | | | |
+ | mark | Packet mark | mark |
+ +----------+----------------------------+-----------+
+ | | | |
+ | pkttype | packet type | pkt_type |
+ +----------+----------------------------+-----------+
+ | | | |
+ | nftrace | ruleset packet tracing | 0, 1 |
+ | | on/off. Use monitor trace | |
+ | | command to watch traces | |
+ +----------+----------------------------+-----------+
+ | | | |
+ | broute | broute on/off. packets are | 0, 1 |
+ | | routed instead of being | |
+ | | bridged | |
+ +----------+----------------------------+-----------+
+
+ LIMIT STATEMENT
+ limit rate [over] packet_number / TIME_UNIT [burst packet_number packets]
+ limit rate [over] byte_number BYTE_UNIT / TIME_UNIT [burst byte_number BYTE_UNIT]
+
+ TIME_UNIT := second | minute | hour | day
+ BYTE_UNIT := bytes | kbytes | mbytes
+
+ A limit statement matches at a limited rate using a token bucket filter. A rule using this statement will
+ match until this limit is reached. It can be used in combination with the log statement to give limited
+ logging. The optional over keyword makes it match over the specified rate.
+
+ The burst value influences the bucket size, i.e. jitter tolerance. With packet-based limit, the bucket holds
+ exactly burst packets, by default five. If you specify packet burst, it must be a non-zero value. With
+ byte-based limit, the bucket's minimum size is the given rate's byte value and the burst value adds to that,
+ by default zero bytes.
+
+ Table 69. limit statement values
+ +---------------+-------------------+---------------------------+
+ | Value | Description | Type |
+ +---------------+-------------------+---------------------------+
+ | | | |
+ | packet_number | Number of packets | unsigned integer (32 bit) |
+ +---------------+-------------------+---------------------------+
+ | | | |
+ | byte_number | Number of bytes | unsigned integer (32 bit) |
+ +---------------+-------------------+---------------------------+
+
+ NAT STATEMENTS
+ snat [[ip | ip6] [ prefix ] to] ADDR_SPEC [:PORT_SPEC] [FLAGS]
+ dnat [[ip | ip6] [ prefix ] to] ADDR_SPEC [:PORT_SPEC] [FLAGS]
+ masquerade [to :PORT_SPEC] [FLAGS]
+ redirect [to :PORT_SPEC] [FLAGS]
+
+ ADDR_SPEC := address | address - address
+ PORT_SPEC := port | port - port
+
+ FLAGS := FLAG [, FLAGS]
+ FLAG := persistent | random | fully-random
+
+ The nat statements are only valid from nat chain types.
+
+ The snat and masquerade statements specify that the source address of the packet should be modified. While
+ snat is only valid in the postrouting and input chains, masquerade makes sense only in postrouting. The dnat
+ and redirect statements are only valid in the prerouting and output chains, they specify that the destination
+ address of the packet should be modified. You can use non-base chains which are called from base chains of nat
+ chain type too. All future packets in this connection will also be mangled, and rules should cease being
+ examined.
+
+ The masquerade statement is a special form of snat which always uses the outgoing interface's IP address to
+ translate to. It is particularly useful on gateways with dynamic (public) IP addresses.
+
+ The redirect statement is a special form of dnat which always translates the destination address to the local
+ host's one. It comes in handy if one only wants to alter the destination port of incoming traffic on different
+ interfaces.
+
+ When used in the inet family (available with kernel 5.2), the dnat and snat statements require the use of the
+ ip and ip6 keyword in case an address is provided, see the examples below.
+
+ Before kernel 4.18 nat statements require both prerouting and postrouting base chains to be present since
+ otherwise packets on the return path won't be seen by netfilter and therefore no reverse translation will take
+ place.
+
+ The optional prefix keyword allows to map to map n source addresses to n destination addresses. See Advanced
+ NAT examples below.
+
+ Table 70. NAT statement values
+ +------------+-------------------------------+-------------------------------+
+ | Expression | Description | Type |
+ +------------+-------------------------------+-------------------------------+
+ | | | |
+ | address | Specifies that the | ipv4_addr, ipv6_addr, e.g. |
+ | | source/destination address of | abcd::1234, or you can use a |
+ | | the packet should be | mapping, e.g. meta mark map { |
+ | | modified. You may specify a | 10 : 192.168.1.2, 20 : |
+ | | mapping to relate a list of | 192.168.1.3 } |
+ | | tuples composed of arbitrary | |
+ | | expression key with address | |
+ | | value. | |
+ +------------+-------------------------------+-------------------------------+
+ | | | |
+ | port | Specifies that the | port number (16 bit) |
+ | | source/destination port of | |
+ | | the packet should be | |
+ | | modified. | |
+ +------------+-------------------------------+-------------------------------+
+
+ Table 71. NAT statement flags
+ +--------------+----------------------------------------+
+ | Flag | Description |
+ +--------------+----------------------------------------+
+ | | |
+ | persistent | Gives a client the same |
+ | | source-/destination-address for each |
+ | | connection. |
+ +--------------+----------------------------------------+
+ | | |
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

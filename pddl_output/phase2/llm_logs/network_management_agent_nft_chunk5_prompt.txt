@@ -1,0 +1,394 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'nft'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (nft) ===
+NFT(8) NFT(8)
+
+NAME
+ nft - Administration tool of the nftables framework for packet filtering and classification
+
+SYNOPSIS
+ nft [ -nNscaeSupyjtT ] [ -I directory ] [ -f filename | -i | cmd ...]
+ nft -h
+ nft -v
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ sport=41360 dport=22
+
+ CT EXPECTATION
+ add ct expectation [family] table name { protocol protocol ; dport dport ; timeout timeout ; size size ; [*l3proto family ;] }
+ delete ct expectation [family] table name
+ list ct expectations
+
+ Ct expectation is used to create connection expectations. Expectations are assigned with the ct expectation
+ set statement. protocol, dport, timeout and size are mandatory, l3proto is derived from the table family by
+ default.
+
+ Table 14. conntrack expectation specifications
+ +----------+-------------------------------+--------------------------+
+ | Keyword | Description | Type |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | protocol | layer 4 protocol of the | string (e.g. ip) |
+ | | expectation object | |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | dport | destination port of expected | unsigned integer |
+ | | connection | |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | timeout | timeout value for expectation | unsigned integer |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | size | size value for expectation | unsigned integer |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | l3proto | layer 3 protocol of the | address family (e.g. ip) |
+ | | expectation object | |
+ +----------+-------------------------------+--------------------------+
+ | | | |
+ | comment | per ct expectation comment | string |
+ | | field | |
+ +----------+-------------------------------+--------------------------+
+
+ defining and assigning ct expectation policy.
+
+ table ip filter {
+ ct expectation expect {
+ protocol udp
+ dport 9876
+ timeout 2m
+ size 8
+ l3proto ip
+ }
+
+ chain input {
+ type filter hook input priority filter; policy accept;
+ ct expectation set "expect"
+ }
+ }
+
+ COUNTER
+ add counter [family] table name [{ [ packets packets bytes bytes ; ] [ comment comment ; }]
+ delete counter [family] table name
+ list counters
+
+ Table 15. Counter specifications
+ +---------+---------------------------+---------------------------+
+ | Keyword | Description | Type |
+ +---------+---------------------------+---------------------------+
+ | | | |
+ | packets | initial count of packets | unsigned integer (64 bit) |
+ +---------+---------------------------+---------------------------+
+ | | | |
+ | bytes | initial count of bytes | unsigned integer (64 bit) |
+ +---------+---------------------------+---------------------------+
+ | | | |
+ | comment | per counter comment field | string |
+ +---------+---------------------------+---------------------------+
+
+ Using named counters.
+
+ nft add counter filter http
+ nft add rule filter input tcp dport 80 counter name \"http\"
+
+ Using named counters with maps.
+
+ nft add counter filter http
+ nft add counter filter https
+ nft add rule filter input counter name tcp dport map { 80 : \"http\", 443 : \"https\" }
+
+ QUOTA
+ add quota [family] table name { [over|until] bytes BYTE_UNIT [ used bytes BYTE_UNIT ] ; [ comment comment ; ] }
+ BYTE_UNIT := bytes | kbytes | mbytes
+ delete quota [family] table name
+ list quotas
+
+ Table 16. Quota specifications
+ +---------+-----------------------------+-------------------------------+
+ | Keyword | Description | Type |
+ +---------+-----------------------------+-------------------------------+
+ | | | |
+ | quota | quota limit, used as the | Two arguments, unsigned |
+ | | quota name | integer (64 bit) and string: |
+ | | | bytes, kbytes, mbytes. "over" |
+ | | | and "until" go before these |
+ | | | arguments |
+ +---------+-----------------------------+-------------------------------+
+ | | | |
+ | used | initial value of used quota | Two arguments, unsigned |
+ | | | integer (64 bit) and string: |
+ | | | bytes, kbytes, mbytes |
+ +---------+-----------------------------+-------------------------------+
+ | | | |
+ | comment | per quota comment field | string |
+ +---------+-----------------------------+-------------------------------+
+
+ Using named quotas.
+
+ nft add quota filter user123 { over 20 mbytes }
+ nft add rule filter input ip saddr 192.168.10.123 quota name \"user123\"
+
+ Using named quotas with maps.
+
+ nft add quota filter user123 { over 20 mbytes }
+ nft add quota filter user124 { over 20 mbytes }
+ nft add rule filter input quota name ip saddr map { 192.168.10.123 : \"user123\", 192.168.10.124 : \"user124\" }
+
+EXPRESSIONS
+ Expressions represent values, either constants like network addresses, port numbers, etc., or data gathered
+ from the packet during ruleset evaluation. Expressions can be combined using binary, logical, relational and
+ other types of expressions to form complex or relational (match) expressions. They are also used as arguments
+ to certain types of operations, like NAT, packet marking etc.
+
+ Each expression has a data type, which determines the size, parsing and representation of symbolic values and
+ type compatibility with other expressions.
+
+ DESCRIBE COMMAND
+ describe expression | data type
+
+ The describe command shows information about the type of an expression and its data type. A data type may also
+ be given, in which nft will display more information about the type.
+
+ The describe command.
+
+ $ nft describe tcp flags
+ payload expression, datatype tcp_flag (TCP flag) (basetype bitmask, integer), 8 bits
+
+ predefined symbolic constants:
+ fin 0x01
+ syn 0x02
+ rst 0x04
+ psh 0x08
+ ack 0x10
+ urg 0x20
+ ecn 0x40
+ cwr 0x80
+
+DATA TYPES
+ Data types determine the size, parsing and representation of symbolic values and type compatibility of
+ expressions. A number of global data types exist, in addition some expression types define further data types
+ specific to the expression type. Most data types have a fixed size, some however may have a dynamic size, f.i.
+ the string type. Some types also have predefined symbolic constants. Those can be listed using the nft
+ describe command:
+
+ $ nft describe ct_state
+ datatype ct_state (conntrack state) (basetype bitmask, integer), 32 bits
+
+ pre-defined symbolic constants (in hexadecimal):
+ invalid 0x00000001
+ new ...
+
+ Types may be derived from lower order types, f.i. the IPv4 address type is derived from the integer type,
+ meaning an IPv4 address can also be specified as an integer value.
+
+ In certain contexts (set and map definitions), it is necessary to explicitly specify a data type. Each type
+ has a name which is used for this.
+
+ INTEGER TYPE
+ +---------+---------+----------+-----------+
+ | Name | Keyword | Size | Base type |
+ +---------+---------+----------+-----------+
+ | | | | |
+ | Integer | integer | variable | - |
+ +---------+---------+----------+-----------+
+
+ The integer type is used for numeric values. It may be specified as a decimal, hexadecimal or octal number.
+ The integer type does not have a fixed size, its size is determined by the expression for which it is used.
+
+ BITMASK TYPE
+ +---------+---------+----------+-----------+
+ | Name | Keyword | Size | Base type |
+ +---------+---------+----------+-----------+
+ | | | | |
+ | Bitmask | bitmask | variable | integer |
+ +---------+---------+----------+-----------+
+
+ The bitmask type (bitmask) is used for bitmasks.
+
+ STRING TYPE
+ +--------+---------+----------+-----------+
+ | Name | Keyword | Size | Base type |
+ +--------+---------+----------+-----------+
+ | | | | |
+ | String | string | variable | - |
+ +--------+---------+----------+-----------+
+
+ The string type is used for character strings. A string begins with an alphabetic character (a-zA-Z) followed
+ by zero or more alphanumeric characters or the characters /, -, _ and .. In addition, anything enclosed in
+ double quotes (") is recognized as a string.
+
+ String specification.
+
+ # Interface name
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.

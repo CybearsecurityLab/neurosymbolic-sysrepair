@@ -1,0 +1,87 @@
+```lisp
+(define (problem display_settings)
+  (:domain display_settings)
+  (:objects
+    user1 user2 user3 - user
+    5 10 15 - number
+  )
+  (:init
+    (children_visible)
+    (idle_processes_shown)
+    (not (user_filter_applied user1))
+    (not (user_filter_applied user2))
+    (not (user_filter_applied user3))
+    (not (cpu_time_scaled))
+    (not (sorted_by_memory))
+    (not (sorted_by_pid))
+    (not (sorted_by_cpu))
+    (not (sorted_by_time))
+    (not (sort_order_reversed))
+    (max_tasks_set 10)
+  )
+  (:goal
+    (and
+      (user_filter_applied user2)
+      (not (children_visible))
+      (cpu_time_scaled)
+      (not (idle_processes_shown))
+      (sorted_by_cpu)
+      (sort_order_reversed)
+      (max_tasks_set 5)
+    )
+  )
+)
+```
+
+```lisp
+(define (domain display_settings)
+  (:requirements :strips :typing)
+  (:types
+    user number
+  )
+  (:predicates
+    (user_filter_applied ?u - user)
+    (children_visible)
+    (cpu_time_scaled)
+    (idle_processes_shown)
+    (max_tasks_set ?n - number)
+    (sorted_by_memory)
+    (sorted_by_pid)
+    (sorted_by_cpu)
+    (sorted_by_time)
+    (sort_order_reversed)
+  )
+  (:action show_specific_user
+    :parameters (?u - user)
+    :effect (user_filter_applied ?u)
+  )
+  (:action toggle_children_visibility
+    :effect (when (children_visible) (not (children_visible))) (when (not (children_visible)) (children_visible))
+  )
+  (:action scale_cpu_time
+    :effect (when (cpu_time_scaled) (not (cpu_time_scaled))) (when (not (cpu_time_scaled)) (cpu_time_scaled))
+  )
+  (:action toggle_idle_processes
+    :effect (when (idle_processes_shown) (not (idle_processes_shown))) (when (not (idle_processes_shown)) (idle_processes_shown))
+  )
+  (:action set_max_tasks
+    :parameters (?n - number)
+    :effect (max_tasks_set ?n)
+  )
+  (:action sort_by_memory
+    :effect (sorted_by_memory)
+  )
+  (:action sort_by_pid
+    :effect (sorted_by_pid)
+  )
+  (:action sort_by_cpu
+    :effect (sorted_by_cpu)
+  )
+  (:action sort_by_time
+    :effect (sorted_by_time)
+  )
+  (:action reverse_sort_order
+    :effect (when (sort_order_reversed) (not (sort_order_reversed))) (when (not (sort_order_reversed)) (sort_order_reversed))
+  )
+)
+```

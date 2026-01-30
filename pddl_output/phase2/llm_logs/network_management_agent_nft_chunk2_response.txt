@@ -1,0 +1,53 @@
+Here are the PDDL actions for managing firewall rules based on the described commands and preferred predicates:
+
+```lisp
+(define (domain firewall-management)
+  (:requirements :strips :typing)
+  (:types
+    firewall_rule chain table family
+  )
+  (:predicates
+    (firewall_rule_exists ?r - firewall_rule)
+  )
+  (:action add-firewall-rule
+    :parameters (?r - firewall_rule ?chain - chain ?table - table ?family - family)
+    :precondition (and)
+    :effect (firewall_rule_exists ?r)
+  )
+  (:action delete-firewall-rule
+    :parameters (?r - firewall_rule)
+    :precondition (firewall_rule_exists ?r)
+    :effect (not (firewall_rule_exists ?r))
+  )
+  (:action insert-firewall-rule
+    :parameters (?r - firewall_rule ?chain - chain ?table - table ?family - family ?position - integer)
+    :precondition (and)
+    :effect (firewall_rule_exists ?r)
+  )
+  (:action replace-firewall-rule
+    :parameters (?old_r - firewall_rule ?new_r - firewall_rule ?chain - chain ?table - table ?family - family)
+    :precondition (firewall_rule_exists ?old_r)
+    :effect (and (not (firewall_rule_exists ?old_r)) (firewall_rule_exists ?new_r))
+  )
+  (:action destroy-firewall-rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (not (firewall_rule_exists ?r))
+  )
+  (:action reset-firewall-rule
+    :parameters (?r - firewall_rule)
+    :precondition (firewall_rule_exists ?r)
+    :effect (firewall_rule_exists ?r)
+  )
+)
+```
+
+### Explanation:
+- **`add-firewall-rule`**: Adds a new rule to a specified chain, table, and family. The effect is the rule's existence.
+- **`delete-firewall-rule`**: Removes an existing rule, ensuring it no longer exists.
+- **`insert-firewall-rule`**: Similar to `add`, but includes a position parameter for insertion order.
+- **`replace-firewall-rule`**: Replaces an existing rule (`?old_r`) with a new one (`?new_r`).
+- **`destroy-firewall-rule`**: Removes a rule if it exists, modeled without a precondition to reflect its non-fatal behavior.
+- **`reset-firewall-rule`**: Resets a rule's state (e.g., counters), retaining its existence.
+
+These actions align with the commands described in the documentation and utilize the `firewall_rule_exists` predicate to track rule states.

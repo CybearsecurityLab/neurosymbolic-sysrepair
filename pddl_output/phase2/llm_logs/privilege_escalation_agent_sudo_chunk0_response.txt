@@ -1,0 +1,88 @@
+```pddl
+(define (problem sudo_actions)
+  (:domain sudo)
+  (:objects
+    user1 - user
+    file1 - filesystem_object
+    dir1 - filesystem_object
+    num1 - integer
+  )
+  (:init
+    (can_escalate user1)
+    (file_exists file1)
+    (file_readable file1)
+    (file_writable file1)
+    (file_exists dir1)
+    (file_readable dir1)
+  )
+  (:goal
+    (and
+      (file_edited file1)
+      (credentials_cached user1)
+      (uses_askpass user1)
+      (bell_rung user1)
+      (background_mode user1)
+      (close_from num1)
+      (working_directory dir1)
+      (environment_preserved user1)
+    )
+  )
+)
+
+(define (domain sudo)
+  (:predicates
+    (can_escalate ?u - user)
+    (file_exists ?f - filesystem_object)
+    (file_readable ?f - filesystem_object)
+    (file_writable ?f - filesystem_object)
+    (file_edited ?f - filesystem_object)
+    (credentials_cached ?u - user)
+    (uses_askpass ?u - user)
+    (bell_rung ?u - user)
+    (background_mode ?u - user)
+    (close_from ?n - integer)
+    (working_directory ?d - filesystem_object)
+    (environment_preserved ?u - user)
+  )
+  (:action sudo_edit_file
+    :parameters (?f - filesystem_object ?u - user)
+    :precondition (and (file_exists ?f) (file_readable ?f) (file_writable ?f) (can_escalate ?u))
+    :effect (file_edited ?f)
+  )
+  (:action sudo_validate_credentials
+    :parameters (?u - user)
+    :precondition (can_escalate ?u)
+    :effect (credentials_cached ?u)
+  )
+  (:action sudo_use_askpass
+    :parameters (?u - user)
+    :precondition (can_escalate ?u)
+    :effect (uses_askpass ?u)
+  )
+  (:action sudo_ring_bell
+    :parameters (?u - user)
+    :precondition (can_escalate ?u)
+    :effect (bell_rung ?u)
+  )
+  (:action sudo_run_background
+    :parameters (?u - user)
+    :precondition (can_escalate ?u)
+    :effect (background_mode ?u)
+  )
+  (:action sudo_close_from
+    :parameters (?n - integer)
+    :precondition (can_escalate ?u)
+    :effect (close_from ?n)
+  )
+  (:action sudo_change_directory
+    :parameters (?d - filesystem_object ?u - user)
+    :precondition (and (file_exists ?d) (file_readable ?d) (can_escalate ?u))
+    :effect (working_directory ?d)
+  )
+  (:action sudo_preserve_environment
+    :parameters (?u - user)
+    :precondition (can_escalate ?u)
+    :effect (environment_preserved ?u)
+  )
+)
+```

@@ -1,0 +1,21 @@
+```lisp
+(:predicates
+  (access_acl_retrieved ?f - filesystem_object)
+  (default_acl_retrieved ?f - filesystem_object)
+  (recursive_acl_retrieved ?d - directory))
+
+(:action retrieve-access-acl
+  :parameters (?f - filesystem_object)
+  :precondition (file_exists ?f)
+  :effect (access_acl_retrieved ?f))
+
+(:action retrieve-default-acl
+  :parameters (?f - filesystem_object)
+  :precondition (file_exists ?f)
+  :effect (default_acl_retrieved ?f))
+
+(:action retrieve-recursive-acls
+  :parameters (?d - directory)
+  :precondition (file_exists ?d)
+  :effect (recursive_acl_retrieved ?d))
+```

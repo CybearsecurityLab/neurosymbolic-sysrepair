@@ -1,0 +1,23 @@
+```lisp
+(:predicates
+  (file_modified ?f - filesystem_object))
+
+(:action sudoedit
+  :parameters (?f - filesystem_object ?u - user ?td - directory)
+  :precondition (and (file_exists ?f) 
+                     (file_readable ?f) 
+                     (file_writable ?f) 
+                     (can_escalate ?u) 
+                     (file_exists ?td) 
+                     (file_writable ?td))
+  :effect (and (executed_as_root ?pr) 
+               (file_modified ?f)))
+```
+
+**Explanation:**  
+The `sudoedit` action models the behavior of editing files with elevated privileges via `sudo -e`. It requires:  
+- The target file (`?f`) to exist, be readable/writable.  
+- The user (`?u`) to have escalation privileges (`can_escalate`).  
+- A writable temporary directory (`?td`) to store intermediate files (as per the error "no writable temporary directory found").  
+
+The effect includes marking the file as modified (`file_modified`) and the process running as root (`executed_as_root`). The new predicate `file_modified` captures the outcome of successful file editing.

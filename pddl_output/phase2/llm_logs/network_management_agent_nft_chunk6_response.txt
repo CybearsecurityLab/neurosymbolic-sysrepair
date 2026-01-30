@@ -1,0 +1,92 @@
+To address the task of identifying new actions and generating corresponding predicates based on the provided documentation, we focus on the specific conditions used in firewall rules. The examples in the documentation highlight conditions involving **ICMP types**, **ICMP codes**, **ICMPv6 types**, and **boolean checks** (e.g., `exists`, `missing`). These conditions are not captured by the existing preferred predicates, so we introduce new predicates and actions to model them.
+
+---
+
+### **New Predicates**
+Each predicate represents a specific condition in a firewall rule:
+
+1. **ICMP Type Conditions**  
+   - `(icmp_type_echo_request ?r - firewall_rule)`  
+   - `(icmp_type_echo_reply ?r - firewall_rule)`  
+   - `(icmp_type_destination_unreachable ?r - firewall_rule)`  
+
+2. **ICMP Code Conditions**  
+   - `(icmp_code_net_unreachable ?r - firewall_rule)`  
+   - `(icmp_code_host_unreachable ?r - firewall_rule)`  
+
+3. **ICMPv6 Type Conditions**  
+   - `(icmpv6_type_destination_unreachable ?r - firewall_rule)`  
+   - `(icmpv6_type_packet_too_big ?r - firewall_rule)`  
+
+4. **Boolean Conditions**  
+   - `(exthdr_frag_missing ?r - firewall_rule)`  
+   - `(tcp_option_timestamp_exists ?r - firewall_rule)`  
+
+---
+
+### **New Actions**
+Each action creates a firewall rule with a specific condition, combining the new predicate with the existing `(firewall_rule_exists ?r - firewall_rule)`.
+
+#### **ICMP Type Actions**
+```lisp
+(:action add_icmp_echo_request_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmp_type_echo_request ?r)))
+
+(:action add_icmp_echo_reply_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmp_type_echo_reply ?r)))
+
+(:action add_icmp_destination_unreachable_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmp_type_destination_unreachable ?r)))
+```
+
+#### **ICMP Code Actions**
+```lisp
+(:action add_icmp_net_unreachable_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmp_code_net_unreachable ?r)))
+
+(:action add_icmp_host_unreachable_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmp_code_host_unreachable ?r)))
+```
+
+#### **ICMPv6 Type Actions**
+```lisp
+(:action add_icmpv6_destination_unreachable_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmpv6_type_destination_unreachable ?r)))
+
+(:action add_icmpv6_packet_too_big_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (icmpv6_type_packet_too_big ?r)))
+```
+
+#### **Boolean Condition Actions**
+```lisp
+(:action add_exthdr_frag_missing_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (exthdr_frag_missing ?r)))
+
+(:action add_tcp_option_timestamp_exists_rule (?r - firewall_rule)
+  :precondition (not (firewall_rule_exists ?r))
+  :effect (and (firewall_rule_exists ?r)
+               (tcp_option_timestamp_exists ?r)))
+```
+
+---
+
+### **Summary**
+- **Predicates**: 10 new predicates to capture specific conditions in firewall rules.
+- **Actions**: 10 new actions to create rules with these conditions, leveraging the existing `(firewall_rule_exists)` predicate.
+- **Purpose**: These additions allow modeling of nuanced rule conditions (e.g., ICMP types, boolean checks) not covered by the existing preferred predicates.

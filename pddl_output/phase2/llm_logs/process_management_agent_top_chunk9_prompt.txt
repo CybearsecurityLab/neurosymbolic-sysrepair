@@ -1,0 +1,333 @@
+=== SYS ===
+You are a PDDL 2.1 domain expert. Generate STRICTLY VALID PDDL syntax.
+
+ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
+
+1. VALID TYPES ONLY - Use ONLY these types:
+   configuration_file, directory, file, firewall_rule, group, interface, object, package, port, process, repository, service, user
+
+   INVALID TYPES (do NOT use): string, boolean, integer, list, command, _user, _group
+
+2. PREDICATES: Boolean predicates only, NO functions
+   - USE EXISTING PREDICATES from the vocabulary provided when applicable
+   - Only create new predicates if absolutely necessary
+   - Predicate names must NOT be reserved keywords (and, or, not, exists, forall, when)
+
+3. ACTIONS: Every parameter MUST be declared with a valid type
+   - Do NOT duplicate actions that already exist
+   - All variables in preconditions/effects MUST appear in :parameters
+
+4. FORBIDDEN CONSTRUCTS - These will cause IMMEDIATE REJECTION:
+   ❌ (assert ...) - NOT valid PDDL, do not use
+   ❌ (equal ?x ?y) - NOT valid PDDL, do not use
+   ❌ (create_process ...) - functions are NOT allowed
+   ❌ (strcat ...) or (concat ...) - string operations NOT allowed
+   ❌ 'string_literal' or "string_literal" - NO string literals
+   ❌ (forall ...) or (exists ...) - NO quantifiers (STRIPS only)
+   ❌ (implies ...) or (imply ...) - NO implications in effects
+
+5. CORRECT EFFECT PATTERNS:
+   ✅ Add fact: (predicate ?var)
+   ✅ Delete fact: (not (predicate ?var))
+   ✅ Conjunction: (and (pred1 ?x) (pred2 ?y))
+
+6. VARIABLE SCOPE:
+   Every ?variable in preconditions/effects MUST be declared in :parameters
+   WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
+   RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
+
+OUTPUT FORMAT - exactly this structure, no markdown:
+(:types
+  package service - object
+)
+
+(:predicates
+  (predicate_name ?var - type)
+)
+
+(:action action_name
+  :parameters (?p - type)
+  :precondition (and (pred1 ?p))
+  :effect (and (pred2 ?p))
+)
+
+Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
+
+=== OFFICIAL PDDL SYNTAX REFERENCE ===
+
+STRICT PDDL 3.1 SYNTAX RULES:
+
+1. NAMING CONVENTIONS:
+   - Predicates and variables must use alphanumeric characters, hyphens (-), and underscores (_).
+   - Variables must always start with '?' (e.g., ?pkg, ?file).
+   - Names must start with a letter: <name> ::= <letter> <any char>*
+   - Do NOT use paths (e.g., /etc/passwd) as identifiers; use abstract names (e.g., file_etc_passwd).
+
+2. RESERVED KEYWORDS - NEVER use these as predicate names:
+   - Logical operators: and, or, not, imply
+   - Quantifiers: exists, forall  <- NEVER USE, not even as quantifiers (we use STRIPS)
+   - Conditionals: when
+   - Structure: define, domain, problem, action, parameters, precondition, effect
+   - Types: either, object, number
+   - Operators: assign, increase, decrease, scale-up, scale-down
+   - Temporal: at, over, start, end, always, sometime, within
+   - Other: preference, minimize, maximize, total-cost, total-time
+   
+   CRITICAL - "exists" errors:
+   WRONG: (exists ?f)                        <- "exists" is reserved, malformed
+   WRONG: (exists (?f - file) (pred ?f))     <- Don't use quantifiers at all
+   RIGHT: (file_exists ?f)                   <- Use descriptive predicate name
+
+3. PREFIX NOTATION ONLY - PDDL uses Lisp-style prefix notation:
+   WRONG: (file_exists ?f) or (directory_exists ?f)    <- Infix "or" is INVALID
+   WRONG: (pred1 ?x) and (pred2 ?x)                    <- Infix "and" is INVALID
+   RIGHT: (or (file_exists ?f) (directory_exists ?f))  <- Prefix notation
+   RIGHT: (and (pred1 ?x) (pred2 ?x))                  <- Prefix notation
+
+4. PREDICATES:
+   - Format: (predicate_name ?arg1 ?arg2)
+   - Example: (package_installed ?p)
+   - Predicate names must NOT be reserved keywords
+   - Each predicate is a single S-expression, not multiple joined by operators
+   - ALL arguments in action preconditions/effects MUST be variables with ? prefix
+     WRONG: (cmd_executed_by_group command ?group)  <- "command" needs ?
+     WRONG: (configures dir ?usr)                   <- "dir" needs ?
+     RIGHT: (cmd_executed_by_group ?command ?group) <- Both are variables
+     RIGHT: (configures ?dir ?usr)                  <- Both are variables
+
+5. PRECONDITIONS - Valid forms (STRIPS level, no quantifiers):
+   - Atomic: (predicate ?args)
+   - Negation: (not (predicate ?args))
+   - Conjunction: (and (pred1 ?x) (pred2 ?y) ...)
+   
+   DO NOT USE quantifiers (exists, forall) - we target STRIPS without :existential-preconditions
+   WRONG: (exists (?f - file) (file_exists ?f))   <- Don't use exists
+   WRONG: (forall (?p - package) (installed ?p))  <- Don't use forall
+   RIGHT: (file_exists ?f)                         <- Simple predicate
+
+6. EFFECTS - Valid forms per BNF <effect> and <c-effect>:
+   - Add fact: (predicate ?args)
+   - Delete fact: (not (predicate ?args))
+   - Conjunction: (and (effect1) (effect2) ...)
+   - Conditional: (when (condition) (effect))         [requires :conditional-effects]
+   - NO disjunction (or) in effects - this is INVALID in PDDL
+
+7. DO NOT USE QUANTIFIERS:
+   We generate STRIPS-level PDDL. Do NOT use exists or forall.
+   WRONG: (exists (?x - file) (pred ?x))     <- No quantifiers
+   WRONG: (exists ?x)                        <- Definitely wrong  
+   WRONG: (forall (?p - pkg) (installed ?p)) <- No quantifiers
+   RIGHT: (file_exists ?f)                   <- Simple predicate with action parameter
+
+8. TYPES:
+   - All parameters must be typed: ?var - type
+   - Hierarchy: object -> filesystem_object -> file -> configuration_file
+   - Use specific types: package, service, user, group, file, port, process
+
+9. OUTPUT FORMAT FOR EXTRACTED ACTIONS:
+   - preconditions: List of INDIVIDUAL predicates, NOT joined with "or"/"and"
+     WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
+     RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
+   - effects: List of INDIVIDUAL predicates
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+
+=== VALID TYPES (use ONLY these) ===
+configuration_file, directory, file, filesystem_object, firewall_rule, group, human_user, interface, object, package, port, process, repository, service, system_user, user
+
+=== USER ===
+Analyze this documentation segment for the utility 'top'. Generate PDDL actions ONLY for the flags/commands found in this specific segment.
+
+=== DOCUMENTATION SEGMENT (top) ===
+TOP(1) User Commands TOP(1)
+
+NAME
+ top - display Linux processes
+
+SYNOPSIS
+ top [options]
+
+DESCRIPTION
+
+... [Header Preserved] ...
+
+ visible task display(s) and any task display(s) you had toggled Off. If all 4 task displays are
+ currently visible, this interactive command will leave the summary area as the only display element.
+
+ * = | + :Equalize/Reset-Window(s)
+ The `=' key forces the `current' window's task display to be visible. It also reverses any active `i'
+ (idle tasks), `n' (max tasks), `u/U' (user filter), `o/O' (other filter), `v' (hide children), `F'
+ focused, `L' (locate) and `!' (combine cpus) commands. Also, if the window had been scrolled, it will
+ be reset with this command. See topic 5c. SCROLLING a Window for additional information regarding
+ vertical and horizontal scrolling.
+
+ The `+' key does the same for all windows. The four task displays will reappear, evenly balanced,
+ while retaining any customizations previously applied beyond those noted for the `=' command toggle.
+
+ * A :Alternate-Display-Mode toggle
+ This command will switch between full-screen mode and alternate-display mode.
+
+ The first time you issue this command, all four task displays will be shown. Thereafter when you
+ switch modes, you will see only the task display(s) you've chosen to make visible.
+
+ * a | w :Next-Window-Forward/Backward
+ This will change the `current' window, which in turn changes the window to which commands are directed.
+ These keys act in a circular fashion so you can reach any desired window using either key.
+
+ Assuming the window name is visible (you have not toggled `l' Off), whenever the `current' window name
+ loses its emphasis/color, that's a reminder the task display is Off and many commands will be
+ restricted.
+
+ G :Change-Window/Field-Group-Name
+ You will be prompted for a new name to be applied to the `current' window. It does not require that
+ the window name be visible (the `l' toggle to be On).
+
+ * The interactive commands shown with an asterisk (`*') have use beyond alternate-display mode.
+ =, A, g are always available
+ a, w act the same with color mapping
+ and fields management
+
+ * g :Choose-Another-Window/Field-Group
+ You will be prompted to enter a number between 1 and 4 designating the field group which should be made
+ the `current' window.
+
+ In full-screen mode, this command is necessary to alter the `current' window. In alternate-display
+ mode, it is simply a less convenient alternative to the `a' and `w' commands.
+
+ 5c. SCROLLING a Window
+ Typically a task window is a partial view into a system's total tasks/threads which shows only some of the
+ available fields/columns. With these scrolling keys, you can move that view vertically or horizontally to
+ reveal any desired task or column.
+
+ Up,PgUp :Scroll-Tasks
+ Move the view up toward the first task row, until the first task is displayed at the top of the `current'
+ window. The Up arrow key moves a single line while PgUp scrolls the entire window.
+
+ Down,PgDn :Scroll-Tasks
+ Move the view down toward the last task row, until the last task is the only task displayed at the top of
+ the `current' window. The Down arrow key moves a single line while PgDn scrolls the entire window.
+
+ Left,Right :Scroll-Columns
+ Move the view of displayable fields horizontally one column at a time.
+
+ Note: As a reminder, some fields/columns are not fixed-width but allocated all remaining screen width when
+ visible. When scrolling right or left, that feature may produce some unexpected results initially.
+
+ Additionally, there are special provisions for any variable width field when positioned as the last
+ displayed field. Once that field is reached via the right arrow key, and is thus the only column shown,
+ you can continue scrolling horizontally within such a field. See the `C' interactive command below for
+ additional information.
+
+ Home :Jump-to-Home-Position
+ Reposition the display to the un-scrolled coordinates.
+
+ End :Jump-to-End-Position
+ Reposition the display so that the rightmost column reflects the last displayable field and the bottom
+ task row represents the last task.
+
+ Note: From this position it is still possible to scroll down and right using the arrow keys. This is true
+ until a single column and a single task is left as the only display element.
+
+ C :Show-scroll-coordinates toggle
+ Toggle an informational message which is displayed whenever the message line is not otherwise being used.
+ That message will take one of two forms depending on whether or not a variable width column has also been
+ scrolled.
+
+ scroll coordinates: y = n/n (tasks), x = n/n (fields)
+ scroll coordinates: y = n/n (tasks), x = n/n (fields) + nn
+
+ The coordinates shown as n/n are relative to the upper left corner of the `current' window. The
+ additional `+ nn' represents the displacement into a variable width column when it has been scrolled
+ horizontally. Such displacement occurs in normal 8 character tab stop amounts via the right and left
+ arrow keys.
+
+ y = n/n (tasks)
+ The first n represents the topmost visible task and is controlled by scrolling keys. The second n is
+ updated automatically to reflect total tasks.
+
+ x = n/n (fields)
+ The first n represents the leftmost displayed column and is controlled by scrolling keys. The second
+ n is the total number of displayable fields and is established with the `f' interactive command.
+
+ The above interactive commands are always available in full-screen mode but never available in
+ alternate-display mode if the `current' window's task display has been toggled Off.
+
+ Note: When any form of filtering is active, you can expect some slight aberrations when scrolling since not
+ all tasks will be visible. This is particularly apparent when using the Up/Down arrow keys.
+
+ 5d. SEARCHING in a Window
+ You can use these interactive commands to locate a task row containing a particular value.
+
+ L :Locate-a-string
+ You will be prompted for the case-sensitive string to locate starting from the current window coordinates.
+ There are no restrictions on search string content.
+
+ Searches are not limited to values from a single field or column. All of the values displayed in a task
+ row are allowed in a search string. You may include spaces, numbers, symbols and even forest view
+ artwork.
+
+ Keying <Enter> with no input will effectively disable the `&' key until a new search string is entered.
+
+ & :Locate-next
+ Assuming a search string has been established, top will attempt to locate the next occurrence.
+
+ When a match is found, the current window is repositioned vertically so the task row containing that string is
+ first. The scroll coordinates message can provide confirmation of such vertical repositioning (see the `C'
+ interactive command). Horizontal scrolling, however, is never altered via searching.
+
+ The availability of a matching string will be influenced by the following factors.
+
+ a. Which fields are displayable from the total available,
+ see topic 3b. MANAGING Fields.
+
+ b. Scrolling a window vertically and/or horizontally,
+ see topic 5c. SCROLLING a Window.
+
+ c. The state of the command/command-line toggle,
+ see the `c' interactive command.
+
+ d. The stability of the chosen sort column,
+ for example PID is good but %CPU bad.
+
+ If a search fails, restoring the `current' window home (unscrolled) position, scrolling horizontally,
+ displaying command-lines or choosing a more stable sort field could yet produce a successful `&' search.
+
+ The above interactive commands are always available in full-screen mode but never available in
+ alternate-display mode if the `current' window's task display has been toggled Off.
+
+ 5e. FILTERING in a Window
+ You can use this `Other Filter' feature to establish selection criteria which will then determine which tasks
+ are shown in the `current' window. Such filters can be made persistent if preserved in the rcfile via the `W'
+ interactive command.
+
+
+=== PREFERRED PREDICATES ===
+  (can_escalate ?arg)
+  (can_escalate ?u - user)
+  (config_applied ?s - service)
+  (configures ?arg)
+  (configures ?f - configuration_file ?s - service)
+  (depends_on ?arg)
+  (depends_on ?s - service ?p - package)
+  (executed_as_root ?pr - process)
+  (file_critical ?arg)
+  (file_critical ?f - filesystem_object)
+  (file_executable ?f - filesystem_object)
+  (file_exists ?arg)
+  (file_exists ?f - filesystem_object)
+  (file_owned_by ?arg)
+  (file_owned_by ?f - filesystem_object ?u - user)
+  (file_readable ?f - filesystem_object)
+  (file_writable ?f - filesystem_object)
+  (firewall_rule_exists ?r - firewall_rule)
+  (group_exists ?g - group)
+  (interface_exists ?i - interface)
+  (use these if applicable)
+
+TASK:
+1. Identify new actions described in the documentation segment.
+2. Generate (:action ...) blocks for them.
+3. Generate (:predicates ...) used in your actions.
+4. Do NOT regenerate actions listed above.
+5. If no actionable commands are in this segment, output nothing.
