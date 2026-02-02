@@ -14,6 +14,7 @@ from typing import Optional
 import sys
 import os
 from phase2.repair import PDDLValidator
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -153,20 +154,196 @@ class MergerAgent:
         self._consolidate_actions(valid_domains)
         logger.info(f"  → {len(self.unified_actions)} unified actions")
 
-        # Step 4: Validate action-predicate consistency
-        logger.info("\n[4/5] Validating action-predicate consistency...")
-        self._validate_action_predicates()
+        # --- NEW STEP: Targeted Repair Loop ---
+        logger.info("\n[3.5/5] Targeted Neurosymbolic Repair...")
+        if self._pddl_available and self.llm:
+            # This replaces the massive whole-file repair loop
+            self.unified_actions = self._validate_and_repair_actions()
+        elif not self._pddl_available:
+            logger.warning("pddl library missing - cannot perform targeted repair.")
+        # --------------------------------------
 
-        # Step 5: Construct and Validate Domain
+        # Step 5: Construct Final Domain
         logger.info("\n[5/5] Constructing unified domain...")
         domain_pddl = self._construct_domain()
 
-        # Phase 2c: The Neurosymbolic Self-Correction Loop
-        # Roadmap Section 5.3: "If validation fails, return repair_pddl"
-        if self.llm:
-            domain_pddl = self._semantic_repair_loop(domain_pddl)
-
         return domain_pddl
+
+    def _validate_and_repair_actions(self) -> list[PDDLAction]:
+        """
+        Iterates through actions one by one.
+        If valid -> Keep.
+        If invalid -> Ask LLM to fix ONLY that action -> Retest -> Keep/Prune.
+        """
+        valid_actions = []
+
+        # 1. Build the "Base Domain" (Types + Predicates) for testing
+        base_domain_str = self._build_base_domain_template()
+
+        from pddl import parse_domain
+        import tempfile
+
+        total = len(self.unified_actions)
+        for i, action in enumerate(self.unified_actions):
+            # 2. Test the action
+            is_valid, error_msg = self._test_single_action(action, base_domain_str)
+
+            if is_valid:
+                valid_actions.append(action)
+                continue
+
+            # 3. Validation Failed - Trigger Targeted Repair
+            logger.info(
+                f"  [{i + 1}/{total}] ⚠ Action '{action.name}' failed: {error_msg}"
+            )
+            logger.info(f"    → Attempting targeted LLM repair...")
+
+            repaired_action = self._repair_single_action_with_llm(action, error_msg)
+
+            # 4. Retest the repaired action
+            is_valid_now, new_error = self._test_single_action(
+                repaired_action, base_domain_str
+            )
+
+            if is_valid_now:
+                logger.info(f"    ✓ Fixed! Action '{action.name}' salvaged.")
+                valid_actions.append(repaired_action)
+            else:
+                logger.warning(
+                    f"    ✗ Repair failed for '{action.name}': {new_error}. Pruning."
+                )
+                self.rejected_actions.append(
+                    (action.name, f"Repair failed: {new_error}")
+                )
+
+        logger.info(
+            f"Targeted repair complete. Final count: {len(valid_actions)}/{total}"
+        )
+        return valid_actions
+
+    def _test_single_action(
+        self, action: PDDLAction, base_domain: str
+    ) -> tuple[bool, str]:
+        """Injects a single action into the base domain and parses it."""
+        try:
+            # Format action as PDDL string
+            action_str = self._format_action_pddl(action)
+
+            # Inject into template (insert before last closing paren)
+            test_domain = base_domain.rpartition(")")[0] + "\n" + action_str + "\n)"
+
+            # Parse with library
+            import tempfile
+            from pddl import parse_domain
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=True
+            ) as tmp:
+                tmp.write(test_domain)
+                tmp.flush()
+                parse_domain(tmp.name)
+
+            return True, ""
+        except Exception as e:
+            # Clean up error message (usually first line is enough)
+            return False, str(e).split("\n")[0]
+
+    def _repair_single_action_with_llm(
+        self, action: PDDLAction, error: str
+    ) -> PDDLAction:
+        """Sends just ONE action and the specific error to the LLM."""
+
+        action_pddl = self._format_action_pddl(action)
+
+        # Highly specific prompt
+        prompt = (
+            f"You are a PDDL repair engine. I have a single action that is invalid.\n"
+            f"ERROR: {error}\n\n"
+            f"INVALID ACTION:\n{action_pddl}\n\n"
+            f"=== OFFICIAL SYNTAX RULES ===\n"
+            f"{PDDL_SYNTAX_GUIDE}\n"
+            f"=============================\n\n"
+            f"INSTRUCTIONS:\n"
+            f"1. Fix the specific error listed above.\n"
+            f"2. Ensure all variables in preconditions/effects are declared in :parameters.\n"
+            f"3. Do not use reserved keywords (like 'exists', 'forall', 'call') as names.\n"
+            f"4. Do not change the action name.\n\n"
+            f"Return ONLY the fixed action PDDL code. No markdown, no comments."
+        )
+
+        try:
+            # Generate fix
+            response = self.llm.generate(
+                prompt, temperature=0.0
+            )  # Zero temp for determinism
+            cleaned_response = self._strip_markdown(response)
+
+            # Parse the text back into a PDDLAction object
+            # We can reuse the worker's parsing logic or a simple regex here
+            parsed = self._parse_action_from_match(
+                action.name, cleaned_response, "repair_agent"
+            )
+
+            if parsed:
+                # Keep metadata
+                parsed.source_utility = action.source_utility
+                return parsed
+
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
+
+        return action  # Return original if repair crashes
+
+    def _build_base_domain_template(self) -> str:
+        """Creates the 'Skeleton' domain with all types and predicates."""
+        lines = [
+            "(define (domain sysadmin-temp)",
+            "  (:requirements :strips :typing :negative-preconditions)",
+            "  ;; Types",
+            generate_types_pddl(),
+            "  ;; Predicates",
+            "  (:predicates",
+        ]
+
+        for pname, pred in sorted(self.unified_predicates.items()):
+            if pred.parameters:
+                params = " ".join(
+                    f"?{p[0]} - {normalize_type(p[1])}" for p in pred.parameters
+                )
+                lines.append(f"    ({pname} {params})")
+            else:
+                lines.append(f"    ({pname})")
+
+        # Add critical standard predicates manually to ensure validation passes
+        if "network_available" not in self.unified_predicates:
+            lines.append("    (network_available)")
+        if "can_escalate" not in self.unified_predicates:
+            lines.append("    (can_escalate ?u - user)")
+
+        lines.append("  )")
+        lines.append("")  # Space for action
+        lines.append(")")
+        return "\n".join(lines)
+
+    def _format_action_pddl(self, action: PDDLAction) -> str:
+        """Helper to convert object back to string."""
+        lines = [f"  (:action {action.name}"]
+        params = " ".join(
+            f"?{p[0]} - {normalize_type(p[1])}" for p in action.parameters
+        )
+        lines.append(f"    :parameters ({params})")
+
+        lines.append("    :precondition (and")
+        for pre in action.preconditions:
+            lines.append(f"      {pre}")
+        lines.append("    )")
+
+        lines.append("    :effect (and")
+        for eff in action.effects:
+            lines.append(f"      {eff}")
+        lines.append("    )")
+        lines.append("  )")
+        return "\n".join(lines)
 
     def _semantic_repair_loop(self, domain_pddl: str) -> str:
         """
