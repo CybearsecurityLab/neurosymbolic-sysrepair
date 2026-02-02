@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.models import ActionSchema, PDDLType as PDDLTypeEnum
 from common.pddl_rules import PDDL_SYNTAX_GUIDE
 from common.type_hierarchy import VALID_TYPES, normalize_type
-
+from common.pddl_sanitizer import PDDL_RESERVED_KEYWORDS
 from phase2.models import PartialPDDLDomain, PDDLPredicate, PDDLAction, PDDLType
 from phase2.llm import LLMInterface
 from phase2.tools import DocumentationExtractor
@@ -81,6 +81,9 @@ ABSOLUTE RULES - VIOLATIONS WILL CAUSE PARSER FAILURE:
    WRONG: :parameters (?p - package) :effect (user_exists ?u)  <- ?u not declared
    RIGHT: :parameters (?p - package ?u - user) :effect (user_exists ?u)
 
+7. RESERVED KEYWORDS - NEVER use these as parameter/variable names:
+{reserved_keywords}
+
 OUTPUT FORMAT - exactly this structure, no markdown:
 (:types
   package service - object
@@ -134,9 +137,12 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         # Start with the base syntax rules
         valid_types = sorted([t.value for t in PDDLTypeEnum])
         valid_types_str = ", ".join(valid_types)
+        reserved_keywords_str = ", ".join(sorted(PDDL_RESERVED_KEYWORDS))
 
         # Inject the dynamic types into the placeholder we created above
-        prompt = self.SYSTEM_PROMPT_BASE.format(valid_types_list=valid_types_str)
+        prompt = self.SYSTEM_PROMPT_BASE.format(
+            valid_types_list=valid_types_str, reserved_keywords=reserved_keywords_str
+        )
 
         # Add the official PDDL syntax guide from common.pddl_rules
         prompt += "\n\n=== OFFICIAL PDDL SYNTAX REFERENCE ===\n"

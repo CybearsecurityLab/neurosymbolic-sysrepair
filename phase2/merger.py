@@ -49,28 +49,39 @@ class MergerAgent:
 
     # Invalid patterns that should cause action rejection
     INVALID_PATTERNS = [
-        r'\(assert\s',           # (assert ...) - not valid PDDL
-        r'\(equal\s',            # (equal ?x ?y) - not valid PDDL
-        r'\(create_process\s',   # functions not allowed
-        r'\(strcat\s',           # string operations not allowed
-        r'\(concat\s',           # string operations not allowed
-        r'\(member\s',           # list operations not allowed
-        r'\(implies\s',          # use (when) instead
-        r'\(imply\s',            # use (when) instead
-        r"'[^']*'",              # single-quoted string literals
-        r'"[^"]*"',              # double-quoted string literals
-        r'\(\s*\)',              # empty parentheses
-        r'\)\s*\(\s*\(',         # malformed )((
-        r'\)\(\(',               # malformed )((
-        r'\(exists\s',           # quantifiers not allowed in STRIPS
-        r'\(forall\s',           # quantifiers not allowed in STRIPS
+        r"\(assert\s",  # (assert ...) - not valid PDDL
+        r"\(equal\s",  # (equal ?x ?y) - not valid PDDL
+        r"\(create_process\s",  # functions not allowed
+        r"\(strcat\s",  # string operations not allowed
+        r"\(concat\s",  # string operations not allowed
+        r"\(member\s",  # list operations not allowed
+        r"\(implies\s",  # use (when) instead
+        r"\(imply\s",  # use (when) instead
+        r"'[^']*'",  # single-quoted string literals
+        r'"[^"]*"',  # double-quoted string literals
+        r"\(\s*\)",  # empty parentheses
+        r"\)\s*\(\s*\(",  # malformed )((
+        r"\)\(\(",  # malformed )((
+        r"\(exists\s",  # quantifiers not allowed in STRIPS
+        r"\(forall\s",  # quantifiers not allowed in STRIPS
     ]
 
     # Invalid types that should be normalized or rejected
-    INVALID_TYPES = frozenset([
-        'string', 'boolean', 'integer', 'list', 'command', 'cmd',
-        '_user', '_group', '_file', '_service', '_package',
-    ])
+    INVALID_TYPES = frozenset(
+        [
+            "string",
+            "boolean",
+            "integer",
+            "list",
+            "command",
+            "cmd",
+            "_user",
+            "_group",
+            "_file",
+            "_service",
+            "_package",
+        ]
+    )
 
     def __init__(self, llm: Optional[LLMInterface] = None):
         self.llm = llm
@@ -88,11 +99,10 @@ class MergerAgent:
         """Check if the pddl library is available."""
         try:
             from pddl import parse_domain
+
             return True
         except ImportError:
-            logger.warning(
-                "pddl library not available. Install with: pip install pddl"
-            )
+            logger.warning("pddl library not available. Install with: pip install pddl")
             return False
 
     def merge(self, partial_domains: list[PartialPDDLDomain]) -> str:
@@ -172,7 +182,9 @@ class MergerAgent:
                 logger.info(f"  ✓ Domain validation passed (Attempt {attempt + 1})")
                 return domain_pddl
 
-            logger.warning(f"  ⚠ Validation failed (Attempt {attempt + 1}): {len(errors)} errors")
+            logger.warning(
+                f"  ⚠ Validation failed (Attempt {attempt + 1}): {len(errors)} errors"
+            )
             for e in errors[:3]:  # Log first few errors
                 logger.warning(f"    - {e}")
 
@@ -191,12 +203,18 @@ class MergerAgent:
         """Send PDDL + Errors to LLM for correction."""
 
         # Summarize errors to fit context
-        error_report = "\n".join(f"{i+1}. {e}" for i, e in enumerate(errors[:15]))
+        error_report = "\n".join(f"{i + 1}. {e}" for i, e in enumerate(errors[:15]))
         if len(errors) > 15:
             error_report += f"\n... and {len(errors) - 15} more errors."
 
+        reserved_kw_list = ", ".join(sorted(list(PDDL_RESERVED_KEYWORDS)))
+
         prompt = (
             "Fix the PDDL domain below. It has validation errors that must be corrected.\n\n"
+            "CRITICAL RULES:\n"
+            f"- NEVER use these as parameter names: {reserved_kw_list}, ...\n"
+            "- If you see ?when, ?object, ?end, ?start, ?all as parameters, RENAME them\n"
+            "- Example: ?when -> ?when_time, ?object -> ?target_obj, ?end -> ?end_point\n\n"
             "VALIDATION ERRORS:\n"
             f"{error_report}\n\n"
             "PDDL TO FIX:\n"
@@ -220,18 +238,24 @@ class MergerAgent:
         text = re.sub(r"\n?```\s*$", "", text, flags=re.MULTILINE)
 
         # Remove common LLM preambles and section headers
-        text = re.sub(r"^.*?Here is.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
-        text = re.sub(r"^.*?corrected.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(
+            r"^.*?Here is.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
+        text = re.sub(
+            r"^.*?corrected.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
         text = re.sub(r"^===.*?===\s*\n", "", text, flags=re.MULTILINE)
 
         # Find the actual PDDL domain definition
         # PDDL domains start with "(define (domain"
-        match = re.search(r'\(define\s+\(domain.*', text, re.DOTALL)
+        match = re.search(r"\(define\s+\(domain.*", text, re.DOTALL)
         if match:
             text = match.group(0)
         else:
             # Try to find any PDDL-like content starting with types, predicates, or actions
-            pddl_match = re.search(r'(?:\(:types|\(:predicates|\(:action).*', text, re.DOTALL)
+            pddl_match = re.search(
+                r"(?:\(:types|\(:predicates|\(:action).*", text, re.DOTALL
+            )
             if pddl_match:
                 # Wrap in domain definition if missing
                 text = f"(define (domain sysadmin)\n  (:requirements :strips :typing :negative-preconditions)\n  {pddl_match.group(0)}\n)"
@@ -251,7 +275,7 @@ class MergerAgent:
             for ptype in domain.types:
                 # Normalize the type name
                 normalized_name = normalize_type(ptype.name)
-                
+
                 if normalized_name not in self.unified_types:
                     # New type - check if parent exists
                     if ptype.parent:
@@ -263,11 +287,11 @@ class MergerAgent:
                             )
                             normalized_parent = "object"
                         ptype.parent = normalized_parent
-                    
+
                     self.unified_types[normalized_name] = PDDLType(
                         name=normalized_name,
                         parent=ptype.parent or "object",
-                        source=domain.worker_name
+                        source=domain.worker_name,
                     )
                 else:
                     # Type exists - check for conflicts
@@ -343,7 +367,9 @@ class MergerAgent:
             self.unified_predicates[canonical_name] = PDDLPredicate(
                 name=canonical_name, parameters=params, source=source
             )
-            self.merge_log.append(f"Extracted predicate '{canonical_name}' from action body")
+            self.merge_log.append(
+                f"Extracted predicate '{canonical_name}' from action body"
+            )
 
     def _validate_action_predicates(self):
         """Ensure all predicates used in actions are declared."""
@@ -359,7 +385,9 @@ class MergerAgent:
                     if pred_name not in PDDL_RESERVED_KEYWORDS:
                         canonical = get_canonical_predicate_name(pred_name)
                         if canonical not in self.unified_predicates:
-                            self._extract_predicate_from_condition(cond_clean, "validator")
+                            self._extract_predicate_from_condition(
+                                cond_clean, "validator"
+                            )
 
     def _consolidate_actions(self, domains: list[PartialPDDLDomain]):
         """Consolidate actions, detecting and merging duplicates with strict validation."""
@@ -392,8 +420,9 @@ class MergerAgent:
             else:
                 # Prefer Phase 1 actions (marked as phase1_reuse)
                 phase1_actions = [
-                    a for a in actions
-                    if getattr(a, 'source_worker', '') == 'phase1_reuse'
+                    a
+                    for a in actions
+                    if getattr(a, "source_worker", "") == "phase1_reuse"
                 ]
                 if phase1_actions:
                     self.unified_actions.append(phase1_actions[0])
@@ -441,13 +470,13 @@ class MergerAgent:
 
         # Check for balanced parentheses in all conditions
         for cond in action.preconditions + action.effects:
-            if cond.count('(') != cond.count(')'):
+            if cond.count("(") != cond.count(")"):
                 return False, f"Unbalanced parentheses in: {cond[:50]}"
 
         # Check that all variables in preconditions/effects are declared
         declared_vars = {f"?{p[0]}" for p in action.parameters}
         for cond in action.preconditions + action.effects:
-            var_pattern = r'\?(\w+)'
+            var_pattern = r"\?(\w+)"
             found_vars = {f"?{m.group(1)}" for m in re.finditer(var_pattern, cond)}
             undeclared = found_vars - declared_vars
             if undeclared:
@@ -492,7 +521,7 @@ class MergerAgent:
                 command_template=action.command_template,
                 requires_root=action.requires_root,
                 source_utility=action.source_utility,
-                source_worker=getattr(action, 'source_worker', 'sanitized'),
+                source_worker=getattr(action, "source_worker", "sanitized"),
             )
         except Exception as e:
             logger.warning(f"Failed to sanitize action '{action.name}': {e}")
@@ -514,11 +543,11 @@ class MergerAgent:
                 return None
 
         # Check balanced parentheses
-        if cond.count('(') != cond.count(')'):
+        if cond.count("(") != cond.count(")"):
             return None
 
         # Must start with '('
-        if not cond.startswith('('):
+        if not cond.startswith("("):
             return None
 
         return cond
@@ -572,8 +601,7 @@ class MergerAgent:
         for pname, pred in sorted(self.unified_predicates.items()):
             if pred.parameters:
                 params = " ".join(
-                    f"?{p[0]} - {normalize_type(p[1])}" 
-                    for p in pred.parameters
+                    f"?{p[0]} - {normalize_type(p[1])}" for p in pred.parameters
                 )
                 lines.append(f"    ({pname} {params})")
             else:
@@ -596,15 +624,14 @@ class MergerAgent:
             lines.append(f"  ;; Action: {action.name}")
             if action.source_utility:
                 lines.append(f"  ;; Source: {action.source_utility}")
-            if getattr(action, 'source_worker', '') == 'phase1_reuse':
+            if getattr(action, "source_worker", "") == "phase1_reuse":
                 lines.append("  ;; Reused from Phase 1")
 
             lines.append(f"  (:action {action.name}")
 
             # Parameters - normalize types
             params = " ".join(
-                f"?{p[0]} - {normalize_type(p[1])}" 
-                for p in action.parameters
+                f"?{p[0]} - {normalize_type(p[1])}" for p in action.parameters
             )
             lines.append(f"    :parameters ({params})")
 
@@ -847,7 +874,8 @@ class MergerAgent:
     def get_validation_summary(self) -> dict:
         """Return a summary of validation results."""
         return {
-            "total_actions_processed": len(self.unified_actions) + len(self.rejected_actions),
+            "total_actions_processed": len(self.unified_actions)
+            + len(self.rejected_actions),
             "valid_actions": len(self.unified_actions),
             "rejected_actions": len(self.rejected_actions),
             "rejection_reasons": dict(
