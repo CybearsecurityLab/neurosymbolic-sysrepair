@@ -16,3 +16,4 @@ wheels/
 data/wadi
 phase1/introspection/__pycache__/*
 *__pycache__*
+pddl_output/phase2/llm_logs/
