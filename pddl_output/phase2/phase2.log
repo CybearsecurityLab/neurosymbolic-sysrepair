@@ -1,0 +1,37 @@
+2026-02-04 09:31:05,837 [INFO] Phase2.Main: Output directory: ./pddl_output/phase2
+2026-02-04 09:31:05,837 [INFO] Phase2.Main: Log file: ./pddl_output/phase2/phase2.log
+2026-02-04 09:31:05,837 [INFO] Phase2.Main: Loading Phase 1 state from: pddl_output/phase1/phase1_statep2.json
+2026-02-04 09:31:05,840 [INFO] Phase2.Main:   Objects: 370
+2026-02-04 09:31:05,840 [INFO] Phase2.Main:   Predicates: 1125
+2026-02-04 09:31:05,840 [INFO] Phase2.Main:   Actions: 396
+2026-02-04 09:31:05,840 [INFO] Phase2.Main:   Relationships: 342
+2026-02-04 09:31:05,874 [INFO] Phase2.Main: Using 1 parallel workers (CLI override)
+2026-02-04 09:31:05,874 [INFO] Phase2.Main: Will reuse 396 Phase 1 actions
+2026-02-04 09:31:05,921 [INFO] Phase2.LLM: Using Ollama interface at http://localhost:11434
+2026-02-04 09:31:05,923 [WARNING] Phase2.Orchestrator: ⚠️  LOOPHOLE ACTIVE: Reusing 396 Phase 1 actions. This bypasses rigorous Phase 2 documentation parsing.
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: ============================================================
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: MAP PHASE: Dispatching Worker Agents
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: ============================================================
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: Hardware: 2 GPUs, 16 CPUs, 125GB RAM
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: Max parallel workers: 1
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: Reuse Phase 1 actions: True
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: Known predicates: 53
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   package_management: ['apt', 'apt-get', 'dpkg', 'npm', 'pip', 'snap']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   service_management: ['hostnamectl', 'journalctl', 'localectl', 'service', 'sysctl', 'systemctl', 'timedatectl']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   user_management: ['chage', 'groupadd', 'groupdel', 'groupmod', 'id', 'passwd', 'useradd', 'userdel', 'usermod', 'whoami']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   file_management: ['chmod', 'chown', 'cp', 'getfacl', 'ln', 'ls', 'mkdir', 'mv', 'rm', 'setfacl', 'stat', 'touch']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   network_management: ['ip', 'ip6tables', 'iptables', 'netplan', 'nft', 'nmcli', 'route', 'ss', 'ufw']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   process_management: ['kill', 'nice', 'nohup', 'pgrep', 'pkill', 'ps', 'renice', 'top']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor:   privilege_escalation: ['su', 'sudo', 'visudo']
+2026-02-04 09:31:06,191 [INFO] Phase2.Supervisor: Pre-warming documentation cache for 55 utilities...
+2026-02-04 09:31:08,865 [INFO] Phase2.Supervisor: 
+Phase 1 actions per group:
+2026-02-04 09:31:08,865 [INFO] Phase2.Supervisor:   package_management: 79 actions
+2026-02-04 09:31:08,865 [INFO] Phase2.Supervisor:   service_management: 24 actions
+2026-02-04 09:31:08,865 [INFO] Phase2.Supervisor:   user_management: 109 actions
+2026-02-04 09:31:08,865 [INFO] Phase2.Supervisor:   file_management: 128 actions
+2026-02-04 09:31:08,866 [INFO] Phase2.Supervisor:   network_management: 20 actions
+2026-02-04 09:31:08,866 [INFO] Phase2.Supervisor:   process_management: 0 actions
+2026-02-04 09:31:08,866 [INFO] Phase2.Supervisor:   privilege_escalation: 8 actions
+2026-02-04 09:31:08,866 [INFO] Phase2.Worker: [package_management_agent] Reusing 79 Phase 1 actions
+2026-02-04 09:31:08,868 [INFO] Phase2.Worker: [package_management_agent] Processing utility: apt

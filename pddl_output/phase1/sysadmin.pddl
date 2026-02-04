@@ -68,227 +68,220 @@
     (network_available)
     (requires_env_preservation ?pr - process)
     ; Dynamically Discovered Predicates
-    (package_list_updated)
-    (sources_list_modified)
-    (package_info_updated)
-    (packages_upgraded)
-    (packages_full_upgraded)
-    (dependencies_satisfied ?x0 - object)
-    (sources_list_updated)
-    (source_files_downloaded ?x0 - object)
-    (build_dependencies_installed ?x0 - object)
-    (package_files_downloaded ?x0 - object)
-    (cache_exists)
-    (cache_cleaned)
-    (cache_dist_cleaned)
-    (cache_autocleaned)
-    (package_lists_updated)
-    (unused_packages_exist)
-    (package_cache_exists)
-    (package_downloaded ?x0 - object)
-    (system_upgraded)
     (package_reverted ?x0 - object)
     (package_enabled ?x0 - object)
-    (can_read_system_journal ?x0 - object)
-    (directory_exists ?x0 - object)
-    (journal_directory_modified ?x0 - object)
-    (journal_file_modified ?x0 - object)
-    (can_read_private_journal ?x0 - object)
-    (can_read_other_user_journal ?x0 - object)
-    (journal_operated_on ?x0 - object)
-    (file_glob_specified ?x0 - object)
-    (path_exists ?x0 - object)
-    (journalctl_operates_on_specified_paths ?x0 - object)
-    (journalctl_root_set_to ?x0 - object)
-    (journalctl_image_set_to ?x0 - object)
-    (disk_image_exists ?x0 - object)
-    (file_systems_mounted ?x0 - object)
-    (log_data_extracted ?x0 - object)
-    (journal_records_exist)
-    (filtered_journal_records ?x0 - object)
-    (pager_secure_mode_enabled ?x0 - object)
-    (pager_used ?x0 - object)
-    (less_charset_set ?x0 - object)
-    (environment_variable_set ?x0 - object ?x1 - object)
-    (pager_disabled)
-    (secure_mode_enabled)
-    (colors_enabled)
-    (base_16_colors_enabled)
-    (base_256_colors_enabled)
-    (urlify_setting ?x0 - object)
-    (disk_usage_below ?x0 - object)
-    (journal_files_left ?x0 - object)
-    (journal_files_removed_older_than ?x0 - object)
-    (journal_synchronized_to_disk)
-    (logging_to_temporary_file_system)
-    (logging_to_temporary_file_system_if_not_root_mount)
-    (journal_data_flushed_to_var)
-    (journal_files_rotated)
-    (catalog_updated)
-    (fss_keys_generated)
-    (file_has_mode ?x0 - object ?x1 - object)
-    (is_symbolic_link ?x0 - object)
+    (assertion_exists ?x0 - object)
+    (valid_assertion ?x0 - object)
+    (verified_signature ?x0 - object)
+    (snap_exists ?x0 - object)
+    (app_exists_in_snap ?x0 - object ?x1 - object)
+    (alias_exists ?x0 - object)
+    (connected ?x0 - object ?x1 - object ?x2 - object ?x3 - object)
+    (slot_connected ?x0 - object ?x1 - object)
+    (cohort_keys_created)
+    (cohort_created ?x0 - object)
+    (home_directory_migrated)
+    (stacktraces_obtained)
+    (state_file_exists)
+    (state_inspected)
+    (timings_available)
+    (timings_inspected)
+    (snapshot_exported ?x0 - object)
+    (snapshot_exists ?x0 - object)
+    (quota_group_exists ?x0 - object)
+    (snap_in_group ?x0 - object ?x1 - object)
+    (subgroup_of ?x0 - object ?x1 - object)
+    (memory_limit_set_to ?x0 - object ?x1 - object)
+    (cpu_limit_set_to ?x0 - object ?x1 - object)
+    (cpu_quota_set ?x0 - object ?x1 - object)
+    (modified_cpu_set ?x0 - object ?x1 - object)
+    (threads_limit_set ?x0 - object)
+    (threads_limit_increased ?x0 - object ?x1 - object)
+    (threads_limit_decreased ?x0 - object ?x1 - object)
+    (journal_limit_set ?x0 - object)
+    (journal_limit_modified ?x0 - object ?x1 - object)
+    (journal_namespace_set ?x0 - object)
+    (snap_aliases_removed ?x0 - object)
+    (snap_installed ?x0 - object)
+    (aliases_preferred ?x0 - object)
+    (user_authenticated)
+    (snapshot_saved)
+    (snapshot_imported)
+    (device_rebooted)
+    (warnings_exist)
+    (warnings_acknowledged)
+    (debug_info_collected)
     (file_executable ?x0 - object)
-    (group_matches_effective_gid ?x0 - object ?x1 - object)
-    (group_matches_supplementary_gids ?x0 - object ?x1 - object)
-    (set_group_id_cleared ?x0 - object)
-    (directory_setuid ?x0 - object)
-    (directory_setgid ?x0 - object)
-    (directory_sticky_bit ?x0 - object)
-    (file_mode_set ?x0 - object ?x1 - object)
-    (directory_has_mode ?x0 - object ?x1 - object)
-    (output_diagnostic ?x0 - object)
-    (no_special_treatment_root)
-    (fail_on_recursive_root)
-    (owned_by_user ?x0 - object ?x1 - object)
-    (owned_by_group ?x0 - object ?x1 - object)
-    (file_owner ?x0 - object ?x1 - object)
-    (file_group ?x0 - object ?x1 - object)
-    (preserve_root)
-    (directory_owner ?x0 - object ?x1 - object)
-    (directory_group ?x0 - object ?x1 - object)
-    (directory_traversed ?x0 - object)
-    (directory_mode_set ?x0 - object ?x1 - object)
-    (directory_selinux_context_set ?x0 - object ?x1 - object)
-    (default_selinux_context_set ?x0 - object)
-    (custom_security_context_set ?x0 - object)
-    (file_access_time_updated ?x0 - object)
-    (file_modification_time_updated ?x0 - object)
-    (file_time_set ?x0 - object ?x1 - object)
+    (disk_image_operated ?x0 - object)
+    (applied_image_policy ?x0 - object)
+    (selected_namespace ?x0 - object)
+    (cursor_written_to_file ?x0 - object)
+    (boots_lookup_from_beginning ?x0 - object)
+    (boots_lookup_from_end ?x0 - object)
+    (output_format_set ?x0 - object)
+    (catalog_updated)
+    (keys_generated)
+    (systemd_lesscharset_set ?x0 - object)
+    (pagersecure_enabled)
+    (filtered_logs ?x0 - object)
+    (systemd_color_output ?x0 - object)
+    (systemd_urlify_output ?x0 - object)
+    (directory_exists ?x0 - object)
+    (directory_contents_copied ?x0 - object ?x1 - object)
+    (symbolic_link_created ?x0 - object ?x1 - object)
+    (sparse_file_created ?x0 - object)
+    (cloned_file_created ?x0 - object)
+    (file_copied ?x0 - object ?x1 - object)
+    (updated_file_copied ?x0 - object ?x1 - object)
+    (trailing_slashes_removed ?x0 - object)
+    (file_copied_to_directory ?x0 - object ?x1 - object)
+    (backup_file_created_with_suffix ?x0 - object)
+    (selinux_context_default ?x0 - object)
+    (selinux_context_custom ?x0 - object ?x1 - object)
+    (same_filesystem ?x0 - object ?x1 - object)
+    (file_copied_within_fs ?x0 - object ?x1 - object)
+    (attributes_copied ?x0 - object ?x1 - object ?x2 - object)
+    (sparse_file_copied ?x0 - object ?x1 - object)
+    (preserved_attributes ?x0 - object ?x1 - object)
+    (follows_symlink ?x0 - object)
+    (full_source_name_copied ?x0 - object)
+    (reflinked_copy_created ?x0 - object)
+    (selinux_smack_context_set ?x0 - object)
+    (sparse_file ?x0 - object)
+    (has_zero_sequence ?x0 - object)
+    (non_sparse_file ?x0 - object)
+    (updated_file ?x0 - object)
+    (file_updated ?x0 - object)
+    (file_backup_created ?x0 - object)
+    (output_version_information)
+    (user_in_group ?x0 - object)
+    (set_group_id_bit ?x0 - object)
+    (set_user_id_bit ?x0 - object)
+    (clear_group_id_bit ?x0 - object)
+    (sticky_bit_set ?x0 - object)
+    (sticky_bit_cleared ?x0 - object)
+    (file_has_mode ?x0 - object ?x1 - object)
+    (owner_of ?x0 - object ?x1 - object)
+    (group_of ?x0 - object ?x1 - object)
+    (owned_by ?x0 - object ?x1 - object)
+    (group_owned_by ?x0 - object ?x1 - object)
+    (current_owner_matches ?x0 - object ?x1 - object)
+    (current_group_matches ?x0 - object ?x1 - object)
+    (new_owner ?x0 - object ?x1 - object)
+    (new_group ?x0 - object ?x1 - object)
+    (preserve_root_disabled)
+    (preserve_root_enabled)
+    (new_owner_from_ref ?x0 - object ?x1 - object)
+    (new_group_from_ref ?x0 - object ?x1 - object)
+    (recursively_operated_on ?x0 - object)
+    (is_symbolic_link ?x0 - object)
+    (points_to_directory ?x0 - object)
+    (traversed_symlink ?x0 - object)
+    (all_symlinks_traversed)
+    (no_symlinks_traversed)
+    (file_group ?x0 - object ?x1 - object ?x2 - object)
+    (directory_mode_set ?x0 - object)
+    (selinux_context_set ?x0 - object)
+    (custom_selinux_context_set ?x0 - object)
+    (file_accessed ?x0 - object)
+    (file_modified ?x0 - object)
+    (same_timestamps ?x0 - object ?x1 - object)
+    (timestamp_set ?x0 - object ?x1 - object)
     (file_time_attribute_set ?x0 - object ?x1 - object)
-    (file_modified_at ?x0 - object ?x1 - object)
-    (pam_configured ?x0 - object)
-    (user_executed_command ?x0 - object ?x1 - object)
-    (resource_limits_reset ?x0 - object)
-    (user_primary_group ?x0 - object ?x1 - object)
-    (user_supplementary_group ?x0 - object ?x1 - object)
-    (shell_is_login ?x0 - object)
-    (environment_preserved ?x0 - object)
-    (session_has_pty ?x0 - object)
-    (session_runs_shell ?x0 - object)
-    (shell_executed ?x0 - object)
-    (current_user_is ?x0 - object)
-    (login_shell_active ?x0 - object)
-    (command_executed ?x0 - object)
-    (active_shell_is ?x0 - object)
-    (primary_group_is ?x0 - object)
-    (pseudo_terminal_created ?x0 - object)
-    (default_new_user_updated)
-    (default_values_set)
-    (account_expires_on ?x0 - object ?x1 - object)
+    (tcp_pacing_rate_set ?x0 - object)
+    (tcp_max_pacing_rate_set ?x0 - object)
+    (tcp_rcv_space_set ?x0 - object)
+    (tcp_ulp_mptcp_configured ?x0 - object)
+    (tcp_ulp_rem_token_set ?x0 - object)
+    (tcp_ulp_loc_token_set ?x0 - object)
+    (tcp_ulp_sn_set ?x0 - object)
+    (tcp_ulp_sfseq_set ?x0 - object)
+    (tcp_ulp_ssnoff_set ?x0 - object)
+    (tcp_ulp_maplen_set ?x0 - object)
+    (sockets_diagnosed ?x0 - object)
+    (device_matched ?x0 - object ?x1 - object)
+    (fwmark_matched ?x0 - object ?x1 - object)
+    (cgroup_matched ?x0 - object ?x1 - object)
+    (autobound_matched ?x0 - object)
+    (tcp_state ?x0 - object ?x1 - object)
+    (socket_in_state ?x0 - object ?x1 - object)
+    (tcp_timer_set ?x0 - object)
+    (keepalive_active ?x0 - object)
+    (timewait_active ?x0 - object)
+    (socket_type ?x0 - object ?x1 - object)
+    (accept_flag ?x0 - object)
+    (waitdata_flag ?x0 - object)
+    (nospace_flag ?x0 - object)
+    (listening)
+    (disconnecting)
+    (free)
+    (connecting)
+    (unknown)
+    (primary_group ?x0 - object ?x1 - object)
+    (path_initialized ?x0 - object)
+    (pam_lastlog_updated ?x0 - object)
+    (updated_default_user_info)
+    (password_inactive ?x0 - object ?x1 - object)
     (subuids_updated ?x0 - object)
     (subgids_updated ?x0 - object)
-    (all_groups_exist ?x0 - object)
-    (user_in_groups ?x0 - object ?x1 - object)
-    (home_exists ?x0 - object)
-    (acls_copied ?x0 - object)
-    (extended_attributes_copied ?x0 - object)
-    (login_def_key_exists ?x0 - object)
-    (login_def_value_set ?x0 - object)
-    (lastlog_exists ?x0 - object)
-    (faillog_exists ?x0 - object)
-    (lastlog_entry ?x0 - object)
-    (faillog_entry ?x0 - object)
-    (home_directory_set ?x0 - object ?x1 - object)
-    (user_in_group ?x0 - object ?x1 - object)
-    (user_has_uid ?x0 - object ?x1 - object)
-    (password_set_for_user ?x0 - object)
-    (account_locked ?x0 - object)
-    (changes_applied_in_chroot ?x0 - object)
-    (changes_applied_in_prefix ?x0 - object)
-    (user_shell_set ?x0 - object ?x1 - object)
-    (user_has_selinux_user ?x0 - object ?x1 - object)
-    (default_value_set ?x0 - object ?x1 - object)
+    (member_of_group ?x0 - object ?x1 - object)
+    (primary_group_of ?x0 - object ?x1 - object)
     (home_directory_created ?x0 - object)
-    (home_directory_mode_set ?x0 - object)
-    (gid_min_set ?x0 - object)
-    (gid_max_set ?x0 - object)
-    (mail_spool_created ?x0 - object)
-    (mail_spool_location_set ?x0 - object)
-    (group_has_max_members ?x0 - object ?x1 - object)
-    (password_has_max_days ?x0 - object ?x1 - object)
-    (password_min_days ?x0 - object ?x1 - object)
-    (password_warn_age ?x0 - object ?x1 - object)
-    (subordinate_gid_min ?x0 - object)
-    (subordinate_gid_max ?x0 - object)
-    (subordinate_gid_count ?x0 - object)
-    (sys_gid_range_valid ?x0 - object ?x1 - object)
-    (system_group_created ?x0 - object ?x1 - object ?x2 - object)
-    (sys_uid_range_valid ?x0 - object ?x1 - object)
-    (system_user_created ?x0 - object ?x1 - object ?x2 - object)
-    (uid_range_valid ?x0 - object ?x1 - object)
-    (regular_user_created ?x0 - object ?x1 - object ?x2 - object)
-    (file_mode_creation_mask ?x0 - object)
-    (selinux_mapping_updated ?x0 - object)
-    (default_user_config_set)
-    (user_has_inactive_period ?x0 - object ?x1 - object)
-    (user_has_gecos_field ?x0 - object ?x1 - object)
-    (user_has_base_directory ?x0 - object ?x1 - object)
-    (user_has_btrfs_subvolume_home ?x0 - object)
-    (badname_check_disabled ?x0 - object)
-    (subuid_entry_added ?x0 - object)
-    (subgid_entry_added ?x0 - object)
-    (primary_group_assigned ?x0 - object ?x1 - object)
-    (supplementary_groups_assigned ?x0 - object ?x1 - object)
-    (no_home_directory_created ?x0 - object)
+    (login_def_overridden ?x0 - object ?x1 - object)
+    (no_lastlog_entry ?x0 - object)
+    (no_faillog_entry ?x0 - object)
+    (entry_in_lastlog ?x0 - object)
+    (entry_in_faillog ?x0 - object)
+    (env_variable_set ?x0 - object)
+    (create_home_enabled)
+    (has_uid ?x0 - object ?x1 - object)
+    (password_set ?x0 - object)
+    (changes_applied_in_chroot ?x0 - object)
+    (changes_applied_with_prefix ?x0 - object)
+    (user_shell_set ?x0 - object ?x1 - object)
+    (default_updated ?x0 - object)
+    (default_base_dir_set ?x0 - object)
+    (default_expire_date_set ?x0 - object)
+    (default_inactive_set ?x0 - object)
+    (password_warn_age_set ?x0 - object ?x1 - object)
+    (subordinate_gids_allocated ?x0 - object)
+    (subordinate_uids_allocated ?x0 - object)
+    (system_user_created ?x0 - object)
+    (regular_user_created ?x0 - object)
+    (system_group_created ?x0 - object)
+    (umask_set ?x0 - object)
+    (usergroups_enab ?x0 - object)
+    (subid_entry_added ?x0 - object)
+    (all_groups_exist ?x0 - object)
+    (supplementary_groups_set ?x0 - object ?x1 - object)
+    (home_directory_not_set ?x0 - object)
     (no_user_group_created ?x0 - object)
-    (non_unique_user_created ?x0 - object)
-    (user_has_shell ?x0 - object ?x1 - object)
-    (user_has_password ?x0 - object ?x1 - object)
-    (user_has_seuser ?x0 - object ?x1 - object)
-    (extra_users_db_used)
-    (user_modified ?x0 - object)
-    (user_comment_updated ?x0 - object)
-    (user_home_changed ?x0 - object)
-    (home_directory_moved ?x0 - object)
-    (primary_group_changed ?x0 - object ?x1 - object)
-    (supplementary_groups_changed ?x0 - object ?x1 - object)
-    (password_locked ?x0 - object)
-    (ownership_updated ?x0 - object)
-    (acl_copied ?x0 - object)
-    (non_unique_uid_set ?x0 - object)
-    (password_updated ?x0 - object)
-    (changes_applied_in_chroot_dir ?x0 - object)
-    (changes_applied_in_prefix_dir ?x0 - object)
-    (user_shell_changed ?x0 - object ?x1 - object)
-    (user_uid_changed ?x0 - object ?x1 - object)
-    (password_unlocked ?x0 - object)
-    (file_owner_changed ?x0 - object)
-    (subuid_range_added ?x0 - object ?x1 - object ?x2 - object)
-    (subgid_range_added ?x0 - object ?x1 - object ?x2 - object)
-    (subordinate_gids_added ?x0 - object ?x1 - object ?x2 - object)
+    (duplicate_user_created ?x0 - object)
+    (home_directory ?x0 - object)
+    (permissions_updated ?x0 - object)
+    (non_unique_uid ?x0 - object ?x1 - object)
+    (subordinate_uid_range_added ?x0 - object ?x1 - object ?x2 - object)
+    (subordinate_gid_range_added ?x0 - object ?x1 - object ?x2 - object)
     (selinux_user_mapped ?x0 - object)
-    (process_running_by_user ?x0 - object)
-    (user_has_new_id ?x0 - object ?x1 - object)
-    (user_has_new_name ?x0 - object ?x1 - object)
-    (user_has_new_home_directory ?x0 - object ?x1 - object)
-    (lastlog_updated ?x0 - object)
-    (mail_directory_set ?x0 - object)
-    (mail_spool_deleted ?x0 - object)
-    (user_shell ?x0 - object ?x1 - object)
-    (user_uid ?x0 - object ?x1 - object)
-    (mail_spool_moved ?x0 - object)
-    (cron_job_exists ?x0 - object)
-    (at_job_exists ?x0 - object)
-    (print_job_exists ?x0 - object)
-    (group_contains_member ?x0 - object ?x1 - object)
-    (scripts_executed ?x0 - object)
-    (subgid_updated ?x0 - object)
-    (subuid_updated ?x0 - object)
-    (selinux_user_mapping_exists ?x0 - object)
-    (gid_unique ?x0 - object)
-    (group_gid ?x0 - object)
-    (group_default_min ?x0 - object)
-    (group_default_max ?x0 - object)
-    (group_has_password ?x0 - object)
-    (sys_gid_min_set ?x0 - object)
-    (sys_gid_max_set ?x0 - object)
-    (gid_available ?x0 - object)
-    (group_has_gid ?x0 - object ?x1 - object)
-    (group_file_updated)
-    (gid_in_use ?x0 - object)
-    (prefix_directory ?x0 - object ?x1 - object)
-    (extra_users_db_enabled)
+    (nis_updated ?x0 - object)
+    (max_members_per_group ?x0 - object)
+    (append_group ?x0 - object ?x1 - object)
+    (subordinate_uids_added ?x0 - object ?x1 - object ?x2 - object)
+    (subordinate_gids_added ?x0 - object ?x1 - object ?x2 - object)
+    (if ?x0 - object ?x1 - object ?x2 - object ?x3 - object ?x4 - object ?x5 - object ?x6 - object ?x7 - object ?x8 - object ?x9 - object ?x10 - object)
+    (applied_changes_in_chroot ?x0 - object ?x1 - object)
+    (applied_changes_in_prefix ?x0 - object ?x1 - object)
+    (selinux_mapped ?x0 - object)
+    (mail_spool_managed ?x0 - object)
+    (gid ?x0 - object ?x1 - object)
+    (login_config_overridden ?x0 - object ?x1 - object)
+    (gid_range_correct ?x0 - object)
+    (changes_applied_in_prefix ?x0 - object)
+    (users_added_to_group ?x0 - object ?x1 - object)
+    (sys_gid_range_set ?x0 - object ?x1 - object)
+    (gid_used ?x0 - object)
+    (can_update_group_file)
+    (extrausers_enabled)
   )
 
   (:action install_package
@@ -327,99 +320,6 @@
     )
   )
 
-  (:action update_package_list
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_list_updated)
-    )
-  )
-
-  (:action edit_sources_list
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (sources_list_modified)
-    )
-  )
-
-  (:action update_package_info
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_info_updated)
-    )
-  )
-
-  (:action upgrade_packages
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (package_info_updated)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (packages_upgraded)
-    )
-  )
-
-  (:action full_upgrade_packages
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (package_info_updated)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (packages_full_upgraded)
-    )
-  )
-
-  (:action install_package_before_upgrade
-    :parameters (?actor - user ?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-      (package_info_updated)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_installed ?pkg)
-      (packages_upgraded)
-    )
-  )
-
-  (:action reinstall_package
-    :parameters (?actor - user ?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  (:action purge_package
-    :parameters (?actor - user ?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (package_installed ?pkg))
-    )
-  )
-
   (:action install_package_version
     :parameters (?actor - user ?pkg - package ?version - file)
     :precondition (and
@@ -429,6 +329,7 @@
     )
     :effect (and
       (package_installed ?pkg)
+      (not (package_outdated ?pkg))
     )
   )
 
@@ -441,38 +342,55 @@
     )
     :effect (and
       (package_installed ?pkg)
+      (not (package_outdated ?pkg))
     )
   )
 
-  (:action satisfy_dependencies
-    :parameters (?actor - user ?dependencies - file)
+  (:action reinstall_package
+    :parameters (?actor - user ?pkg - package)
     :precondition (and
+      (not (package_installed ?pkg))
       (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (dependencies_satisfied ?dependencies)
+      (package_installed ?pkg)
+      (not (package_outdated ?pkg))
     )
   )
 
-  (:action edit_sources
-    :parameters (?actor - user ?obj - file)
+  (:action purge_package
+    :parameters (?actor - user ?pkg - package)
     :precondition (and
+      (package_installed ?pkg)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (package_installed ?pkg))
+      (not (package_configured ?pkg))
+    )
+  )
+
+  (:action install_package_before_upgrade
+    :parameters (?actor - user ?pkg - package)
+    :precondition (and
+      (not (package_installed ?pkg))
       (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (sources_list_updated)
+      (package_installed ?pkg)
+      (not (package_outdated ?pkg))
     )
   )
 
-  (:action download_source
+  (:action download_source_package
     :parameters (?pkg - package)
     :precondition (and
       (network_available)
     )
     :effect (and
-      (source_files_downloaded ?pkg)
+      (package_configured ?pkg)
     )
   )
 
@@ -483,7 +401,7 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (build_dependencies_installed ?pkg)
+      (package_configured ?pkg)
     )
   )
 
@@ -493,95 +411,7 @@
       (network_available)
     )
     :effect (and
-      (package_files_downloaded ?pkg)
-    )
-  )
-
-  (:action clean_cache
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (cache_exists)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (cache_cleaned)
-    )
-  )
-
-  (:action distclean_cache
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (cache_exists)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (cache_dist_cleaned)
-    )
-  )
-
-  (:action autoclean_cache
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (cache_exists)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (cache_autocleaned)
-    )
-  )
-
-  (:action update_package_lists
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (package_lists_updated)
-    )
-  )
-
-  (:action autoremove_packages
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (unused_packages_exist)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (unused_packages_exist))
-    )
-  )
-
-  (:action clean_package_cache
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (package_cache_exists)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (package_cache_exists))
-    )
-  )
-
-  (:action download_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_downloaded ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_downloaded ?pkg)
-    )
-  )
-
-  (:action upgrade_system
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (system_upgraded)
+      (package_configured ?pkg)
     )
   )
 
@@ -678,6 +508,521 @@
     )
   )
 
+  (:action abort_pending_change
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (not (package_reverted))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_reverted)
+    )
+  )
+
+  (:action ack_assertion
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_configured)
+    )
+  )
+
+  (:action add_assertion
+    :parameters (?actor - user ?a - file)
+    :precondition (and
+      (not (assertion_exists ?a))
+      (valid_assertion ?a)
+      (verified_signature ?a)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (assertion_exists ?a)
+    )
+  )
+
+  (:action create_alias
+    :parameters (?actor - user ?snap - file ?app - file ?alias - file)
+    :precondition (and
+      (snap_exists ?snap)
+      (app_exists_in_snap ?app ?snap)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (alias_exists ?alias)
+    )
+  )
+
+  (:action connect_plug_slot
+    :parameters (?actor - user ?snap1 - file ?plug - file ?snap2 - file ?slot - file)
+    :precondition (and
+      (service_exists ?snap1)
+      (service_exists ?snap2)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (connected ?snap1 ?plug ?snap2 ?slot)
+    )
+  )
+
+  (:action connect_plug_to_snap
+    :parameters (?actor - user ?snap1 - file ?plug - file ?snap2 - file)
+    :precondition (and
+      (service_exists ?snap1)
+      (service_exists ?snap2)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (connected ?snap1 ?plug ?snap2)
+    )
+  )
+
+  (:action snap_connect
+    :parameters (?actor - user ?snap - file ?plug - file)
+    :precondition (and
+      (not (slot_connected ?snap ?plug))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (slot_connected ?snap ?plug)
+    )
+  )
+
+  (:action create_cohort_keys
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (cohort_keys_created)
+    )
+  )
+
+  (:action create_cohort
+    :parameters (?actor - user ?snap - file)
+    :precondition (and
+      (package_installed ?snap)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (cohort_created ?snap)
+    )
+  )
+
+  (:action migrate_home_directory
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (home_directory_migrated)
+    )
+  )
+
+  (:action obtain_stacktraces
+    :parameters (?obj - file)
+    :precondition (and
+      (network_available)
+    )
+    :effect (and
+      (stacktraces_obtained)
+    )
+  )
+
+  (:action inspect_state_file
+    :parameters (?obj - file)
+    :precondition (and
+      (state_file_exists)
+    )
+    :effect (and
+      (state_inspected)
+    )
+  )
+
+  (:action inspect_timings
+    :parameters (?obj - file)
+    :precondition (and
+      (timings_available)
+    )
+    :effect (and
+      (timings_inspected)
+    )
+  )
+
+  (:action disconnect_plug_slot
+    :parameters (?actor - user ?plug - file ?slot - file)
+    :precondition (and
+      (package_installed ?plug)
+      (package_installed ?slot)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (service_running ?plug))
+      (not (process_running ?plug))
+    )
+  )
+
+  (:action disconnect_plug_or_slot
+    :parameters (?actor - user ?snap - file ?plug_or_slot - file)
+    :precondition (and
+      (package_installed ?snap)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (service_running ?snap))
+      (not (process_running ?snap))
+    )
+  )
+
+  (:action forget_connection
+    :parameters (?conn - file)
+    :precondition (and
+      (service_exists ?conn)
+    )
+    :effect (and
+      (not (traffic_blocked ?conn))
+    )
+  )
+
+  (:action install_from_candidate_channel
+    :parameters (?actor - user ?snap - file)
+    :precondition (and
+      (not (package_installed ?snap))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action install_from_stable_channel
+    :parameters (?actor - user ?snap - file)
+    :precondition (and
+      (not (package_installed ?snap))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action download_snap_revision
+    :parameters (?snap - file ?rev - file)
+    :precondition (and
+      (not (package_installed ?snap))
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action download_with_basename
+    :parameters (?snap - file ?rev - file ?base - file)
+    :precondition (and
+      (not (package_installed ?snap))
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action download_to_directory
+    :parameters (?snap - file ?dir - directory)
+    :precondition (and
+      (not (package_installed ?snap))
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action download_only_components
+    :parameters (?snap - file ?comp - file)
+    :precondition (and
+      (not (package_installed ?snap))
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action download_from_cohort
+    :parameters (?snap - file ?coh - file)
+    :precondition (and
+      (not (package_installed ?snap))
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action export_snapshot
+    :parameters (?actor - user ?filename - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (snapshot_exported ?filename)
+    )
+  )
+
+  (:action delete_snapshot
+    :parameters (?actor - user ?snap - file)
+    :precondition (and
+      (snapshot_exists ?snap)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (snapshot_exists ?snap))
+    )
+  )
+
+  (:action remove_snap_from_quota_group
+    :parameters (?actor - user ?group - file ?snap - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (snap_in_group ?snap ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (snap_in_group ?snap ?group))
+    )
+  )
+
+  (:action add_service_to_sub_group
+    :parameters (?actor - user ?svc - service ?subgroup - file ?parentgroup - file)
+    :precondition (and
+      (service_exists ?svc)
+      (quota_group_exists ?parentgroup)
+      (subgroup_of ?subgroup ?parentgroup)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (snap_in_group ?snap_for_svc ?subgroup)
+    )
+  )
+
+  (:action remove_sub_group_from_quota_group
+    :parameters (?actor - user ?subgroup - file ?parentgroup - file)
+    :precondition (and
+      (quota_group_exists ?parentgroup)
+      (subgroup_of ?subgroup ?parentgroup)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (subgroup_of ?subgroup ?parentgroup))
+    )
+  )
+
+  (:action increase_memory_limit
+    :parameters (?actor - user ?g - group ?new_limit - file)
+    :precondition (and
+      (group_exists ?g)
+      (not (memory_limit_set_to ?g ?new_limit))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (memory_limit_set_to ?g ?new_limit)
+    )
+  )
+
+  (:action increase_cpu_limit
+    :parameters (?actor - user ?g - group ?new_limit - file)
+    :precondition (and
+      (group_exists ?g)
+      (not (cpu_limit_set_to ?g ?new_limit))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (cpu_limit_set_to ?g ?new_limit)
+    )
+  )
+
+  (:action set_cpu_quota
+    :parameters (?actor - user ?group - file ?percentage - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (cpu_quota_set ?group ?percentage)
+    )
+  )
+
+  (:action modify_cpu_set
+    :parameters (?actor - user ?group - file ?cpu_list - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (cpu_quota_set ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (modified_cpu_set ?group ?cpu_list)
+    )
+  )
+
+  (:action increase_threads_limit
+    :parameters (?actor - user ?group - file ?new_limit - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (threads_limit_set ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (threads_limit_increased ?group ?new_limit)
+    )
+  )
+
+  (:action decrease_threads_limit
+    :parameters (?actor - user ?group - file ?new_limit - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (threads_limit_set ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (threads_limit_decreased ?group ?new_limit)
+    )
+  )
+
+  (:action modify_journal_limit
+    :parameters (?actor - user ?group - file ?new_limit - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (journal_limit_set ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (journal_limit_modified ?group ?new_limit)
+    )
+  )
+
+  (:action set_journal_namespace
+    :parameters (?actor - user ?group - file ?new_limit - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (journal_namespace_set ?group)
+    )
+  )
+
+  (:action set_quota
+    :parameters (?actor - user ?qg - file ?svc - file ?memory - file ?cpu - file ?cpuset - file ?threads - file ?journalsize - file ?journalratelimit - file ?parent - file)
+    :precondition (and
+      (service_exists ?svc)
+      (not (package_reverted ?svc))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_configured ?svc)
+    )
+  )
+
+  (:action start_services
+    :parameters (?actor - user ?svc - file)
+    :precondition (and
+      (service_exists ?svc)
+      (not (service_running ?svc))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (service_running ?svc)
+    )
+  )
+
+  (:action start_snap_service
+    :parameters (?actor - user ?svc - service)
+    :precondition (and
+      (not (service_running ?svc))
+      (service_exists ?svc)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (service_running ?svc)
+      (service_enabled ?svc)
+    )
+  )
+
+  (:action stop_snap_service
+    :parameters (?actor - user ?svc - service)
+    :precondition (and
+      (service_running ?svc)
+      (service_exists ?svc)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (service_running ?svc))
+      (not (service_enabled ?svc))
+    )
+  )
+
+  (:action switch_snap_channel
+    :parameters (?snap - file ?channel - file)
+    :precondition (and
+      (service_exists ?snap)
+    )
+    :effect (and
+      (package_configured ?snap)
+      (not (vulnerable ?snap))
+    )
+  )
+
+  (:action disable_service_on_boot
+    :parameters (?actor - user ?svc - service)
+    :precondition (and
+      (service_exists ?svc)
+      (not (service_enabled ?svc))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (service_enabled ?svc))
+    )
+  )
+
+  (:action try_snap
+    :parameters (?actor - user ?snap_path - file)
+    :precondition (and
+      (file_exists ?snap_path)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (package_installed ?snap_path)
+      (service_running ?snap_path)
+    )
+  )
+
+  (:action unalias_snap
+    :parameters (?name - file)
+    :precondition (and
+    )
+    :effect (and
+      (snap_aliases_removed ?name)
+    )
+  )
+
+  (:action unset_configuration
+    :parameters (?snap - file ?option - file)
+    :precondition (and
+      (package_installed ?snap)
+    )
+    :effect (and
+      (not (package_configured ?snap))
+    )
+  )
+
+  (:action configure_snap
+    :parameters (?snap - package)
+    :precondition (and
+      (package_installed ?snap)
+    )
+    :effect (and
+      (package_configured ?snap)
+    )
+  )
+
   (:action start_service
     :parameters (?actor - user ?svc - service)
     :precondition (and
@@ -715,6 +1060,144 @@
     )
   )
 
+  (:action set_alias
+    :parameters (?alias_name - file ?command - file)
+    :precondition (and
+    )
+    :effect (and
+      (alias_exists ?alias_name)
+    )
+  )
+
+  (:action remove_alias
+    :parameters (?alias_name - file)
+    :precondition (and
+      (alias_exists ?alias_name)
+    )
+    :effect (and
+      (not (alias_exists ?alias_name))
+    )
+  )
+
+  (:action prefer_aliases
+    :parameters (?snap - file)
+    :precondition (and
+      (snap_installed ?snap)
+    )
+    :effect (and
+      (aliases_preferred ?snap)
+    )
+  )
+
+  (:action login_snap
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (user_authenticated)
+    )
+  )
+
+  (:action logout_snap
+    :parameters (?obj - file)
+    :precondition (and
+      (user_authenticated)
+    )
+    :effect (and
+      (not (user_authenticated))
+    )
+  )
+
+  (:action save_snapshot
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (snapshot_saved)
+    )
+  )
+
+  (:action import_snapshot
+    :parameters (?source_file - file)
+    :precondition (and
+    )
+    :effect (and
+      (snapshot_imported)
+    )
+  )
+
+  (:action reboot_device
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (device_rebooted)
+    )
+  )
+
+  (:action acknowledge_warnings
+    :parameters (?obj - file)
+    :precondition (and
+      (warnings_exist)
+    )
+    :effect (and
+      (warnings_acknowledged)
+    )
+  )
+
+  (:action run_debug_commands
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (debug_info_collected)
+    )
+  )
+
+  (:action download_snap
+    :parameters (?snap - file)
+    :precondition (and
+      (network_available)
+    )
+    :effect (and
+      (package_installed ?snap)
+    )
+  )
+
+  (:action export_key
+    :parameters (?key - file)
+    :precondition (and
+    )
+    :effect (and
+      (file_exists ?key)
+    )
+  )
+
+  (:action set_quota_group
+    :parameters (?actor - user ?group - file ?size - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (quota_group_exists ?group)
+    )
+  )
+
+  (:action remove_quota_group
+    :parameters (?actor - user ?group - file)
+    :precondition (and
+      (quota_group_exists ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (quota_group_exists ?group))
+    )
+  )
+
   (:action enable_service
     :parameters (?actor - user ?svc - service)
     :precondition (and
@@ -737,244 +1220,668 @@
     )
   )
 
+  (:action add_exe_match
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_executable ?f))
+    )
+    :effect (and
+      (file_executable ?f)
+    )
+  )
+
+  (:action add_comm_match
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+      (not (file_executable ?f))
+    )
+    :effect (and
+      (file_executable ?f)
+    )
+  )
+
   (:action grant_access_to_system_journal
-    :parameters (?actor - user ?user - user ?group - group)
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
+      (user_exists ?u)
+      (group_exists ?g)
       (can_escalate ?actor)
     )
     :effect (and
-      (can_read_system_journal ?user)
-    )
-  )
-
-  (:action modify_journal_files_set
-    :parameters (?directory - directory ?file - file ?user - user ?system - service)
-    :precondition (and
-      (directory_exists ?directory)
-      (file_exists ?file)
-    )
-    :effect (and
-      (journal_directory_modified ?directory)
-      (journal_file_modified ?file)
-    )
-  )
-
-  (:action access_private_journal
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (can_read_private_journal ?user)
-    )
-  )
-
-  (:action access_system_journal
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (can_read_system_journal ?user)
-    )
-  )
-
-  (:action access_other_users_journals
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (can_read_other_user_journal ?user)
-    )
-  )
-
-  (:action specify_journal_directory
-    :parameters (?dir - directory)
-    :precondition (and
-      (network_available)
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (journal_operated_on ?dir)
-    )
-  )
-
-  (:action specify_file_glob
-    :parameters (?glob - file)
-    :precondition (and
-      (network_available)
-      (file_exists ?glob)
-    )
-    :effect (and
-      (file_glob_specified ?glob)
-    )
-  )
-
-  (:action operate_on_journal_files
-    :parameters (?glob - file ?root_directory - directory ?image_path - file)
-    :precondition (and
-      (file_exists ?glob)
-      (directory_exists ?root_directory)
-      (path_exists ?image_path)
-    )
-    :effect (and
-      (journalctl_operates_on_specified_paths ?glob)
-      (journalctl_root_set_to ?root_directory)
-      (journalctl_image_set_to ?image_path)
-    )
-  )
-
-  (:action set_journal_root
-    :parameters (?root_directory - directory)
-    :precondition (and
-      (directory_exists ?root_directory)
-    )
-    :effect (and
-      (journalctl_root_set_to ?root_directory)
-    )
-  )
-
-  (:action set_journal_image
-    :parameters (?image_path - file)
-    :precondition (and
-      (path_exists ?image_path)
-    )
-    :effect (and
-      (journalctl_image_set_to ?image_path)
+      (member_of ?u ?g)
     )
   )
 
   (:action operate_on_disk_image
     :parameters (?actor - user ?image - file ?policy - file ?namespace - file)
     :precondition (and
-      (disk_image_exists ?image)
+      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (file_systems_mounted ?image)
-      (log_data_extracted ?image)
+      (disk_image_operated ?image)
+      (applied_image_policy ?policy)
+      (selected_namespace ?namespace)
     )
   )
 
-  (:action filter_journal_since_date
-    :parameters (?date - file)
+  (:action write_cursor_to_file
+    :parameters (?file - file)
     :precondition (and
-      (journal_records_exist)
+      (file_exists ?file)
     )
     :effect (and
-      (filtered_journal_records ?date)
+      (cursor_written_to_file ?file)
     )
   )
 
-  (:action filter_journal_until_date
-    :parameters (?date - file)
-    :precondition (and
-      (journal_records_exist)
-    )
-    :effect (and
-      (filtered_journal_records ?date)
-    )
-  )
-
-  (:action set_pager_secure_mode
-    :parameters (?mode - file ?pager - file)
+  (:action lookup_boots_from_beginning
+    :parameters (?offset - file)
     :precondition (and
       (network_available)
     )
     :effect (and
-      (pager_secure_mode_enabled ?mode)
-      (pager_used ?pager)
+      (boots_lookup_from_beginning ?offset)
     )
   )
 
-  (:action set_less_charset
+  (:action lookup_boots_from_end
+    :parameters (?offset - file)
+    :precondition (and
+      (network_available)
+    )
+    :effect (and
+      (boots_lookup_from_end ?offset)
+    )
+  )
+
+  (:action negate_boot_filter
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (process_running ?all)
+    )
+  )
+
+  (:action set_output_format
+    :parameters (?format - file)
+    :precondition (and
+    )
+    :effect (and
+      (output_format_set ?format)
+    )
+  )
+
+  (:action set_output_short
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (output_format_set ?short)
+    )
+  )
+
+  (:action set_output_short_full
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (output_format_set ?short-full)
+    )
+  )
+
+  (:action update_catalog
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (catalog_updated)
+    )
+  )
+
+  (:action setup_keys
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (keys_generated)
+    )
+  )
+
+  (:action set_systemd_lesscharset
     :parameters (?charset - file)
     :precondition (and
+    )
+    :effect (and
+      (systemd_lesscharset_set ?charset)
+    )
+  )
+
+  (:action enable_pagersecure_mode
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (pagersecure_enabled)
+    )
+  )
+
+  (:action disable_pagersecure_mode
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (not (pagersecure_enabled))
+    )
+  )
+
+  (:action filter_journal
+    :parameters (?match - file)
+    :precondition (and
       (network_available)
     )
     :effect (and
-      (less_charset_set ?charset)
+      (filtered_logs ?match)
     )
   )
 
-  (:action set_environment_variable
-    :parameters (?var - file ?value - file)
+  (:action set_systemd_color_output
+    :parameters (?color - file)
     :precondition (and
+      (network_available)
     )
     :effect (and
-      (environment_variable_set ?var ?value)
+      (systemd_color_output ?color)
     )
   )
 
-  (:action disable_pager
-    :parameters (?obj - file)
+  (:action set_systemd_urlify_output
+    :parameters (?urlify - file)
     :precondition (and
+      (network_available)
     )
     :effect (and
-      (pager_disabled)
+      (systemd_urlify_output ?urlify)
     )
   )
 
-  (:action enable_secure_mode_pager
-    :parameters (?obj - file)
+  (:action copy_file
+    :parameters (?src - file ?dst - file)
     :precondition (and
+      (file_exists ?src)
+      (not (file_exists ?dst))
     )
     :effect (and
-      (secure_mode_enabled)
+      (file_exists ?dst)
     )
   )
 
-  (:action disable_secure_mode_pager
-    :parameters (?obj - file)
+  (:action copy_files_to_directory
+    :parameters (?srcs - file ?dir - directory)
     :precondition (and
-      (secure_mode_enabled)
+      (file_exists ?srcs)
     )
     :effect (and
-      (not (secure_mode_enabled))
+      (file_exists ?concatenate ?dir ?basename_?srcs)
     )
   )
 
-  (:action enable_colors_output
-    :parameters (?obj - file)
+  (:action recursive_copy_special_files
+    :parameters (?src - file ?dest - directory)
     :precondition (and
+      (file_exists ?src)
     )
     :effect (and
-      (colors_enabled)
+      (file_exists ?concatenate ?dest ?basename_?src)
     )
   )
 
-  (:action enable_base_16_colors_output
-    :parameters (?obj - file)
+  (:action backup_file
+    :parameters (?src - file ?dest - file)
     :precondition (and
+      (file_exists ?dest)
     )
     :effect (and
-      (base_16_colors_enabled)
+      (file_exists ?concatenate ?dest)
     )
   )
 
-  (:action enable_base_256_colors_output
-    :parameters (?obj - file)
+  (:action copy_attributes_only
+    :parameters (?src - file ?dest - file)
     :precondition (and
+      (file_exists ?src)
     )
     :effect (and
-      (base_256_colors_enabled)
+      (not (file_executable ?dest))
     )
   )
 
-  (:action disable_colors_output
-    :parameters (?obj - file)
+  (:action change_permissions_to_executable
+    :parameters (?f - file)
     :precondition (and
-      (colors_enabled)
+      (file_exists ?f)
     )
     :effect (and
-      (not (colors_enabled))
+      (file_executable ?f)
+    )
+  )
+
+  (:action force_copy_file
+    :parameters (?src - file ?dst - file)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_executable ?dst))
+    )
+    :effect (and
+      (file_exists ?dst)
+    )
+  )
+
+  (:action no_clobber_copy_file
+    :parameters (?src - file ?dst - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (file_exists ?dst))
+    )
+  )
+
+  (:action recursive_copy
+    :parameters (?src - directory ?dest - directory)
+    :precondition (and
+      (directory_exists ?src)
+      (directory_exists ?dest)
+    )
+    :effect (and
+      (directory_contents_copied ?src ?dest)
+    )
+  )
+
+  (:action create_symbolic_link
+    :parameters (?target - file ?link_path - file)
+    :precondition (and
+      (file_exists ?target)
+    )
+    :effect (and
+      (symbolic_link_created ?link_path ?target)
+    )
+  )
+
+  (:action remove_destination_before_copying
+    :parameters (?dest - file)
+    :precondition (and
+      (file_exists ?dest)
+    )
+    :effect (and
+      (not (file_exists ?dest))
+    )
+  )
+
+  (:action create_sparse_file
+    :parameters (?file - file ?when - file)
+    :precondition (and
+      (not (file_exists ?file))
+    )
+    :effect (and
+      (sparse_file_created ?file)
+    )
+  )
+
+  (:action clone_copy
+    :parameters (?src - file ?dest - file ?when - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (cloned_file_created ?dest)
+    )
+  )
+
+  (:action copy_to_normal_file
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (not (directory_exists ?dest))
+    )
+    :effect (and
+      (file_copied ?src ?dest)
+    )
+  )
+
+  (:action update_existing_files
+    :parameters (?src - file ?dest - directory ?update - file)
+    :precondition (and
+      (file_exists ?src)
+      (directory_exists ?dest)
+    )
+    :effect (and
+      (updated_file_copied ?src ?dest)
+    )
+  )
+
+  (:action strip_trailing_slashes
+    :parameters (?src - directory)
+    :precondition (and
+      (directory_exists ?src)
+    )
+    :effect (and
+      (trailing_slashes_removed ?src)
+    )
+  )
+
+  (:action copy_into_directory
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (directory_exists ?dest)
+    )
+    :effect (and
+      (file_copied_to_directory ?src ?dest)
+    )
+  )
+
+  (:action override_backup_suffix
+    :parameters (?file - file ?suffix - file)
+    :precondition (and
+      (not (file_exists ?file))
+    )
+    :effect (and
+      (backup_file_created_with_suffix ?file)
+    )
+  )
+
+  (:action set_selinux_context_default
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (selinux_context_default ?f)
+    )
+  )
+
+  (:action set_selinux_context_custom
+    :parameters (?f - file ?ctx - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (selinux_context_custom ?f ?ctx)
+    )
+  )
+
+  (:action copy_within_filesystem
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+      (same_filesystem ?src ?dest)
+    )
+    :effect (and
+      (file_copied_within_fs ?src ?dest)
+    )
+  )
+
+  (:action copy_with_attributes
+    :parameters (?src - file ?dest - file ?attr_list - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (attributes_copied ?src ?dest ?attr_list)
+    )
+  )
+
+  (:action copy_sparse_file
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (sparse_file_copied ?src ?dest)
+    )
+  )
+
+  (:action copy_file_no_sparse
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_executable ?dest)
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action copy_file_all_update
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_executable ?dest)
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action copy_file_none_update
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action copy_file_older_update
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action copy_file_reflink
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action copy_file_reflink_always
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (vulnerable ?dest))
+    )
+  )
+
+  (:action standard_copy
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+      (not (requires_env_preservation ?dest))
+    )
+    :effect (and
+      (file_copied ?src ?dest)
+    )
+  )
+
+  (:action copy_files_to_directory_with_t_option
+    :parameters (?src - file ?dest_dir - directory)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_exists ?concatenate ?dest_dir ?basename_?src)
+    )
+  )
+
+  (:action copy_file_attributes_only
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (file_executable ?dest))
+    )
+  )
+
+  (:action copy_file_with_backup
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_exists ?concatenate ?dest)
+    )
+  )
+
+  (:action copy_file_archive
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_exists ?dest)
+      (not (file_executable ?dest))
+    )
+  )
+
+  (:action copy_contents
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_writable ?dest))
+    )
+    :effect (and
+      (file_executable ?src)
+    )
+  )
+
+  (:action force_copy
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_writable ?dest))
+    )
+    :effect (and
+      (file_executable ?src)
+    )
+  )
+
+  (:action interactive_copy
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_writable ?dest))
+    )
+    :effect (and
+      (file_executable ?src)
+    )
+  )
+
+  (:action hard_link_files
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_writable ?dest))
+    )
+    :effect (and
+      (file_executable ?src)
+    )
+  )
+
+  (:action no_clobber_copy
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_writable ?dest))
+    )
+    :effect (and
+      (file_executable ?src)
+    )
+  )
+
+  (:action make_executable
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_executable ?f)
+    )
+  )
+
+  (:action preserve_attributes
+    :parameters (?f - file ?attrs - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (preserved_attributes ?f ?attrs)
+    )
+  )
+
+  (:action remove_destination_before_copy
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?dest)
+    )
+    :effect (and
+      (not (file_exists ?dest))
+    )
+  )
+
+  (:action no_dereference_copy
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (not (follows_symlink ?src))
+    )
+  )
+
+  (:action copy_with_full_source_name
+    :parameters (?src - file ?dest - directory)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (full_source_name_copied ?dest)
+    )
+  )
+
+  (:action reflink_copy
+    :parameters (?src - file ?dest - file ?when - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (reflinked_copy_created ?dest)
+    )
+  )
+
+  (:action set_selinux_smack_context
+    :parameters (?file - file ?ctx - file)
+    :precondition (and
+      (file_exists ?file)
+    )
+    :effect (and
+      (selinux_smack_context_set ?file)
     )
   )
 
@@ -988,133 +1895,90 @@
     )
   )
 
-  (:action set_systemd_urlify
-    :parameters (?setting - file)
-    :precondition (and
-      (network_available)
-    )
-    :effect (and
-      (urlify_setting ?setting)
-    )
-  )
-
-  (:action reduce_disk_usage
-    :parameters (?actor - user ?bytes - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (disk_usage_below ?bytes)
-    )
-  )
-
-  (:action leave_journal_files
-    :parameters (?actor - user ?int - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_files_left ?int)
-    )
-  )
-
-  (:action remove_old_journal_files
-    :parameters (?actor - user ?time - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_files_removed_older_than ?time)
-    )
-  )
-
-  (:action synchronize_journal
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_synchronized_to_disk)
-    )
-  )
-
-  (:action stop_logging_to_disk
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (logging_to_temporary_file_system)
-    )
-  )
-
-  (:action smart_relinquish_var
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (logging_to_temporary_file_system_if_not_root_mount)
-    )
-  )
-
-  (:action flush_journal_data
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_data_flushed_to_var)
-    )
-  )
-
-  (:action rotate_journal_files
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (journal_files_rotated)
-    )
-  )
-
-  (:action update_catalog_database
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (catalog_updated)
-    )
-  )
-
-  (:action generate_fss_key_pair
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (fss_keys_generated)
-    )
-  )
-
-  (:action copy_file
-    :parameters (?src - file ?dst - file)
+  (:action create_sparse_file_with_zeros
+    :parameters (?src - file ?dest - file)
     :precondition (and
       (file_exists ?src)
-      (not (file_exists ?dst))
     )
     :effect (and
-      (file_exists ?dst)
+      (sparse_file ?dest)
+      (has_zero_sequence ?dest)
+    )
+  )
+
+  (:action create_non_sparse_file
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (non_sparse_file ?dest)
+    )
+  )
+
+  (:action update_destination_files
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+      (file_exists ?dest)
+    )
+    :effect (and
+      (updated_file ?dest)
+    )
+  )
+
+  (:action lightweight_copy
+    :parameters (?src_file - file ?dest_file - file)
+    :precondition (and
+      (file_exists ?src_file)
+      (not (file_exists ?dest_file))
+    )
+    :effect (and
+      (file_exists ?dest_file)
+    )
+  )
+
+  (:action update_copy
+    :parameters (?src_file - file ?dest_file - file)
+    :precondition (and
+      (file_exists ?src_file)
+      (file_exists ?dest_file)
+    )
+    :effect (and
+      (file_updated ?dest_file)
+    )
+  )
+
+  (:action backup_copy
+    :parameters (?src_file - file ?dest_file - file)
+    :precondition (and
+      (file_exists ?src_file)
+      (not (file_exists ?dest_file))
+    )
+    :effect (and
+      (file_backup_created ?dest_file)
+    )
+  )
+
+  (:action create_numbered_backup
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_exists ?dest))
+    )
+    :effect (and
+      (file_exists ?dest)
+    )
+  )
+
+  (:action create_simple_backup
+    :parameters (?src - file ?dest - file)
+    :precondition (and
+      (file_exists ?src)
+      (not (file_exists ?dest))
+    )
+    :effect (and
+      (file_exists ?dest)
     )
   )
 
@@ -1147,7 +2011,6 @@
     )
     :effect (and
       (not (file_exists ?file_path))
-      (not (directory_exists ?file_path))
     )
   )
 
@@ -1157,7 +2020,6 @@
     )
     :effect (and
       (not (file_exists ?file_path))
-      (not (directory_exists ?file_path))
     )
   )
 
@@ -1171,37 +2033,7 @@
     )
   )
 
-  (:action remove_directory_recursive_one_file_system
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  (:action remove_directory_recursive
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  (:action remove_empty_directory
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  (:action remove_file
+  (:action remove_file_interactive_once
     :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
@@ -1211,13 +2043,82 @@
     )
   )
 
-  (:action remove_directory_recursively
+  (:action remove_file_interactive_when
+    :parameters (?f - file ?when - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  (:action remove_directory_recursive_one_file_system
     :parameters (?d - directory)
     :precondition (and
       (directory_exists ?d)
     )
     :effect (and
       (not (directory_exists ?d))
+    )
+  )
+
+  (:action remove_file_preserve_root
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  (:action remove_file_preserve_root_all
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  (:action remove_directory_recursive
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (not (directory_exists ?d))
+    )
+  )
+
+  (:action remove_empty_directory
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (not (directory_exists ?d))
+    )
+  )
+
+  (:action remove_file_verbose
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  (:action output_version_info
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (output_version_information)
     )
   )
 
@@ -1231,7 +2132,7 @@
     )
   )
 
-  (:action remove_special_file_relative_path
+  (:action securely_delete_file
     :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
@@ -1241,16 +2142,7 @@
     )
   )
 
-  (:action force_remove_file
-    :parameters (?f - file)
-    :precondition (and
-    )
-    :effect (and
-      (not (file_exists ?f))
-    )
-  )
-
-  (:action interactive_remove_file
+  (:action remove_file
     :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
@@ -1260,18 +2152,17 @@
     )
   )
 
-  (:action once_interactive_remove_file
-    :parameters (?files - file)
+  (:action remove_file_force
+    :parameters (?f - file)
     :precondition (and
-      (file_exists ?files)
     )
     :effect (and
-      (not (file_exists ?files))
+      (not (file_exists ?f))
     )
   )
 
-  (:action custom_interactive_remove_file
-    :parameters (?f - file ?when - file)
+  (:action remove_file_interactive
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
     )
@@ -1283,66 +2174,55 @@
   (:action recursively_remove_hierarchy
     :parameters (?dir - directory)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?dir)
     )
     :effect (and
-      (not (directory_exists ?dir))
+      (not (file_exists ?dir))
     )
   )
 
-  (:action remove_root_directory
-    :parameters (?actor - user ?obj - file)
+  (:action remove_root_recursively
+    :parameters (?actor - user ?dir - directory)
     :precondition (and
-      (directory_exists)
+      (file_exists ?dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (directory_exists))
-    )
-  )
-
-  (:action preserve_root_directory_all
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (directory_exists)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_exists)
+      (not (file_exists ?dir))
     )
   )
 
   (:action recursively_remove_directory_contents
     :parameters (?dir - directory)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?dir)
     )
     :effect (and
-      (not (directory_exists ?dir))
+      (not (file_exists ?dir))
     )
   )
 
-  (:action recursively_remove_hierarchy_one_file_system
+  (:action preserve_root_and_device_hierarchy
     :parameters (?dir - directory)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?dir)
     )
     :effect (and
-      (not (directory_exists ?dir))
+      (not (file_exists ?dir))
     )
   )
 
-  (:action remove_with_verbose_output
-    :parameters (?file - file)
+  (:action recursively_remove_directory_contents_verbose
+    :parameters (?dir - directory)
     :precondition (and
-      (file_exists ?file)
+      (file_exists ?dir)
     )
     :effect (and
-      (not (file_exists ?file))
+      (not (file_exists ?dir))
     )
   )
 
-  (:action remove_special_file_path
+  (:action remove_file_relative_path
     :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
@@ -1362,13 +2242,15 @@
     )
   )
 
-  (:action change_file_permissions
-    :parameters (?f - file ?mode - file)
+  (:action change_file_mode_bits
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_has_mode ?f ?mode)
+      (file_executable ?f)
+      (file_readable ?f)
+      (file_writable ?f)
     )
   )
 
@@ -1376,7 +2258,7 @@
     :parameters (?link - file ?target - file)
     :precondition (and
       (file_exists ?link)
-      (is_symbolic_link ?link)
+      (not (file_executable ?target))
     )
     :effect (and
       (file_executable ?target)
@@ -1387,11 +2269,10 @@
     :parameters (?f - file ?gid - file)
     :precondition (and
       (file_exists ?f)
-      (not (group_matches_effective_gid ?f ?gid))
-      (not (group_matches_supplementary_gids ?f ?gid))
+      (not (user_in_group ?gid))
     )
     :effect (and
-      (set_group_id_cleared ?f)
+      (not (set_group_id_bit ?f))
     )
   )
 
@@ -1401,108 +2282,72 @@
       (file_exists ?dir)
     )
     :effect (and
-      (directory_setuid ?dir)
-      (directory_setgid ?dir)
-      (directory_sticky_bit ?dir)
+      (set_user_id_bit ?dir)
+      (set_group_id_bit ?dir)
     )
   )
 
-  (:action clear_directory_setuid_setgid_bits
-    :parameters (?dir - directory)
-    :precondition (and
-      (file_exists ?dir)
-      (directory_setuid ?dir)
-      (directory_setgid ?dir)
-    )
-    :effect (and
-      (not (directory_setuid ?dir))
-      (not (directory_setgid ?dir))
-    )
-  )
-
-  (:action toggle_directory_sticky_bit
-    :parameters (?dir - directory)
-    :precondition (and
-      (file_exists ?dir)
-    )
-    :effect (and
-      (directory_sticky_bit ?dir)
-      (not (directory_sticky_bit ?dir))
-    )
-  )
-
-  (:action change_mode
-    :parameters (?file - file ?mode - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (file_mode_set ?file ?mode)
-    )
-  )
-
-  (:action change_mode_reference
-    :parameters (?file - file ?rfile - file)
-    :precondition (and
-      (file_exists ?file)
-      (file_exists ?rfile)
-    )
-    :effect (and
-      (action_completed_change_mode_reference)
-    )
-  )
-
-  (:action change_permissions_recursive
+  (:action toggle_set_bits
     :parameters (?dir - directory ?mode - file)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?dir)
     )
     :effect (and
-      (directory_has_mode ?dir ?mode)
+      (set_user_id_bit ?dir)
+      (clear_group_id_bit ?dir)
     )
   )
 
-  (:action change_permissions_reference
-    :parameters (?f - file ?ref_file - file)
+  (:action toggle_sticky_bit
+    :parameters (?dir - directory ?mode - file)
     :precondition (and
-      (file_exists ?f)
-      (file_exists ?ref_file)
+      (file_exists ?dir)
     )
     :effect (and
-      (action_completed_change_permissions_reference)
+      (sticky_bit_set ?dir)
+      (sticky_bit_cleared ?dir)
     )
   )
 
-  (:action change_permissions_verbose
+  (:action change_file_mode
     :parameters (?f - file ?mode - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
       (file_has_mode ?f ?mode)
-      (output_diagnostic ?f)
     )
   )
 
-  (:action change_permissions_no_preserve_root
-    :parameters (?dir - directory ?mode - file)
+  (:action change_file_mode_reference
+    :parameters (?f - file ?rfile - file)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?f)
+      (file_exists ?rfile)
     )
     :effect (and
-      (directory_has_mode ?dir ?mode)
-      (no_special_treatment_root)
+      (action_completed_change_file_mode_reference)
     )
   )
 
-  (:action change_permissions_preserve_root
-    :parameters (?dir - directory ?mode - file)
+  (:action change_file_permissions
+    :parameters (?file - file ?mode - file)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?file)
     )
     :effect (and
-      (directory_has_mode ?dir ?mode)
-      (fail_on_recursive_root)
+      (file_executable ?file)
+    )
+  )
+
+  (:action change_permissions_reference
+    :parameters (?f - file ?rfile - file)
+    :precondition (and
+      (file_exists ?f)
+      (file_exists ?rfile)
+    )
+    :effect (and
+      (file_executable ?f)
     )
   )
 
@@ -1522,72 +2367,29 @@
     :parameters (?actor - user ?f - file ?owner - user ?group - group)
     :precondition (and
       (file_exists ?f)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (owner_of ?f ?owner)
+      (group_of ?f ?group)
+    )
+  )
+
+  (:action change_owner_group
+    :parameters (?actor - user ?f - file ?owner - user ?group - group ?rfile - file)
+    :precondition (and
+      (file_exists ?f)
       (user_exists ?owner)
       (group_exists ?group)
       (can_escalate ?actor)
     )
     :effect (and
-      (owned_by_user ?f ?owner)
-      (owned_by_group ?f ?group)
+      (owned_by ?f ?owner)
+      (group_owned_by ?f ?group)
     )
   )
 
-  (:action chown_chgrp
-    :parameters (?actor - user ?owner - user ?group - group ?f - file)
-    :precondition (and
-      (file_exists ?f)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (file_owner ?f ?owner)
-      (file_group ?f ?group)
-    )
-  )
-
-  (:action chgrp_only
-    :parameters (?actor - user ?group - group ?f - file)
-    :precondition (and
-      (file_exists ?f)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (file_group ?f ?group)
-    )
-  )
-
-  (:action chown_reference
-    :parameters (?actor - user ?rfile - file ?f - file)
-    :precondition (and
-      (file_exists ?f)
-      (file_exists ?rfile)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (action_completed_chown_reference)
-    )
-  )
-
-  (:action disable_preserve_root
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (preserve_root))
-    )
-  )
-
-  (:action enable_preserve_root
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (preserve_root)
-    )
-  )
-
-  (:action chown_reference_file
+  (:action change_owner_group_reference
     :parameters (?actor - user ?f - file ?rfile - file)
     :precondition (and
       (file_exists ?f)
@@ -1595,11 +2397,23 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (action_completed_chown_reference_file)
+      (action_completed_change_owner_group_reference)
     )
   )
 
-  (:action traverse_symlink_directory_h
+  (:action change_group_only
+    :parameters (?actor - user ?f - file ?group - group)
+    :precondition (and
+      (file_exists ?f)
+      (group_exists ?group)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_owned_by ?f ?group)
+    )
+  )
+
+  (:action change_owner_group_dereference
     :parameters (?actor - user ?f - file ?owner - user ?group - group)
     :precondition (and
       (file_exists ?f)
@@ -1608,11 +2422,12 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner ?f ?owner)
+      (owned_by ?f ?owner)
+      (group_owned_by ?f ?group)
     )
   )
 
-  (:action traverse_symlink_directory_l
+  (:action change_owner_group_no_dereference
     :parameters (?actor - user ?f - file ?owner - user ?group - group)
     :precondition (and
       (file_exists ?f)
@@ -1621,39 +2436,108 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner ?f ?owner)
+      (owned_by ?f ?owner)
+      (group_owned_by ?f ?group)
     )
   )
 
-  (:action do_not_traverse_symlink_directory_p
+  (:action chown_if_match
     :parameters (?actor - user ?f - file ?owner - user ?group - group)
     :precondition (and
       (file_exists ?f)
-      (user_exists ?owner)
-      (group_exists ?group)
+      (current_owner_matches ?f ?owner)
+      (current_group_matches ?f ?group)
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner ?f ?owner)
+      (new_owner ?f ?owner)
+      (new_group ?f ?group)
     )
   )
 
-  (:action chown_recursive
-    :parameters (?actor - user ?owner - user ?group - group ?f - file)
+  (:action disable_preserve_root
+    :parameters (?obj - file)
     :precondition (and
-      (user_exists ?owner)
-      (group_exists ?group)
-      (directory_exists ?f)
+    )
+    :effect (and
+      (preserve_root_disabled)
+    )
+  )
+
+  (:action enable_preserve_root
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (preserve_root_enabled)
+    )
+  )
+
+  (:action chown_reference
+    :parameters (?actor - user ?f - file ?rfile - file)
+    :precondition (and
+      (file_exists ?rfile)
+      (file_exists ?f)
       (can_escalate ?actor)
     )
     :effect (and
-      (directory_owner ?f ?owner)
-      (directory_group ?f ?group)
+      (new_owner_from_ref ?f ?rfile)
+      (new_group_from_ref ?f ?rfile)
+    )
+  )
+
+  (:action operate_recursively
+    :parameters (?dir - directory)
+    :precondition (and
+      (directory_exists ?dir)
+    )
+    :effect (and
+      (recursively_operated_on ?dir)
+    )
+  )
+
+  (:action traverse_symlink_dir
+    :parameters (?symlink - file)
+    :precondition (and
+      (is_symbolic_link ?symlink)
+      (points_to_directory ?symlink)
+    )
+    :effect (and
+      (traversed_symlink ?symlink)
+    )
+  )
+
+  (:action traverse_all_symlinks
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (all_symlinks_traversed)
+    )
+  )
+
+  (:action do_not_traverse_symlinks
+    :parameters (?obj - file)
+    :precondition (and
+    )
+    :effect (and
+      (no_symlinks_traversed)
+    )
+  )
+
+  (:action recursive_change_owner
+    :parameters (?actor - user ?dir - directory ?owner - user)
+    :precondition (and
+      (file_exists ?dir)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (user_locked ?owner))
     )
   )
 
   (:action chown_file_reference
-    :parameters (?actor - user ?rfile - file ?f - file)
+    :parameters (?actor - user ?f - file ?rfile - file)
     :precondition (and
       (file_exists ?f)
       (file_exists ?rfile)
@@ -1673,88 +2557,30 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner ?f ?owner)
-      (file_group ?f ?group)
+      (member_of ?owner ?group)
     )
   )
 
-  (:action recursive_operation
-    :parameters (?actor - user ?dir - directory ?owner - user ?group - group)
-    :precondition (and
-      (directory_exists ?dir)
-      (user_exists ?owner)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_owner ?dir ?owner)
-      (directory_group ?dir ?group)
-    )
-  )
-
-  (:action change_ownership_reference
-    :parameters (?actor - user ?f - file ?rfile - file)
-    :precondition (and
-      (file_exists ?f)
-      (file_exists ?rfile)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (action_completed_change_ownership_reference)
-    )
-  )
-
-  (:action no_preserve_root
-    :parameters (?actor - user ?dir - directory ?owner - user ?group - group)
-    :precondition (and
-      (directory_exists ?dir)
-      (user_exists ?owner)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_owner ?dir ?owner)
-      (directory_group ?dir ?group)
-    )
-  )
-
-  (:action preserve_root
-    :parameters (?actor - user ?dir - directory ?owner - user ?group - group)
-    :precondition (and
-      (directory_exists ?dir)
-      (user_exists ?owner)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_owner ?dir ?owner)
-      (directory_group ?dir ?group)
-    )
-  )
-
-  (:action conditional_change_ownership
-    :parameters (?actor - user ?f - file ?current_owner - user ?current_group - group ?new_owner - user ?new_group - group)
+  (:action change_ownership_from
+    :parameters (?actor - user ?f - file ?owner - user ?group - group ?current_owner - user ?current_group - group)
     :precondition (and
       (file_exists ?f)
       (user_exists ?current_owner)
       (group_exists ?current_group)
-      (user_exists ?new_owner)
-      (group_exists ?new_group)
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner ?f ?new_owner)
-      (file_group ?f ?new_group)
+      (member_of ?owner ?group)
     )
   )
 
-  (:action traverse_symlinks
+  (:action traverse_symlink
     :parameters (?dir - directory ?option - file)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?dir)
     )
     :effect (and
-      (directory_traversed ?dir)
+      (not (requires_env_preservation ?dir))
     )
   )
 
@@ -1765,6 +2591,59 @@
     )
     :effect (and
       (file_exists ?d)
+    )
+  )
+
+  (:action create_directory_with_mode
+    :parameters (?dir - directory ?mode - file)
+    :precondition (and
+      (not (directory_exists ?dir))
+    )
+    :effect (and
+      (directory_exists ?dir)
+      (directory_mode_set ?dir)
+    )
+  )
+
+  (:action create_directory_with_parents
+    :parameters (?dir - directory)
+    :precondition (and
+      (not (directory_exists ?dir))
+    )
+    :effect (and
+      (directory_exists ?dir)
+    )
+  )
+
+  (:action create_directory_with_verbose
+    :parameters (?dir - directory)
+    :precondition (and
+      (not (directory_exists ?dir))
+    )
+    :effect (and
+      (directory_exists ?dir)
+    )
+  )
+
+  (:action create_directory_with_selinux_context
+    :parameters (?dir - directory)
+    :precondition (and
+      (not (directory_exists ?dir))
+    )
+    :effect (and
+      (directory_exists ?dir)
+      (selinux_context_set ?dir)
+    )
+  )
+
+  (:action create_directory_with_custom_selinux_context
+    :parameters (?dir - directory ?ctx - file)
+    :precondition (and
+      (not (directory_exists ?dir))
+    )
+    :effect (and
+      (directory_exists ?dir)
+      (custom_selinux_context_set ?dir)
     )
   )
 
@@ -1788,33 +2667,43 @@
     )
   )
 
-  (:action set_directory_selinux_context
-    :parameters (?dir - directory ?context - file)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (directory_selinux_context_set ?dir ?context)
-    )
-  )
-
-  (:action set_default_selinux_context
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (default_selinux_context_set ?dir)
-    )
-  )
-
-  (:action set_custom_security_context
+  (:action set_selinux_context
     :parameters (?dir - directory ?ctx - file)
     :precondition (and
-      (directory_exists ?dir)
+      (not (file_exists ?dir))
     )
     :effect (and
-      (custom_security_context_set ?dir)
+      (file_owned_by ?dir ?ctx)
+    )
+  )
+
+  (:action create_directory_verbose
+    :parameters (?dir - directory)
+    :precondition (and
+      (not (file_exists ?dir))
+    )
+    :effect (and
+      (file_exists ?dir)
+    )
+  )
+
+  (:action create_directory_default_selinux
+    :parameters (?dir - directory)
+    :precondition (and
+      (not (file_exists ?dir))
+    )
+    :effect (and
+      (file_exists ?dir)
+    )
+  )
+
+  (:action create_directory_specified_context
+    :parameters (?dir - directory ?ctx - file)
+    :precondition (and
+      (not (file_exists ?dir))
+    )
+    :effect (and
+      (file_owned_by ?dir ?ctx)
     )
   )
 
@@ -1834,82 +2723,82 @@
       (not (file_exists ?f))
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (file_accessed ?f)
+      (file_modified ?f)
     )
   )
 
-  (:action update_access_time
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_access_time_updated ?f)
-    )
-  )
-
-  (:action update_modification_time
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_modification_time_updated ?f)
-    )
-  )
-
-  (:action no_create_touch
+  (:action touch_no_create
     :parameters (?f - file)
     :precondition (and
       (not (file_exists ?f))
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (file_accessed ?f)
+      (file_modified ?f)
     )
   )
 
-  (:action set_timestamp_with_string
-    :parameters (?f - file ?timestamp - file)
+  (:action touch_access_time
+    :parameters (?f - file)
     :precondition (and
-      (not (file_exists ?f))
+      (file_exists ?f)
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (file_accessed ?f)
     )
   )
 
-  (:action update_symlink_timestamps
-    :parameters (?symlink - file)
+  (:action touch_modification_time
+    :parameters (?f - file)
     :precondition (and
-      (file_exists ?symlink)
+      (file_exists ?f)
     )
     :effect (and
-      (file_access_time_updated ?symlink)
-      (file_modification_time_updated ?symlink)
+      (file_modified ?f)
     )
   )
 
-  (:action set_file_times_from_reference
+  (:action touch_with_date
+    :parameters (?f - file ?date - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_accessed ?f)
+      (file_modified ?f)
+    )
+  )
+
+  (:action touch_no_dereference
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_accessed ?f)
+      (file_modified ?f)
+    )
+  )
+
+  (:action set_file_times_reference
     :parameters (?f - file ?ref - file)
     :precondition (and
       (file_exists ?f)
       (file_exists ?ref)
     )
     :effect (and
-      (file_time_set ?f ?ref)
+      (same_timestamps ?f ?ref)
     )
   )
 
-  (:action set_file_time_to_timestamp
+  (:action set_file_times_timestamp
     :parameters (?f - file ?stamp - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_time_set ?f ?stamp)
+      (timestamp_set ?f ?stamp)
     )
   )
 
@@ -1923,7 +2812,7 @@
     )
   )
 
-  (:action create_file_if_not_exists
+  (:action create_file_if_not_exist
     :parameters (?f - file)
     :precondition (and
       (not (file_exists ?f))
@@ -1933,13 +2822,13 @@
     )
   )
 
-  (:action update_file_modification_time
-    :parameters (?f - file ?t - file)
+  (:action update_mtime
+    :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_modified_at ?f ?t)
+      (file_modified ?f)
     )
   )
 
@@ -2000,6 +2889,398 @@
     )
   )
 
+  (:action set_pacing_rate
+    :parameters (?actor - user ?pacing_rate - file ?max_pacing_rate - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (tcp_pacing_rate_set ?pacing_rate)
+      (tcp_max_pacing_rate_set ?max_pacing_rate)
+    )
+  )
+
+  (:action set_rcv_space
+    :parameters (?actor - user ?rcv_space - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (tcp_rcv_space_set ?rcv_space)
+    )
+  )
+
+  (:action configure_tcp_ulp_mptcp
+    :parameters (?actor - user ?flags - file ?rem_token - file ?loc_token - file ?sn - file ?ssn - file ?off - file ?maplen - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (tcp_ulp_mptcp_configured ?flags)
+      (tcp_ulp_rem_token_set ?rem_token)
+      (tcp_ulp_loc_token_set ?loc_token)
+      (tcp_ulp_sn_set ?sn)
+      (tcp_ulp_sfseq_set ?ssn)
+      (tcp_ulp_ssnoff_set ?off)
+      (tcp_ulp_maplen_set ?maplen)
+    )
+  )
+
+  (:action switch_network_namespace
+    :parameters (?nsname - interface)
+    :precondition (and
+      (network_available)
+    )
+    :effect (and
+      (network_available)
+    )
+  )
+
+  (:action diagnose_sockets_from_file
+    :parameters (?file - file)
+    :precondition (and
+    )
+    :effect (and
+      (sockets_diagnosed ?file)
+    )
+  )
+
+  (:action match_device
+    :parameters (?actor - user ?dev - file ?conn - file)
+    :precondition (and
+      (not (traffic_blocked ?conn))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (device_matched ?conn ?dev)
+    )
+  )
+
+  (:action match_fwmark
+    :parameters (?actor - user ?mask - file ?conn - file)
+    :precondition (and
+      (not (traffic_blocked ?conn))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (fwmark_matched ?conn ?mask)
+    )
+  )
+
+  (:action match_cgroup
+    :parameters (?actor - user ?path - file ?conn - file)
+    :precondition (and
+      (not (traffic_blocked ?conn))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (cgroup_matched ?conn ?path)
+    )
+  )
+
+  (:action match_autobound
+    :parameters (?actor - user ?conn - file)
+    :precondition (and
+      (not (traffic_blocked ?conn))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (autobound_matched ?conn)
+    )
+  )
+
+  (:action configure_link_address
+    :parameters (?actor - user ?addr - file ?dev - interface)
+    :precondition (and
+      (interface_exists ?dev)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (port_allowed ?addr)
+    )
+  )
+
+  (:action configure_netlink_address
+    :parameters (?actor - user ?addr - file ?port - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (port_allowed ?port)
+    )
+  )
+
+  (:action configure_vsock_address
+    :parameters (?actor - user ?cid - file ?port - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (port_allowed ?port)
+    )
+  )
+
+  (:action configure_inet_address
+    :parameters (?actor - user ?addr - file ?family - interface)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (port_allowed ?addr)
+    )
+  )
+
+  (:action read_filter_information
+    :parameters (?actor - user ?file - firewall_rule)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (traffic_blocked ?file)
+    )
+  )
+
+  (:action set_tcp_state
+    :parameters (?actor - user ?p - port ?s - file)
+    :precondition (and
+      (port_open ?p)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (tcp_state ?p ?s)
+    )
+  )
+
+  (:action change_socket_state
+    :parameters (?s - file)
+    :precondition (and
+      (not (socket_in_state ?s ?close))
+    )
+    :effect (and
+      (socket_in_state ?s ?new_state)
+    )
+  )
+
+  (:action start_listening_socket
+    :parameters (?p - port ?u - user ?pid - process)
+    :precondition (and
+      (not (port_open ?p))
+      (user_exists ?u)
+      (network_available)
+    )
+    :effect (and
+      (port_open ?p)
+    )
+  )
+
+  (:action shutdown_socket
+    :parameters (?actor - user ?p - port ?u - user ?pid - process)
+    :precondition (and
+      (port_open ?p)
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (port_open ?p))
+    )
+  )
+
+  (:action listen_for_connections
+    :parameters (?p - port ?u - user ?pid - process)
+    :precondition (and
+      (not (port_open ?p))
+      (user_exists ?u)
+      (network_available)
+    )
+    :effect (and
+      (port_open ?p)
+    )
+  )
+
+  (:action set_tcp_timer
+    :parameters (?actor - user ?p - port ?u - user ?pid - process ?timer - file)
+    :precondition (and
+      (port_open ?p)
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (tcp_timer_set ?p)
+    )
+  )
+
+  (:action disable_tcp_timer
+    :parameters (?actor - user ?p - port ?u - user ?pid - process)
+    :precondition (and
+      (tcp_timer_set ?p)
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (tcp_timer_set ?p))
+    )
+  )
+
+  (:action activate_keepalive_timer
+    :parameters (?sock - file)
+    :precondition (and
+      (not (keepalive_active ?sock))
+    )
+    :effect (and
+      (keepalive_active ?sock)
+    )
+  )
+
+  (:action activate_timewait_timer
+    :parameters (?sock - file)
+    :precondition (and
+      (not (timewait_active ?sock))
+    )
+    :effect (and
+      (timewait_active ?sock)
+    )
+  )
+
+  (:action change_socket_type_to_datagram
+    :parameters (?sock - file)
+    :precondition (and
+      (not (socket_type ?sock ?sock_dgram))
+    )
+    :effect (and
+      (socket_type ?sock ?sock_dgram)
+    )
+  )
+
+  (:action change_socket_type_to_stream
+    :parameters (?sock - file)
+    :precondition (and
+      (not (socket_type ?sock ?sock_stream))
+    )
+    :effect (and
+      (socket_type ?sock ?sock_stream)
+    )
+  )
+
+  (:action change_socket_type_to_raw
+    :parameters (?sock - file)
+    :precondition (and
+      (not (socket_type ?sock ?sock_raw))
+    )
+    :effect (and
+      (socket_type ?sock ?sock_raw)
+    )
+  )
+
+  (:action activate_accept_flag
+    :parameters (?sock - file)
+    :precondition (and
+      (not (accept_flag ?sock))
+    )
+    :effect (and
+      (accept_flag ?sock)
+    )
+  )
+
+  (:action activate_waitdata_flag
+    :parameters (?sock - file)
+    :precondition (and
+      (not (waitdata_flag ?sock))
+    )
+    :effect (and
+      (waitdata_flag ?sock)
+    )
+  )
+
+  (:action activate_nospace_flag
+    :parameters (?sock - file)
+    :precondition (and
+      (not (nospace_flag ?sock))
+    )
+    :effect (and
+      (nospace_flag ?sock)
+    )
+  )
+
+  (:action use_raw_socket
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (service_running ?s)
+    )
+  )
+
+  (:action set_socket_listening
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (listening)
+    )
+  )
+
+  (:action set_socket_connected
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (connected)
+    )
+  )
+
+  (:action set_socket_disconnecting
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (disconnecting)
+    )
+  )
+
+  (:action set_socket_free
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (free)
+    )
+  )
+
+  (:action set_socket_connecting
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (connecting)
+    )
+  )
+
+  (:action set_socket_unknown
+    :parameters (?actor - user ?s - file)
+    :precondition (and
+      (not (service_running ?s))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (unknown)
+    )
+  )
+
   (:action execute_privileged
     :parameters (?u - user ?cmd - process)
     :precondition (and
@@ -2011,166 +3292,27 @@
     )
   )
 
-  (:action switch_user
-    :parameters (?user - user)
+  (:action set_primary_group
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (can_escalate ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  (:action switch_user_with_args
-    :parameters (?user - user ?args - file)
-    :precondition (and
-      (can_escalate ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  (:action switch_user_with_login_option
-    :parameters (?user - user ?args - file)
-    :precondition (and
-      (can_escalate ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  (:action configure_pam_for_su
-    :parameters (?actor - user ?config - file)
-    :precondition (and
-      (file_exists ?config)
-      (network_available)
+      (user_exists ?u)
+      (member_of ?u ?g)
       (can_escalate ?actor)
     )
     :effect (and
-      (pam_configured ?config)
-    )
-  )
-
-  (:action switch_user_with_runuser
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (process_running ?cmd)
-      (user_executed_command ?user ?cmd)
-    )
-  )
-
-  (:action switch_user_with_setpriv
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (process_running ?cmd)
-      (user_executed_command ?user ?cmd)
-    )
-  )
-
-  (:action reset_resource_limits_with_su
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (process_running ?cmd)
-      (resource_limits_reset ?cmd)
-    )
-  )
-
-  (:action execute_command_with_su
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (process_running ?cmd)
-      (user_executed_command ?user ?cmd)
-    )
-  )
-
-  (:action fast_mode_with_su
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (process_running ?cmd)
-      (user_executed_command ?user ?cmd)
-    )
-  )
-
-  (:action change_user_group
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_primary_group ?user ?group)
+      (primary_group ?u ?g)
     )
   )
 
   (:action add_supplementary_group
-    :parameters (?actor - user ?user - user ?group - group)
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
+      (user_exists ?u)
+      (not (member_of ?u ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_supplementary_group ?user ?group)
-    )
-  )
-
-  (:action start_shell_login
-    :parameters (?shell - file ?user - user)
-    :precondition (and
-      (file_exists ?shell)
-      (user_exists ?user)
-    )
-    :effect (and
-      (shell_is_login ?shell)
-    )
-  )
-
-  (:action preserve_environment
-    :parameters (?shell - file ?user - user)
-    :precondition (and
-      (file_exists ?shell)
-      (user_exists ?user)
-    )
-    :effect (and
-      (environment_preserved ?shell)
-    )
-  )
-
-  (:action create_pseudo_terminal
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (session_has_pty ?user)
-    )
-  )
-
-  (:action run_specified_shell
-    :parameters (?shell - file ?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (session_runs_shell ?user)
+      (member_of ?u ?g)
     )
   )
 
@@ -2184,82 +3326,46 @@
     )
   )
 
-  (:action login_shell_with_su
-    :parameters (?user - user)
+  (:action change_path_environment
+    :parameters (?env - process)
     :precondition (and
-      (user_exists ?user)
+      (requires_env_preservation ?env)
     )
     :effect (and
-      (shell_executed ?user)
+      (path_initialized ?env)
     )
   )
 
-  (:action preserve_environment_with_su
-    :parameters (?cmd - process ?user - user)
+  (:action execute_su_with_login_and_preserve_environment
+    :parameters (?user - user ?env - process)
     :precondition (and
+      (requires_env_preservation ?env)
       (user_exists ?user)
     )
     :effect (and
-      (environment_preserved ?user)
+      (path_initialized ?env)
     )
   )
 
-  (:action configure_pam_su_behavior
-    :parameters (?actor - user ?config_file - file ?module - file)
+  (:action execute_su_without_login_and_preserve_environment
+    :parameters (?user - user ?env - process)
     :precondition (and
-      (file_exists ?config_file)
-      (not (pam_configured ?module))
+      (requires_env_preservation ?env)
+      (user_exists ?user)
+    )
+    :effect (and
+      (path_initialized ?env)
+    )
+  )
+
+  (:action update_pam_lastlog
+    :parameters (?actor - user ?f - file)
+    :precondition (and
+      (file_exists ?f)
       (can_escalate ?actor)
     )
     :effect (and
-      (pam_configured ?module)
-    )
-  )
-
-  (:action switch_to_login_shell
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (current_user_is ?user)
-      (login_shell_active ?true)
-    )
-  )
-
-  (:action execute_command_as_user
-    :parameters (?user - user ?command - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (current_user_is ?user)
-      (command_executed ?true)
-    )
-  )
-
-  (:action switch_shell_as_user
-    :parameters (?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_executable ?shell)
-    )
-    :effect (and
-      (current_user_is ?user)
-      (active_shell_is ?shell)
-    )
-  )
-
-  (:action switch_user_with_pty
-    :parameters (?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-    )
-    :effect (and
-      (current_user_is ?user)
-      (primary_group_is ?group)
-      (pseudo_terminal_created ?true)
+      (pam_lastlog_updated ?f)
     )
   )
 
@@ -2274,147 +3380,173 @@
     )
   )
 
-  (:action add_user
-    :parameters (?actor - user ?user - user)
+  (:action update_default_user_info
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (updated_default_user_info)
+    )
+  )
+
+  (:action add_user_with_comment
+    :parameters (?actor - user ?user - user ?comment - file)
     :precondition (and
       (not (user_exists ?user))
       (can_escalate ?actor)
     )
     :effect (and
       (user_exists ?user)
-      (group_exists ?user)
     )
   )
 
-  (:action update_default_user_info
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (default_new_user_updated)
-    )
-  )
-
-  (:action set_default_useradd
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (default_values_set)
-    )
-  )
-
-  (:action set_home_directory
-    :parameters (?actor - user ?user - user ?home_dir - directory)
-    :precondition (and
-      (user_exists ?user)
-      (not (configures ?home_dir ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (configures ?home_dir ?user)
-    )
-  )
-
-  (:action set_user_expiration_date
+  (:action add_user_with_expire_date
     :parameters (?actor - user ?user - user ?expire_date - file)
     :precondition (and
-      (user_exists ?user)
+      (not (user_exists ?user))
       (can_escalate ?actor)
     )
     :effect (and
-      (account_expires_on ?user ?expire_date)
+      (user_exists ?user)
+    )
+  )
+
+  (:action set_password_inactivity_period
+    :parameters (?actor - user ?u - user ?inactive_days - file)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (password_inactive ?u ?inactive_days)
     )
   )
 
   (:action update_subids_for_system_account
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (subuids_updated ?user)
-      (subgids_updated ?user)
+      (subuids_updated ?u)
+      (subgids_updated ?u)
     )
   )
 
-  (:action add_supplementary_groups_to_user
-    :parameters (?actor - user ?user - user ?groups - file)
+  (:action add_user
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (user_exists ?user)
-      (all_groups_exist ?groups)
+      (not (user_exists ?u))
+      (group_exists ?g)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_in_groups ?user ?groups)
+      (user_exists ?u)
+      (member_of_group ?u ?g)
     )
   )
 
-  (:action create_home_directory
-    :parameters (?actor - user ?user - user ?skel_dir - directory)
+  (:action add_user_with_group
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (not (home_exists ?user))
+      (not (user_exists ?u))
+      (group_exists ?g)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?u)
+      (primary_group_of ?u ?g)
+    )
+  )
+
+  (:action add_user_with_supplementary_groups
+    :parameters (?actor - user ?u - user ?g1 - group ?g2 - group ?gn - group)
+    :precondition (and
+      (not (user_exists ?u))
+      (group_exists ?g1)
+      (group_exists ?g2)
+      (group_exists ?gn)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?u)
+      (member_of_group ?u ?g1)
+      (member_of_group ?u ?g2)
+      (member_of_group ?u ?gn)
+    )
+  )
+
+  (:action create_user_with_skeleton
+    :parameters (?actor - user ?username - user ?skel_dir - directory)
+    :precondition (and
+      (not (user_exists ?username))
       (directory_exists ?skel_dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (home_exists ?user)
-      (acls_copied ?user)
-      (extended_attributes_copied ?user)
+      (user_exists ?username)
+      (home_directory_created ?username)
     )
   )
 
-  (:action override_login_defs_defaults
+  (:action override_login_defs
     :parameters (?actor - user ?key - file ?value - file)
     :precondition (and
-      (not (login_def_key_exists ?key))
       (can_escalate ?actor)
     )
     :effect (and
-      (login_def_key_exists ?key)
-      (login_def_value_set ?value)
+      (login_def_overridden ?key ?value)
     )
   )
 
-  (:action no_log_init
-    :parameters (?actor - user ?user - user)
+  (:action create_user_no_log_init
+    :parameters (?actor - user ?username - user)
     :precondition (and
-      (not (lastlog_exists ?user))
-      (not (faillog_exists ?user))
+      (not (user_exists ?username))
       (can_escalate ?actor)
     )
     :effect (and
-      (not (lastlog_exists ?user))
-      (not (faillog_exists ?user))
+      (user_exists ?username)
+      (no_lastlog_entry ?username)
+      (no_faillog_entry ?username)
     )
   )
 
   (:action reset_user_logs
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (lastlog_entry ?user))
-      (not (faillog_entry ?user))
+      (not (entry_in_lastlog ?u))
+      (not (entry_in_faillog ?u))
     )
   )
 
-  (:action no_create_home_directory
-    :parameters (?actor - user ?user - user ?dir - directory)
+  (:action preserve_user_logs
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (not (directory_exists ?dir))
-      (user_exists ?user)
+      (user_exists ?u)
+      (env_variable_set ?log_init_no)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (home_directory_set ?user ?dir))
+      (entry_in_lastlog ?u)
+      (entry_in_faillog ?u)
+    )
+  )
+
+  (:action set_create_home
+    :parameters (?actor - user ?obj - file)
+    :precondition (and
+      (network_available)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (create_home_enabled)
     )
   )
 
@@ -2422,12 +3554,12 @@
     :parameters (?actor - user ?user - user ?group - group)
     :precondition (and
       (not (user_exists ?user))
-      (group_exists ?group)
+      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
       (user_exists ?user)
-      (user_in_group ?user ?group)
+      (member_of ?user ?group)
     )
   )
 
@@ -2435,11 +3567,12 @@
     :parameters (?actor - user ?user - user ?uid - file)
     :precondition (and
       (not (user_exists ?user))
+      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
       (user_exists ?user)
-      (user_has_uid ?user ?uid)
+      (has_uid ?user ?uid)
     )
   )
 
@@ -2450,77 +3583,64 @@
       (can_escalate ?actor)
     )
     :effect (and
-      (password_set_for_user ?user)
+      (password_set ?user)
     )
   )
 
   (:action create_system_account
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (not (user_exists ?user))
+      (not (user_exists ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (account_locked ?user)
+      (user_exists ?u)
+      (user_locked ?u)
     )
   )
 
-  (:action create_system_account_with_home_directory
-    :parameters (?actor - user ?user - user ?home_dir - directory)
+  (:action create_home_directory
+    :parameters (?actor - user ?u - user ?d - directory)
     :precondition (and
-      (not (user_exists ?user))
+      (user_exists ?u)
+      (not (file_exists ?d))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (directory_exists ?home_dir)
+      (file_exists ?d)
     )
   )
 
-  (:action create_system_account_with_home_directory_and_update_subfiles
-    :parameters (?actor - user ?user - user ?home_dir - directory)
+  (:action apply_changes_chroot
+    :parameters (?actor - user ?dir - directory)
     :precondition (and
-      (not (user_exists ?user))
+      (file_exists ?dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (directory_exists ?home_dir)
+      (changes_applied_in_chroot ?dir)
     )
   )
 
-  (:action apply_changes_in_chroot_directory
-    :parameters (?actor - user ?chroot_dir - directory)
+  (:action apply_changes_prefix
+    :parameters (?dir - directory)
     :precondition (and
-      (directory_exists ?chroot_dir)
-      (can_escalate ?actor)
+      (file_exists ?dir)
     )
     :effect (and
-      (changes_applied_in_chroot ?chroot_dir)
+      (changes_applied_with_prefix ?dir)
     )
   )
 
-  (:action apply_changes_to_prefix_directory
-    :parameters (?actor - user ?prefix_dir - directory)
+  (:action set_shell_path
+    :parameters (?actor - user ?u - user ?s - file)
     :precondition (and
-      (directory_exists ?prefix_dir)
+      (user_exists ?u)
+      (file_exists ?s)
       (can_escalate ?actor)
     )
     :effect (and
-      (changes_applied_in_prefix ?prefix_dir)
-    )
-  )
-
-  (:action set_user_shell
-    :parameters (?actor - user ?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_exists ?shell)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_shell_set ?user ?shell)
+      (user_shell_set ?u ?s)
     )
   )
 
@@ -2538,132 +3658,64 @@
   )
 
   (:action set_user_id
-    :parameters (?actor - user ?user - user ?uid - file)
+    :parameters (?actor - user ?u - user ?uid - file)
     :precondition (and
-      (not (user_exists ?user))
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (user_has_uid ?user ?uid)
+      (not (service_running ?uid))
     )
   )
 
   (:action set_selinux_user
-    :parameters (?actor - user ?user - user ?seuser - file)
+    :parameters (?actor - user ?u - user ?seuser - file)
     :precondition (and
-      (not (user_exists ?user))
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (user_has_selinux_user ?user ?seuser)
+      (not (service_running ?seuser))
     )
   )
 
-  (:action update_useradd_defaults
+  (:action update_default_values
     :parameters (?actor - user ?option - file ?value - file)
     :precondition (and
-      (network_available)
-      (user_exists ?root)
       (can_escalate ?actor)
     )
     :effect (and
-      (default_value_set ?option ?value)
+      (default_updated ?option)
     )
   )
 
-  (:action set_home_mode
-    :parameters (?actor - user ?mode - file ?user - user)
+  (:action set_home_directory_prefix
+    :parameters (?actor - user ?base_dir - file)
     :precondition (and
-      (user_exists ?user)
-      (home_directory_created ?user)
       (can_escalate ?actor)
     )
     :effect (and
-      (home_directory_mode_set ?user)
+      (default_base_dir_set ?base_dir)
     )
   )
 
-  (:action create_group
-    :parameters (?actor - user ?g - group)
+  (:action set_account_expiry_date
+    :parameters (?actor - user ?expire_date - file)
     :precondition (and
-      (not (group_exists ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?g)
+      (default_expire_date_set ?expire_date)
     )
   )
 
-  (:action set_gid_range
-    :parameters (?actor - user ?min - file ?max - file)
+  (:action set_inactive_days
+    :parameters (?actor - user ?inactive - file)
     :precondition (and
-      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (gid_min_set ?min)
-      (gid_max_set ?max)
-    )
-  )
-
-  (:action create_user_home_directory
-    :parameters (?actor - user ?u - user ?h - directory)
-    :precondition (and
-      (not (directory_exists ?h))
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_exists ?h)
-      (user_exists ?u)
-    )
-  )
-
-  (:action set_home_directory_mode
-    :parameters (?actor - user ?h - directory ?m - file)
-    :precondition (and
-      (directory_exists ?h)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_mode_set ?h)
-    )
-  )
-
-  (:action create_mail_spool_directory
-    :parameters (?actor - user ?m - directory ?u - user)
-    :precondition (and
-      (not (directory_exists ?m))
-      (user_exists ?u)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_exists ?m)
-      (mail_spool_created ?u)
-    )
-  )
-
-  (:action set_mail_spool_location
-    :parameters (?h - directory ?m - file)
-    :precondition (and
-      (directory_exists ?h)
-    )
-    :effect (and
-      (mail_spool_location_set ?m)
-    )
-  )
-
-  (:action modify_user
-    :parameters (?actor - user ?user - user ?mail_dir - directory ?mail_file - file)
-    :precondition (and
-      (user_exists ?user)
-      (directory_exists ?mail_dir)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (configures ?mail_file ?user)
+      (default_inactive_set ?inactive)
     )
   )
 
@@ -2676,383 +3728,6 @@
     )
     :effect (and
       (not (user_exists ?u))
-    )
-  )
-
-  (:action set_max_members_per_group
-    :parameters (?actor - user ?max_members - file ?group - group)
-    :precondition (and
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (group_has_max_members ?group ?max_members)
-    )
-  )
-
-  (:action set_password_max_days
-    :parameters (?actor - user ?user - user ?max_days - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_has_max_days ?user ?max_days)
-    )
-  )
-
-  (:action set_pass_min_days
-    :parameters (?actor - user ?days - file ?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_min_days ?user ?days)
-    )
-  )
-
-  (:action set_pass_warn_age
-    :parameters (?actor - user ?warn_days - file ?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_warn_age ?user ?warn_days)
-    )
-  )
-
-  (:action set_sub_gid_range
-    :parameters (?actor - user ?min - file ?max - file ?count - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subordinate_gid_min ?min)
-      (subordinate_gid_max ?max)
-      (subordinate_gid_count ?count)
-    )
-  )
-
-  (:action create_system_group
-    :parameters (?actor - user ?group - group ?sys_gid_min - file ?sys_gid_max - file)
-    :precondition (and
-      (not (group_exists ?group))
-      (sys_gid_range_valid ?sys_gid_min ?sys_gid_max)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (group_exists ?group)
-      (system_group_created ?group ?sys_gid_min ?sys_gid_max)
-    )
-  )
-
-  (:action create_system_user
-    :parameters (?actor - user ?user - user ?sys_uid_min - file ?sys_uid_max - file)
-    :precondition (and
-      (not (user_exists ?user))
-      (sys_uid_range_valid ?sys_uid_min ?sys_uid_max)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (system_user_created ?user ?sys_uid_min ?sys_uid_max)
-    )
-  )
-
-  (:action create_regular_user
-    :parameters (?actor - user ?user - user ?uid_min - file ?uid_max - file)
-    :precondition (and
-      (not (user_exists ?user))
-      (uid_range_valid ?uid_min ?uid_max)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (regular_user_created ?user ?uid_min ?uid_max)
-    )
-  )
-
-  (:action set_umask
-    :parameters (?umask - file)
-    :precondition (and
-    )
-    :effect (and
-      (file_mode_creation_mask ?umask)
-    )
-  )
-
-  (:action add_user_with_defaults
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (not (user_exists ?user))
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (file_mode_creation_mask ?obj_022)
-    )
-  )
-
-  (:action add_user_with_custom_settings
-    :parameters (?actor - user ?user - user ?group - group ?home_mode - file ?umask - file)
-    :precondition (and
-      (not (user_exists ?user))
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (file_mode_creation_mask ?umask)
-    )
-  )
-
-  (:action remove_user_and_group
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (user_exists ?user))
-      (not (group_exists ?group))
-    )
-  )
-
-  (:action update_selinux_mapping
-    :parameters (?actor - user ?username - user)
-    :precondition (and
-      (user_exists ?username)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (selinux_mapping_updated ?username)
-    )
-  )
-
-  (:action set_default_user_config
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (default_user_config_set)
-    )
-  )
-
-  (:action set_password_inactivity_period
-    :parameters (?actor - user ?login - user ?inactive - file)
-    :precondition (and
-      (not (user_exists ?login))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_inactive_period ?login ?inactive)
-    )
-  )
-
-  (:action set_gecos_field
-    :parameters (?actor - user ?login - user ?comment - file)
-    :precondition (and
-      (not (user_exists ?login))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_gecos_field ?login ?comment)
-    )
-  )
-
-  (:action set_base_directory_for_home
-    :parameters (?actor - user ?login - user ?base_dir - directory)
-    :precondition (and
-      (not (user_exists ?login))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_base_directory ?login ?base_dir)
-    )
-  )
-
-  (:action set_btrfs_subvolume_home
-    :parameters (?actor - user ?login - user)
-    :precondition (and
-      (not (user_exists ?login))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_btrfs_subvolume_home ?login)
-    )
-  )
-
-  (:action disable_badname_check
-    :parameters (?actor - user ?login - user)
-    :precondition (and
-      (not (user_exists ?login))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (badname_check_disabled ?login)
-    )
-  )
-
-  (:action add_subuids_for_system_user
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subuid_entry_added ?user)
-      (subgid_entry_added ?user)
-    )
-  )
-
-  (:action create_user_with_primary_group
-    :parameters (?actor - user ?user - user ?gid - group)
-    :precondition (and
-      (not (user_exists ?user))
-      (group_exists ?gid)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (primary_group_assigned ?user ?gid)
-    )
-  )
-
-  (:action create_user_with_supplementary_groups
-    :parameters (?actor - user ?user - user ?groups - file)
-    :precondition (and
-      (not (user_exists ?user))
-      (all_groups_exist ?groups)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (supplementary_groups_assigned ?user ?groups)
-    )
-  )
-
-  (:action create_user_with_home_directory
-    :parameters (?actor - user ?user - user ?skel_dir - directory)
-    :precondition (and
-      (not (user_exists ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (home_directory_created ?user)
-    )
-  )
-
-  (:action create_user_without_home_directory
-    :parameters (?actor - user ?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (no_home_directory_created ?user)
-    )
-  )
-
-  (:action create_user_without_user_group
-    :parameters (?actor - user ?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (no_user_group_created ?user)
-    )
-  )
-
-  (:action create_user_with_duplicate_id
-    :parameters (?actor - user ?user - user ?gid - group)
-    :precondition (and
-      (not (user_exists ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_exists ?user)
-      (non_unique_user_created ?user)
-    )
-  )
-
-  (:action create_user_group
-    :parameters (?actor - user ?group - group ?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (group_exists ?group))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (group_exists ?group)
-    )
-  )
-
-  (:action set_login_shell
-    :parameters (?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_has_shell ?user ?shell)
-    )
-  )
-
-  (:action set_encrypted_password
-    :parameters (?actor - user ?user - user ?password - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_password ?user ?password)
-    )
-  )
-
-  (:action set_user_uid
-    :parameters (?actor - user ?user - user ?uid - file)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_has_uid ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_uid ?user)
-    )
-  )
-
-  (:action set_selinux_user_mapping
-    :parameters (?actor - user ?user - user ?seuser - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_has_seuser ?user ?seuser)
-    )
-  )
-
-  (:action use_extra_users_database
-    :parameters (?actor - user ?obj - file)
-    :precondition (and
-      (network_available)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (extra_users_db_used)
     )
   )
 
@@ -3080,318 +3755,384 @@
     )
   )
 
-  (:action modify_user_account
-    :parameters (?actor - user ?user - user)
+  (:action change_password
+    :parameters (?u - user)
     :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
+      (user_exists ?u)
     )
     :effect (and
-      (user_modified ?user)
-    )
-  )
-
-  (:action add_user_to_groups
-    :parameters (?actor - user ?user - user ?groups - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?groups)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_in_group ?user ?groups)
-    )
-  )
-
-  (:action update_user_comment
-    :parameters (?actor - user ?user - user ?comment - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_comment_updated ?user)
-    )
-  )
-
-  (:action change_user_home_directory
-    :parameters (?actor - user ?user - user ?new_home - directory)
-    :precondition (and
-      (user_exists ?user)
-      (not (directory_exists ?new_home))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_home_changed ?user)
-    )
-  )
-
-  (:action move_user_home_directory_contents
-    :parameters (?actor - user ?user - user ?new_home - directory)
-    :precondition (and
-      (user_exists ?user)
-      (file_exists ?current_home)
-      (not (directory_exists ?new_home))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (home_directory_moved ?user)
-    )
-  )
-
-  (:action set_user_account_expiration_date
-    :parameters (?actor - user ?user - user ?expire_date - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (account_expires_on ?user ?expire_date)
-    )
-  )
-
-  (:action change_primary_group
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (primary_group_changed ?user ?group)
-    )
-  )
-
-  (:action change_supplementary_groups
-    :parameters (?actor - user ?user - user ?groups - file)
-    :precondition (and
-      (user_exists ?user)
-      (all_groups_exist ?groups)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (supplementary_groups_changed ?user ?groups)
-    )
-  )
-
-  (:action append_user_to_group
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_in_group ?user ?group)
-    )
-  )
-
-  (:action change_user_login
-    :parameters (?actor - user ?old_login - user ?new_login - user)
-    :precondition (and
-      (user_exists ?old_login)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (user_exists ?old_login))
-      (user_exists ?new_login)
-    )
-  )
-
-  (:action lock_user_password
-    :parameters (?actor - user ?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_locked ?user)
-    )
-  )
-
-  (:action move_user_home_directory
-    :parameters (?actor - user ?user - user ?new_home - directory)
-    :precondition (and
-      (user_exists ?user)
-      (not (directory_exists ?new_home))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (directory_exists ?new_home)
-    )
-  )
-
-  (:action update_user_properties
-    :parameters (?actor - user ?user - user ?new_uid - file ?password - file)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_critical ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (ownership_updated ?user)
-      (acl_copied ?user)
-      (extended_attributes_copied ?user)
-    )
-  )
-
-  (:action set_non_unique_user_id
-    :parameters (?actor - user ?user - user ?new_uid - file)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_critical ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (non_unique_uid_set ?user)
-    )
-  )
-
-  (:action set_user_password
-    :parameters (?actor - user ?user - user ?encrypted_password - file)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_critical ?user))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (password_updated ?user)
+      (not (vulnerable ?u))
     )
   )
 
   (:action remove_user_from_group
+    :parameters (?actor - user ?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (member_of ?u ?g)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (member_of ?u ?g))
+    )
+  )
+
+  (:action set_password_warn_age
+    :parameters (?actor - user ?user - user ?age - file)
+    :precondition (and
+      (user_exists ?user)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (password_warn_age_set ?user ?age)
+    )
+  )
+
+  (:action allocate_subordinate_group_ids
+    :parameters (?actor - user ?user - user ?min - file ?max - file ?count - file)
+    :precondition (and
+      (user_exists ?user)
+      (not (subordinate_gids_allocated ?user))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (subordinate_gids_allocated ?user)
+    )
+  )
+
+  (:action allocate_subordinate_user_ids
+    :parameters (?actor - user ?user - user ?min - file ?max - file ?count - file)
+    :precondition (and
+      (user_exists ?user)
+      (not (subordinate_uids_allocated ?user))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (subordinate_uids_allocated ?user)
+    )
+  )
+
+  (:action create_system_user
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (not (user_exists ?u))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?u)
+      (system_user_created ?u)
+    )
+  )
+
+  (:action create_regular_user
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (not (user_exists ?u))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?u)
+      (regular_user_created ?u)
+    )
+  )
+
+  (:action create_system_group
+    :parameters (?actor - user ?g - group)
+    :precondition (and
+      (not (group_exists ?g))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_exists ?g)
+      (system_group_created ?g)
+    )
+  )
+
+  (:action set_umask
+    :parameters (?mask - file)
+    :precondition (and
+    )
+    :effect (and
+      (umask_set ?mask)
+    )
+  )
+
+  (:action remove_user_and_group
     :parameters (?actor - user ?user - user ?group - group)
     :precondition (and
       (user_exists ?user)
-      (group_exists ?group)
+      (member_of ?user ?group)
+      (usergroups_enab ?yes)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (user_in_group ?user ?group))
+      (not (user_exists ?user))
+      (not (member_of ?user ?group))
     )
   )
 
-  (:action chroot_changes
-    :parameters (?actor - user ?dir - directory)
+  (:action add_subids_for_system_user
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (directory_exists ?dir)
+      (not (user_exists ?u))
+      (group_exists ?g)
       (can_escalate ?actor)
     )
     :effect (and
-      (changes_applied_in_chroot_dir ?dir)
+      (member_of ?u ?g)
+      (subid_entry_added ?u)
     )
   )
 
-  (:action prefix_changes
-    :parameters (?actor - user ?prefix_dir - directory)
+  (:action set_supplementary_groups
+    :parameters (?actor - user ?u - user ?gs - file)
     :precondition (and
-      (directory_exists ?prefix_dir)
+      (not (user_exists ?u))
+      (all_groups_exist ?gs)
       (can_escalate ?actor)
     )
     :effect (and
-      (changes_applied_in_prefix_dir ?prefix_dir)
+      (member_of ?u ?gs)
+      (supplementary_groups_set ?u ?gs)
     )
   )
 
-  (:action change_shell
-    :parameters (?actor - user ?user - user ?shell - file)
+  (:action no_create_home_directory
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
-      (file_exists ?shell)
+      (not (user_exists ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_shell_changed ?user ?shell)
+      (home_directory_not_set ?u)
     )
   )
 
-  (:action change_user_id
-    :parameters (?actor - user ?user - user ?uid - file)
+  (:action no_create_user_group
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (not (user_exists ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_uid_changed ?user ?uid)
+      (no_user_group_created ?u)
+    )
+  )
+
+  (:action create_duplicate_users
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (not (user_exists ?u))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (duplicate_user_created ?u)
+    )
+  )
+
+  (:action create_user_group
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (not (group_exists ?u))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_exists ?u)
+      (member_of ?u ?u)
+    )
+  )
+
+  (:action change_primary_group
+    :parameters (?actor - user ?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (member_of ?u ?g)
+    )
+  )
+
+  (:action append_user_to_group
+    :parameters (?actor - user ?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (member_of ?u ?g)
+    )
+  )
+
+  (:action change_username
+    :parameters (?actor - user ?old_user - user ?new_user - user)
+    :precondition (and
+      (user_exists ?old_user)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (user_exists ?old_user))
+      (user_exists ?new_user)
+    )
+  )
+
+  (:action lock_password
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_locked ?u)
+    )
+  )
+
+  (:action move_home_directory
+    :parameters (?actor - user ?u - user ?d - directory)
+    :precondition (and
+      (user_exists ?u)
+      (directory_exists ?d)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (home_directory ?u))
+      (home_directory ?u ?d)
+    )
+  )
+
+  (:action update_user_properties
+    :parameters (?actor - user ?u - user ?f - file)
+    :precondition (and
+      (user_exists ?u)
+      (file_exists ?f)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (owner_of ?f ?u)
+      (permissions_updated ?f)
+    )
+  )
+
+  (:action set_non_unique_uid
+    :parameters (?actor - user ?u - user ?uid - file)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (non_unique_uid ?u ?uid)
+    )
+  )
+
+  (:action set_user_password
+    :parameters (?actor - user ?u - user ?encrypted_password - file)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (password_set ?u)
     )
   )
 
   (:action unlock_user_password
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (not (user_locked ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (password_unlocked ?user)
+      (not (user_locked ?u))
     )
   )
 
-  (:action change_file_ownership_outside_home
-    :parameters (?actor - user ?file - file ?new_user_id - file)
+  (:action change_home_directory_ownership
+    :parameters (?actor - user ?f - file ?u - user)
     :precondition (and
-      (file_exists ?file)
+      (user_exists ?u)
+      (file_exists ?f)
+      (not (traffic_blocked ?network))
+      (interface_up)
       (can_escalate ?actor)
     )
     :effect (and
-      (file_owner_changed ?file)
+      (requires_env_preservation ?f)
+      (member_of ?u)
     )
   )
 
-  (:action add_subuids
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+  (:action change_file_ownership_outside_home_directory
+    :parameters (?actor - user ?f - file ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (file_exists ?f)
       (can_escalate ?actor)
     )
     :effect (and
-      (subuid_range_added ?user ?first ?last)
+      (requires_env_preservation ?f)
+      (member_of ?u)
     )
   )
 
-  (:action remove_subuids
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+  (:action unlock_account
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
-      (subuid_range_added ?user ?first ?last)
+      (user_exists ?u)
+      (user_locked ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (subuid_range_added ?user ?first ?last))
+      (not (user_locked ?u))
     )
   )
 
-  (:action add_subgids
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+  (:action add_subordinate_uids
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (subgid_range_added ?user ?first ?last)
+      (subordinate_uid_range_added ?u ?first ?last)
+    )
+  )
+
+  (:action remove_subordinate_uids
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
+    :precondition (and
+      (user_exists ?u)
+      (subordinate_uid_range_added ?u ?first ?last)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (subordinate_uid_range_added ?u ?first ?last))
     )
   )
 
   (:action add_subordinate_gids
-    :parameters (?actor - user ?user - user ?first_gid - file ?last_gid - file)
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (subordinate_gids_added ?user ?first_gid ?last_gid)
+      (subordinate_gid_range_added ?u ?first ?last)
     )
   )
 
   (:action remove_subordinate_gids
-    :parameters (?actor - user ?user - user ?first_gid - file ?last_gid - file)
+    :parameters (?actor - user ?user - user ?first - file ?last - file)
     :precondition (and
       (user_exists ?user)
-      (subordinate_gids_added ?user ?first_gid ?last_gid)
+      (subordinate_gid_range_added ?user ?first ?last)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (subordinate_gids_added ?user ?first_gid ?last_gid))
+      (not (subordinate_gid_range_added ?user ?first ?last))
     )
   )
 
@@ -3407,545 +4148,490 @@
     )
   )
 
-  (:action modify_user_properties
-    :parameters (?actor - user ?user - user ?new_uid - file ?new_username - file ?new_home_dir - directory)
+  (:action change_owner_crontab_at_jobs
+    :parameters (?actor - user ?f - file ?u - user)
     :precondition (and
-      (user_exists ?user)
-      (not (process_running_by_user ?user))
+      (file_exists ?f)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_has_new_id ?user ?new_uid)
-      (user_has_new_name ?user ?new_username)
-      (user_has_new_home_directory ?user ?new_home_dir)
+      (owner_of ?f ?u)
     )
   )
 
-  (:action update_lastlog_entries
-    :parameters (?actor - user ?uid_limit - file)
+  (:action modify_nis_server
+    :parameters (?actor - user ?server - interface ?u - user)
     :precondition (and
-      (network_available)
+      (interface_exists ?server)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (lastlog_updated ?uid_limit)
+      (nis_updated ?server)
     )
   )
 
-  (:action configure_mail_directory
-    :parameters (?actor - user ?mail_dir - directory)
+  (:action set_max_members_per_group
+    :parameters (?actor - user ?max_num - file)
     :precondition (and
-      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (mail_directory_set ?mail_dir)
+      (max_members_per_group ?max_num)
     )
   )
 
-  (:action create_user_account
-    :parameters (?actor - user ?user - user ?mail_dir - directory ?mail_file - file)
+  (:action modify_user
+    :parameters (?actor - user ?login - user ?group - group)
     :precondition (and
-      (not (user_exists ?user))
-      (network_available)
+      (user_exists ?login)
+      (not (user_locked ?login))
       (can_escalate ?actor)
     )
     :effect (and
-      (user_exists ?user)
-      (mail_spool_created ?mail_dir)
-    )
-  )
-
-  (:action delete_user_account
-    :parameters (?actor - user ?user - user ?mail_dir - directory ?mail_file - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (user_exists ?user))
-      (mail_spool_deleted ?mail_dir)
+      (append_group ?login ?group)
     )
   )
 
   (:action lock_user_account
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (not (user_locked ?u))
       (can_escalate ?actor)
     )
     :effect (and
-      (account_locked ?user)
+      (user_locked ?u)
     )
   )
 
-  (:action move_home_directory
-    :parameters (?actor - user ?user - user ?new_home - directory)
+  (:action change_supplementary_groups
+    :parameters (?actor - user ?u - user ?gs - file)
     :precondition (and
-      (user_exists ?user)
-      (directory_exists ?new_home)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (home_directory_moved ?user ?new_home)
+      (member_of ?u ?gs)
     )
   )
 
   (:action remove_user_from_groups
-    :parameters (?actor - user ?user - user ?groups - group)
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (user_exists ?user)
-      (group_exists ?groups)
+      (user_exists ?u)
+      (member_of ?u ?g)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (user_in_group ?user ?groups))
-    )
-  )
-
-  (:action change_user_shell
-    :parameters (?actor - user ?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_executable ?shell)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_shell ?user ?shell)
-    )
-  )
-
-  (:action change_user_uid
-    :parameters (?actor - user ?user - user ?uid - file)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (user_uid ?user ?uid)
+      (not (member_of ?u ?g))
     )
   )
 
   (:action unlock_user_account
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (user_locked ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (account_locked ?user))
+      (not (user_locked ?u))
     )
   )
 
   (:action add_subuids_range
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (subuid_range_added ?user ?first ?last)
+      (subordinate_uids_added ?u ?first ?last)
     )
   )
 
-  (:action del_subuids_range
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+  (:action remove_subuids_range
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (subuid_range_added ?user ?first ?last)
+      (user_exists ?u)
+      (subordinate_uids_added ?u ?first ?last)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (subuid_range_added ?user ?first ?last))
+      (not (subordinate_uids_added ?u ?first ?last))
     )
   )
 
   (:action add_subgids_range
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (subgid_range_added ?user ?first ?last)
+      (subordinate_gids_added ?u ?first ?last)
     )
   )
 
-  (:action del_subgids_range
-    :parameters (?actor - user ?user - user ?first - file ?last - file)
+  (:action remove_subgids_range
+    :parameters (?actor - user ?u - user ?first - file ?last - file)
     :precondition (and
-      (subgid_range_added ?user ?first ?last)
+      (user_exists ?u)
+      (subordinate_gids_added ?u ?first ?last)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (subgid_range_added ?user ?first ?last))
+      (not (subordinate_gids_added ?u ?first ?last))
+    )
+  )
+
+  (:action delete_user_account
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (user_exists ?u))
+      (not (user_locked ?u))
+    )
+  )
+
+  (:action delete_user_account_forcefully
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (user_exists ?u))
+      (not (user_locked ?u))
     )
   )
 
   (:action remove_user
-    :parameters (?actor - user ?user - user ?group - group)
+    :parameters (?actor - user ?u - user ?g - group)
     :precondition (and
-      (user_exists ?user)
-      (not (user_critical ?user))
-      (group_exists ?group)
+      (user_exists ?u)
+      (not (user_locked ?u))
+      (not (group_exists ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (not (user_exists ?user))
-      (not (group_exists ?group))
+      (not (user_exists ?u))
     )
   )
 
-  (:action remove_user_home_and_mail
-    :parameters (?actor - user ?user - user)
+  (:action chroot_changes
+    :parameters (?actor - user ?u - user ?chroot_dir - directory)
     :precondition (and
-      (user_exists ?user)
-      (not (user_critical ?user))
+      (user_exists ?u)
+      (directory_exists ?chroot_dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (directory_exists ?home_dir))
-      (not (file_exists ?mail_spool))
+      (applied_changes_in_chroot ?u ?chroot_dir)
     )
   )
 
-  (:action remove_selinux_user_mapping
-    :parameters (?actor - user ?user - user)
+  (:action prefix_changes
+    :parameters (?actor - user ?u - user ?prefix_dir - directory)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (directory_exists ?prefix_dir)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (selinux_user_mapped ?user))
+      (applied_changes_in_prefix ?u ?prefix_dir)
     )
   )
 
-  (:action move_mail_spool
-    :parameters (?actor - user ?old_path - file ?new_path - directory ?user - user)
+  (:action remove_selinux_mapping
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (file_exists ?old_path)
-      (not (directory_exists ?new_path))
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (file_exists ?old_path))
-      (mail_spool_moved ?user)
+      (not (selinux_mapped ?u))
     )
   )
 
-  (:action remove_user_and_run_command
-    :parameters (?actor - user ?user - user ?cmd - file)
+  (:action manage_mail_spool
+    :parameters (?actor - user ?u - user ?m - file ?f - file)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
+      (directory_exists ?m)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (user_exists ?user))
+      (mail_spool_managed ?u)
     )
   )
 
-  (:action remove_user_jobs
-    :parameters (?actor - user ?user - user)
+  (:action userdel_with_command
+    :parameters (?actor - user ?username - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?username)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (cron_job_exists ?user))
-      (not (at_job_exists ?user))
-      (not (print_job_exists ?user))
-    )
-  )
-
-  (:action manage_user_group
-    :parameters (?actor - user ?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (group_contains_member ?group ?user))
-      (not (group_exists ?group))
-    )
-  )
-
-  (:action remove_group_account_info
-    :parameters (?actor - user ?group - group)
-    :precondition (and
-      (group_exists ?group)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (group_exists ?group))
-    )
-  )
-
-  (:action remove_user_account_info
-    :parameters (?actor - user ?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (user_exists ?user))
-    )
-  )
-
-  (:action run_pre_delete_scripts
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (user_exists ?usr)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (scripts_executed ?usr)
-    )
-  )
-
-  (:action run_post_delete_scripts
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (not (user_exists ?usr))
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (scripts_executed ?usr)
-    )
-  )
-
-  (:action update_subgid_file
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (user_exists ?usr)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subgid_updated ?usr)
-    )
-  )
-
-  (:action update_subuid_file
-    :parameters (?actor - user ?usr - user)
-    :precondition (and
-      (user_exists ?usr)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (subuid_updated ?usr)
-    )
-  )
-
-  (:action delete_user_account_force
-    :parameters (?actor - user ?user - user ?process - process)
-    :precondition (and
-      (user_exists ?user)
-      (process_running ?process)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (user_exists ?user))
-      (not (group_exists ?user))
-    )
-  )
-
-  (:action delete_user_group
-    :parameters (?actor - user ?group - group ?user - user)
-    :precondition (and
-      (group_exists ?group)
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (group_exists ?group))
-    )
-  )
-
-  (:action delete_user_group_force
-    :parameters (?actor - user ?group - group ?user - user)
-    :precondition (and
-      (group_exists ?group)
-      (user_exists ?user)
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (not (group_exists ?group))
+      (not (user_exists ?username))
     )
   )
 
   (:action force_delete_user
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (user_exists ?user))
-      (not (can_escalate ?user))
+      (not (user_exists ?u))
+    )
+  )
+
+  (:action delete_user_with_home
+    :parameters (?actor - user ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (not (user_exists ?u))
     )
   )
 
   (:action delete_selinux_mapping
-    :parameters (?actor - user ?user - user)
+    :parameters (?actor - user ?u - user)
     :precondition (and
-      (user_exists ?user)
+      (user_exists ?u)
       (can_escalate ?actor)
     )
     :effect (and
-      (not (selinux_user_mapping_exists ?user))
+      (not (file_exists ?selinux_user_mapping ?u))
     )
   )
 
-  (:action add_group
-    :parameters (?actor - user ?groupname - file ?gid - file)
+  (:action create_group
+    :parameters (?actor - user ?g - group)
     :precondition (and
-      (not (group_exists ?groupname))
-      (length_?groupname ?obj_32)
-      (gid_unique ?gid)
+      (not (group_exists ?g))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?groupname)
-      (group_gid ?groupname)
+      (group_exists ?g)
     )
   )
 
   (:action force_add_group
     :parameters (?actor - user ?groupname - file ?gid - file)
     :precondition (and
-      (length_?groupname ?obj_32)
-      (gid_unique ?gid)
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?groupname)
-      (group_gid ?groupname)
+      (user_exists ?groupname)
+      (gid ?groupname ?gid)
     )
   )
 
-  (:action set_group_defaults
-    :parameters (?actor - user ?min_gid - file ?max_gid - file)
+  (:action override_login_config
+    :parameters (?actor - user ?key - file ?value - file)
     :precondition (and
       (can_escalate ?actor)
     )
     :effect (and
-      (group_default_min ?min_gid)
-      (group_default_max ?max_gid)
-    )
-  )
-
-  (:action create_non_unique_group
-    :parameters (?actor - user ?group - group ?gid - file)
-    :precondition (and
-      (can_escalate ?actor)
-    )
-    :effect (and
-      (group_exists ?group)
-      (group_gid ?group ?gid)
+      (login_config_overridden ?key ?value)
     )
   )
 
   (:action set_group_password
-    :parameters (?actor - user ?group - group ?password - file)
+    :parameters (?actor - user ?grp - group ?pwd - file)
     :precondition (and
-      (group_exists ?group)
+      (not (user_locked ?grp))
+      (network_available)
       (can_escalate ?actor)
     )
     :effect (and
-      (group_has_password ?group)
+      (not (user_locked ?grp))
+    )
+  )
+
+  (:action create_non_unique_group
+    :parameters (?actor - user ?newgroup - group ?gid - file)
+    :precondition (and
+      (not (user_exists ?newgroup))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?newgroup)
+    )
+  )
+
+  (:action add_group
+    :parameters (?actor - user ?grp - group ?gid - file)
+    :precondition (and
+      (not (group_exists ?grp))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (group_exists ?grp)
+      (gid_range_correct ?gid)
+    )
+  )
+
+  (:action chroot_apply_changes
+    :parameters (?actor - user ?dir - directory)
+    :precondition (and
+      (directory_exists ?dir)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (changes_applied_in_chroot ?dir)
+    )
+  )
+
+  (:action prefix_apply_changes
+    :parameters (?actor - user ?prefix_dir - directory)
+    :precondition (and
+      (directory_exists ?prefix_dir)
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (changes_applied_in_prefix ?prefix_dir)
     )
   )
 
   (:action add_users_to_group
-    :parameters (?actor - user ?users - file ?group - group)
+    :parameters (?actor - user ?grp - group ?users - file)
     :precondition (and
-      (group_exists ?group)
+      (group_exists ?grp)
       (can_escalate ?actor)
     )
     :effect (and
-      (user_in_group ?users ?group)
+      (users_added_to_group ?grp ?users)
     )
   )
 
   (:action set_sys_gid_range
     :parameters (?actor - user ?sys_min - file ?sys_max - file)
     :precondition (and
-      (not (sys_gid_min_set ?sys_min))
-      (not (sys_gid_max_set ?sys_max))
       (can_escalate ?actor)
     )
     :effect (and
-      (sys_gid_min_set ?sys_min)
-      (sys_gid_max_set ?sys_max)
+      (sys_gid_range_set ?sys_min ?sys_max)
     )
   )
 
   (:action add_system_group
-    :parameters (?actor - user ?group - group ?gid - file)
+    :parameters (?actor - user ?grp - group ?gid - file)
     :precondition (and
-      (not (group_exists ?group))
-      (gid_available ?gid)
+      (not (gid_used ?gid))
+      (not (group_exists ?grp))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?group)
-      (group_has_gid ?group ?gid)
+      (group_exists ?grp)
+      (gid_used ?gid)
     )
   )
 
   (:action update_group_file
-    :parameters (?obj - file)
+    :parameters (?actor - user ?grp - group ?gid - file)
     :precondition (and
-      (network_available)
+      (not (can_update_group_file))
+      (can_escalate ?actor)
     )
     :effect (and
-      (group_file_updated)
+      (can_update_group_file)
     )
   )
 
   (:action add_group_with_gid
     :parameters (?actor - user ?group - group ?gid - file)
     :precondition (and
-      (not (group_exists ?group))
-      (not (gid_in_use ?gid))
+      (not (user_exists ?group))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?group)
-      (group_has_gid ?group ?gid)
+      (user_exists ?group)
+    )
+  )
+
+  (:action add_group_with_password
+    :parameters (?actor - user ?group - group ?password - file)
+    :precondition (and
+      (not (user_exists ?group))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?group)
     )
   )
 
   (:action add_group_non_unique_gid
     :parameters (?actor - user ?group - group ?gid - file)
     :precondition (and
-      (not (group_exists ?group))
+      (not (user_exists ?group))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?group)
-      (group_has_gid ?group ?gid)
+      (user_exists ?group)
     )
   )
 
-  (:action add_group_with_prefix_and_chroot
-    :parameters (?actor - user ?group - group ?prefix_dir - file ?chroot_dir - file)
+  (:action add_group_force
+    :parameters (?actor - user ?group - group)
     :precondition (and
-      (not (group_exists ?group))
+      (not (user_exists ?group))
       (can_escalate ?actor)
     )
     :effect (and
-      (group_exists ?group)
-      (prefix_directory ?group ?prefix_dir)
+      (user_exists ?group)
     )
   )
 
-  (:action use_extra_users_db
+  (:action add_group_with_key_value
+    :parameters (?actor - user ?group - group ?key - file ?value - file)
+    :precondition (and
+      (not (user_exists ?group))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?group)
+    )
+  )
+
+  (:action add_group_with_chroot
+    :parameters (?actor - user ?group - group ?chroot_dir - file)
+    :precondition (and
+      (not (user_exists ?group))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?group)
+    )
+  )
+
+  (:action add_group_with_prefix
+    :parameters (?actor - user ?group - group ?prefix - file)
+    :precondition (and
+      (not (user_exists ?group))
+      (can_escalate ?actor)
+    )
+    :effect (and
+      (user_exists ?group)
+    )
+  )
+
+  (:action enable_extra_users_db
     :parameters (?obj - file)
     :precondition (and
     )
     :effect (and
-      (extra_users_db_enabled)
+      (extrausers_enabled)
     )
   )
 
