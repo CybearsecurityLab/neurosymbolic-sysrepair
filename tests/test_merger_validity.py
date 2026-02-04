@@ -97,6 +97,7 @@ def test_basic_structure(merger, sample_partial_domains):
 def test_type_unification(merger, sample_partial_domains):
     """Ensure hierarchy is respected (including Core Hierarchy overrides)."""
     pddl_output = merger.merge(sample_partial_domains)
+    # Normalize whitespace to single spaces
     clean_pddl = re.sub(r"\s+", " ", pddl_output)
 
     assert (
@@ -110,17 +111,25 @@ def test_predicate_unification(merger, sample_partial_domains):
     """Ensure duplicate predicates are merged."""
     pddl_output = merger.merge(sample_partial_domains)
 
-    predicate_section = re.search(
-        r"\(:predicates(.*?)\)", pddl_output, re.DOTALL
-    ).group(1)
+    # Extract everything from (:predicates DOWN TO (:action
+    # This avoids the "stop at first closing paren" bug
+    match = re.search(r"\(:predicates(.*?)(?=\(:action)", pddl_output, re.DOTALL)
+    assert match, "Could not find predicate section (or action section missing)"
+
+    predicate_section = match.group(1)
+    normalized_section = re.sub(r"\s+", " ", predicate_section).strip()
 
     # Check for our safe predicate 'file_secure'
-    matches = re.findall(r"\(file_secure \?f - file\)", predicate_section)
+    # It should appear exactly once as "(file_secure ?f - file)"
+    count = normalized_section.count("(file_secure ?f - file)")
 
-    assert len(matches) == 1, (
-        f"Predicate consolidation failed. Section: {predicate_section}"
+    assert count == 1, (
+        f"Expected 1 occurrence of '(file_secure ?f - file)', found {count}.\n"
+        f"Normalized Section: {normalized_section}"
     )
-    assert "(owns ?u - user ?f - file)" in predicate_section
+
+    # Check 'owns' exists
+    assert "(owns ?u - user ?f - file)" in normalized_section
 
 
 def test_action_consolidation(merger, sample_partial_domains):
