@@ -1,7 +1,8 @@
 import json
 import sys
+import os
 
-from phase1.common.logger import set_log_stream, log
+from phase1.common.logger import set_log_stream, log, setup_logging, close_logging, suppress_console
 from phase1.orchestrator import Phase1Orchestrator
 
 
@@ -15,8 +16,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         "-o",
-        default="./pddl_output",
-        help="Output directory for PDDL files",
+        default="./pddl_output/phase1",
+        help="Output directory for PDDL files (default: ./pddl_output/phase1)",
     )
     parser.add_argument(
         "--json-output",
@@ -46,12 +47,6 @@ def main():
         help="Validate generated PDDL with VAL validator",
     )
     parser.add_argument(
-        "--write-files",
-        "-w",
-        action="store_true",
-        help="Write PDDL files to output directory",
-    )
-    parser.add_argument(
         "--scoping",
         choices=["dynamic", "static"],
         default="dynamic",
@@ -61,16 +56,23 @@ def main():
 
     args = parser.parse_args()
 
-    # Configure logging output
+    # Ensure output directory exists
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    # Set up file logging (always logs to file)
+    log_file_path = setup_logging(args.output_dir, "phase1.log")
+
+    # Configure console output
     if args.json_output:
         # Send progress to stderr so stdout is clean JSON
         set_log_stream(sys.stderr)
 
     if args.quiet:
-        # Suppress all progress output (cross-platform null device)
-        import os
+        # Suppress console output (file logging continues)
+        suppress_console(True)
 
-        set_log_stream(open(os.devnull, "w"))
+    log(f"Output directory: {args.output_dir}")
+    log(f"Log file: {log_file_path}")
 
     # Run orchestrator
     orchestrator = Phase1Orchestrator(
@@ -81,12 +83,8 @@ def main():
     )
     results = orchestrator.run()
 
-    # Write files if requested
-    if args.write_files and results.get("pddl_generated"):
-        import os
-
-        os.makedirs(args.output_dir, exist_ok=True)
-
+    # Always write PDDL files if generation succeeded
+    if results.get("pddl_generated"):
         domain_path = os.path.join(args.output_dir, "sysadmin.pddl")
         problem_path = os.path.join(args.output_dir, "problem.pddl")
 
@@ -98,6 +96,7 @@ def main():
         log(f"\nFiles written to {args.output_dir}/")
         log(f"  - sysadmin.pddl ({len(results.get('domain_pddl', ''))} bytes)")
         log(f"  - problem.pddl ({len(results.get('problem_pddl', ''))} bytes)")
+        log(f"  - phase1.log")
 
     if args.json_output:
         # Build JSON output
@@ -124,6 +123,9 @@ def main():
             print("GENERATED DOMAIN (sysadmin.pddl)")
             print("=" * 60)
             print(results["domain_pddl"])
+
+    # Close log file
+    close_logging()
 
     return 0 if results["success"] else 1
 

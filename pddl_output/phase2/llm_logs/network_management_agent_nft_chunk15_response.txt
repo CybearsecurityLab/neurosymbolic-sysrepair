@@ -1,8 +1,0 @@
-(:predicates 
-  (firewall_rule_exists ?r - firewall_rule)
-)
-
-(:action add_conntrack_rule
-  :parameters (?rule - firewall_rule ?port - integer ?set - firewall_rule ?threshold - integer)
-  :effect (firewall_rule_exists ?rule)
-)

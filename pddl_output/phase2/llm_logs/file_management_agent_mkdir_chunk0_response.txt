@@ -1,9 +1,0 @@
-(:action create-directory
- :parameters (?d - filesystem_object)
- :precondition (not (file_exists ?d))
- :effect (file_exists ?d))
-
-(:action create-directory-with-parents
- :parameters (?d - filesystem_object)
- :precondition (not (file_exists ?d))
- :effect (file_exists ?d))
