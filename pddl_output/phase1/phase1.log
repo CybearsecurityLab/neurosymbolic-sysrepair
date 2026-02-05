@@ -130,3 +130,17 @@ Started: 2026-02-05 12:52:54
 [2026-02-05 13:45:28] [INFO]     iptables: 63 actions (regex:3, llm:60)
 [2026-02-05 13:45:28] [INFO]     netstat: 0 actions (regex:0, llm:0)
 [2026-02-05 13:45:28] [INFO]     [DEBUG] sudo: Sending 8893 chars to LLM...
+[2026-02-05 13:54:23] [INFO]     [ERROR] LLM extraction failed for ss: Failed to parse JSON content: Unterminated string starting at: line 1214 column 17 (char 121115)
+[2026-02-05 13:54:23] [INFO]     ss: 0 actions (regex:0, llm:0)
+[2026-02-05 13:54:23] [INFO]     [DEBUG] su: Sending 9294 chars to LLM...
+[2026-02-05 13:55:08] [INFO]     [DEBUG] sudo: Got 27 raw extractions
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'run_editor': Unbound variable ?user
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'run_as_user': Unbound variable ?pr
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'validate_session': Unbound variable ?user
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'run_as_group': Unbound variable ?pr
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'run_login_shell': Unbound variable ?pr
+[2026-02-05 13:55:08] [INFO]     [WARN] Dropping action 'run_as_user': Unbound variable ?pr
+[2026-02-05 13:55:08] [INFO] 
+  Processing privilege...
+[2026-02-05 13:55:08] [INFO]     sudo: 13 actions (regex:1, llm:12)
+[2026-02-05 13:55:08] [INFO]     [DEBUG] useradd: Sending 21753 chars to LLM...
