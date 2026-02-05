@@ -2350,3 +2350,9 @@ Phase 1 actions per group:
 2026-02-05 13:48:58,986 [WARNING] Phase2.Merger:     ✗ Repair failed for 'send': Unexpected token Token('RPAR', ')') at line 31, column 32.. Pruning.
 2026-02-05 13:48:59,008 [INFO] Phase2.Merger:   [680/723] ⚠ Action 'run' failed: Unexpected token Token('RPAR', ')') at line 31, column 32.
 2026-02-05 13:48:59,008 [INFO] Phase2.Merger:     → Attempting targeted LLM repair...
+2026-02-05 13:50:08,276 [WARNING] Phase2.Merger:     ✗ Repair failed for 'run': Unexpected token Token('RPAR', ')') at line 31, column 32.. Pruning.
+2026-02-05 13:50:08,301 [INFO] Phase2.Merger:   [681/723] ⚠ Action 'run_nohup_command' failed: Unexpected token Token('RPAR', ')') at line 31, column 32.
+2026-02-05 13:50:08,301 [INFO] Phase2.Merger:     → Attempting targeted LLM repair...
+2026-02-05 13:50:28,775 [WARNING] Phase2.Merger:     ✗ Repair failed for 'run_nohup_command': Unexpected token Token('RPAR', ')') at line 31, column 32.. Pruning.
+2026-02-05 13:50:28,797 [INFO] Phase2.Merger:   [682/723] ⚠ Action 'pkill' failed: Unexpected token Token('RPAR', ')') at line 31, column 32.
+2026-02-05 13:50:28,797 [INFO] Phase2.Merger:     → Attempting targeted LLM repair...
