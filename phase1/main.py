@@ -53,8 +53,42 @@ def main():
         help="Scoping method: 'dynamic' (graph-based Anchor & Propagate) or "
         "'static' (legacy arbitrary caps). Default: dynamic",
     )
+    parser.add_argument(
+        "--gpu",
+        "-g",
+        type=str,
+        default=None,
+        help="GPU device(s) to use (e.g., '0', '1', '0,1'). Sets CUDA_VISIBLE_DEVICES. "
+        "Default: use all available GPUs.",
+    )
+    parser.add_argument(
+        "--llm-model",
+        default="qwen2.5:32b",
+        help="LLM model for action extraction (default: qwen2.5:32b)",
+    )
+    parser.add_argument(
+        "--llm-url",
+        default="http://localhost:11434",
+        help="Ollama server URL (default: http://localhost:11434)",
+    )
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Disable LLM extraction (use regex-only extraction)",
+    )
+    parser.add_argument(
+        "--max-llm-workers",
+        type=int,
+        default=1,
+        help="Max parallel LLM extraction workers (default: 1). "
+        "Increase based on GPU count and model size.",
+    )
 
     args = parser.parse_args()
+
+    # Set GPU device(s) if specified (before any CUDA initialization)
+    if args.gpu is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
     # Ensure output directory exists
     os.makedirs(args.output_dir, exist_ok=True)
@@ -73,6 +107,12 @@ def main():
 
     log(f"Output directory: {args.output_dir}")
     log(f"Log file: {log_file_path}")
+    if args.gpu is not None:
+        log(f"GPU device(s): {args.gpu}")
+    if not args.no_llm:
+        log(f"LLM: {args.llm_model} @ {args.llm_url} (workers: {args.max_llm_workers})")
+    else:
+        log("LLM: disabled")
 
     # Run orchestrator
     orchestrator = Phase1Orchestrator(
@@ -80,6 +120,10 @@ def main():
         osquery_socket=args.osquery_socket,
         validate=args.validate,
         scoping_mode=args.scoping,
+        llm_model=args.llm_model,
+        llm_url=args.llm_url,
+        enable_llm=not args.no_llm,
+        max_llm_workers=args.max_llm_workers,
     )
     results = orchestrator.run()
 

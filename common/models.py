@@ -355,3 +355,4 @@ class LLMExtractionConfig:
     timeout: int = 600
     max_retries: int = 2
     temperature: float = 0.0
+    max_workers: int = 1  # Number of parallel LLM extraction workers
