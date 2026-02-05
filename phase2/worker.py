@@ -15,6 +15,7 @@ import os
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
@@ -113,6 +114,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         log_dir: str = "pddl_output/llm_logs",
         reuse_phase1_actions: bool = True,
         os_capabilities: dict = None,
+        max_llm_workers: int = 1,
     ):
         self.group_name = group_name
         self.config = group_config
@@ -126,6 +128,7 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.reuse_phase1_actions = reuse_phase1_actions
         self.os_capabilities = os_capabilities or {}
+        self.max_llm_workers = max_llm_workers
 
     def _build_system_prompt(self) -> str:
         """
@@ -208,42 +211,12 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
             utilities = self.config.get("utilities", [])
             system_prompt = self._build_system_prompt()
 
-            for utility in utilities:
-                logger.info(f"[{self.worker_name}] Processing utility: {utility}")
-
-                # Use the new chunking method from tools.py
-                chunk_generator = self.doc_extractor.get_chunked_docs(utility)
-
-                for i, doc_chunk in enumerate(chunk_generator):
-                    logger.debug(
-                        f"[{self.worker_name}] Processing chunk {i + 1} for {utility}"
-                    )
-
-                    generation_prompt = self._build_chunk_prompt(
-                        utility, doc_chunk, existing_actions
-                    )
-
-                    # Log prompt
-                    log_file = (
-                        self.log_dir
-                        / f"{self.worker_name}_{utility}_chunk{i}_prompt.txt"
-                    )
-                    log_file.write_text(
-                        f"=== SYS ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
-                    )
-
-                    # Call LLM
-                    raw_response = self.llm.generate(generation_prompt, system_prompt)
-
-                    # Log response
-                    resp_log = (
-                        self.log_dir
-                        / f"{self.worker_name}_{utility}_chunk{i}_response.txt"
-                    )
-                    resp_log.write_text(raw_response)
-
-                    # Parse and Merge results
-                    self._parse_pddl_output(raw_response, result)
+            if self.max_llm_workers > 1:
+                # Parallel chunk processing
+                self._process_chunks_parallel(utilities, system_prompt, existing_actions, result)
+            else:
+                # Sequential chunk processing (original behavior)
+                self._process_chunks_sequential(utilities, system_prompt, existing_actions, result)
 
             logger.info(
                 f"[{self.worker_name}] Total Generated: {len(result.actions)} actions "
@@ -256,6 +229,115 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         result.generation_time = time.time() - start_time
         return result
+
+    def _process_chunks_sequential(
+        self,
+        utilities: list[str],
+        system_prompt: str,
+        existing_actions: set[str],
+        result: PartialPDDLDomain
+    ) -> None:
+        """Process chunks sequentially (original behavior)."""
+        for utility in utilities:
+            logger.info(f"[{self.worker_name}] Processing utility: {utility}")
+
+            # Use the new chunking method from tools.py
+            chunk_generator = self.doc_extractor.get_chunked_docs(utility)
+
+            for i, doc_chunk in enumerate(chunk_generator):
+                logger.debug(
+                    f"[{self.worker_name}] Processing chunk {i + 1} for {utility}"
+                )
+
+                generation_prompt = self._build_chunk_prompt(
+                    utility, doc_chunk, existing_actions
+                )
+
+                # Log prompt
+                log_file = (
+                    self.log_dir
+                    / f"{self.worker_name}_{utility}_chunk{i}_prompt.txt"
+                )
+                log_file.write_text(
+                    f"=== SYS ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
+                )
+
+                # Call LLM
+                raw_response = self.llm.generate(generation_prompt, system_prompt)
+
+                # Log response
+                resp_log = (
+                    self.log_dir
+                    / f"{self.worker_name}_{utility}_chunk{i}_response.txt"
+                )
+                resp_log.write_text(raw_response)
+
+                # Parse and Merge results
+                self._parse_pddl_output(raw_response, result)
+
+    def _process_chunks_parallel(
+        self,
+        utilities: list[str],
+        system_prompt: str,
+        existing_actions: set[str],
+        result: PartialPDDLDomain
+    ) -> None:
+        """Process chunks in parallel using ThreadPoolExecutor."""
+        logger.info(f"[{self.worker_name}] Processing chunks in parallel (workers: {self.max_llm_workers})")
+
+        # First, collect all chunks from all utilities
+        chunk_tasks = []
+        for utility in utilities:
+            chunk_generator = self.doc_extractor.get_chunked_docs(utility)
+            for i, doc_chunk in enumerate(chunk_generator):
+                chunk_tasks.append((utility, i, doc_chunk))
+
+        logger.info(f"[{self.worker_name}] Processing {len(chunk_tasks)} chunks in parallel")
+
+        # Process chunks in parallel
+        def process_chunk(task):
+            utility, chunk_idx, doc_chunk = task
+            try:
+                generation_prompt = self._build_chunk_prompt(
+                    utility, doc_chunk, existing_actions
+                )
+
+                # Log prompt
+                log_file = (
+                    self.log_dir
+                    / f"{self.worker_name}_{utility}_chunk{chunk_idx}_prompt.txt"
+                )
+                log_file.write_text(
+                    f"=== SYS ===\n{system_prompt}\n\n=== USER ===\n{generation_prompt}"
+                )
+
+                # Call LLM
+                raw_response = self.llm.generate(generation_prompt, system_prompt)
+
+                # Log response
+                resp_log = (
+                    self.log_dir
+                    / f"{self.worker_name}_{utility}_chunk{chunk_idx}_response.txt"
+                )
+                resp_log.write_text(raw_response)
+
+                return (utility, chunk_idx, raw_response, None)
+            except Exception as e:
+                logger.error(f"[{self.worker_name}] Chunk {utility}:{chunk_idx} failed: {e}")
+                return (utility, chunk_idx, None, str(e))
+
+        # Execute in parallel
+        with ThreadPoolExecutor(max_workers=self.max_llm_workers) as executor:
+            futures = {executor.submit(process_chunk, task): task for task in chunk_tasks}
+
+            for future in as_completed(futures):
+                utility, chunk_idx, raw_response, error = future.result()
+                if error:
+                    logger.warning(f"[{self.worker_name}] Skipping {utility}:{chunk_idx} due to error")
+                else:
+                    # Parse and merge results (thread-safe since we're appending to lists)
+                    self._parse_pddl_output(raw_response, result)
+                    logger.debug(f"[{self.worker_name}] Completed {utility}:chunk{chunk_idx}")
 
     def _build_chunk_prompt(
         self, utility: str, doc_chunk: str, existing_actions: set[str]

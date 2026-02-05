@@ -295,6 +295,7 @@ class LLMConfig:
     temperature: float = 0.1
     tensor_parallel_size: int = 1
     timeout: int = 300
+    max_llm_workers: int = 1
 
     def __post_init__(self):
         # Check for environment overrides

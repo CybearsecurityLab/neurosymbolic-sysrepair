@@ -105,6 +105,7 @@ class Phase2Orchestrator:
             known_predicates=self.known_predicates,
             output_dir=str(self.output_dir),
             reuse_phase1_actions=reuse_phase1_actions,
+            llm_config=self.llm_config,
         )
         self.merger = MergerAgent(llm=self.llm)
         self.validator = PDDLValidator()

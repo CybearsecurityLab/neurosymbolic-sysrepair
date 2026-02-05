@@ -139,6 +139,13 @@ def main():
         default=None,
         help="Number of parallel workers (default: auto-detect based on hardware)"
     )
+    parser.add_argument(
+        "--max-llm-workers",
+        type=int,
+        default=1,
+        help="Max parallel LLM extraction workers for chunk processing (default: 1). "
+        "Increase based on GPU count and model size."
+    )
 
     args = parser.parse_args()
 
@@ -183,7 +190,10 @@ def main():
     if args.workers is not None:
         hardware.max_parallel_workers = args.workers
         logger.info(f"Using {args.workers} parallel workers (CLI override)")
-    llm_config = LLMConfig(model_name=args.model)
+    llm_config = LLMConfig(model_name=args.model, max_llm_workers=args.max_llm_workers)
+
+    if args.max_llm_workers > 1:
+        logger.info(f"Using {args.max_llm_workers} parallel LLM workers for chunk processing")
 
     # Launch vLLM if requested
     vllm_process = None

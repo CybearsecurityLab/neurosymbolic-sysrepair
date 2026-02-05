@@ -2,7 +2,13 @@ import json
 import sys
 import os
 
-from phase1.common.logger import set_log_stream, log, setup_logging, close_logging, suppress_console
+from phase1.common.logger import (
+    set_log_stream,
+    log,
+    setup_logging,
+    close_logging,
+    suppress_console,
+)
 from phase1.orchestrator import Phase1Orchestrator
 
 

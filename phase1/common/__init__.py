@@ -5,7 +5,6 @@ Common utilities for Phase 1.
 """
 
 from phase1.common.config import (
-    MODEL,
     LLM_MAX_CONTEXT_CHARS,
     OSQUERY_MAPPINGS,
     AnchorCriteria,
