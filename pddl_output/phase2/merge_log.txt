@@ -1,66 +1,85 @@
-Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'string' parent conflict: keeping core 'None' over 'object'
-Type 'integer' parent conflict: keeping core 'None' over 'object'
-Type 'boolean' parent conflict: keeping core 'None' over 'object'
-Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'connection' parent conflict: keeping core 'None' over 'object'
-Type 'object' parent conflict: keeping core 'None' over 'object'
-Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Extracted predicate 'allow_insecure_repositories' from action body
-Extracted predicate 'allow_unauthenticated' from action body
-Extracted predicate 'allow_releaseinfo_change' from action body
-Extracted predicate 'show_progress' from action body
-Extracted predicate 'source_file_added' from action body
-Extracted predicate 'package_unpacked' from action body
-Extracted predicate 'triggers_pending' from action body
-Extracted predicate 'triggers_processed' from action body
-Extracted predicate 'package_verified' from action body
-Extracted predicate 'available_packages_updated' from action body
-Extracted predicate 'available_packages_cleared' from action body
-Extracted predicate 'package_selections_set' from action body
-Extracted predicate 'package_selections_cleared' from action body
-Extracted predicate 'true' from action body
-Extracted predicate 'file_not_exists' from action body
-Extracted predicate 'aborted' from action body
-Extracted predicate 'checked' from action body
+Predicate 'configures' arity mismatch: 2 vs 1
+Extracted predicate 'package_upgraded' from action body
+Extracted predicate 'package_full_upgraded' from action body
+Extracted predicate 'package_removed' from action body
+Extracted predicate 'package_info_shown' from action body
+Extracted predicate 'sources_list_edited' from action body
+Extracted predicate 'depends_on' from action body
 Extracted predicate 'none' from action body
-Extracted predicate 'change_pending' from action body
-Extracted predicate 'listed' from action body
-Extracted predicate 'automount_exists' from action body
-Extracted predicate 'path_exists' from action body
-Extracted predicate 'job_exists' from action body
-Extracted predicate 'timer_exists' from action body
-Extracted predicate 'is_system_group' from action body
-Extracted predicate 'useradd_defaults_set' from action body
-Extracted predicate 'filesystem_exists' from action body
-Extracted predicate 'filesystem_readable' from action body
-Extracted predicate 'filesystem_writable' from action body
-Extracted predicate 'valid_config' from action body
-Extracted predicate 'variable_defined' from action body
-Extracted predicate 'file_included' from action body
-Extracted predicate 'valid_chain' from action body
-Extracted predicate 'icmp_type_rule_exists' from action body
-Extracted predicate 'icmp_code_rule_exists' from action body
-Extracted predicate 'icmpv6_type_rule_exists' from action body
-Extracted predicate 'conntrack_state_matches' from action body
-Extracted predicate 'dccp_pkttype_matches' from action body
-Extracted predicate 'nfproto_matches' from action body
-Extracted predicate 'l4proto_matches' from action body
-Extracted predicate 'interface_name_matches' from action body
-Extracted predicate 'set_exists' from action body
-Extracted predicate 'set_tcp_state' from action body
-Extracted predicate 'match_cgroup' from action body
-Extracted predicate 'process_name_matches' from action body
-Extracted predicate 'process_full_command_matches' from action body
+Extracted predicate 'is_seeded' from action body
+Extracted predicate 'remembered_connection' from action body
+Extracted predicate 'change_exists' from action body
+Extracted predicate 'installed_snap' from action body
+Extracted predicate 'api_available' from action body
+Extracted predicate 'aborted' from action body
+Extracted predicate 'service_status_checked' from action body
+Extracted predicate 'valid_kill_whom' from action body
+Extracted predicate 'service_killed' from action body
+Extracted predicate 'service_started' from action body
+Extracted predicate 'all_other_services_stopped' from action body
+Extracted predicate 'resources_cleaned' from action body
+Extracted predicate 'system_halted' from action body
+Extracted predicate 'system_powered_off' from action body
+Extracted predicate 'system_rebooted' from action body
+Extracted predicate 'preset_applied' from action body
+Extracted predicate 'status_displayed' from action body
+Extracted predicate 'restarted' from action body
+Extracted predicate 'reloaded' from action body
+Extracted predicate 'unit_exists' from action body
+Extracted predicate 'true' from action body
+Extracted predicate 'interface_down' from action body
+Extracted predicate 'batch_processed' from action body
+Extracted predicate 'current_namespace' from action body
+Extracted predicate 'configuration_active' from action body
+Extracted predicate 'addresses_displayed' from action body
+Extracted predicate 'neighbor_table_displayed' from action body
+Extracted predicate 'table_exists' from action body
+Extracted predicate 'table_flushed' from action body
+Extracted predicate 'chain_flushed' from action body
+Extracted predicate 'ruleset_listed' from action body
+Extracted predicate 'ruleset_flushed' from action body
+Extracted predicate 'available' from action body
+Extracted predicate 'mark_set' from action body
+Extracted predicate 'block_traffic' from action body
+Extracted predicate 'tcp_sport' from action body
+Extracted predicate 'tcp_dport' from action body
+Extracted predicate 'tcp_sequence' from action body
+Extracted predicate 'tcp_ackseq' from action body
+Extracted predicate 'tcp_doff' from action body
+Extracted predicate 'tcp_reserved' from action body
+Extracted predicate 'tcp_flags' from action body
+Extracted predicate 'tcp_window' from action body
+Extracted predicate 'tcp_checksum' from action body
+Extracted predicate 'tcp_urgptr' from action body
+Extracted predicate 'udp_sport' from action body
+Extracted predicate 'udp_dport' from action body
+Extracted predicate 'udp_length' from action body
+Extracted predicate 'udp_checksum' from action body
+Extracted predicate 'udplite_sport' from action body
+Extracted predicate 'udplite_dport' from action body
+Extracted predicate 'udplite_checksum' from action body
+Extracted predicate 'sctp_sport' from action body
+Extracted predicate 'sctp_dport' from action body
+Extracted predicate 'sctp_vtag' from action body
+Extracted predicate 'sctp_checksum' from action body
+Extracted predicate 'sctp_chunk_exists' from action body
+Extracted predicate 'log_configured' from action body
+Extracted predicate 'reject_configured' from action body
+Extracted predicate 'counter_configured' from action body
+Extracted predicate 'conntrack_configured' from action body
+Extracted predicate 'dscp_configured' from action body
+Extracted predicate 'tcp_mss_configured' from action body
+Extracted predicate 'default_policy_set' from action body
 Rejected action 'set_output_short': Invalid pattern in effect: '[^']*'
 Rejected action 'set_output_short_full': Invalid pattern in effect: '[^']*'
 Rejected action 'remove_user': Unbalanced parentheses in: (or (not (member_of ?u ?g))
@@ -72,53 +91,52 @@ Rejected action 'copy_files_to_directory_with_t_option': Invalid pattern in effe
 Rejected action 'copy_file_with_backup': Invalid pattern in effect: '[^']*'
 Action 'reinstall_package': preferring Phase 1 version
 Action 'install_package': preferring Phase 1 version
-Action 'remove_package': preferring Phase 1 version
 Action 'configure_package': preferring Phase 1 version
+Action 'inspect_state_file': preferring Phase 1 version
+Action 'forget_connection': preferring Phase 1 version
 Action 'set_journal_namespace': preferring Phase 1 version
-Merged 2 definitions of action 'upgrade_packages'
-Merged 2 definitions of action 'clean'
-Merged 6 definitions of action 'check'
-Merged 2 definitions of action 'set_package_selections'
-Merged 2 definitions of action 'clear_package_selections'
-Merged 3 definitions of action 'abort_change'
-Merged 2 definitions of action 'check_snapshot'
-Merged 2 definitions of action 'list_changes'
-Merged 2 definitions of action 'list_components'
-Merged 6 definitions of action 'apply'
-Merged 2 definitions of action 'list_timers'
-Merged 2 definitions of action 'list_units'
-Merged 8 definitions of action 'list'
-Merged 16 definitions of action 'set'
+Merged 2 definitions of action 'satisfy_dependency'
+Merged 2 definitions of action 'check_snapshot_data'
+Merged 2 definitions of action 'validate_snap_seed'
+Merged 2 definitions of action 'disconnect_plug'
+Merged 2 definitions of action 'abort_change'
+Merged 2 definitions of action 'apply'
+Merged 2 definitions of action 'isolate_target'
+Action 'add_users_to_group': preferring Phase 1 version
 Action 'set_selinux_user': preferring Phase 1 version
-Action 'create_system_group': preferring Phase 1 version
-Action 'add_user_to_group': preferring Phase 1 version
-Merged 2 definitions of action 'display_version'
-Action 'create_symbolic_link': preferring Phase 1 version
-Action 'create_directory_with_mode': preferring Phase 1 version
+Action 'create_system_user': preferring Phase 1 version
+Action 'force_delete_user': preferring Phase 1 version
+Merged 2 definitions of action 'set_password_min_days'
+Merged 2 definitions of action 'set_password_max_days'
+Merged 2 definitions of action 'set_password_warn_days'
 Action 'create_directory_with_parents': preferring Phase 1 version
 Action 'remove_directory_recursive': preferring Phase 1 version
-Action 'remove_empty_directory': preferring Phase 1 version
-Action 'remove_file': preferring Phase 1 version
-Merged 2 definitions of action 'create_hard_link'
-Action 'match_autobound': preferring Phase 1 version
-Merged 3 definitions of action 'set_chain_policy'
+Merged 9 definitions of action 'create'
+Merged 10 definitions of action 'list'
 Merged 2 definitions of action 'append'
-Merged 2 definitions of action 'delete'
+Action 'switch_network_namespace': preferring Phase 1 version
+Merged 4 definitions of action 'create_chain'
+Merged 4 definitions of action 'delete_chain'
+Merged 2 definitions of action 'append_rule'
+Merged 2 definitions of action 'insert_rule'
+Merged 3 definitions of action 'delete_rule'
+Merged 3 definitions of action 'set_chain_policy'
+Merged 3 definitions of action 'rename_chain'
+Merged 2 definitions of action 'delete_firewall_chain'
+Merged 2 definitions of action 'rename_firewall_chain'
+Merged 4 definitions of action 'add'
+Merged 4 definitions of action 'reset'
+Merged 2 definitions of action 'add_counter'
 Merged 2 definitions of action 'delete_counter'
 Merged 2 definitions of action 'match_icmp_type'
 Merged 2 definitions of action 'match_icmpv6_type'
-Merged 2 definitions of action 'match_ip_protocol'
-Merged 5 definitions of action 'enable'
-Merged 4 definitions of action 'disable'
 Merged 2 definitions of action 'connect'
-Merged 2 definitions of action 'create'
-Merged 3 definitions of action 'register'
-Merged 2 definitions of action 'add_route'
-Merged 2 definitions of action 'delete_route'
-Merged 2 definitions of action 'adjust'
-Merged 4 definitions of action 'send'
-Merged 8 definitions of action 'select'
-Merged 6 definitions of action 'toggle'
-Merged 2 definitions of action 'renice'
-Merged 3 definitions of action 'sudo'
+Merged 2 definitions of action 'register'
+Merged 2 definitions of action 'modify'
+Merged 3 definitions of action 'run'
+Merged 11 definitions of action 'select'
+Merged 30 definitions of action 'toggle'
+Merged 4 definitions of action 'scale'
+Merged 10 definitions of action 'set'
+Merged 4 definitions of action 'check'
 Merged 2 definitions of action 'ignore'
