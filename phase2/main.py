@@ -146,6 +146,14 @@ def main():
         help="Max parallel LLM extraction workers for chunk processing (default: 1). "
         "Increase based on GPU count and model size."
     )
+    parser.add_argument(
+        "--base-url",
+        "--ollama-url",
+        dest="base_url",
+        default=None,
+        help="Base URL for LLM service (e.g., http://localhost:11434 for Ollama, "
+        "http://localhost:8000/v1 for vLLM). Overrides default based on backend."
+    )
 
     args = parser.parse_args()
 
@@ -190,7 +198,17 @@ def main():
     if args.workers is not None:
         hardware.max_parallel_workers = args.workers
         logger.info(f"Using {args.workers} parallel workers (CLI override)")
-    llm_config = LLMConfig(model_name=args.model, max_llm_workers=args.max_llm_workers)
+
+    # Configure LLM
+    llm_kwargs = {
+        "model_name": args.model,
+        "max_llm_workers": args.max_llm_workers
+    }
+    if args.base_url:
+        llm_kwargs["base_url"] = args.base_url
+        logger.info(f"Using custom base URL: {args.base_url}")
+
+    llm_config = LLMConfig(**llm_kwargs)
 
     if args.max_llm_workers > 1:
         logger.info(f"Using {args.max_llm_workers} parallel LLM workers for chunk processing")

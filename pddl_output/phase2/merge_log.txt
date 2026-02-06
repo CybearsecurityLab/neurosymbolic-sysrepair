@@ -6,7 +6,7 @@ Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'configuration_file' parent conflict: keeping core 'file' over 'filesystem_object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Predicate 'configures' arity mismatch: 2 vs 1
 Extracted predicate 'package_upgraded' from action body
