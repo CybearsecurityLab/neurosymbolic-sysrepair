@@ -393,18 +393,48 @@ PREDICATE_ALIASES: dict[str, list[str]] = {
 }
 
 
+def sanitize_pddl_name(name: str) -> str:
+    """
+    Sanitize a PDDL identifier (predicate/type/action name).
+
+    PDDL names must match [a-zA-Z][a-zA-Z0-9_]*.
+    Common LLM mistakes: hyphens (type separator in PDDL),
+    question marks (variable prefix), colons, parentheses.
+
+    Args:
+        name: Raw name string
+
+    Returns:
+        Sanitized name safe for PDDL use
+    """
+    import re
+    # Replace hyphens with underscores (most common issue)
+    sanitized = name.replace("-", "_")
+    # Strip any remaining non-alphanumeric/underscore characters
+    sanitized = re.sub(r"[^a-zA-Z0-9_]", "", sanitized)
+    # Ensure it starts with a letter
+    if sanitized and not sanitized[0].isalpha():
+        sanitized = "p_" + sanitized
+    # Fallback for empty result
+    if not sanitized:
+        sanitized = "unnamed_predicate"
+    return sanitized
+
+
 def get_canonical_predicate_name(name: str) -> str:
     """
-    Get the canonical predicate name, resolving aliases.
-    
+    Get the canonical predicate name, resolving aliases and sanitizing.
+
     Args:
-        name: A predicate name (possibly an alias)
-        
+        name: A predicate name (possibly an alias or with invalid chars)
+
     Returns:
-        The canonical predicate name
+        The canonical, sanitized predicate name
     """
-    # Build reverse mapping
+    # First sanitize
+    clean_name = sanitize_pddl_name(name)
+    # Then check aliases (check both raw and sanitized)
     for canonical, aliases in PREDICATE_ALIASES.items():
-        if name in aliases:
+        if name in aliases or clean_name in aliases:
             return canonical
-    return name
+    return clean_name

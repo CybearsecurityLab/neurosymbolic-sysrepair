@@ -156,16 +156,64 @@ class MergerAgent:
 
         # --- NEW STEP: Targeted Repair Loop ---
         logger.info("\n[3.5/5] Targeted Neurosymbolic Repair...")
+        pre_repair_actions = list(self.unified_actions)  # Backup before repair
+        pre_repair_count = len(pre_repair_actions)
+
         if self._pddl_available and self.llm:
             # This replaces the massive whole-file repair loop
-            self.unified_actions = self._validate_and_repair_actions()
+            repaired = self._validate_and_repair_actions()
+            logger.info(
+                f"  Repair result: {len(repaired)} actions "
+                f"(was {pre_repair_count} before repair)"
+            )
+
+            # Guard: if repair returned empty/drastically fewer, fall back
+            if len(repaired) == 0 and pre_repair_count > 0:
+                logger.error(
+                    f"  CRITICAL: Repair returned 0 actions but had "
+                    f"{pre_repair_count} before repair. Falling back to "
+                    f"pre-repair actions."
+                )
+                self.unified_actions = pre_repair_actions
+            elif len(repaired) < pre_repair_count * 0.5:
+                logger.warning(
+                    f"  WARNING: Repair lost >50% of actions "
+                    f"({len(repaired)}/{pre_repair_count}). "
+                    f"Falling back to pre-repair actions."
+                )
+                self.unified_actions = pre_repair_actions
+            else:
+                self.unified_actions = repaired
         elif not self._pddl_available:
             logger.warning("pddl library missing - cannot perform targeted repair.")
         # --------------------------------------
 
         # Step 5: Construct Final Domain
-        logger.info("\n[5/5] Constructing unified domain...")
+        logger.info(
+            f"\n[5/5] Constructing unified domain "
+            f"({len(self.unified_actions)} actions)..."
+        )
         domain_pddl = self._construct_domain()
+
+        # Final sanity check on the constructed domain
+        action_count_in_pddl = domain_pddl.count("(:action ")
+        if action_count_in_pddl == 0 and len(self.unified_actions) > 0:
+            logger.error(
+                f"  CRITICAL: _construct_domain produced 0 actions but "
+                f"unified_actions has {len(self.unified_actions)}. "
+                f"Rebuilding with pre-repair actions..."
+            )
+            self.unified_actions = pre_repair_actions
+            domain_pddl = self._construct_domain()
+            action_count_in_pddl = domain_pddl.count("(:action ")
+            logger.info(
+                f"  Rebuild produced {action_count_in_pddl} actions"
+            )
+
+        logger.info(
+            f"  Final domain: {action_count_in_pddl} actions, "
+            f"{len(domain_pddl.splitlines())} lines"
+        )
 
         return domain_pddl
 
@@ -174,47 +222,98 @@ class MergerAgent:
         Iterates through actions one by one.
         If valid -> Keep.
         If invalid -> Ask LLM to fix ONLY that action -> Retest -> Keep/Prune.
+        Returns the original unified_actions list on catastrophic failure.
         """
         valid_actions = []
+        skipped = 0
 
         # 1. Build the "Base Domain" (Types + Predicates) for testing
-        base_domain_str = self._build_base_domain_template()
-
-        from pddl import parse_domain
-        import tempfile
+        try:
+            base_domain_str = self._build_base_domain_template()
+        except Exception as e:
+            logger.error(
+                f"  Failed to build base domain template: {e}. "
+                f"Skipping validation, returning all actions as-is."
+            )
+            return list(self.unified_actions)
 
         total = len(self.unified_actions)
+        logger.info(f"  Validating {total} actions...")
+
         for i, action in enumerate(self.unified_actions):
-            # 2. Test the action
-            is_valid, error_msg = self._test_single_action(action, base_domain_str)
+            try:
+                # 2. Test the action
+                is_valid, error_msg = self._test_single_action(
+                    action, base_domain_str
+                )
 
-            if is_valid:
-                valid_actions.append(action)
-                continue
+                if is_valid:
+                    valid_actions.append(action)
+                    continue
 
-            # 3. Validation Failed - Trigger Targeted Repair
-            logger.info(
-                f"  [{i + 1}/{total}] ⚠ Action '{action.name}' failed: {error_msg}"
-            )
-            logger.info(f"    → Attempting targeted LLM repair...")
+                # 3. Validation Failed - Trigger Targeted Repair
+                if self.llm:
+                    logger.info(
+                        f"  [{i + 1}/{total}] Action '{action.name}' "
+                        f"failed: {error_msg}"
+                    )
+                    logger.info(f"    Attempting targeted LLM repair...")
 
-            repaired_action = self._repair_single_action_with_llm(action, error_msg)
+                    repaired_action = self._repair_single_action_with_llm(
+                        action, error_msg
+                    )
 
-            # 4. Retest the repaired action
-            is_valid_now, new_error = self._test_single_action(
-                repaired_action, base_domain_str
-            )
+                    # 4. Retest the repaired action
+                    is_valid_now, new_error = self._test_single_action(
+                        repaired_action, base_domain_str
+                    )
 
-            if is_valid_now:
-                logger.info(f"    ✓ Fixed! Action '{action.name}' salvaged.")
-                valid_actions.append(repaired_action)
-            else:
+                    if is_valid_now:
+                        logger.info(
+                            f"    Fixed! Action '{action.name}' salvaged."
+                        )
+                        valid_actions.append(repaired_action)
+                    else:
+                        logger.warning(
+                            f"    Repair failed for '{action.name}': "
+                            f"{new_error}. Pruning."
+                        )
+                        self.rejected_actions.append(
+                            (action.name, f"Repair failed: {new_error}")
+                        )
+                else:
+                    # No LLM available - just skip invalid actions
+                    self.rejected_actions.append(
+                        (action.name, f"Invalid (no LLM): {error_msg}")
+                    )
+
+            except (MemoryError, OSError) as e:
+                # Critical resource error - stop validation, return what we have
+                logger.error(
+                    f"  RESOURCE ERROR at action {i + 1}/{total} "
+                    f"('{action.name}'): {e}. "
+                    f"Stopping validation early with {len(valid_actions)} "
+                    f"valid actions collected so far."
+                )
+                # Include remaining untested actions rather than losing them
+                remaining = self.unified_actions[i:]
+                logger.info(
+                    f"  Preserving {len(remaining)} untested actions."
+                )
+                valid_actions.extend(remaining)
+                break
+
+            except Exception as e:
+                # Non-critical error on single action - skip and continue
+                skipped += 1
                 logger.warning(
-                    f"    ✗ Repair failed for '{action.name}': {new_error}. Pruning."
+                    f"  [{i + 1}/{total}] Unexpected error testing "
+                    f"'{action.name}': {e}. Keeping action as-is."
                 )
-                self.rejected_actions.append(
-                    (action.name, f"Repair failed: {new_error}")
-                )
+                valid_actions.append(action)  # Keep it rather than lose it
+
+        if skipped > 0:
+            logger.info(f"  {skipped} actions had validation errors (kept as-is)")
 
         logger.info(
             f"Targeted repair complete. Final count: {len(valid_actions)}/{total}"
@@ -225,6 +324,7 @@ class MergerAgent:
         self, action: PDDLAction, base_domain: str
     ) -> tuple[bool, str]:
         """Injects a single action into the base domain and parses it."""
+        tmp_path = None
         try:
             # Format action as PDDL string
             action_str = self._format_action_pddl(action)
@@ -232,21 +332,30 @@ class MergerAgent:
             # Inject into template (insert before last closing paren)
             test_domain = base_domain.rpartition(")")[0] + "\n" + action_str + "\n)"
 
-            # Parse with library
-            import tempfile
+            # Parse with library - use delete=False for cross-platform safety
             from pddl import parse_domain
 
             with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".pddl", delete=True
+                mode="w", suffix=".pddl", delete=False
             ) as tmp:
+                tmp_path = tmp.name
                 tmp.write(test_domain)
                 tmp.flush()
-                parse_domain(tmp.name)
+
+            # Parse after file handle is closed (safer on all platforms)
+            parse_domain(tmp_path)
 
             return True, ""
         except Exception as e:
             # Clean up error message (usually first line is enough)
             return False, str(e).split("\n")[0]
+        finally:
+            # Always clean up temp file
+            if tmp_path:
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
 
     def _repair_single_action_with_llm(
         self, action: PDDLAction, error: str
@@ -667,11 +776,17 @@ class MergerAgent:
         Returns None if the action cannot be fixed.
         """
         try:
-            # Normalize parameter types
+            from common.predicates import sanitize_pddl_name
+
+            # Sanitize action name
+            action.name = sanitize_pddl_name(action.name)
+
+            # Normalize parameter types and names
             normalized_params = []
             for param_name, param_type in action.parameters:
+                clean_name = re.sub(r"[^a-zA-Z0-9_]", "", param_name)
                 normalized_type = normalize_type(param_type)
-                normalized_params.append((param_name, normalized_type))
+                normalized_params.append((clean_name, normalized_type))
 
             # Filter out invalid conditions from preconditions
             valid_preconds = []
@@ -726,6 +841,22 @@ class MergerAgent:
         # Must start with '('
         if not cond.startswith("("):
             return None
+
+        # Strip type annotations from conditions/effects.
+        # LLMs sometimes write "(pred ?x - type ?y - type)" in conditions
+        # but PDDL only allows typed params in :parameters, not in
+        # preconditions/effects. Remove " - type_name" after variables.
+        cond = re.sub(r"(\?\w+)\s+-\s+\w+", r"\1", cond)
+
+        # Sanitize predicate names inside conditions:
+        # Replace hyphens with underscores in identifiers.
+        def _fix_pred_name(m):
+            return "(" + m.group(1).replace("-", "_")
+        cond = re.sub(r"\(([a-zA-Z][a-zA-Z0-9_-]*)", _fix_pred_name, cond)
+
+        # Strip question marks from any remaining identifiers (not ?vars)
+        # e.g., "collapsed?" -> "collapsed"
+        cond = re.sub(r"([a-zA-Z0-9_])\?(?!\w)", r"\1", cond)
 
         return cond
 
