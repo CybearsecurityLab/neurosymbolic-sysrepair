@@ -2,141 +2,97 @@ Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
 Type 'configuration_file' parent conflict: keeping core 'file' over 'filesystem_object'
 Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
-Predicate 'configures' arity mismatch: 2 vs 1
-Extracted predicate 'package_upgraded' from action body
-Extracted predicate 'package_full_upgraded' from action body
-Extracted predicate 'package_removed' from action body
-Extracted predicate 'package_info_shown' from action body
-Extracted predicate 'sources_list_edited' from action body
-Extracted predicate 'depends_on' from action body
-Extracted predicate 'none' from action body
-Extracted predicate 'is_seeded' from action body
-Extracted predicate 'remembered_connection' from action body
-Extracted predicate 'change_exists' from action body
-Extracted predicate 'installed_snap' from action body
-Extracted predicate 'api_available' from action body
-Extracted predicate 'aborted' from action body
-Extracted predicate 'service_status_checked' from action body
-Extracted predicate 'valid_kill_whom' from action body
-Extracted predicate 'service_killed' from action body
-Extracted predicate 'service_started' from action body
-Extracted predicate 'all_other_services_stopped' from action body
-Extracted predicate 'resources_cleaned' from action body
-Extracted predicate 'system_halted' from action body
-Extracted predicate 'system_powered_off' from action body
-Extracted predicate 'system_rebooted' from action body
-Extracted predicate 'preset_applied' from action body
-Extracted predicate 'status_displayed' from action body
-Extracted predicate 'restarted' from action body
-Extracted predicate 'reloaded' from action body
-Extracted predicate 'unit_exists' from action body
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Predicate 'pager_disabled' arity mismatch: 0 vs 1
+Predicate 'file_owned_by' arity mismatch: 2 vs 3
+Predicate 'interactive_mode_enabled' arity mismatch: 0 vs 1
+Unified predicate alias 'netdev_filter_frag-off' → 'netdev_filter_frag_off'
+Unified predicate alias 'interface_active' → 'interface_up'
+Extracted predicate 'managed' from action body
+Extracted predicate 'time_set' from action body
+Extracted predicate 'timezones_listed' from action body
+Extracted predicate 'ntp_server_reverted' from action body
+Extracted predicate 'variable_value_set' from action body
 Extracted predicate 'true' from action body
-Extracted predicate 'interface_down' from action body
-Extracted predicate 'batch_processed' from action body
-Extracted predicate 'current_namespace' from action body
-Extracted predicate 'configuration_active' from action body
-Extracted predicate 'addresses_displayed' from action body
-Extracted predicate 'neighbor_table_displayed' from action body
-Extracted predicate 'table_exists' from action body
-Extracted predicate 'table_flushed' from action body
-Extracted predicate 'chain_flushed' from action body
-Extracted predicate 'ruleset_listed' from action body
-Extracted predicate 'ruleset_flushed' from action body
-Extracted predicate 'available' from action body
-Extracted predicate 'mark_set' from action body
-Extracted predicate 'block_traffic' from action body
-Extracted predicate 'tcp_sport' from action body
-Extracted predicate 'tcp_dport' from action body
-Extracted predicate 'tcp_sequence' from action body
-Extracted predicate 'tcp_ackseq' from action body
-Extracted predicate 'tcp_doff' from action body
-Extracted predicate 'tcp_reserved' from action body
-Extracted predicate 'tcp_flags' from action body
-Extracted predicate 'tcp_window' from action body
-Extracted predicate 'tcp_checksum' from action body
-Extracted predicate 'tcp_urgptr' from action body
-Extracted predicate 'udp_sport' from action body
-Extracted predicate 'udp_dport' from action body
-Extracted predicate 'udp_length' from action body
-Extracted predicate 'udp_checksum' from action body
-Extracted predicate 'udplite_sport' from action body
-Extracted predicate 'udplite_dport' from action body
-Extracted predicate 'udplite_checksum' from action body
-Extracted predicate 'sctp_sport' from action body
-Extracted predicate 'sctp_dport' from action body
-Extracted predicate 'sctp_vtag' from action body
-Extracted predicate 'sctp_checksum' from action body
-Extracted predicate 'sctp_chunk_exists' from action body
-Extracted predicate 'log_configured' from action body
-Extracted predicate 'reject_configured' from action body
-Extracted predicate 'counter_configured' from action body
-Extracted predicate 'conntrack_configured' from action body
-Extracted predicate 'dscp_configured' from action body
-Extracted predicate 'tcp_mss_configured' from action body
-Extracted predicate 'default_policy_set' from action body
-Rejected action 'set_output_short': Invalid pattern in effect: '[^']*'
-Rejected action 'set_output_short_full': Invalid pattern in effect: '[^']*'
-Rejected action 'remove_user': Unbalanced parentheses in: (or (not (member_of ?u ?g))
-Rejected action 'delete_selinux_mapping': Invalid pattern in effect: \(exists\s
-Rejected action 'copy_files_to_directory': Invalid pattern in effect: '[^']*'
-Rejected action 'recursive_copy_special_files': Invalid pattern in effect: '[^']*'
-Rejected action 'backup_file': Invalid pattern in effect: '[^']*'
-Rejected action 'copy_files_to_directory_with_t_option': Invalid pattern in effect: '[^']*'
-Rejected action 'copy_file_with_backup': Invalid pattern in effect: '[^']*'
+Extracted predicate 'write_libiptc' from action body
+Extracted predicate 'configure_rule' from action body
+Rejected action 'lobby_for_packet_framework': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_mangle_table': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_owner_match': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_mark': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_tos_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_tos_match': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_reject_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_ulog_nfqueue_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_libiptc': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_ttl_dscp_ecn': Invalid pattern in precondition: \(exists\s
+Action 'purge_package': preferring Phase 1 version
 Action 'reinstall_package': preferring Phase 1 version
+Action 'satisfy_dependencies': preferring Phase 1 version
 Action 'install_package': preferring Phase 1 version
-Action 'configure_package': preferring Phase 1 version
-Action 'inspect_state_file': preferring Phase 1 version
-Action 'forget_connection': preferring Phase 1 version
-Action 'set_journal_namespace': preferring Phase 1 version
-Merged 2 definitions of action 'satisfy_dependency'
-Merged 2 definitions of action 'check_snapshot_data'
-Merged 2 definitions of action 'validate_snap_seed'
-Merged 2 definitions of action 'disconnect_plug'
-Merged 2 definitions of action 'abort_change'
-Merged 2 definitions of action 'apply'
-Merged 2 definitions of action 'isolate_target'
-Action 'add_users_to_group': preferring Phase 1 version
+Action 'remove_package': preferring Phase 1 version
+Action 'update_package': preferring Phase 1 version
+Action 'autoremove_packages': preferring Phase 1 version
+Action 'build_dependencies': preferring Phase 1 version
+Action 'download_package': preferring Phase 1 version
+Action 'no_upgrade': preferring Phase 1 version
+Action 'only_upgrade': preferring Phase 1 version
+Action 'force_yes': preferring Phase 1 version
+Action 'mark_auto': preferring Phase 1 version
+Action 'set_alias': preferring Phase 1 version
+Action 'connect_plug': preferring Phase 1 version
+Merged 3 definitions of action 'disable_pager'
+Action 'stop_service': preferring Phase 1 version
+Action 'start_service': preferring Phase 1 version
+Action 'soft_reboot': preferring Phase 1 version
+Action 'exit_instance': preferring Phase 1 version
+Action 'switch_root': preferring Phase 1 version
+Action 'sleep_system': preferring Phase 1 version
+Action 'send_signal': preferring Phase 1 version
+Merged 2 definitions of action 'enable_colors'
+Merged 5 definitions of action 'set'
+Merged 6 definitions of action 'list'
+Merged 6 definitions of action 'list_units'
+Merged 7 definitions of action 'list_automounts'
+Merged 7 definitions of action 'list_paths'
+Merged 7 definitions of action 'list_sockets'
+Merged 7 definitions of action 'list_timers'
+Merged 2 definitions of action 'suspend'
+Merged 2 definitions of action 'timedatectl_set_ntp'
+Merged 2 definitions of action 'timedatectl_timesync_status'
+Action 'create_user_group': preferring Phase 1 version
+Action 'lock_user_password': preferring Phase 1 version
+Action 'unlock_user_password': preferring Phase 1 version
 Action 'set_selinux_user': preferring Phase 1 version
-Action 'create_system_user': preferring Phase 1 version
-Action 'force_delete_user': preferring Phase 1 version
-Merged 2 definitions of action 'set_password_min_days'
-Merged 2 definitions of action 'set_password_max_days'
-Merged 2 definitions of action 'set_password_warn_days'
-Action 'create_directory_with_parents': preferring Phase 1 version
-Action 'remove_directory_recursive': preferring Phase 1 version
-Merged 9 definitions of action 'create'
-Merged 10 definitions of action 'list'
-Merged 2 definitions of action 'append'
-Action 'switch_network_namespace': preferring Phase 1 version
-Merged 4 definitions of action 'create_chain'
-Merged 4 definitions of action 'delete_chain'
-Merged 2 definitions of action 'append_rule'
-Merged 2 definitions of action 'insert_rule'
+Action 'set_selinux_range': preferring Phase 1 version
+Action 'change_owner_recursive': preferring Phase 1 version
+Action 'change_owner_and_group': preferring Phase 1 version
+Action 'copy_no_clobber': preferring Phase 1 version
+Action 'remove_file': preferring Phase 1 version
+Action 'prompt_before_removal': preferring Phase 1 version
+Action 'remove_directory': preferring Phase 1 version
+Action 'zero_counters': preferring Phase 1 version
+Action 'create_chain': preferring Phase 1 version
+Action 'delete_chain': preferring Phase 1 version
+Action 'rename_chain': preferring Phase 1 version
+Action 'wait_for_lock': preferring Phase 1 version
+Action 'numeric_output': preferring Phase 1 version
 Merged 3 definitions of action 'delete_rule'
-Merged 3 definitions of action 'set_chain_policy'
-Merged 3 definitions of action 'rename_chain'
-Merged 2 definitions of action 'delete_firewall_chain'
-Merged 2 definitions of action 'rename_firewall_chain'
-Merged 4 definitions of action 'add'
-Merged 4 definitions of action 'reset'
-Merged 2 definitions of action 'add_counter'
-Merged 2 definitions of action 'delete_counter'
-Merged 2 definitions of action 'match_icmp_type'
-Merged 2 definitions of action 'match_icmpv6_type'
-Merged 2 definitions of action 'connect'
-Merged 2 definitions of action 'register'
-Merged 2 definitions of action 'modify'
-Merged 3 definitions of action 'run'
-Merged 11 definitions of action 'select'
-Merged 30 definitions of action 'toggle'
-Merged 4 definitions of action 'scale'
-Merged 10 definitions of action 'set'
-Merged 4 definitions of action 'check'
-Merged 2 definitions of action 'ignore'
+Merged 2 definitions of action 'insert_rule'
+Merged 2 definitions of action 'replace_rule'
+Merged 2 definitions of action 'add_rule'
+Merged 2 definitions of action 'add_set'
+Merged 2 definitions of action 'delete_set'
+Merged 2 definitions of action 'add_element'
+Merged 2 definitions of action 'delete_element'
+Merged 2 definitions of action 'show_connection_details'
