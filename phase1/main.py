@@ -1,7 +1,14 @@
 import json
 import sys
+import os
 
-from phase1.common.logger import set_log_stream, log
+from phase1.common.logger import (
+    set_log_stream,
+    log,
+    setup_logging,
+    close_logging,
+    suppress_console,
+)
 from phase1.orchestrator import Phase1Orchestrator
 
 
@@ -15,8 +22,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         "-o",
-        default="./pddl_output",
-        help="Output directory for PDDL files",
+        default="./pddl_output/phase1",
+        help="Output directory for PDDL files (default: ./pddl_output/phase1)",
     )
     parser.add_argument(
         "--json-output",
@@ -46,31 +53,72 @@ def main():
         help="Validate generated PDDL with VAL validator",
     )
     parser.add_argument(
-        "--write-files",
-        "-w",
-        action="store_true",
-        help="Write PDDL files to output directory",
-    )
-    parser.add_argument(
         "--scoping",
         choices=["dynamic", "static"],
         default="dynamic",
         help="Scoping method: 'dynamic' (graph-based Anchor & Propagate) or "
         "'static' (legacy arbitrary caps). Default: dynamic",
     )
+    parser.add_argument(
+        "--gpu",
+        "-g",
+        type=str,
+        default=None,
+        help="GPU device(s) to use (e.g., '0', '1', '0,1'). Sets CUDA_VISIBLE_DEVICES. "
+        "Default: use all available GPUs.",
+    )
+    parser.add_argument(
+        "--llm-model",
+        default="qwen2.5:32b",
+        help="LLM model for action extraction (default: qwen2.5:32b)",
+    )
+    parser.add_argument(
+        "--llm-url",
+        default="http://localhost:11434",
+        help="Ollama server URL (default: http://localhost:11434)",
+    )
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Disable LLM extraction (use regex-only extraction)",
+    )
+    parser.add_argument(
+        "--max-llm-workers",
+        type=int,
+        default=1,
+        help="Max parallel LLM extraction workers (default: 1). "
+        "Increase based on GPU count and model size.",
+    )
 
     args = parser.parse_args()
 
-    # Configure logging output
+    # Set GPU device(s) if specified (before any CUDA initialization)
+    if args.gpu is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
+    # Ensure output directory exists
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    # Set up file logging (always logs to file)
+    log_file_path = setup_logging(args.output_dir, "phase1.log")
+
+    # Configure console output
     if args.json_output:
         # Send progress to stderr so stdout is clean JSON
         set_log_stream(sys.stderr)
 
     if args.quiet:
-        # Suppress all progress output (cross-platform null device)
-        import os
+        # Suppress console output (file logging continues)
+        suppress_console(True)
 
-        set_log_stream(open(os.devnull, "w"))
+    log(f"Output directory: {args.output_dir}")
+    log(f"Log file: {log_file_path}")
+    if args.gpu is not None:
+        log(f"GPU device(s): {args.gpu}")
+    if not args.no_llm:
+        log(f"LLM: {args.llm_model} @ {args.llm_url} (workers: {args.max_llm_workers})")
+    else:
+        log("LLM: disabled")
 
     # Run orchestrator
     orchestrator = Phase1Orchestrator(
@@ -78,15 +126,15 @@ def main():
         osquery_socket=args.osquery_socket,
         validate=args.validate,
         scoping_mode=args.scoping,
+        llm_model=args.llm_model,
+        llm_url=args.llm_url,
+        enable_llm=not args.no_llm,
+        max_llm_workers=args.max_llm_workers,
     )
     results = orchestrator.run()
 
-    # Write files if requested
-    if args.write_files and results.get("pddl_generated"):
-        import os
-
-        os.makedirs(args.output_dir, exist_ok=True)
-
+    # Always write PDDL files if generation succeeded
+    if results.get("pddl_generated"):
         domain_path = os.path.join(args.output_dir, "sysadmin.pddl")
         problem_path = os.path.join(args.output_dir, "problem.pddl")
 
@@ -98,6 +146,7 @@ def main():
         log(f"\nFiles written to {args.output_dir}/")
         log(f"  - sysadmin.pddl ({len(results.get('domain_pddl', ''))} bytes)")
         log(f"  - problem.pddl ({len(results.get('problem_pddl', ''))} bytes)")
+        log(f"  - phase1.log")
 
     if args.json_output:
         # Build JSON output
@@ -124,6 +173,9 @@ def main():
             print("GENERATED DOMAIN (sysadmin.pddl)")
             print("=" * 60)
             print(results["domain_pddl"])
+
+    # Close log file
+    close_logging()
 
     return 0 if results["success"] else 1
 

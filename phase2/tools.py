@@ -2,14 +2,14 @@
 phase2/tools.py
 
 Tools for documentation extraction and system introspection.
-Provides man page parsing and help output fetching.
+Provides man page parsing, help output fetching, and smart chunking.
 """
 
 import logging
 import subprocess
 import re
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Iterator
 
 logger = logging.getLogger("Phase2.Tools")
 
@@ -28,16 +28,9 @@ class DocumentationExtractor:
         self._help_cache: dict[str, str] = {}
 
     @lru_cache(maxsize=CACHE_SIZE)
-    def fetch_man_page(self, utility: str, section: int = 1) -> str:
+    def _fetch_man_section(self, utility: str, section: int) -> str:
         """
-        Fetch and parse a man page for a utility.
-
-        Args:
-            utility: Name of the utility (e.g., 'apt', 'systemctl')
-            section: Man page section (default: 1 for user commands)
-
-        Returns:
-            Man page content as text, or empty string if not found
+        Internal cached method to fetch a specific man page section.
         """
         try:
             # Use man with -P cat to avoid pager
@@ -51,31 +44,41 @@ class DocumentationExtractor:
 
             if result.returncode == 0:
                 content = result.stdout
-                # Clean up formatting
                 content = self._clean_man_output(content)
-                logger.debug(f"Fetched man page for {utility} ({len(content)} chars)")
+                logger.debug(
+                    f"Fetched man page for {utility} section {section} ({len(content)} chars)"
+                )
                 return content
             else:
-                logger.debug(f"Man page not found for {utility}")
                 return ""
 
         except subprocess.TimeoutExpired:
-            logger.warning(f"Timeout fetching man page for {utility}")
+            logger.warning(f"Timeout fetching man page for {utility} section {section}")
             return ""
         except Exception as e:
             logger.warning(f"Error fetching man page for {utility}: {e}")
             return ""
 
+    def fetch_man_page(self, utility: str, sections: Optional[list[int]] = None) -> str:
+        """
+        Fetch and parse a man page for a utility.
+        Tries multiple sections if specific one not found.
+        """
+        if sections is None:
+            sections = [1, 8, 5]
+
+        for section in sections:
+            content = self._fetch_man_section(utility, section)
+            if content:
+                return content
+
+        logger.debug(f"Man page not found for {utility} in sections {sections}")
+        return ""
+
     @lru_cache(maxsize=CACHE_SIZE)
     def fetch_help_output(self, utility: str) -> str:
         """
         Fetch --help output for a utility.
-
-        Args:
-            utility: Name of the utility
-
-        Returns:
-            Help output as text, or empty string if not available
         """
         try:
             # Try --help first
@@ -90,7 +93,6 @@ class DocumentationExtractor:
                 logger.debug(f"Fetched --help for {utility}")
                 return result.stdout
             elif result.stderr:
-                # Some utilities output help to stderr
                 return result.stderr
 
             # Try -h as fallback
@@ -120,26 +122,14 @@ class DocumentationExtractor:
 
     def _clean_man_output(self, text: str) -> str:
         """Clean up man page output by removing control characters."""
-        # Remove backspace sequences (bold/underline formatting)
         text = re.sub(r".\x08", "", text)
-        # Remove other control characters
         text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
-        # Normalize whitespace
         text = re.sub(r" +", " ", text)
         return text.strip()
 
     def get_utility_docs(self, utilities: list[str]) -> dict[str, str]:
-        """
-        Get documentation for multiple utilities.
-
-        Args:
-            utilities: List of utility names
-
-        Returns:
-            Dict mapping utility name to combined documentation
-        """
+        """Get combined documentation for multiple utilities (Legacy/Simple)."""
         docs = {}
-
         for utility in utilities:
             man_content = self.fetch_man_page(utility)
             help_content = self.fetch_help_output(utility)
@@ -153,32 +143,87 @@ class DocumentationExtractor:
             if combined:
                 docs[utility] = combined
             else:
-                logger.warning(f"No documentation found for {utility}")
                 docs[utility] = f"# {utility}\nNo documentation available."
 
         return docs
 
-    def extract_subcommands(self, utility: str) -> list[str]:
+    def get_chunked_docs(
+        self, utility: str, max_chunk_size: int = 8000
+    ) -> Iterator[str]:
         """
-        Extract subcommands from a utility's documentation.
+        Get documentation split into chunks, preserving the header (NAME/SYNOPSIS)
+        in EVERY chunk so the LLM maintains context.
 
         Args:
-            utility: Name of the utility
+            utility: The command name
+            max_chunk_size: Approximate characters per chunk
 
-        Returns:
-            List of subcommand names
+        Yields:
+            Strings containing [Persistent Header] + [Unique Body Chunk]
         """
-        subcommands = []
+        full_text = self.fetch_man_page(utility)
+        if not full_text:
+            # Fallback to help if no man page
+            full_text = self.fetch_help_output(utility)
 
+        if not full_text:
+            yield f"# {utility}\nNo documentation available."
+            return
+
+        lines = full_text.splitlines()
+
+        # 1. Extract Persistent Header (NAME and SYNOPSIS)
+        # We look for the start of "DESCRIPTION" or "OPTIONS" to end the header
+        header_lines = []
+        body_start_index = 0
+
+        # Simple heuristic: Take first 20 lines OR up to DESCRIPTION
+        for i, line in enumerate(lines):
+            header_lines.append(line)
+            # Stop if we hit Description or if header gets too long (safety valve)
+            if (
+                re.match(r"^\s*(DESCRIPTION|OPTIONS|OVERVIEW)", line, re.IGNORECASE)
+                or i > 50
+            ):
+                body_start_index = i
+                break
+
+        header_text = "\n".join(header_lines) + "\n\n... [Header Preserved] ...\n\n"
+        header_len = len(header_text)
+
+        # 2. Chunk the rest
+        current_chunk = []
+        current_len = 0
+        effective_limit = max_chunk_size - header_len
+
+        for line in lines[body_start_index:]:
+            line_len = len(line) + 1  # +1 for newline
+
+            if current_len + line_len > effective_limit:
+                # Yield current chunk with header
+                yield header_text + "\n".join(current_chunk)
+                current_chunk = []
+                current_len = 0
+
+            current_chunk.append(line)
+            current_len += line_len
+
+        # Yield final chunk
+        if current_chunk:
+            yield header_text + "\n".join(current_chunk)
+
+    # ... (Keep extract_subcommands and extract_options as they were) ...
+    def extract_subcommands(self, utility: str) -> list[str]:
+        """Extract subcommands from a utility's documentation."""
+        subcommands = []
         help_text = self.fetch_help_output(utility)
         if not help_text:
             return subcommands
 
-        # Common patterns for subcommand listings
         patterns = [
-            r"^\s*(\w+)\s+[-–]\s+",  # "subcommand - description"
-            r"^\s{2,4}(\w+)\s{2,}",  # "  subcommand  description"
-            r"^Commands:\s*\n((?:\s+\w+.*\n)+)",  # Commands: section
+            r"^\s*(\w+)\s+[-–]\s+",
+            r"^\s{2,4}(\w+)\s{2,}",
+            r"^Commands:\s*\n((?:\s+\w+.*\n)+)",
         ]
 
         for pattern in patterns[:2]:
@@ -187,7 +232,6 @@ class DocumentationExtractor:
                 if match and match not in ["the", "a", "an", "or", "and"]:
                     subcommands.append(match)
 
-        # Remove duplicates while preserving order
         seen = set()
         unique = []
         for cmd in subcommands:
@@ -198,23 +242,12 @@ class DocumentationExtractor:
         return unique
 
     def extract_options(self, utility: str) -> list[dict]:
-        """
-        Extract command-line options from documentation.
-
-        Args:
-            utility: Name of the utility
-
-        Returns:
-            List of option dicts with 'short', 'long', 'description'
-        """
+        """Extract command-line options from documentation."""
         options = []
-
         help_text = self.fetch_help_output(utility)
         man_text = self.fetch_man_page(utility)
-
         combined = f"{help_text}\n{man_text}"
 
-        # Pattern for options like "-v, --verbose    Description"
         pattern = r"^\s*(-\w)?(?:,\s*)?(--[\w-]+)?\s+(.+)$"
 
         for match in re.finditer(pattern, combined, re.MULTILINE):
@@ -227,7 +260,7 @@ class DocumentationExtractor:
                     {
                         "short": short_opt,
                         "long": long_opt,
-                        "description": description[:300],  # Truncate
+                        "description": description[:300],
                     }
                 )
 
@@ -235,14 +268,9 @@ class DocumentationExtractor:
 
 
 class SystemIntrospector:
-    """
-    Introspects the local system for package and service information.
-    Complements osquery data when available.
-    """
-
+    # ... (Keep SystemIntrospector exactly as it was in your uploaded file) ...
     @staticmethod
     def get_installed_packages() -> list[str]:
-        """Get list of installed package names."""
         try:
             result = subprocess.run(
                 ["dpkg-query", "-f", "${Package}\n", "-W"],
@@ -258,7 +286,6 @@ class SystemIntrospector:
 
     @staticmethod
     def get_running_services() -> list[str]:
-        """Get list of running service names."""
         try:
             result = subprocess.run(
                 [
@@ -287,7 +314,6 @@ class SystemIntrospector:
 
     @staticmethod
     def get_system_users() -> list[str]:
-        """Get list of system user names."""
         try:
             with open("/etc/passwd", "r") as f:
                 users = []
@@ -302,15 +328,8 @@ class SystemIntrospector:
 
     @staticmethod
     def check_ubuntu_version() -> tuple[str, str]:
-        """
-        Check Ubuntu version and detect sudo-rs/uutils.
-
-        Returns:
-            Tuple of (version_id, variant_info)
-        """
         version_id = ""
         variant_info = ""
-
         try:
             with open("/etc/os-release", "r") as f:
                 for line in f:
@@ -319,8 +338,6 @@ class SystemIntrospector:
                         break
         except Exception:
             pass
-
-        # Check for sudo-rs (Ubuntu 25.10+)
         try:
             result = subprocess.run(
                 ["sudo", "--version"], capture_output=True, text=True, timeout=5
@@ -331,8 +348,6 @@ class SystemIntrospector:
                 variant_info = "sudo"
         except Exception:
             pass
-
-        # Check for uutils coreutils
         try:
             result = subprocess.run(
                 ["ls", "--version"], capture_output=True, text=True, timeout=5
@@ -341,17 +356,11 @@ class SystemIntrospector:
                 variant_info += "+uutils" if variant_info else "uutils"
         except Exception:
             pass
-
         return version_id, variant_info
 
     @staticmethod
     def get_os_capabilities() -> dict:
-        """
-        Returns a capability dict for prompt injection.
-        Detects if strict Rust variants are active.
-        """
         version_id, variant_info = SystemIntrospector.check_ubuntu_version()
-
         return {
             "is_sudo_rs": "sudo-rs" in variant_info,
             "is_uutils": "uutils" in variant_info,

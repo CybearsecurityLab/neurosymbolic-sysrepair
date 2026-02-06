@@ -8,7 +8,9 @@ Updated to use shared common modules.
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from common.models import OSQueryMapping
 from common.predicates import get_base_predicates as _get_base_predicates
@@ -18,7 +20,6 @@ from common.predicates import get_base_predicates as _get_base_predicates
 # Global Configuration
 # =============================================================================
 
-MODEL = "qwen2.5:32b"
 LLM_MAX_CONTEXT_CHARS = 30000
 
 # Critical paths to scan for file system objects
@@ -125,6 +126,7 @@ OSQUERY_MAPPINGS = [
 # =============================================================================
 # Scoping Heuristics
 # =============================================================================
+
 
 class AnchorCriteria:
     """

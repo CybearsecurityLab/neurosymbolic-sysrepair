@@ -1,0 +1,213 @@
+======================================================================
+Phase 1: System Introspection Log
+Started: 2026-02-05 20:36:32
+======================================================================
+
+[2026-02-05 20:36:32] [INFO] Output directory: ./pddl_output/phase1
+[2026-02-05 20:36:32] [INFO] Log file: ./pddl_output/phase1/phase1.log
+[2026-02-05 20:36:32] [INFO] LLM: devstral-small-2 @ http://10.100.203.130:11434 (workers: 2)
+[2026-02-05 20:36:32] [INFO] ============================================================
+[2026-02-05 20:36:32] [INFO] Phase 1: System Introspection
+[2026-02-05 20:36:32] [INFO] ============================================================
+[2026-02-05 20:36:32] [INFO] 
+[1/4] Initializing osquery Thrift API (osquery==3.1.1)...
+[2026-02-05 20:36:32] [INFO]   Using osqueryi shell (fallback): osqueryi version 5.21.0
+[2026-02-05 20:36:32] [INFO]   ✓ Connected to osquery
+[2026-02-05 20:36:32] [INFO] 
+[2/4] Extracting system state (scoping: dynamic)...
+[2026-02-05 20:36:36] [INFO]   ✓ Scoping: 76 anchors → 418 reachable (pruned 1806)
+[2026-02-05 20:36:36] [INFO]   ✓ Extracted objects: {'user_count': 12, 'group_count': 11, 'process_count': 184, 'port_count': 12, 'service_count': 132, 'package_count': 34, 'configuration_file_count': 33, 'predicate_count': 1216}
+[2026-02-05 20:36:36] [INFO] 
+[3/4] Mining actions from system documentation...
+[2026-02-05 20:36:36] [INFO]   LLM: Using model 'devstral-small-2'
+[2026-02-05 20:36:36] [INFO]   LLM extraction: enabled
+[2026-02-05 20:36:36] [INFO]   Parallel workers: 2
+[2026-02-05 20:36:37] [INFO]     [DEBUG] apt: Sending 9111 chars to LLM...
+[2026-02-05 20:36:37] [INFO]     [DEBUG] apt-get: Sending 30027 chars to LLM...
+[2026-02-05 20:38:53] [INFO]     [DEBUG] apt: Got 33 raw extractions
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'upgrade_packages': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'full_upgrade_packages': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'upgrade_packages': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'full_upgrade_packages': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'autoremove_packages': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO]     [WARN] Dropping action 'satisfy_dependencies': Unbound variable ?pkg
+[2026-02-05 20:38:53] [INFO] 
+  Processing package_management...
+[2026-02-05 20:38:53] [INFO]     apt: 11 actions (regex:3, llm:8)
+[2026-02-05 20:38:53] [INFO]     [DEBUG] dpkg: Sending 30027 chars to LLM...
+[2026-02-05 20:44:45] [INFO]     [DEBUG] apt-get: Got 121 raw extractions
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'dist_upgrade': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'install_package_regex': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'clean_apt_cache': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'autoclean_apt_cache': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'distclean_apt_cache': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'autoremove_packages': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'autoremove_packages': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'autopurge_packages': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'fix_broken': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'allow_downgrades': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'allow_remove_essential': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     [WARN] Dropping action 'allow_change_held_packages': Unbound variable ?pkg
+[2026-02-05 20:44:45] [INFO]     apt-get: 66 actions (regex:3, llm:63)
+[2026-02-05 20:44:46] [INFO]     [DEBUG] snap: Sending 30027 chars to LLM...
+[2026-02-05 20:46:41] [INFO]     [ERROR] LLM extraction failed for dpkg: Content must contain an 'extractions' key.
+[2026-02-05 20:46:41] [INFO]     dpkg: 2 actions (regex:2, llm:0)
+[2026-02-05 20:46:41] [INFO]     [DEBUG] systemctl: Sending 30027 chars to LLM...
+[2026-02-05 20:55:08] [INFO]     [DEBUG] snap: Got 146 raw extractions
+[2026-02-05 20:55:08] [INFO]     [WARN] Dropping action 'print_sandbox_features': Unbound variable ?feature
+[2026-02-05 20:55:08] [INFO]     [WARN] Dropping action 'debug_timings': Unbound variable ?user
+[2026-02-05 20:55:08] [INFO]     [WARN] Dropping action 'add_snap_to_quota_group': Unbound variable ?service
+[2026-02-05 20:55:08] [INFO]     snap: 71 actions (regex:6, llm:65)
+[2026-02-05 20:55:08] [INFO]     [DEBUG] journalctl: Sending 30027 chars to LLM...
+[2026-02-05 21:03:53] [INFO]     [DEBUG] systemctl: Got 162 raw extractions
+[2026-02-05 21:03:53] [INFO]     [WARN] Dropping action 'list_units': Unbound variable ?user
+[2026-02-05 21:03:53] [INFO]     [WARN] Dropping action 'preset_all_units': Unbound variable ?unit
+[2026-02-05 21:03:53] [INFO] 
+  Processing service_management...
+[2026-02-05 21:03:53] [INFO]     systemctl: 82 actions (regex:5, llm:77)
+[2026-02-05 21:03:53] [INFO]     [DEBUG] cp: Sending 12253 chars to LLM...
+[2026-02-05 21:05:29] [INFO]     [ERROR] LLM extraction failed for journalctl: Failed to parse JSON content: Unterminated string starting at: line 10 column 29 (char 411)
+[2026-02-05 21:05:29] [INFO]     journalctl: 0 actions (regex:0, llm:0)
+[2026-02-05 21:05:29] [INFO]     [DEBUG] mv: Sending 6582 chars to LLM...
+[2026-02-05 21:07:46] [INFO]     [DEBUG] mv: Got 28 raw extractions
+[2026-02-05 21:07:46] [INFO]     [WARN] Dropping 'move_files_to_directory': contains raw path in condition
+[2026-02-05 21:07:46] [INFO]     [WARN] Dropping 'move_files': contains raw path in condition
+[2026-02-05 21:07:46] [INFO] 
+  Processing file_operations...
+[2026-02-05 21:07:46] [INFO]     mv: 24 actions (regex:1, llm:23)
+[2026-02-05 21:07:46] [INFO]     [DEBUG] rm: Sending 5547 chars to LLM...
+[2026-02-05 21:08:07] [INFO]     [DEBUG] cp: Got 68 raw extractions
+[2026-02-05 21:08:07] [INFO]     [WARN] Dropping 'parents_copy': contains raw path in condition
+[2026-02-05 21:08:07] [INFO]     [WARN] Dropping 'copy_to_directory': contains raw path in condition
+[2026-02-05 21:08:07] [INFO]     [WARN] Dropping 'parents': contains raw path in condition
+[2026-02-05 21:08:07] [INFO]     cp: 52 actions (regex:1, llm:51)
+[2026-02-05 21:08:07] [INFO]     [DEBUG] chmod: Sending 8769 chars to LLM...
+[2026-02-05 21:09:01] [INFO]     [DEBUG] rm: Got 20 raw extractions
+[2026-02-05 21:09:01] [INFO]     rm: 15 actions (regex:1, llm:14)
+[2026-02-05 21:09:01] [INFO]     [DEBUG] chown: Sending 6732 chars to LLM...
+[2026-02-05 21:10:37] [INFO]     [DEBUG] chmod: Got 28 raw extractions
+[2026-02-05 21:10:37] [INFO]     chmod: 21 actions (regex:1, llm:20)
+[2026-02-05 21:10:37] [INFO]     [DEBUG] mkdir: Sending 1703 chars to LLM...
+[2026-02-05 21:10:56] [INFO]     [DEBUG] chown: Got 24 raw extractions
+[2026-02-05 21:10:56] [INFO]     [WARN] Dropping action 'change_owner_group_reference': Unbound variable ?owner
+[2026-02-05 21:10:56] [INFO]     chown: 16 actions (regex:1, llm:15)
+[2026-02-05 21:10:56] [INFO]     [DEBUG] touch: Sending 2353 chars to LLM...
+[2026-02-05 21:10:57] [INFO]     [DEBUG] mkdir: Got 2 raw extractions
+[2026-02-05 21:10:57] [INFO]     mkdir: 1 actions (regex:1, llm:0)
+[2026-02-05 21:10:57] [INFO]     [DEBUG] iptables: Sending 23670 chars to LLM...
+[2026-02-05 21:12:01] [INFO]     [DEBUG] touch: Got 10 raw extractions
+[2026-02-05 21:12:01] [INFO]     touch: 11 actions (regex:1, llm:10)
+[2026-02-05 21:12:01] [INFO]     [DEBUG] ip: Sending 9632 chars to LLM...
+[2026-02-05 21:15:09] [INFO]     [DEBUG] ip: Got 56 raw extractions
+[2026-02-05 21:15:09] [INFO]     [WARN] Dropping action 'ip_command': Unbound variable ?user
+[2026-02-05 21:15:09] [INFO] 
+  Processing network...
+[2026-02-05 21:15:09] [INFO]     ip: 35 actions (regex:2, llm:33)
+[2026-02-05 21:15:09] [INFO]     [DEBUG] ss: Sending 19534 chars to LLM...
+[2026-02-05 21:19:31] [INFO]     [DEBUG] iptables: Got 114 raw extractions
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'match_packet': Unbound variable ?chain
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'jump_to_chain': Unbound variable ?current_chain
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'accept_packet': Unbound variable ?rule
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'drop_packet': Unbound variable ?rule
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'return_from_chain': Unbound variable ?chain
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_incoming_packets': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_local_packets': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_locally_generated_packets': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_outgoing_packets': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_incoming_packets_before_routing': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_locally_generated_packets_before_routing': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_packets_coming_into_box': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'alter_packets_being_routed': Unbound variable ?packet
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'insert_ipv6_rule': Unbound variable ?rule_file
+[2026-02-05 21:19:31] [INFO]     [WARN] Dropping action 'set_protocol': Unbound variable ?rule
+[2026-02-05 21:19:31] [INFO]     iptables: 73 actions (regex:3, llm:70)
+[2026-02-05 21:19:31] [INFO]     netstat: 0 actions (regex:0, llm:0)
+[2026-02-05 21:19:31] [INFO]     [DEBUG] sudo: Sending 8960 chars to LLM...
+[2026-02-05 21:28:35] [INFO]     [ERROR] LLM extraction failed for ss: Failed to parse JSON content: Unterminated string starting at: line 1214 column 17 (char 121115)
+[2026-02-05 21:28:35] [INFO]     ss: 0 actions (regex:0, llm:0)
+[2026-02-05 21:28:35] [INFO]     [DEBUG] su: Sending 9340 chars to LLM...
+[2026-02-05 21:29:17] [INFO]     [DEBUG] sudo: Got 33 raw extractions
+[2026-02-05 21:29:17] [INFO]     [WARN] Dropping action 'ignore_session_record': Unbound variable ?user
+[2026-02-05 21:29:17] [INFO]     [WARN] Dropping action 'avoid_user_prompt': Unbound variable ?user
+[2026-02-05 21:29:17] [INFO]     [WARN] Dropping action 'custom_auth_prompt': Unbound variable ?user
+[2026-02-05 21:29:17] [INFO]     [WARN] Dropping action 'run_shell_as_user': Unbound variable ?pr
+[2026-02-05 21:29:17] [INFO]     [WARN] Dropping action 'run_command_as_user': Unbound variable ?pr
+[2026-02-05 21:29:17] [INFO] 
+  Processing privilege...
+[2026-02-05 21:29:17] [INFO]     sudo: 19 actions (regex:1, llm:18)
+[2026-02-05 21:29:17] [INFO]     [DEBUG] useradd: Sending 21903 chars to LLM...
+[2026-02-05 21:30:36] [INFO]     [DEBUG] su: Got 26 raw extractions
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'run_as_user': Unbound variable ?pr
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'set_primary_group': Unbound variable ?user
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'add_supplementary_group': Unbound variable ?user
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'run_shell': Unbound variable ?user
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'no_pty': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'set_supplemental_group': Unbound variable ?user
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'make_login_shell': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'pass_command': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'pass_command_no_session': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'pass_fast_flag': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'run_shell': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'create_pty': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     [WARN] Dropping action 'no_pty': Unbound variable ?process
+[2026-02-05 21:30:36] [INFO]     su: 12 actions (regex:0, llm:12)
+[2026-02-05 21:30:36] [INFO]     [DEBUG] usermod: Sending 14759 chars to LLM...
+[2026-02-05 21:34:45] [INFO]     [DEBUG] usermod: Got 53 raw extractions
+[2026-02-05 21:34:45] [INFO]     [WARN] Dropping 'set_account_expiration': contains raw path in condition
+[2026-02-05 21:34:45] [INFO]     [WARN] Dropping 'set_password_grace_period': contains raw path in condition
+[2026-02-05 21:34:45] [INFO]     [WARN] Dropping 'allocate_subordinate_uids': contains raw path in condition
+[2026-02-05 21:34:45] [INFO] 
+  Processing user_management...
+[2026-02-05 21:34:45] [INFO]     usermod: 46 actions (regex:3, llm:43)
+[2026-02-05 21:34:45] [INFO]     [DEBUG] userdel: Sending 7088 chars to LLM...
+[2026-02-05 21:34:49] [INFO]     [DEBUG] useradd: Got 63 raw extractions
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'configure_useradd_groups': Unbound variable ?f
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'create_home_directory': Unbound variable ?home_dir
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'skip_home_directory_creation': Unbound variable ?home_dir
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_home_base_dir': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_user_expiry_date': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_password_inactive_days': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'create_home_directory': Unbound variable ?home_dir
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_home_mode': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_lastlog_uid_max': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_mail_dir': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_mail_file': Unbound variable ?user
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'set_max_members_per_group': Unbound variable ?group
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping action 'configure_login_defs': Unbound variable ?value
+[2026-02-05 21:34:49] [INFO]     [WARN] Dropping 'set_sub_gid_range': contains raw path in condition
+[2026-02-05 21:34:49] [INFO]     useradd: 41 actions (regex:1, llm:40)
+[2026-02-05 21:34:49] [INFO]     [DEBUG] groupadd: Sending 6597 chars to LLM...
+[2026-02-05 21:36:07] [INFO]     [DEBUG] groupadd: Got 12 raw extractions
+[2026-02-05 21:36:07] [INFO]     [WARN] Dropping action 'override_login_defs': Unbound variable ?value
+[2026-02-05 21:36:07] [INFO]     groupadd: 10 actions (regex:1, llm:9)
+[2026-02-05 21:36:19] [INFO]     [DEBUG] userdel: Got 24 raw extractions
+[2026-02-05 21:36:19] [INFO]     [WARN] Dropping action 'remove_user_at_jobs': Unbound variable ?f
+[2026-02-05 21:36:19] [INFO]     [WARN] Dropping action 'remove_print_jobs': Unbound variable ?job
+[2026-02-05 21:36:19] [INFO]     [WARN] Dropping action 'remove_empty_user_group': Unbound variable ?group
+[2026-02-05 21:36:19] [INFO]     [WARN] Dropping action 'remove_user': Unbound variable ?pr
+[2026-02-05 21:36:19] [INFO]     [WARN] Dropping action 'remove_home_directory': Unbound variable ?home_dir
+[2026-02-05 21:36:19] [INFO]     userdel: 16 actions (regex:1, llm:15)
+[2026-02-05 21:36:19] [INFO]   ✓ Detected variants: {'sudo': 'sudo-rs'}
+[2026-02-05 21:36:19] [INFO]   ✓ Extracted 592 action schemas
+[2026-02-05 21:36:19] [INFO] 
+[4/4] Generating PDDL domain...
+[2026-02-05 21:36:19] [INFO]   ✓ Generated domain (150823 chars)
+[2026-02-05 21:36:19] [INFO]   ✓ Generated problem (71119 chars)
+[2026-02-05 21:36:19] [INFO] 
+  ✓ Serialized 592 actions for Phase 2
+[2026-02-05 21:36:19] [INFO]   ✓ Saved Phase 2 compatible state to ./pddl_output/phase1/phase1_statep2.json
+[2026-02-05 21:36:19] [INFO] 
+  ✓ Closed osquery connection
+[2026-02-05 21:36:19] [INFO] 
+============================================================
+[2026-02-05 21:36:19] [INFO] Phase 1 Complete: SUCCESS
+[2026-02-05 21:36:19] [INFO] ============================================================
+[2026-02-05 21:36:19] [INFO] 
+Files written to ./pddl_output/phase1/
+[2026-02-05 21:36:19] [INFO]   - sysadmin.pddl (150823 bytes)
+[2026-02-05 21:36:19] [INFO]   - problem.pddl (71119 bytes)
+[2026-02-05 21:36:19] [INFO]   - phase1.log
+
+======================================================================
+Finished: 2026-02-05 21:36:19
+======================================================================

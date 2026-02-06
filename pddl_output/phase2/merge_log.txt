@@ -1,27 +1,98 @@
-Predicate 'owner' arity mismatch: 1 vs 2
-Predicate 'group' arity mismatch: 1 vs 2
-Predicate 'mode' arity mismatch: 1 vs 2
-Extracted predicate 'package_installed' from action body
-Extracted predicate 'package_outdated' from action body
-Rejected action 'install': Action has no effects
-Rejected action 'remove': Action has no effects
-Rejected action 'upgrade': Action has no effects
-Rejected action 'start': Action has no effects
-Rejected action 'stop': Action has no effects
-Rejected action 'enable': Action has no effects
-Rejected action 'disable': Action has no effects
-Rejected action 'apply': Action has no effects
-Rejected action 'reload': Action has no effects
-Rejected action 'change': Action has no effects
-Rejected action 'create': Action has no effects
-Rejected action 'enable': Action has no effects
-Rejected action 'disable': Action has no effects
-Rejected action 'add': Action has no effects
-Rejected action 'delete': Action has no effects
-Rejected action 'apply': Action has no effects
-Rejected action 'set': Action has no effects
-Rejected action 'reload': Action has no effects
-Rejected action 'adjust': Action has no effects
-Rejected action 'run': Action has no effects
-Rejected action 'apply_sudoers_config': Action has no effects
-Rejected action 'grant_sudo_privilege': Action has no effects
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'configuration_file' parent conflict: keeping core 'file' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'configuration_file' parent conflict: keeping core 'file' over 'filesystem_object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'directory' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Type 'file' parent conflict: keeping core 'filesystem_object' over 'object'
+Predicate 'pager_disabled' arity mismatch: 0 vs 1
+Predicate 'file_owned_by' arity mismatch: 2 vs 3
+Predicate 'interactive_mode_enabled' arity mismatch: 0 vs 1
+Unified predicate alias 'netdev_filter_frag-off' → 'netdev_filter_frag_off'
+Unified predicate alias 'interface_active' → 'interface_up'
+Extracted predicate 'managed' from action body
+Extracted predicate 'time_set' from action body
+Extracted predicate 'timezones_listed' from action body
+Extracted predicate 'ntp_server_reverted' from action body
+Extracted predicate 'variable_value_set' from action body
+Extracted predicate 'true' from action body
+Extracted predicate 'write_libiptc' from action body
+Extracted predicate 'configure_rule' from action body
+Rejected action 'lobby_for_packet_framework': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_mangle_table': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_owner_match': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_mark': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_tos_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_tos_match': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_reject_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_ulog_nfqueue_target': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_libiptc': Invalid pattern in precondition: \(exists\s
+Rejected action 'write_ttl_dscp_ecn': Invalid pattern in precondition: \(exists\s
+Action 'purge_package': preferring Phase 1 version
+Action 'reinstall_package': preferring Phase 1 version
+Action 'satisfy_dependencies': preferring Phase 1 version
+Action 'install_package': preferring Phase 1 version
+Action 'remove_package': preferring Phase 1 version
+Action 'update_package': preferring Phase 1 version
+Action 'autoremove_packages': preferring Phase 1 version
+Action 'build_dependencies': preferring Phase 1 version
+Action 'download_package': preferring Phase 1 version
+Action 'no_upgrade': preferring Phase 1 version
+Action 'only_upgrade': preferring Phase 1 version
+Action 'force_yes': preferring Phase 1 version
+Action 'mark_auto': preferring Phase 1 version
+Action 'set_alias': preferring Phase 1 version
+Action 'connect_plug': preferring Phase 1 version
+Merged 3 definitions of action 'disable_pager'
+Action 'stop_service': preferring Phase 1 version
+Action 'start_service': preferring Phase 1 version
+Action 'soft_reboot': preferring Phase 1 version
+Action 'exit_instance': preferring Phase 1 version
+Action 'switch_root': preferring Phase 1 version
+Action 'sleep_system': preferring Phase 1 version
+Action 'send_signal': preferring Phase 1 version
+Merged 2 definitions of action 'enable_colors'
+Merged 5 definitions of action 'set'
+Merged 6 definitions of action 'list'
+Merged 6 definitions of action 'list_units'
+Merged 7 definitions of action 'list_automounts'
+Merged 7 definitions of action 'list_paths'
+Merged 7 definitions of action 'list_sockets'
+Merged 7 definitions of action 'list_timers'
+Merged 2 definitions of action 'suspend'
+Merged 2 definitions of action 'timedatectl_set_ntp'
+Merged 2 definitions of action 'timedatectl_timesync_status'
+Action 'create_user_group': preferring Phase 1 version
+Action 'lock_user_password': preferring Phase 1 version
+Action 'unlock_user_password': preferring Phase 1 version
+Action 'set_selinux_user': preferring Phase 1 version
+Action 'set_selinux_range': preferring Phase 1 version
+Action 'change_owner_recursive': preferring Phase 1 version
+Action 'change_owner_and_group': preferring Phase 1 version
+Action 'copy_no_clobber': preferring Phase 1 version
+Action 'remove_file': preferring Phase 1 version
+Action 'prompt_before_removal': preferring Phase 1 version
+Action 'remove_directory': preferring Phase 1 version
+Action 'zero_counters': preferring Phase 1 version
+Action 'create_chain': preferring Phase 1 version
+Action 'delete_chain': preferring Phase 1 version
+Action 'rename_chain': preferring Phase 1 version
+Action 'wait_for_lock': preferring Phase 1 version
+Action 'numeric_output': preferring Phase 1 version
+Merged 3 definitions of action 'delete_rule'
+Merged 2 definitions of action 'insert_rule'
+Merged 2 definitions of action 'replace_rule'
+Merged 2 definitions of action 'add_rule'
+Merged 2 definitions of action 'add_set'
+Merged 2 definitions of action 'delete_set'
+Merged 2 definitions of action 'add_element'
+Merged 2 definitions of action 'delete_element'
+Merged 2 definitions of action 'show_connection_details'

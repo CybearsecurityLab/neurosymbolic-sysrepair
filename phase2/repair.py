@@ -9,7 +9,6 @@ import logging
 import tempfile
 import re
 from pathlib import Path
-from typing import Optional
 import sys
 import os
 
@@ -17,7 +16,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.pddl_sanitizer import PDDLSanitizer, PDDL_RESERVED_KEYWORDS
-from common.type_hierarchy import VALID_TYPES
 
 logger = logging.getLogger("Phase2.Repair")
 

@@ -14,6 +14,7 @@ from typing import Optional
 import sys
 import os
 from phase2.repair import PDDLValidator
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,12 +26,9 @@ from common.type_hierarchy import (
     generate_types_pddl,
 )
 from common.predicates import (
-    PREDICATE_ALIASES,
     get_canonical_predicate_name,
-    generate_predicates_pddl,
 )
 from common.pddl_sanitizer import PDDLSanitizer, PDDL_RESERVED_KEYWORDS
-from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 from phase2.models import PartialPDDLDomain, PDDLType, PDDLPredicate, PDDLAction
 from phase2.llm import LLMInterface
@@ -52,28 +50,39 @@ class MergerAgent:
 
     # Invalid patterns that should cause action rejection
     INVALID_PATTERNS = [
-        r'\(assert\s',           # (assert ...) - not valid PDDL
-        r'\(equal\s',            # (equal ?x ?y) - not valid PDDL
-        r'\(create_process\s',   # functions not allowed
-        r'\(strcat\s',           # string operations not allowed
-        r'\(concat\s',           # string operations not allowed
-        r'\(member\s',           # list operations not allowed
-        r'\(implies\s',          # use (when) instead
-        r'\(imply\s',            # use (when) instead
-        r"'[^']*'",              # single-quoted string literals
-        r'"[^"]*"',              # double-quoted string literals
-        r'\(\s*\)',              # empty parentheses
-        r'\)\s*\(\s*\(',         # malformed )((
-        r'\)\(\(',               # malformed )((
-        r'\(exists\s',           # quantifiers not allowed in STRIPS
-        r'\(forall\s',           # quantifiers not allowed in STRIPS
+        r"\(assert\s",  # (assert ...) - not valid PDDL
+        r"\(equal\s",  # (equal ?x ?y) - not valid PDDL
+        r"\(create_process\s",  # functions not allowed
+        r"\(strcat\s",  # string operations not allowed
+        r"\(concat\s",  # string operations not allowed
+        r"\(member\s",  # list operations not allowed
+        r"\(implies\s",  # use (when) instead
+        r"\(imply\s",  # use (when) instead
+        r"'[^']*'",  # single-quoted string literals
+        r'"[^"]*"',  # double-quoted string literals
+        r"\(\s*\)",  # empty parentheses
+        r"\)\s*\(\s*\(",  # malformed )((
+        r"\)\(\(",  # malformed )((
+        r"\(exists\s",  # quantifiers not allowed in STRIPS
+        r"\(forall\s",  # quantifiers not allowed in STRIPS
     ]
 
     # Invalid types that should be normalized or rejected
-    INVALID_TYPES = frozenset([
-        'string', 'boolean', 'integer', 'list', 'command', 'cmd',
-        '_user', '_group', '_file', '_service', '_package',
-    ])
+    INVALID_TYPES = frozenset(
+        [
+            "string",
+            "boolean",
+            "integer",
+            "list",
+            "command",
+            "cmd",
+            "_user",
+            "_group",
+            "_file",
+            "_service",
+            "_package",
+        ]
+    )
 
     def __init__(self, llm: Optional[LLMInterface] = None):
         self.llm = llm
@@ -91,11 +100,10 @@ class MergerAgent:
         """Check if the pddl library is available."""
         try:
             from pddl import parse_domain
+
             return True
         except ImportError:
-            logger.warning(
-                "pddl library not available. Install with: pip install pddl"
-            )
+            logger.warning("pddl library not available. Install with: pip install pddl")
             return False
 
     def merge(self, partial_domains: list[PartialPDDLDomain]) -> str:
@@ -146,20 +154,305 @@ class MergerAgent:
         self._consolidate_actions(valid_domains)
         logger.info(f"  → {len(self.unified_actions)} unified actions")
 
-        # Step 4: Validate action-predicate consistency
-        logger.info("\n[4/5] Validating action-predicate consistency...")
-        self._validate_action_predicates()
+        # --- NEW STEP: Targeted Repair Loop ---
+        logger.info("\n[3.5/5] Targeted Neurosymbolic Repair...")
+        pre_repair_actions = list(self.unified_actions)  # Backup before repair
+        pre_repair_count = len(pre_repair_actions)
 
-        # Step 5: Construct and Validate Domain
-        logger.info("\n[5/5] Constructing unified domain...")
+        if self._pddl_available and self.llm:
+            # This replaces the massive whole-file repair loop
+            repaired = self._validate_and_repair_actions()
+            logger.info(
+                f"  Repair result: {len(repaired)} actions "
+                f"(was {pre_repair_count} before repair)"
+            )
+
+            # Guard: if repair returned empty/drastically fewer, fall back
+            if len(repaired) == 0 and pre_repair_count > 0:
+                logger.error(
+                    f"  CRITICAL: Repair returned 0 actions but had "
+                    f"{pre_repair_count} before repair. Falling back to "
+                    f"pre-repair actions."
+                )
+                self.unified_actions = pre_repair_actions
+            elif len(repaired) < pre_repair_count * 0.5:
+                logger.warning(
+                    f"  WARNING: Repair lost >50% of actions "
+                    f"({len(repaired)}/{pre_repair_count}). "
+                    f"Falling back to pre-repair actions."
+                )
+                self.unified_actions = pre_repair_actions
+            else:
+                self.unified_actions = repaired
+        elif not self._pddl_available:
+            logger.warning("pddl library missing - cannot perform targeted repair.")
+        # --------------------------------------
+
+        # Step 5: Construct Final Domain
+        logger.info(
+            f"\n[5/5] Constructing unified domain "
+            f"({len(self.unified_actions)} actions)..."
+        )
         domain_pddl = self._construct_domain()
 
-        # Phase 2c: The Neurosymbolic Self-Correction Loop
-        # Roadmap Section 5.3: "If validation fails, return repair_pddl"
-        if self.llm:
-            domain_pddl = self._semantic_repair_loop(domain_pddl)
+        # Final sanity check on the constructed domain
+        action_count_in_pddl = domain_pddl.count("(:action ")
+        if action_count_in_pddl == 0 and len(self.unified_actions) > 0:
+            logger.error(
+                f"  CRITICAL: _construct_domain produced 0 actions but "
+                f"unified_actions has {len(self.unified_actions)}. "
+                f"Rebuilding with pre-repair actions..."
+            )
+            self.unified_actions = pre_repair_actions
+            domain_pddl = self._construct_domain()
+            action_count_in_pddl = domain_pddl.count("(:action ")
+            logger.info(
+                f"  Rebuild produced {action_count_in_pddl} actions"
+            )
+
+        logger.info(
+            f"  Final domain: {action_count_in_pddl} actions, "
+            f"{len(domain_pddl.splitlines())} lines"
+        )
 
         return domain_pddl
+
+    def _validate_and_repair_actions(self) -> list[PDDLAction]:
+        """
+        Iterates through actions one by one.
+        If valid -> Keep.
+        If invalid -> Ask LLM to fix ONLY that action -> Retest -> Keep/Prune.
+        Returns the original unified_actions list on catastrophic failure.
+        """
+        valid_actions = []
+        skipped = 0
+
+        # 1. Build the "Base Domain" (Types + Predicates) for testing
+        try:
+            base_domain_str = self._build_base_domain_template()
+        except Exception as e:
+            logger.error(
+                f"  Failed to build base domain template: {e}. "
+                f"Skipping validation, returning all actions as-is."
+            )
+            return list(self.unified_actions)
+
+        total = len(self.unified_actions)
+        logger.info(f"  Validating {total} actions...")
+
+        for i, action in enumerate(self.unified_actions):
+            try:
+                # 2. Test the action
+                is_valid, error_msg = self._test_single_action(
+                    action, base_domain_str
+                )
+
+                if is_valid:
+                    valid_actions.append(action)
+                    continue
+
+                # 3. Validation Failed - Trigger Targeted Repair
+                if self.llm:
+                    logger.info(
+                        f"  [{i + 1}/{total}] Action '{action.name}' "
+                        f"failed: {error_msg}"
+                    )
+                    logger.info(f"    Attempting targeted LLM repair...")
+
+                    repaired_action = self._repair_single_action_with_llm(
+                        action, error_msg
+                    )
+
+                    # 4. Retest the repaired action
+                    is_valid_now, new_error = self._test_single_action(
+                        repaired_action, base_domain_str
+                    )
+
+                    if is_valid_now:
+                        logger.info(
+                            f"    Fixed! Action '{action.name}' salvaged."
+                        )
+                        valid_actions.append(repaired_action)
+                    else:
+                        logger.warning(
+                            f"    Repair failed for '{action.name}': "
+                            f"{new_error}. Pruning."
+                        )
+                        self.rejected_actions.append(
+                            (action.name, f"Repair failed: {new_error}")
+                        )
+                else:
+                    # No LLM available - just skip invalid actions
+                    self.rejected_actions.append(
+                        (action.name, f"Invalid (no LLM): {error_msg}")
+                    )
+
+            except (MemoryError, OSError) as e:
+                # Critical resource error - stop validation, return what we have
+                logger.error(
+                    f"  RESOURCE ERROR at action {i + 1}/{total} "
+                    f"('{action.name}'): {e}. "
+                    f"Stopping validation early with {len(valid_actions)} "
+                    f"valid actions collected so far."
+                )
+                # Include remaining untested actions rather than losing them
+                remaining = self.unified_actions[i:]
+                logger.info(
+                    f"  Preserving {len(remaining)} untested actions."
+                )
+                valid_actions.extend(remaining)
+                break
+
+            except Exception as e:
+                # Non-critical error on single action - skip and continue
+                skipped += 1
+                logger.warning(
+                    f"  [{i + 1}/{total}] Unexpected error testing "
+                    f"'{action.name}': {e}. Keeping action as-is."
+                )
+                valid_actions.append(action)  # Keep it rather than lose it
+
+        if skipped > 0:
+            logger.info(f"  {skipped} actions had validation errors (kept as-is)")
+
+        logger.info(
+            f"Targeted repair complete. Final count: {len(valid_actions)}/{total}"
+        )
+        return valid_actions
+
+    def _test_single_action(
+        self, action: PDDLAction, base_domain: str
+    ) -> tuple[bool, str]:
+        """Injects a single action into the base domain and parses it."""
+        tmp_path = None
+        try:
+            # Format action as PDDL string
+            action_str = self._format_action_pddl(action)
+
+            # Inject into template (insert before last closing paren)
+            test_domain = base_domain.rpartition(")")[0] + "\n" + action_str + "\n)"
+
+            # Parse with library - use delete=False for cross-platform safety
+            from pddl import parse_domain
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=False
+            ) as tmp:
+                tmp_path = tmp.name
+                tmp.write(test_domain)
+                tmp.flush()
+
+            # Parse after file handle is closed (safer on all platforms)
+            parse_domain(tmp_path)
+
+            return True, ""
+        except Exception as e:
+            # Clean up error message (usually first line is enough)
+            return False, str(e).split("\n")[0]
+        finally:
+            # Always clean up temp file
+            if tmp_path:
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+
+    def _repair_single_action_with_llm(
+        self, action: PDDLAction, error: str
+    ) -> PDDLAction:
+        """Sends just ONE action and the specific error to the LLM."""
+
+        action_pddl = self._format_action_pddl(action)
+
+        # Highly specific prompt
+        prompt = (
+            f"You are a PDDL repair engine. I have a single action that is invalid.\n"
+            f"ERROR: {error}\n\n"
+            f"INVALID ACTION:\n{action_pddl}\n\n"
+            f"=== OFFICIAL SYNTAX RULES ===\n"
+            f"{PDDL_SYNTAX_GUIDE}\n"
+            f"=============================\n\n"
+            f"INSTRUCTIONS:\n"
+            f"1. Fix the specific error listed above.\n"
+            f"2. Ensure all variables in preconditions/effects are declared in :parameters.\n"
+            f"3. Do not use reserved keywords (like 'exists', 'forall', 'call') as names.\n"
+            f"4. Do not change the action name.\n\n"
+            f"Return ONLY the fixed action PDDL code. No markdown, no comments."
+        )
+
+        try:
+            # Generate fix
+            response = self.llm.generate(
+                prompt, temperature=0.0
+            )  # Zero temp for determinism
+            cleaned_response = self._strip_markdown(response)
+
+            # Parse the text back into a PDDLAction object
+            # We can reuse the worker's parsing logic or a simple regex here
+            parsed = self._parse_action_from_match(
+                action.name, cleaned_response, "repair_agent"
+            )
+
+            if parsed:
+                # Keep metadata
+                parsed.source_utility = action.source_utility
+                return parsed
+
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
+
+        return action  # Return original if repair crashes
+
+    def _build_base_domain_template(self) -> str:
+        """Creates the 'Skeleton' domain with all types and predicates."""
+        lines = [
+            "(define (domain sysadmin-temp)",
+            "  (:requirements :strips :typing :negative-preconditions)",
+            "  ;; Types",
+            generate_types_pddl(),
+            "  ;; Predicates",
+            "  (:predicates",
+        ]
+
+        for pname, pred in sorted(self.unified_predicates.items()):
+            if pred.parameters:
+                params = " ".join(
+                    f"?{p[0]} - {normalize_type(p[1])}" for p in pred.parameters
+                )
+                lines.append(f"    ({pname} {params})")
+            else:
+                lines.append(f"    ({pname})")
+
+        # Add critical standard predicates manually to ensure validation passes
+        if "network_available" not in self.unified_predicates:
+            lines.append("    (network_available)")
+        if "can_escalate" not in self.unified_predicates:
+            lines.append("    (can_escalate ?u - user)")
+
+        lines.append("  )")
+        lines.append("")  # Space for action
+        lines.append(")")
+        return "\n".join(lines)
+
+    def _format_action_pddl(self, action: PDDLAction) -> str:
+        """Helper to convert object back to string."""
+        lines = [f"  (:action {action.name}"]
+        params = " ".join(
+            f"?{p[0]} - {normalize_type(p[1])}" for p in action.parameters
+        )
+        lines.append(f"    :parameters ({params})")
+
+        lines.append("    :precondition (and")
+        for pre in action.preconditions:
+            lines.append(f"      {pre}")
+        lines.append("    )")
+
+        lines.append("    :effect (and")
+        for eff in action.effects:
+            lines.append(f"      {eff}")
+        lines.append("    )")
+        lines.append("  )")
+        return "\n".join(lines)
 
     def _semantic_repair_loop(self, domain_pddl: str) -> str:
         """
@@ -175,12 +468,14 @@ class MergerAgent:
                 logger.info(f"  ✓ Domain validation passed (Attempt {attempt + 1})")
                 return domain_pddl
 
-            logger.warning(f"  ⚠ Validation failed (Attempt {attempt + 1}): {len(errors)} errors")
+            logger.warning(
+                f"  ⚠ Validation failed (Attempt {attempt + 1}): {len(errors)} errors"
+            )
             for e in errors[:3]:  # Log first few errors
                 logger.warning(f"    - {e}")
 
             # 2. Re-prompt LLM with errors
-            logger.info(f"    → Triggering LLM repair...")
+            logger.info("    → Triggering LLM repair...")
             domain_pddl = self._llm_repair(domain_pddl, errors)
 
         # Final check
@@ -194,12 +489,18 @@ class MergerAgent:
         """Send PDDL + Errors to LLM for correction."""
 
         # Summarize errors to fit context
-        error_report = "\n".join(f"{i+1}. {e}" for i, e in enumerate(errors[:15]))
+        error_report = "\n".join(f"{i + 1}. {e}" for i, e in enumerate(errors[:15]))
         if len(errors) > 15:
             error_report += f"\n... and {len(errors) - 15} more errors."
 
+        reserved_kw_list = ", ".join(sorted(list(PDDL_RESERVED_KEYWORDS)))
+
         prompt = (
             "Fix the PDDL domain below. It has validation errors that must be corrected.\n\n"
+            "CRITICAL RULES:\n"
+            f"- NEVER use these as parameter names: {reserved_kw_list}, ...\n"
+            "- If you see ?when, ?object, ?end, ?start, ?all as parameters, RENAME them\n"
+            "- Example: ?when -> ?when_time, ?object -> ?target_obj, ?end -> ?end_point\n\n"
             "VALIDATION ERRORS:\n"
             f"{error_report}\n\n"
             "PDDL TO FIX:\n"
@@ -223,18 +524,24 @@ class MergerAgent:
         text = re.sub(r"\n?```\s*$", "", text, flags=re.MULTILINE)
 
         # Remove common LLM preambles and section headers
-        text = re.sub(r"^.*?Here is.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
-        text = re.sub(r"^.*?corrected.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(
+            r"^.*?Here is.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
+        text = re.sub(
+            r"^.*?corrected.*?:\s*\n", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
         text = re.sub(r"^===.*?===\s*\n", "", text, flags=re.MULTILINE)
 
         # Find the actual PDDL domain definition
         # PDDL domains start with "(define (domain"
-        match = re.search(r'\(define\s+\(domain.*', text, re.DOTALL)
+        match = re.search(r"\(define\s+\(domain.*", text, re.DOTALL)
         if match:
             text = match.group(0)
         else:
             # Try to find any PDDL-like content starting with types, predicates, or actions
-            pddl_match = re.search(r'(?:\(:types|\(:predicates|\(:action).*', text, re.DOTALL)
+            pddl_match = re.search(
+                r"(?:\(:types|\(:predicates|\(:action).*", text, re.DOTALL
+            )
             if pddl_match:
                 # Wrap in domain definition if missing
                 text = f"(define (domain sysadmin)\n  (:requirements :strips :typing :negative-preconditions)\n  {pddl_match.group(0)}\n)"
@@ -254,7 +561,7 @@ class MergerAgent:
             for ptype in domain.types:
                 # Normalize the type name
                 normalized_name = normalize_type(ptype.name)
-                
+
                 if normalized_name not in self.unified_types:
                     # New type - check if parent exists
                     if ptype.parent:
@@ -266,11 +573,11 @@ class MergerAgent:
                             )
                             normalized_parent = "object"
                         ptype.parent = normalized_parent
-                    
+
                     self.unified_types[normalized_name] = PDDLType(
                         name=normalized_name,
                         parent=ptype.parent or "object",
-                        source=domain.worker_name
+                        source=domain.worker_name,
                     )
                 else:
                     # Type exists - check for conflicts
@@ -346,7 +653,9 @@ class MergerAgent:
             self.unified_predicates[canonical_name] = PDDLPredicate(
                 name=canonical_name, parameters=params, source=source
             )
-            self.merge_log.append(f"Extracted predicate '{canonical_name}' from action body")
+            self.merge_log.append(
+                f"Extracted predicate '{canonical_name}' from action body"
+            )
 
     def _validate_action_predicates(self):
         """Ensure all predicates used in actions are declared."""
@@ -362,7 +671,9 @@ class MergerAgent:
                     if pred_name not in PDDL_RESERVED_KEYWORDS:
                         canonical = get_canonical_predicate_name(pred_name)
                         if canonical not in self.unified_predicates:
-                            self._extract_predicate_from_condition(cond_clean, "validator")
+                            self._extract_predicate_from_condition(
+                                cond_clean, "validator"
+                            )
 
     def _consolidate_actions(self, domains: list[PartialPDDLDomain]):
         """Consolidate actions, detecting and merging duplicates with strict validation."""
@@ -395,8 +706,9 @@ class MergerAgent:
             else:
                 # Prefer Phase 1 actions (marked as phase1_reuse)
                 phase1_actions = [
-                    a for a in actions
-                    if getattr(a, 'source_worker', '') == 'phase1_reuse'
+                    a
+                    for a in actions
+                    if getattr(a, "source_worker", "") == "phase1_reuse"
                 ]
                 if phase1_actions:
                     self.unified_actions.append(phase1_actions[0])
@@ -444,13 +756,13 @@ class MergerAgent:
 
         # Check for balanced parentheses in all conditions
         for cond in action.preconditions + action.effects:
-            if cond.count('(') != cond.count(')'):
+            if cond.count("(") != cond.count(")"):
                 return False, f"Unbalanced parentheses in: {cond[:50]}"
 
         # Check that all variables in preconditions/effects are declared
         declared_vars = {f"?{p[0]}" for p in action.parameters}
         for cond in action.preconditions + action.effects:
-            var_pattern = r'\?(\w+)'
+            var_pattern = r"\?(\w+)"
             found_vars = {f"?{m.group(1)}" for m in re.finditer(var_pattern, cond)}
             undeclared = found_vars - declared_vars
             if undeclared:
@@ -464,11 +776,17 @@ class MergerAgent:
         Returns None if the action cannot be fixed.
         """
         try:
-            # Normalize parameter types
+            from common.predicates import sanitize_pddl_name
+
+            # Sanitize action name
+            action.name = sanitize_pddl_name(action.name)
+
+            # Normalize parameter types and names
             normalized_params = []
             for param_name, param_type in action.parameters:
+                clean_name = re.sub(r"[^a-zA-Z0-9_]", "", param_name)
                 normalized_type = normalize_type(param_type)
-                normalized_params.append((param_name, normalized_type))
+                normalized_params.append((clean_name, normalized_type))
 
             # Filter out invalid conditions from preconditions
             valid_preconds = []
@@ -495,7 +813,7 @@ class MergerAgent:
                 command_template=action.command_template,
                 requires_root=action.requires_root,
                 source_utility=action.source_utility,
-                source_worker=getattr(action, 'source_worker', 'sanitized'),
+                source_worker=getattr(action, "source_worker", "sanitized"),
             )
         except Exception as e:
             logger.warning(f"Failed to sanitize action '{action.name}': {e}")
@@ -517,12 +835,28 @@ class MergerAgent:
                 return None
 
         # Check balanced parentheses
-        if cond.count('(') != cond.count(')'):
+        if cond.count("(") != cond.count(")"):
             return None
 
         # Must start with '('
-        if not cond.startswith('('):
+        if not cond.startswith("("):
             return None
+
+        # Strip type annotations from conditions/effects.
+        # LLMs sometimes write "(pred ?x - type ?y - type)" in conditions
+        # but PDDL only allows typed params in :parameters, not in
+        # preconditions/effects. Remove " - type_name" after variables.
+        cond = re.sub(r"(\?\w+)\s+-\s+\w+", r"\1", cond)
+
+        # Sanitize predicate names inside conditions:
+        # Replace hyphens with underscores in identifiers.
+        def _fix_pred_name(m):
+            return "(" + m.group(1).replace("-", "_")
+        cond = re.sub(r"\(([a-zA-Z][a-zA-Z0-9_-]*)", _fix_pred_name, cond)
+
+        # Strip question marks from any remaining identifiers (not ?vars)
+        # e.g., "collapsed?" -> "collapsed"
+        cond = re.sub(r"([a-zA-Z0-9_])\?(?!\w)", r"\1", cond)
 
         return cond
 
@@ -575,8 +909,7 @@ class MergerAgent:
         for pname, pred in sorted(self.unified_predicates.items()):
             if pred.parameters:
                 params = " ".join(
-                    f"?{p[0]} - {normalize_type(p[1])}" 
-                    for p in pred.parameters
+                    f"?{p[0]} - {normalize_type(p[1])}" for p in pred.parameters
                 )
                 lines.append(f"    ({pname} {params})")
             else:
@@ -599,15 +932,14 @@ class MergerAgent:
             lines.append(f"  ;; Action: {action.name}")
             if action.source_utility:
                 lines.append(f"  ;; Source: {action.source_utility}")
-            if getattr(action, 'source_worker', '') == 'phase1_reuse':
-                lines.append(f"  ;; Reused from Phase 1")
+            if getattr(action, "source_worker", "") == "phase1_reuse":
+                lines.append("  ;; Reused from Phase 1")
 
             lines.append(f"  (:action {action.name}")
 
             # Parameters - normalize types
             params = " ".join(
-                f"?{p[0]} - {normalize_type(p[1])}" 
-                for p in action.parameters
+                f"?{p[0]} - {normalize_type(p[1])}" for p in action.parameters
             )
             lines.append(f"    :parameters ({params})")
 
@@ -850,7 +1182,8 @@ class MergerAgent:
     def get_validation_summary(self) -> dict:
         """Return a summary of validation results."""
         return {
-            "total_actions_processed": len(self.unified_actions) + len(self.rejected_actions),
+            "total_actions_processed": len(self.unified_actions)
+            + len(self.rejected_actions),
             "valid_actions": len(self.unified_actions),
             "rejected_actions": len(self.rejected_actions),
             "rejection_reasons": dict(

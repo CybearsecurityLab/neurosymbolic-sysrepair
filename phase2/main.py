@@ -10,6 +10,7 @@ import json
 import logging
 import sys
 import os
+from datetime import datetime
 
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,10 +20,61 @@ from common.models import Phase1State
 from phase2.config import HardwareConfig, LLMConfig
 from phase2.orchestrator import Phase2Orchestrator, launch_vllm_server
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+# Global for log file path
+_log_file_path = None
+
+
+def setup_logging(output_dir: str, log_filename: str = "phase2.log") -> str:
+    """
+    Set up logging to both console and file.
+
+    Args:
+        output_dir: Directory where log file will be created
+        log_filename: Name of the log file
+
+    Returns:
+        Path to the log file
+    """
+    global _log_file_path
+
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    _log_file_path = os.path.join(output_dir, log_filename)
+
+    # Create formatters
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
+    # Get root logger and Phase2 loggers
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    # Remove existing handlers to avoid duplicates
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+
+    # File handler
+    file_handler = logging.FileHandler(_log_file_path, mode='w')
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    # Write header to file
+    with open(_log_file_path, 'a') as f:
+        f.write(f"{'=' * 70}\n")
+        f.write(f"Phase 2: Parallel Synthesis Log\n")
+        f.write(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"{'=' * 70}\n\n")
+
+    return _log_file_path
+
+
 logger = logging.getLogger("Phase2.Main")
 
 
@@ -87,8 +139,31 @@ def main():
         default=None,
         help="Number of parallel workers (default: auto-detect based on hardware)"
     )
+    parser.add_argument(
+        "--max-llm-workers",
+        type=int,
+        default=1,
+        help="Max parallel LLM extraction workers for chunk processing (default: 1). "
+        "Increase based on GPU count and model size."
+    )
+    parser.add_argument(
+        "--base-url",
+        "--ollama-url",
+        dest="base_url",
+        default=None,
+        help="Base URL for LLM service (e.g., http://localhost:11434 for Ollama, "
+        "http://localhost:8000/v1 for vLLM). Overrides default based on backend."
+    )
 
     args = parser.parse_args()
+
+    # =================================================================
+    # Set up logging to both console and file
+    # =================================================================
+    os.makedirs(args.output_dir, exist_ok=True)
+    log_file_path = setup_logging(args.output_dir, "phase2.log")
+    logger.info(f"Output directory: {args.output_dir}")
+    logger.info(f"Log file: {log_file_path}")
 
     # =================================================================
     # Load Phase 1 state - now loading FULL state, not just objects
@@ -123,7 +198,20 @@ def main():
     if args.workers is not None:
         hardware.max_parallel_workers = args.workers
         logger.info(f"Using {args.workers} parallel workers (CLI override)")
-    llm_config = LLMConfig(model_name=args.model)
+
+    # Configure LLM
+    llm_kwargs = {
+        "model_name": args.model,
+        "max_llm_workers": args.max_llm_workers
+    }
+    if args.base_url:
+        llm_kwargs["base_url"] = args.base_url
+        logger.info(f"Using custom base URL: {args.base_url}")
+
+    llm_config = LLMConfig(**llm_kwargs)
+
+    if args.max_llm_workers > 1:
+        logger.info(f"Using {args.max_llm_workers} parallel LLM workers for chunk processing")
 
     # Launch vLLM if requested
     vllm_process = None
@@ -158,8 +246,12 @@ def main():
 
         results = orchestrator.run()
 
+        # Log completion
+        logger.info(f"Log file saved to: {log_file_path}")
+
         if args.json_output:
             output = {k: v for k, v in results.items() if k != "domain_pddl"}
+            output["log_file"] = log_file_path
             print(json.dumps(output, indent=2))
         else:
             if results.get("domain_pddl"):

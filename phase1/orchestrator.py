@@ -18,15 +18,23 @@ from typing import Optional
 # Add parent directory to path for common imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.models import Phase1State, ActionSchema
+from enum import Enum
+from common.models import Phase1State, ActionSchema, PDDLType
 from common.predicates import get_base_predicates
-
-from phase1.common.config import MODEL
 from phase1.common.logger import log
 from phase1.introspection.extractor import SystemStateExtractor
 from phase1.mining.manpage_parser import create_hybrid_parser
 from phase1.pddl.generator import PDDLGenerator
 from phase1.pddl.validator import PDDLValidator
+
+
+class EnumEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles Enum types."""
+
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
 
 
 class Phase1Orchestrator:
@@ -38,14 +46,15 @@ class Phase1Orchestrator:
     """
 
     def __init__(
-            self,
-            output_dir: str = "./pddl_output",
-            osquery_socket: Optional[str] = None,
-            validate: bool = False,
-            scoping_mode: str = "dynamic",
-            llm_model: str = MODEL,
-            llm_url: str = "http://localhost:11434",
-            enable_llm: bool = True,
+        self,
+        output_dir: str = "./pddl_output",
+        osquery_socket: Optional[str] = None,
+        validate: bool = False,
+        scoping_mode: str = "dynamic",
+        llm_model: str = "qwen2.5:32b",
+        llm_url: str = "http://localhost:11434",
+        enable_llm: bool = True,
+        max_llm_workers: int = 1,
     ):
         self.output_dir = output_dir
         self.osquery_socket = osquery_socket
@@ -60,6 +69,7 @@ class Phase1Orchestrator:
         self.llm_model = llm_model
         self.llm_url = llm_url
         self.enable_llm = enable_llm
+        self.max_llm_workers = max_llm_workers
 
     def run(self) -> dict:
         """
@@ -147,6 +157,7 @@ class Phase1Orchestrator:
                 model_url=self.llm_url,
                 enable_llm=self.enable_llm,
                 known_predicates=known_preds,
+                max_workers=self.max_llm_workers,
             )
             self.actions = self.parser.extract_all_actions()
             results["actions_mined"] = True
@@ -232,7 +243,7 @@ class Phase1Orchestrator:
                 "llm_model": self.llm_model,
                 "action_count": len(self.actions),
                 "detected_variants": getattr(self.parser, "detected_variants", {}),
-            }
+            },
         )
 
         results["phase1_state"] = phase1_state.to_dict()
@@ -269,27 +280,35 @@ class Phase1Orchestrator:
             # Convert ActionParameter objects to dicts
             params = []
             for p in action.parameters:
-                if hasattr(p, 'to_dict'):
+                if hasattr(p, "to_dict"):
                     params.append(p.to_dict())
-                elif hasattr(p, 'pddl_type'):
+                elif hasattr(p, "pddl_type"):
                     # Handle original ActionParameter from phase1.common.models
-                    params.append({
-                        "name": p.name,
-                        "type": p.pddl_type.value if hasattr(p.pddl_type, 'value') else str(p.pddl_type)
-                    })
+                    params.append(
+                        {
+                            "name": p.name,
+                            "type": p.pddl_type.value
+                            if hasattr(p.pddl_type, "value")
+                            else str(p.pddl_type),
+                        }
+                    )
                 else:
                     params.append({"name": str(p), "type": "object"})
 
-            serialized.append({
-                "name": action.name,
-                "parameters": params,
-                "preconditions": action.preconditions,
-                "effects": action.effects,
-                "command_template": action.command_template,
-                "requires_root": action.requires_root,
-                "source_utility": action.source_utility,
-                "extraction_method": getattr(action, 'extraction_method', 'unknown'),
-            })
+            serialized.append(
+                {
+                    "name": action.name,
+                    "parameters": params,
+                    "preconditions": action.preconditions,
+                    "effects": action.effects,
+                    "command_template": action.command_template,
+                    "requires_root": action.requires_root,
+                    "source_utility": action.source_utility,
+                    "extraction_method": getattr(
+                        action, "extraction_method", "unknown"
+                    ),
+                }
+            )
 
         return serialized
 
@@ -318,11 +337,11 @@ class Phase1Orchestrator:
                 "llm_model": self.llm_model,
                 "action_count": len(self.actions),
                 "detected_variants": getattr(self.parser, "detected_variants", {}),
-            }
+            },
         )
 
         with open(filepath, "w") as f:
-            f.write(phase1_state.to_json(indent=2))
+            json.dump(phase1_state.to_dict(), f, indent=2, cls=EnumEncoder)
 
         log(f"  ✓ Saved Phase 1 state to {filepath}")
         return filepath
@@ -355,7 +374,7 @@ class Phase1Orchestrator:
         }
 
         with open(filepath, "w") as f:
-            json.dump(phase2_state, f, indent=2)
+            json.dump(phase2_state, f, indent=2, cls=EnumEncoder)
 
         log(f"  ✓ Saved Phase 2 compatible state to {filepath}")
         return filepath

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.models import Phase1State, ActionSchema
 
-from phase2.config import HardwareConfig, get_utility_groups
+from phase2.config import HardwareConfig, LLMConfig, get_utility_groups
 from phase2.models import PartialPDDLDomain
 from phase2.llm import LLMInterface
 from phase2.worker import WorkerAgent
@@ -47,6 +47,7 @@ class SupervisorAgent:
         known_predicates: Optional[list[str]] = None,
         output_dir: str = "./pddl_output",
         reuse_phase1_actions: bool = True,
+        llm_config: Optional["LLMConfig"] = None,
     ):
         self.llm = llm
         self.hardware = hardware_config
@@ -57,11 +58,12 @@ class SupervisorAgent:
         self.partial_domains: list[PartialPDDLDomain] = []
         self.log_dir = Path(output_dir) / "llm_logs"
         self.reuse_phase1_actions = reuse_phase1_actions
+        self.llm_config = llm_config
 
         # Build utility -> actions mapping for quick lookup
         self._actions_by_utility = self._build_actions_index()
         self.os_capabilities = SystemIntrospector.get_os_capabilities()
-        self.utility_groups = get_utility_groups()
+        self.utility_groups = get_utility_groups(self.phase1_state)
 
         if self.os_capabilities["is_sudo_rs"]:
             logger.info(
@@ -149,6 +151,7 @@ class SupervisorAgent:
                 # Get relevant osquery data for this group
                 osquery_data = self._get_osquery_data_for_group(config)
 
+                max_llm_workers = self.llm_config.max_llm_workers if self.llm_config else 1
                 worker = WorkerAgent(
                     group_name=group_name,
                     group_config=config,
@@ -160,6 +163,7 @@ class SupervisorAgent:
                     log_dir=str(self.log_dir),
                     reuse_phase1_actions=self.reuse_phase1_actions,
                     os_capabilities=self.os_capabilities,
+                    max_llm_workers=max_llm_workers,
                 )
                 future = executor.submit(worker.generate_partial_domain)
                 future_to_worker[future] = group_name

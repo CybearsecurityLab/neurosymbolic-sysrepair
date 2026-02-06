@@ -1,9 +1,10 @@
 import hashlib
 import re
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Any
 
-from phase1.common.config import MODEL, LLM_MAX_CONTEXT_CHARS
+from phase1.common.config import LLM_MAX_CONTEXT_CHARS
 from phase1.common.config import get_base_predicates
 from phase1.common.logger import log
 from common.models import (
@@ -132,7 +133,7 @@ Skip read-only or query commands.
             )
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status != 200:
-                    log(f"  LLM: Ollama server not responding")
+                    log("  LLM: Ollama server not responding")
                     return False
 
                 # Parse available models
@@ -152,7 +153,7 @@ Skip read-only or query commands.
                 return True
 
         except ImportError:
-            log(f"  LLM: langextract not installed (pip install langextract)")
+            log("  LLM: langextract not installed (pip install langextract)")
             return False
         except Exception as e:
             log(f"  LLM extraction disabled: {e}")
@@ -761,13 +762,28 @@ INSTRUCTION:
         return list(final_actions.values())
 
     def extract_all_actions(self) -> list[ActionSchema]:
-        """Main entry point for extraction."""
-        all_actions = []
-        log(f"  LLM extraction: {'enabled' if self._llm_available else 'disabled'}")
+        """Main entry point for extraction.
 
+        Uses parallel workers when max_workers > 1 for faster LLM extraction.
+        """
+        all_actions = []
+        max_workers = self.llm_config.max_workers
+        log(f"  LLM extraction: {'enabled' if self._llm_available else 'disabled'}")
+        if max_workers > 1:
+            log(f"  Parallel workers: {max_workers}")
+
+        # Flatten utilities list with their categories for parallel processing
+        utility_tasks = []
         for category, utilities in self.TARGET_UTILITIES.items():
-            log(f"\n  Processing {category}...")
             for utility in utilities:
+                utility_tasks.append((category, utility))
+
+        if max_workers > 1 and self._llm_available:
+            # Parallel extraction
+            all_actions = self._extract_parallel(utility_tasks, max_workers)
+        else:
+            # Sequential extraction (original behavior)
+            for category, utility in utility_tasks:
                 try:
                     actions = self.extract_actions_from_utility(utility)
                     all_actions.extend(actions)
@@ -780,6 +796,57 @@ INSTRUCTION:
                     log(f"    {utility}: FAILED - {e}")
 
         return self._deduplicate_actions(all_actions)
+
+    def _extract_parallel(
+        self, utility_tasks: list[tuple[str, str]], max_workers: int
+    ) -> list[ActionSchema]:
+        """Extract actions from utilities in parallel using ThreadPoolExecutor.
+
+        Args:
+            utility_tasks: List of (category, utility) tuples
+            max_workers: Number of parallel workers
+
+        Returns:
+            List of extracted ActionSchema objects
+        """
+        all_actions = []
+        current_category = None
+
+        def extract_task(task: tuple[str, str]) -> tuple[str, str, list[ActionSchema], Optional[str]]:
+            """Worker function for parallel extraction."""
+            category, utility = task
+            try:
+                actions = self.extract_actions_from_utility(utility)
+                return (category, utility, actions, None)
+            except Exception as e:
+                return (category, utility, [], str(e))
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_task = {
+                executor.submit(extract_task, task): task for task in utility_tasks
+            }
+
+            # Process results as they complete
+            for future in as_completed(future_to_task):
+                category, utility, actions, error = future.result()
+
+                # Log category header if changed
+                if category != current_category:
+                    log(f"\n  Processing {category}...")
+                    current_category = category
+
+                if error:
+                    log(f"    {utility}: FAILED - {error}")
+                else:
+                    all_actions.extend(actions)
+                    regex_c = sum(1 for a in actions if a.extraction_method == "regex")
+                    llm_c = sum(1 for a in actions if a.extraction_method == "llm")
+                    log(
+                        f"    {utility}: {len(actions)} actions (regex:{regex_c}, llm:{llm_c})"
+                    )
+
+        return all_actions
 
     def _extract_with_regex(
         self, utility: str, text: str, requires_root: bool
@@ -1281,20 +1348,26 @@ INSTRUCTION:
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-    model_id: str = MODEL,
+    model_id: str = "qwen2.5:32b",
     model_url: str = "http://localhost:11434",
     enable_llm: bool = True,
     temperature: float = 0.0,
-    known_predicates: list[str] = None,  # <--- ADD THIS
+    known_predicates: list[str] = None,
+    max_workers: int = 1,
 ) -> ManPageParser:
     """
     Create a HybridManPageParser with the specified configuration.
+
+    Args:
+        max_workers: Number of parallel LLM extraction workers.
+                     Increase based on GPU count and model size.
     """
     config = LLMExtractionConfig(
         model_id=model_id,
         model_url=model_url,
         enabled=enable_llm,
         temperature=temperature,
+        max_workers=max_workers,
     )
     # Pass known_predicates to constructor
     return ManPageParser(llm_config=config, known_predicates=known_predicates)

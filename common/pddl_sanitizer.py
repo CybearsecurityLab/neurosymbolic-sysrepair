@@ -14,8 +14,7 @@ This module handles:
 import re
 from typing import Optional
 
-from common.type_hierarchy import VALID_TYPES, TYPE_MAPPINGS, normalize_type
-from common.predicates import get_predicate_names, PREDICATE_ALIASES
+from common.type_hierarchy import VALID_TYPES, TYPE_MAPPINGS
 
 
 # =============================================================================
