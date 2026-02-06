@@ -10,6 +10,7 @@ This module orchestrates the complete Phase 3 refinement process:
 
 import json
 import logging
+import re
 import time
 from pathlib import Path
 from datetime import datetime
@@ -104,9 +105,15 @@ class Phase3Orchestrator:
             print("-" * 70)
             self._load_inputs()
 
+            # Auto-scale EW parameters based on domain size
+            num_actions = len(re.findall(r'\(:action\s+', self.domain_pddl))
+            self.config.auto_scale_ew_params(num_actions)
+
             print(f"  Domain: {self.config.input_domain_path}")
             print(f"    Size: {len(self.domain_pddl)} characters")
+            print(f"    Actions: {num_actions}")
             print(f"  Problem: {self.config.input_problem_path}")
+            print(f"  EW Params: walks={self.config.walks_per_iteration}, depth={self.config.walk_depth}")
 
             # Initialize session
             self.session = RefinementSession(
@@ -151,6 +158,19 @@ class Phase3Orchestrator:
             self.session.current_domain = final_domain
             self.session.current_score = final_score
 
+            # Validate final domain with pddl library parser
+            print("\n" + "-" * 70)
+            print("PDDL VALIDATION GATE")
+            print("-" * 70)
+
+            valid, validation_msg = self._validate_final_domain(final_domain)
+            if valid:
+                print(f"  [OK] {validation_msg}")
+            else:
+                print(f"  [WARN] {validation_msg}")
+                results["warnings"].append(f"PDDL validation: {validation_msg}")
+                logger.warning(f"Final domain failed PDDL validation: {validation_msg}")
+
             # Save outputs
             print("\n" + "-" * 70)
             print("SAVING OUTPUTS")
@@ -164,6 +184,7 @@ class Phase3Orchestrator:
             results["final_score"] = final_score
             results["target_achieved"] = final_score >= self.config.ew_target_score
             results["iterations"] = summary["iterations"]
+            results["validation_passed"] = valid
             results["statistics"] = {
                 "score_history": summary["score_history"],
                 "total_discrepancies": summary["total_discrepancies"],
@@ -187,6 +208,43 @@ class Phase3Orchestrator:
         self._print_summary(results, elapsed)
 
         return results
+
+    def _validate_final_domain(self, domain_pddl: str) -> tuple[bool, str]:
+        """
+        Validate the final refined domain using the pddl library parser.
+        Acts as a post-pipeline gate to catch syntax violations.
+
+        Returns:
+            (valid, message) tuple
+        """
+        import os
+        import tempfile
+
+        try:
+            from pddl import parse_domain
+        except ImportError:
+            return True, "pddl library not installed — skipping validation"
+
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".pddl", delete=False
+            ) as f:
+                f.write(domain_pddl)
+                tmp_path = f.name
+
+            parse_domain(tmp_path)
+            return True, "Domain syntax validated successfully by pddl parser"
+
+        except Exception as e:
+            error_msg = str(e)
+            # Truncate long error messages
+            if len(error_msg) > 300:
+                error_msg = error_msg[:300] + "..."
+            return False, f"Parse error: {error_msg}"
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
     def _load_inputs(self):
         """Load domain and problem PDDL files."""

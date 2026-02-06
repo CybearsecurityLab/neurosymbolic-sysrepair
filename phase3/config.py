@@ -98,8 +98,9 @@ class Phase3Config:
     # Exploration Walk parameters
     ew_target_score: float = 0.9  # Target EW score to achieve
     max_refinement_iterations: int = 10  # Max iterations before giving up
-    walks_per_iteration: int = 10  # N in EW formula
-    walk_depth: int = 5  # T_max in EW formula
+    walks_per_iteration: int = 10  # N in EW formula (default; overridden by auto-scale)
+    walk_depth: int = 5  # T_max in EW formula (default; overridden by auto-scale)
+    ew_params_explicitly_set: bool = False  # True if user provided --walks/--depth
 
     # I/O
     input_domain_path: str = "./pddl_output/sysadmin.pddl"
@@ -114,6 +115,35 @@ class Phase3Config:
     use_mock_docker: bool = False
     use_mock_planner: bool = False
     use_mock_llm: bool = False
+
+    def auto_scale_ew_params(self, num_actions: int) -> None:
+        """
+        Auto-scale EW parameters based on domain size, ONLY if the user
+        did not explicitly set them via CLI args.
+
+        Formulas:
+        - walks_per_iteration = clamp(num_actions // 10, 30, 100)
+        - walk_depth = clamp(num_actions // 100, 8, 20)
+
+        For 1,132 actions: walks=100, depth=11 -> 1,100 total steps
+        For 50 actions: walks=30, depth=8 -> 240 total steps
+        For 500 actions: walks=50, depth=8 -> 400 total steps
+        """
+        if self.ew_params_explicitly_set:
+            logger.info(
+                f"EW params explicitly set by user: "
+                f"walks={self.walks_per_iteration}, depth={self.walk_depth}"
+            )
+            return
+
+        self.walks_per_iteration = max(30, min(100, num_actions // 10))
+        self.walk_depth = max(8, min(20, num_actions // 100))
+
+        logger.info(
+            f"Auto-scaled EW params for {num_actions} actions: "
+            f"walks={self.walks_per_iteration}, depth={self.walk_depth} "
+            f"(~{self.walks_per_iteration * self.walk_depth} total steps/iteration)"
+        )
 
     @classmethod
     def from_env(cls) -> "Phase3Config":

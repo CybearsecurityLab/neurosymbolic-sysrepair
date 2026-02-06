@@ -107,14 +107,14 @@ Examples:
     parser.add_argument(
         "--walks-per-iteration", "-n",
         type=int,
-        default=10,
-        help="Number of exploration walks per iteration (default: 10)",
+        default=None,
+        help="Number of exploration walks per iteration (default: auto-scaled based on domain size)",
     )
     parser.add_argument(
         "--walk-depth", "-w",
         type=int,
-        default=5,
-        help="Maximum depth of each walk (default: 5)",
+        default=None,
+        help="Maximum depth of each walk (default: auto-scaled based on domain size)",
     )
 
     # Docker configuration
@@ -206,9 +206,15 @@ Examples:
     # Refinement parameters
     config.ew_target_score = args.target_score
     config.max_refinement_iterations = args.max_iterations
-    config.walks_per_iteration = args.walks_per_iteration
-    config.walk_depth = args.walk_depth
     config.save_intermediate_domains = args.save_intermediate
+
+    # EW walk params: only override defaults if user explicitly set them
+    if args.walks_per_iteration is not None:
+        config.walks_per_iteration = args.walks_per_iteration
+        config.ew_params_explicitly_set = True
+    if args.walk_depth is not None:
+        config.walk_depth = args.walk_depth
+        config.ew_params_explicitly_set = True
 
     # Docker
     config.docker.image = args.docker_image

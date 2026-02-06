@@ -48,7 +48,7 @@ class Phase2Orchestrator:
         phase1_state: Optional[Phase1State] = None,
         use_mock_llm: bool = False,
         output_dir: str = "./pddl_output",
-        reuse_phase1_actions: bool = True,
+        reuse_phase1_actions: bool = False,
         backend: str = "auto",
     ):
         self.hardware = hardware_config or HardwareConfig.detect()
@@ -59,20 +59,20 @@ class Phase2Orchestrator:
         self.reuse_phase1_actions = reuse_phase1_actions
 
         # Initialize LLM interface
-        self.llm = get_llm_interface(self.llm_config, use_mock=use_mock_llm, backend=backend)
+        self.llm = get_llm_interface(
+            self.llm_config, use_mock=use_mock_llm, backend=backend
+        )
 
         # =================================================================
         # Build known predicates from Phase 1 + base predicates
         # =================================================================
         self.known_predicates = self._build_known_predicates()
-        
+
         # =================================================================
-        # Get Phase 1 actions for reuse
-        # =================================================================
-        # =================================================================
-        # STRICT SEPARATION OF CONCERNS
-        # Phase 1 = Discovery (Objects/Predicates)
-        # Phase 2 = Generation (Actions)
+        # Phase 1 action handling
+        # If reuse enabled: Phase 1 actions included as candidates alongside
+        # LLM-generated versions; merger decides quality via heuristic.
+        # If reuse disabled (default): Phase 2 regenerates everything.
         # =================================================================
         self.phase1_actions = []
 
@@ -81,20 +81,21 @@ class Phase2Orchestrator:
 
         if reuse_phase1_actions and has_legacy_actions:
             self.phase1_actions = self.phase1_state.get_actions()
-            logger.warning(
-                f"⚠️  LOOPHOLE ACTIVE: Reusing {len(self.phase1_actions)} Phase 1 actions. "
-                "This bypasses rigorous Phase 2 documentation parsing."
+            logger.info(
+                f"Including {len(self.phase1_actions)} Phase 1 actions as candidates. "
+                f"LLM will also generate its versions; merger decides quality."
             )
         elif has_legacy_actions:
-            # The Critical Fix: Explicitly discarding Phase 1 actions
             count = len(self.phase1_state.actions)
             logger.info(
-                f"🛡️  Roadmap Enforcement: Discarding {count} Phase 1 actions. "
-                "Phase 2 will regenerate them from Man pages to ensure validity."
+                f"Phase 1 has {count} actions but reuse is disabled. "
+                f"Phase 2 will regenerate from documentation."
             )
             # We explicitly do NOT load them into self.phase1_actions
         else:
-            logger.info("Phase 1 state contains no actions. Pure Phase 2 generation enabled.")
+            logger.info(
+                "Phase 1 state contains no actions. Pure Phase 2 generation enabled."
+            )
 
         # Initialize components with Phase 1 context
         self.supervisor = SupervisorAgent(
@@ -122,7 +123,7 @@ class Phase2Orchestrator:
         """
         # Start with base predicates
         known = set(get_base_predicates())
-        
+
         # Add predicates from Phase 1 state
         for pred in self.phase1_state.predicates:
             pred_name = pred.get("name", "")
@@ -134,7 +135,7 @@ class Phase2Orchestrator:
                     known.add(f"({pred_name} ?arg)")
                 else:
                     known.add(f"({pred_name})")
-        
+
         return sorted(list(known))
 
     def run(self) -> dict:
@@ -161,17 +162,21 @@ class Phase2Orchestrator:
         print(f"  CPUs: {self.hardware.num_cpus}")
         print(f"  Parallel Workers: {self.hardware.max_parallel_workers}")
         print(f"\nLLM: {self.llm_config.model_name}")
-        
+
         # =================================================================
         # Report Phase 1 integration status
         # =================================================================
         print("\nPhase 1 Integration:")
         print(f"  Objects: {sum(len(v) for v in self.phase1_state.objects.values())}")
         print(f"  Predicates: {len(self.phase1_state.predicates)}")
-        print(f"  Actions: {len(self.phase1_actions)} (reuse: {self.reuse_phase1_actions})")
+        print(
+            f"  Actions: {len(self.phase1_actions)} (reuse: {self.reuse_phase1_actions})"
+        )
         print(f"  Known predicates: {len(self.known_predicates)}")
-        
-        results["statistics"]["phase1_objects"] = sum(len(v) for v in self.phase1_state.objects.values())
+
+        results["statistics"]["phase1_objects"] = sum(
+            len(v) for v in self.phase1_state.objects.values()
+        )
         results["statistics"]["phase1_predicates"] = len(self.phase1_state.predicates)
         results["statistics"]["phase1_actions"] = len(self.phase1_actions)
         results["statistics"]["known_predicates"] = len(self.known_predicates)
@@ -193,12 +198,13 @@ class Phase2Orchestrator:
             results["statistics"]["total_actions"] = sum(
                 len(d.actions) for d in successful
             )
-            
+
             # Count reused vs new actions
             reused_count = sum(
-                1 for d in successful 
-                for a in d.actions 
-                if getattr(a, 'source_worker', '') == 'phase1_reuse'
+                1
+                for d in successful
+                for a in d.actions
+                if getattr(a, "source_worker", "") == "phase1_reuse"
             )
             results["statistics"]["actions_reused_from_phase1"] = reused_count
             results["statistics"]["actions_generated_new"] = (
@@ -410,7 +416,6 @@ def launch_vllm_server(config: LLMConfig, hardware: HardwareConfig) -> subproces
     logger.info(f"Launching vLLM server: {' '.join(cmd)}")
 
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
 
     for _ in range(60):
         try:

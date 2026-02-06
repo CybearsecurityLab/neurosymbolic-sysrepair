@@ -127,6 +127,132 @@ class RandomWalkGenerator:
         self.problem_pddl = problem_pddl
         self.parsed_domain = PDDLParser.parse_domain(self.domain_pddl)
 
+    def _validate_pddl_for_fd(self, domain_pddl: str) -> str:
+        """
+        Validate and clean PDDL domain for Fast Downward translator compatibility.
+
+        The FD translator (exit code 31) fails when actions reference predicates
+        or types not declared in the domain header. This method:
+        1. Extracts declared predicates and types
+        2. Scans actions for undeclared predicate references
+        3. Forward-declares missing predicates into (:predicates)
+
+        Returns:
+            Cleaned domain PDDL string safe for FD translator.
+        """
+        # Extract declared types (including 'object' which is always implicit)
+        declared_types = {"object"}
+        types_match = re.search(r'\(:types\s+(.*?)\)', domain_pddl, re.DOTALL)
+        if types_match:
+            for token in re.findall(r'[a-zA-Z]\w*', types_match.group(1)):
+                declared_types.add(token)
+
+        # Extract declared predicate names from (:predicates ...) block
+        declared_predicates = set()
+        pred_match = re.search(
+            r'\(:predicates\s+(.*?)\)\s*(?=\s*(?:;|\(:action))',
+            domain_pddl, re.DOTALL
+        )
+        if pred_match:
+            for pm in re.finditer(r'\((\w+)', pred_match.group(1)):
+                declared_predicates.add(pm.group(1))
+
+        if not declared_predicates:
+            logger.warning("FD validator: no predicates found in domain, skipping validation")
+            return domain_pddl
+
+        # PDDL keywords to skip when scanning for predicate references
+        pddl_keywords = {
+            'and', 'or', 'not', 'when', 'forall', 'exists', 'imply',
+            'increase', 'decrease', 'assign', 'define', 'domain',
+        }
+
+        # Scan all action blocks for undeclared predicate references
+        missing_predicates = {}  # name -> max arity observed
+
+        # Find each (:action ...) block by balanced parentheses
+        action_starts = [m.start() for m in re.finditer(r'\(:action\s+', domain_pddl)]
+
+        for start in action_starts:
+            # Find balanced end of this action block
+            depth = 0
+            end = start
+            for j in range(start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end = j + 1
+                        break
+
+            action_block = domain_pddl[start:end]
+
+            # Extract just precondition and effect sections
+            for section in [':precondition', ':effect']:
+                sec_match = re.search(rf'{section}\s*\(', action_block)
+                if not sec_match:
+                    continue
+
+                sec_start = sec_match.start() + len(section)
+                # Find balanced section text
+                sdepth = 0
+                sec_text = ""
+                for j in range(sec_match.end() - 1, len(action_block)):
+                    if action_block[j] == '(':
+                        sdepth += 1
+                    elif action_block[j] == ')':
+                        sdepth -= 1
+                        if sdepth == 0:
+                            sec_text = action_block[sec_match.end() - 1:j + 1]
+                            break
+
+                # Find predicate references: (pred_name ?var1 ?var2 ...)
+                for pred_ref in re.finditer(r'\((\w+)((?:\s+\?\w+)*)\s*\)', sec_text):
+                    pname = pred_ref.group(1)
+                    if pname in pddl_keywords or pname in declared_predicates:
+                        continue
+                    # Count arguments to infer arity
+                    args = re.findall(r'\?\w+', pred_ref.group(2))
+                    missing_predicates[pname] = max(
+                        missing_predicates.get(pname, 0), len(args)
+                    )
+
+        if not missing_predicates:
+            logger.info("FD validator: domain is consistent, no missing predicates")
+            return domain_pddl
+
+        # Forward-declare missing predicates
+        logger.info(
+            f"FD validator: forward-declaring {len(missing_predicates)} missing predicates "
+            f"(sample: {list(missing_predicates.keys())[:5]})"
+        )
+
+        additional_preds = []
+        for pred_name, arity in sorted(missing_predicates.items()):
+            if arity > 0:
+                params = " ".join(f"?x{i} - object" for i in range(arity))
+                additional_preds.append(f"    ({pred_name} {params})")
+            else:
+                additional_preds.append(f"    ({pred_name})")
+
+        # Insert before the closing ) of the (:predicates ...) block
+        # Find the last predicate declaration line and insert after it
+        if pred_match:
+            insert_pos = pred_match.start(1) + len(pred_match.group(1))
+            additions = (
+                "\n    ; Auto-declared for Fast Downward compatibility\n"
+                + "\n".join(additional_preds)
+                + "\n  "
+            )
+            domain_pddl = (
+                domain_pddl[:insert_pos]
+                + additions
+                + domain_pddl[insert_pos:]
+            )
+
+        return domain_pddl
+
     def generate_random_walk(
         self,
         depth: int,
@@ -166,8 +292,9 @@ class RandomWalkGenerator:
             problem_file = Path(tmpdir) / "problem.pddl"
             plan_file = Path(tmpdir) / "plan.txt"
 
-            # Write domain
-            domain_file.write_text(self.domain_pddl)
+            # Validate and clean domain for FD translator compatibility
+            cleaned_domain = self._validate_pddl_for_fd(self.domain_pddl)
+            domain_file.write_text(cleaned_domain)
 
             # Generate problem file if not provided
             if self.problem_pddl:
@@ -198,7 +325,11 @@ class RandomWalkGenerator:
                 if result.returncode == 0 and plan_file.exists():
                     return self._parse_plan(plan_file.read_text(), env_state)
                 else:
-                    logger.warning(f"Fast Downward returned {result.returncode}")
+                    logger.warning(
+                        f"Fast Downward returned {result.returncode}\n"
+                        f"  STDOUT (last 500): {result.stdout[-500:] if result.stdout else '(empty)'}\n"
+                        f"  STDERR (last 500): {result.stderr[-500:] if result.stderr else '(empty)'}"
+                    )
                     return self._sample_random_walk(depth, env_state)
 
             except subprocess.TimeoutExpired:

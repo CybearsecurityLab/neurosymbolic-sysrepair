@@ -404,6 +404,29 @@ def generate_report(
     return report
 
 
+def validate_final_pddl(domain_path: Path) -> tuple:
+    """
+    Post-pipeline PDDL validation gate using the pddl library parser.
+    Catches any remaining syntax violations in the final domain.
+
+    Returns:
+        (valid, message) tuple
+    """
+    try:
+        from pddl import parse_domain
+    except ImportError:
+        return True, "pddl library not installed — skipping validation"
+
+    try:
+        parse_domain(str(domain_path))
+        return True, "Domain syntax validated successfully by pddl parser"
+    except Exception as e:
+        error_msg = str(e)
+        if len(error_msg) > 300:
+            error_msg = error_msg[:300] + "..."
+        return False, f"Parse error: {error_msg}"
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Full PDDL Domain Generation Pipeline (Phase 1 + 2 + 3)",
@@ -527,15 +550,54 @@ Examples:
             use_mock=args.mock,
         )
 
+        # Phase 3 (if not skipped and Phase 2 succeeded)
+        phase3_results = None
+        if phase2_results.get("success") and not args.skip_phase3:
+            domain_path = output_dir / "sysadmin.pddl"
+            problem_path = output_dir / "sysadmin_problem.pddl"
+
+            if domain_path.exists():
+                phase3_results = run_phase3(
+                    output_dir=output_dir,
+                    domain_path=domain_path,
+                    problem_path=problem_path,
+                    target_score=args.ew_target,
+                    max_iterations=args.max_refinement_iterations,
+                    use_mock=args.mock,
+                )
+            else:
+                print(f"[!] Phase 2 domain not found at {domain_path}, skipping Phase 3")
+        elif args.skip_phase3:
+            print("\n[*] Phase 3 skipped (--skip-phase3 flag)")
+
+        # Final PDDL validation gate
+        final_domain_path = None
+        if phase3_results and phase3_results.get("domain_path"):
+            final_domain_path = Path(phase3_results["domain_path"])
+        elif phase2_results.get("success"):
+            final_domain_path = output_dir / "sysadmin.pddl"
+
+        if final_domain_path and final_domain_path.exists():
+            print("\n[*] Running final PDDL validation gate...")
+            valid, msg = validate_final_pddl(final_domain_path)
+            if valid:
+                print(f"[OK] {msg}")
+            else:
+                print(f"[WARN] {msg}")
+
         # Generate report
         elapsed = time.time() - start_time
-        generate_report(output_dir, phase1_results, phase2_results, elapsed)
+        generate_report(
+            output_dir, phase1_results, phase2_results, elapsed,
+            phase3_results=phase3_results,
+        )
 
         # Return appropriate exit code
-        if phase2_results.get("success"):
-            return 0
-        else:
+        if not phase2_results.get("success"):
             return 1
+        if phase3_results and not phase3_results.get("success"):
+            return 2  # Phase 3 failed but Phase 2 succeeded
+        return 0
 
     except KeyboardInterrupt:
         print("\n\n[!] Interrupted by user")

@@ -191,15 +191,16 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
         )
 
         try:
-            # Step 1: Reuse Phase 1 actions
+            # Step 1: Include Phase 1 actions as candidates (merger decides quality)
             existing_actions = set()
             if self.reuse_phase1_actions and self.phase1_actions:
                 logger.info(
-                    f"[{self.worker_name}] Reusing {len(self.phase1_actions)} Phase 1 actions"
+                    f"[{self.worker_name}] Including {len(self.phase1_actions)} Phase 1 actions "
+                    f"as candidates (LLM will also generate its versions; merger decides)"
                 )
                 converted = self._convert_phase1_actions()
                 result.actions.extend(converted)
-                existing_actions = {a.name for a in converted}
+                # NOT populating existing_actions — let LLM generate competing versions
 
                 # Extract types/predicates from reused actions
                 result.types.extend(self._extract_types_from_actions(converted))

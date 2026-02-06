@@ -704,23 +704,14 @@ class MergerAgent:
             if len(actions) == 1:
                 self.unified_actions.append(actions[0])
             else:
-                # Prefer Phase 1 actions (marked as phase1_reuse)
-                phase1_actions = [
-                    a
-                    for a in actions
-                    if getattr(a, "source_worker", "") == "phase1_reuse"
-                ]
-                if phase1_actions:
-                    self.unified_actions.append(phase1_actions[0])
-                    self.merge_log.append(
-                        f"Action '{name}': preferring Phase 1 version"
-                    )
-                else:
-                    merged = self._merge_actions(actions)
-                    self.unified_actions.append(merged)
-                    self.merge_log.append(
-                        f"Merged {len(actions)} definitions of action '{name}'"
-                    )
+                # Merge all versions — pick best template, union conditions
+                merged = self._merge_actions(actions)
+                self.unified_actions.append(merged)
+                sources = {getattr(a, "source_worker", "unknown") for a in actions}
+                self.merge_log.append(
+                    f"Merged {len(actions)} definitions of action '{name}' "
+                    f"(sources: {sources})"
+                )
 
     def _validate_action(self, action: PDDLAction) -> tuple[bool, str]:
         """
