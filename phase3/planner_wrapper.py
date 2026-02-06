@@ -177,8 +177,10 @@ class RandomWalkGenerator:
                 problem_file.write_text(problem_pddl)
 
             # Run Fast Downward
+            fd_time_limit = max(30, self.config.plan_timeout - 10)
             cmd = [
                 self.config.fast_downward_path,
+                "--overall-time-limit", str(fd_time_limit),
                 "--plan-file", str(plan_file),
                 str(domain_file),
                 str(problem_file),

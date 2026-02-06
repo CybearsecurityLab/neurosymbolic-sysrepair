@@ -4,14 +4,28 @@ Domain Refiner for Phase 3: Core EW Calculation and LLM-based Refinement
 This module implements the main refinement loop:
 1. Calculate Exploration Walk (EW) score
 2. Collect discrepancies between PDDL predictions and actual environment
-3. Use LLM to update domain based on feedback
+3. Use LLM to update domain based on feedback (targeted per-action repair)
 4. Iterate until EW score meets target (>0.9)
+
+Follows Phase 2's targeted repair pattern:
+- Never send the full domain to the LLM
+- Extract only broken actions from discrepancies
+- Send each broken action individually with its specific error
+- Use PDDL_SYNTAX_GUIDE in prompts
+- Use PDDLSanitizer to fix common syntax issues
+- Validate results before accepting
+- Rollback to best domain on catastrophic failure
 """
 
 import logging
+import re
+import sys
+import os
 import time
+import tempfile
 from typing import Optional
 from datetime import datetime
+from collections import defaultdict
 
 from .config import Phase3Config, LLMRefinementConfig
 from .models import (
@@ -24,8 +38,13 @@ from .models import (
     ExecutionResult,
 )
 from .docker_executor import DockerExecutor
-from .planner_wrapper import RandomWalkGenerator
+from .planner_wrapper import RandomWalkGenerator, PDDLParser
 from .action_concretizer import ActionConcretizer, EffectVerifier
+
+# Import Phase 2 shared tools
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common.pddl_rules import PDDL_SYNTAX_GUIDE
+from common.pddl_sanitizer import PDDLSanitizer
 
 logger = logging.getLogger("Phase3.DomainRefiner")
 
@@ -39,7 +58,7 @@ class DomainRefiner:
     2. Execute walks in sandboxed environment
     3. Compare predicted vs actual effects
     4. Collect discrepancies
-    5. Use LLM to update domain
+    5. Use LLM to update domain (targeted per-action repair)
     6. Repeat until EW(d) > target
 
     EW(d) = (1 / (N * T_max)) * Σ E[E_env(q)]
@@ -65,6 +84,7 @@ class DomainRefiner:
         self.concretizer = ActionConcretizer()
         self.effect_verifier: Optional[EffectVerifier] = None
         self.llm = None
+        self.sanitizer = PDDLSanitizer()
 
         # State tracking
         self.feedback_logs: list[Discrepancy] = []
@@ -114,6 +134,10 @@ class DomainRefiner:
         """Cleanup resources."""
         if self.docker:
             self.docker.stop_container()
+
+    # =========================================================================
+    # EW Score Calculation (unchanged)
+    # =========================================================================
 
     def calculate_ew_score(
         self,
@@ -270,9 +294,255 @@ class DomainRefiner:
 
         return result
 
+    # =========================================================================
+    # Action Extraction / Replacement Helpers
+    # =========================================================================
+
+    def _extract_action_blocks(self, domain_pddl: str) -> dict[str, str]:
+        """
+        Extract individual (:action ...) blocks from a domain string.
+
+        Returns:
+            Dict mapping action_name -> raw PDDL text of that action block
+        """
+        actions = {}
+        # Find each (:action ...) by balanced parentheses
+        i = 0
+        while i < len(domain_pddl):
+            match = re.search(r'\(:action\s+(\S+)', domain_pddl[i:])
+            if not match:
+                break
+
+            action_start = i + match.start()
+            action_name = match.group(1)
+
+            # Find the balanced closing paren
+            depth = 0
+            action_end = action_start
+            for j in range(action_start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        action_end = j + 1
+                        break
+
+            actions[action_name] = domain_pddl[action_start:action_end]
+            i = action_end
+
+        return actions
+
+    def _replace_action_block(
+        self, domain_pddl: str, action_name: str, new_action_pddl: str
+    ) -> str:
+        """
+        Replace a single (:action action_name ...) block in the domain.
+
+        Returns the domain with the action replaced, or unchanged if not found.
+        """
+        # Find the action block
+        pattern = re.compile(r'\(:action\s+' + re.escape(action_name) + r'\s')
+        match = pattern.search(domain_pddl)
+        if not match:
+            return domain_pddl
+
+        action_start = match.start()
+
+        # Find balanced closing paren
+        depth = 0
+        action_end = action_start
+        for j in range(action_start, len(domain_pddl)):
+            if domain_pddl[j] == '(':
+                depth += 1
+            elif domain_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    action_end = j + 1
+                    break
+
+        return domain_pddl[:action_start] + new_action_pddl + domain_pddl[action_end:]
+
+    def _count_actions(self, domain_pddl: str) -> int:
+        """Count the number of (:action ...) blocks in a domain."""
+        return len(re.findall(r'\(:action\s+', domain_pddl))
+
+    # =========================================================================
+    # Domain Validation
+    # =========================================================================
+
+    def _validate_domain(self, candidate_domain: str, original_domain: str) -> bool:
+        """
+        Validate a candidate domain against the original.
+
+        Checks:
+        1. Has (define (domain ...)) structure
+        2. Action count didn't drop catastrophically
+        3. Basic parentheses balance
+        4. Uses PDDLSanitizer for syntax fixes
+
+        Returns:
+            True if domain is acceptable, False if should rollback
+        """
+        # Check basic structure
+        if "(define (domain" not in candidate_domain:
+            logger.warning("Validation failed: missing (define (domain ...))")
+            return False
+
+        # Check parentheses balance
+        if candidate_domain.count("(") != candidate_domain.count(")"):
+            logger.warning("Validation failed: unbalanced parentheses")
+            return False
+
+        # Check action count
+        original_count = self._count_actions(original_domain)
+        candidate_count = self._count_actions(candidate_domain)
+
+        if candidate_count == 0 and original_count > 0:
+            logger.warning(
+                f"Validation failed: candidate has 0 actions "
+                f"(original had {original_count})"
+            )
+            return False
+
+        if original_count > 0 and candidate_count < original_count * 0.5:
+            logger.warning(
+                f"Validation failed: lost >50% of actions "
+                f"({candidate_count}/{original_count})"
+            )
+            return False
+
+        # Check domain isn't drastically smaller (LLM truncation)
+        if len(candidate_domain) < len(original_domain) * 0.3:
+            logger.warning(
+                f"Validation failed: domain shrank to {len(candidate_domain)} chars "
+                f"from {len(original_domain)} chars (>70% reduction)"
+            )
+            return False
+
+        return True
+
+    # =========================================================================
+    # Targeted LLM Repair (Phase 2 pattern)
+    # =========================================================================
+
+    def _repair_single_action_with_llm(
+        self, action_name: str, action_pddl: str, errors: list[str]
+    ) -> Optional[str]:
+        """
+        Send ONE action + its specific errors to the LLM for repair.
+
+        Follows Phase 2's _repair_single_action_with_llm pattern:
+        small, focused prompt with PDDL_SYNTAX_GUIDE.
+
+        Args:
+            action_name: Name of the broken action
+            action_pddl: The raw PDDL text of the action
+            errors: List of error/discrepancy descriptions
+
+        Returns:
+            Repaired action PDDL string, or None if repair failed
+        """
+        if not self.llm:
+            return None
+
+        errors_str = "\n".join(f"- {e}" for e in errors[:5])
+
+        prompt = (
+            f"You are a PDDL repair engine. I have a single action that has "
+            f"discrepancies when tested against a real Ubuntu 25.10 environment.\n\n"
+            f"ERRORS/DISCREPANCIES:\n{errors_str}\n\n"
+            f"ACTION TO FIX:\n{action_pddl}\n\n"
+            f"=== OFFICIAL SYNTAX RULES ===\n"
+            f"{PDDL_SYNTAX_GUIDE}\n"
+            f"=============================\n\n"
+            f"INSTRUCTIONS:\n"
+            f"1. Fix the specific errors listed above.\n"
+            f"2. Ensure all variables in preconditions/effects are declared "
+            f"in :parameters.\n"
+            f"3. Do not use reserved keywords (like 'exists', 'forall', 'call') "
+            f"as predicate names.\n"
+            f"4. Do not change the action name '{action_name}'.\n"
+            f"5. Keep preconditions and effects minimal and correct.\n\n"
+            f"Return ONLY the fixed (:action ...) PDDL block. "
+            f"No markdown, no comments, no explanation."
+        )
+
+        try:
+            response = self.llm.chat.completions.create(
+                model=self.config.llm.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.config.llm.max_tokens,
+                temperature=0.1,
+            )
+
+            content = response.choices[0].message.content
+            if not content:
+                return None
+
+            # Strip markdown fences if present
+            content = content.strip()
+            content = re.sub(r'^```(?:pddl)?\s*', '', content)
+            content = re.sub(r'\s*```$', '', content)
+            content = content.strip()
+
+            # Verify it looks like a valid action block
+            if not re.match(r'\(:action\s+', content):
+                # Try to extract action block from response
+                match = re.search(
+                    r'(\(:action\s+' + re.escape(action_name) + r'\s.*)',
+                    content, re.DOTALL
+                )
+                if match:
+                    content = match.group(1)
+                else:
+                    logger.warning(
+                        f"LLM response doesn't contain valid action block "
+                        f"for '{action_name}'"
+                    )
+                    return None
+
+            # Balance parentheses
+            open_count = content.count('(')
+            close_count = content.count(')')
+            if open_count > close_count:
+                content += ')' * (open_count - close_count)
+            elif close_count > open_count:
+                # Trim excess closing parens from the end
+                excess = close_count - open_count
+                for _ in range(excess):
+                    last = content.rfind(')')
+                    if last > 0:
+                        content = content[:last] + content[last + 1:]
+
+            # Run through PDDLSanitizer for common fixes
+            content = self.sanitizer.repair(content)
+
+            # Verify the action name wasn't changed
+            name_match = re.match(r'\(:action\s+(\S+)', content)
+            if not name_match or name_match.group(1) != action_name:
+                logger.warning(
+                    f"LLM changed action name from '{action_name}' to "
+                    f"'{name_match.group(1) if name_match else '???'}'"
+                )
+                return None
+
+            logger.info(
+                f"  LLM repaired action '{action_name}' "
+                f"({len(content)} chars)"
+            )
+            return content
+
+        except Exception as e:
+            logger.error(f"LLM repair failed for '{action_name}': {e}")
+            return None
+
     def llm_update_domain(self, discrepancies: list[Discrepancy]) -> str:
         """
         Use LLM to update the domain based on observed discrepancies.
+
+        TARGETED REPAIR: Only sends broken actions to the LLM, not the
+        full domain. Follows Phase 2's _validate_and_repair_actions pattern.
 
         Args:
             discrepancies: List of discrepancies from exploration walks
@@ -283,59 +553,98 @@ class DomainRefiner:
         if self.config.use_mock_llm or not self.llm:
             return self._mock_update_domain(discrepancies)
 
-        # Build feedback string from discrepancies
-        feedback_items = discrepancies[: self.config.llm.max_feedback_items]
-        feedback_str = "\n\n".join(d.to_feedback_string() for d in feedback_items)
+        original_domain = self.domain_pddl
+        original_action_count = self._count_actions(original_domain)
 
-        prompt = f"""You are an expert PDDL domain designer. The following PDDL domain was tested against
-a real Ubuntu 25.10 environment using exploration walks. Several discrepancies were found between
-the predicted effects and actual outcomes.
+        # Group discrepancies by action name
+        action_errors: dict[str, list[str]] = defaultdict(list)
+        for d in discrepancies[:self.config.llm.max_feedback_items]:
+            error_desc = (
+                f"[{d.discrepancy_type}] Expected: {d.expected[:150]} | "
+                f"Actual: {d.actual[:150]}"
+            )
+            if d.context:
+                error_desc += f" | Context: {d.context[:100]}"
+            action_errors[d.action_name].append(error_desc)
 
-CURRENT DOMAIN:
-```pddl
-{self.domain_pddl}
-```
+        if not action_errors:
+            logger.info("No actionable discrepancies to repair")
+            return original_domain
 
-DISCREPANCIES FOUND:
-{feedback_str}
+        # Extract all action blocks from current domain
+        action_blocks = self._extract_action_blocks(original_domain)
 
-Please update the PDDL domain to fix these discrepancies. Common issues include:
-1. Missing preconditions (action can't execute in real environment)
-2. Incorrect effects (predicted state changes don't match actual)
-3. Missing type definitions
-4. Wrong parameter types
+        logger.info(
+            f"Targeted repair: {len(action_errors)} broken actions "
+            f"out of {len(action_blocks)} total"
+        )
 
-Return ONLY the updated PDDL domain, enclosed in ```pddl ... ``` markers.
-Make minimal changes - only fix the specific issues identified."""
+        # Repair each broken action individually
+        updated_domain = original_domain
+        repaired_count = 0
+        failed_count = 0
 
-        try:
-            response = self.llm.chat.completions.create(
-                model=self.config.llm.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.config.llm.max_tokens,
-                temperature=self.config.llm.temperature,
+        for action_name, errors in action_errors.items():
+            if action_name not in action_blocks:
+                logger.warning(
+                    f"  Action '{action_name}' not found in domain, skipping"
+                )
+                continue
+
+            action_pddl = action_blocks[action_name]
+            logger.info(
+                f"  Repairing '{action_name}' "
+                f"({len(errors)} discrepancies, "
+                f"{len(action_pddl)} chars)..."
             )
 
-            content = response.choices[0].message.content
+            repaired = self._repair_single_action_with_llm(
+                action_name, action_pddl, errors
+            )
 
-            # Extract PDDL from response
-            updated_domain = self._extract_pddl(content)
-
-            if updated_domain:
-                logger.info(f"LLM generated updated domain ({len(updated_domain)} chars)")
-                return updated_domain
+            if repaired:
+                updated_domain = self._replace_action_block(
+                    updated_domain, action_name, repaired
+                )
+                repaired_count += 1
             else:
-                logger.warning("Could not extract PDDL from LLM response")
-                return self.domain_pddl
+                failed_count += 1
+                logger.warning(
+                    f"  Could not repair '{action_name}', keeping original"
+                )
 
-        except Exception as e:
-            logger.exception(f"LLM refinement failed: {e}")
-            return self.domain_pddl
+        logger.info(
+            f"Targeted repair complete: "
+            f"{repaired_count} fixed, {failed_count} kept original"
+        )
+
+        # Validate the updated domain
+        if not self._validate_domain(updated_domain, original_domain):
+            logger.warning(
+                "Updated domain failed validation, reverting to original"
+            )
+            return original_domain
+
+        # Final sanitizer pass on the whole domain
+        updated_domain = self.sanitizer.repair(updated_domain)
+        repairs = self.sanitizer.get_repairs_log()
+        if repairs:
+            logger.info(
+                f"Sanitizer applied {len(repairs)} fixes: "
+                f"{', '.join(repairs[:5])}"
+            )
+
+        # Final action count check
+        updated_count = self._count_actions(updated_domain)
+        logger.info(
+            f"Domain actions: {original_action_count} -> {updated_count} "
+            f"({len(updated_domain)} chars)"
+        )
+
+        return updated_domain
 
     def _extract_pddl(self, text: str) -> Optional[str]:
         """Extract PDDL domain from LLM response."""
-        import re
-
         # Look for ```pddl ... ``` block
         match = re.search(r"```pddl\s*(.*?)\s*```", text, re.DOTALL)
         if match:
@@ -357,10 +666,6 @@ Make minimal changes - only fix the specific issues identified."""
         """Mock domain update for testing."""
         logger.info(f"[MOCK] Updating domain based on {len(discrepancies)} discrepancies")
 
-        # Simulate minor improvements
-        # In a real scenario, the LLM would make intelligent fixes
-        # Here we just return the original domain with a comment
-
         updated = self.domain_pddl.replace(
             "(define (domain",
             f"; Updated at {datetime.now().isoformat()} - {len(discrepancies)} discrepancies addressed\n(define (domain"
@@ -368,11 +673,19 @@ Make minimal changes - only fix the specific issues identified."""
 
         return updated
 
+    # =========================================================================
+    # Main Refinement Loop
+    # =========================================================================
+
     def refine(self, max_iterations: Optional[int] = None) -> tuple[str, float]:
         """
         Main refinement loop.
 
         Iteratively improves the domain until EW score meets target.
+        Includes:
+        - Rollback to best domain when score drops
+        - Stuck loop detection (0 discrepancies + score < target)
+        - Domain validation after each LLM update
 
         Args:
             max_iterations: Override max iterations from config
@@ -387,6 +700,9 @@ Make minimal changes - only fix the specific issues identified."""
 
         best_domain = self.domain_pddl
         best_score = 0.0
+        previous_score = -1.0
+        stuck_count = 0
+        MAX_STUCK_ITERATIONS = 3
 
         for iteration in range(1, max_iterations + 1):
             iter_start = time.time()
@@ -403,6 +719,8 @@ Make minimal changes - only fix the specific issues identified."""
             if ew_score.score > best_score:
                 best_score = ew_score.score
                 best_domain = self.domain_pddl
+                stuck_count = 0
+                logger.info(f"New best score: {best_score:.3f}")
 
             # Check if target met
             if ew_score.meets_target(target):
@@ -421,14 +739,91 @@ Make minimal changes - only fix the specific issues identified."""
 
                 return self.domain_pddl, ew_score.score
 
-            # Refine domain based on discrepancies
+            # ---- Stuck loop detection ----
+            # Case 1: 0 discrepancies but score < target means the domain
+            # is broken (0 actions -> 0 walks -> 0 discrepancies)
+            if not ew_score.discrepancies and ew_score.total_steps == 0:
+                logger.warning(
+                    "STUCK: 0 steps executed, 0 discrepancies. "
+                    "Domain likely broken (no parseable actions). "
+                    "Reverting to best known domain."
+                )
+                self.domain_pddl = best_domain
+                self.planner.load_domain_string(self.domain_pddl, self.problem_pddl)
+                stuck_count += 1
+
+                if stuck_count >= MAX_STUCK_ITERATIONS:
+                    logger.warning(
+                        f"Stuck for {stuck_count} iterations, stopping early. "
+                        f"Best score: {best_score:.3f}"
+                    )
+                    self.iteration_history.append(RefinementIteration(
+                        iteration=iteration,
+                        timestamp=datetime.now(),
+                        domain_before=self.domain_pddl,
+                        ew_score=ew_score,
+                        domain_after=best_domain,
+                        changes_made=["Stuck loop - reverted to best domain"],
+                        evaluation_time=eval_time,
+                        refinement_time=0.0,
+                    ))
+                    return best_domain, best_score
+
+                self.iteration_history.append(RefinementIteration(
+                    iteration=iteration,
+                    timestamp=datetime.now(),
+                    domain_before=self.domain_pddl,
+                    ew_score=ew_score,
+                    domain_after=best_domain,
+                    changes_made=["Reverted to best domain (stuck loop)"],
+                    evaluation_time=eval_time,
+                    refinement_time=0.0,
+                ))
+                continue
+
+            # Case 2: Score dropped significantly from previous iteration
+            if previous_score > 0 and ew_score.score < previous_score * 0.5:
+                logger.warning(
+                    f"Score dropped significantly: {previous_score:.3f} -> "
+                    f"{ew_score.score:.3f}. Reverting to best domain "
+                    f"(score: {best_score:.3f})."
+                )
+                self.domain_pddl = best_domain
+                self.planner.load_domain_string(self.domain_pddl, self.problem_pddl)
+                stuck_count += 1
+
+                self.iteration_history.append(RefinementIteration(
+                    iteration=iteration,
+                    timestamp=datetime.now(),
+                    domain_before=self.domain_pddl,
+                    ew_score=ew_score,
+                    domain_after=best_domain,
+                    changes_made=["Reverted to best domain (score dropped)"],
+                    evaluation_time=eval_time,
+                    refinement_time=0.0,
+                ))
+                previous_score = best_score
+                continue
+
+            previous_score = ew_score.score
+
+            # ---- Refine domain based on discrepancies ----
             refine_start = time.time()
             domain_before = self.domain_pddl
 
             if ew_score.discrepancies:
-                self.domain_pddl = self.llm_update_domain(ew_score.discrepancies)
-                # Update planner with new domain
-                self.planner.load_domain_string(self.domain_pddl, self.problem_pddl)
+                candidate = self.llm_update_domain(ew_score.discrepancies)
+
+                # Validate the candidate domain
+                if self._validate_domain(candidate, domain_before):
+                    self.domain_pddl = candidate
+                    self.planner.load_domain_string(
+                        self.domain_pddl, self.problem_pddl
+                    )
+                else:
+                    logger.warning(
+                        "LLM candidate failed validation, keeping current domain"
+                    )
 
             refine_time = time.time() - refine_start
 

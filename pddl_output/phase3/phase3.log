@@ -1,0 +1,174 @@
+2026-02-06 12:49:46,756 [INFO] root: Logging to pddl_output/phase3/phase3.log
+2026-02-06 12:49:46,757 [INFO] Phase3.DomainRefiner: Initializing DomainRefiner components...
+2026-02-06 12:49:46,839 [INFO] Phase3.DockerExecutor: Starting container with image: ubuntu:25.10
+2026-02-06 12:49:54,199 [INFO] Phase3.DockerExecutor: Container started: d1f8c91d5cec
+2026-02-06 12:49:54,209 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 935 actions
+2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: DomainRefiner initialized
+2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: Starting refinement loop (target: 0.9, max_iter: 10)
+2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 1/10
+============================================================
+2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
+2026-02-06 12:49:54,988 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:49:54,989 [WARNING] Phase3.ActionConcretizer: Missing binding for template hostnamectl_deployment: 'deployment'
+2026-02-06 12:50:12,302 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:50:12,642 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:50:29,991 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:50:30,335 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:50:47,637 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:50:47,974 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:51:05,286 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:51:05,617 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:51:23,004 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:51:23,401 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:51:40,824 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:51:41,156 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:51:58,533 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:51:58,873 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:52:16,237 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:52:16,570 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:52:33,928 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:52:34,263 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (4/8 steps, 5 discrepancies)
+2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (target: 0.9)
+2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: New best score: 0.500
+2026-02-06 12:52:34,337 [INFO] Phase3.DomainRefiner: Targeted repair: 5 broken actions out of 1132 total
+2026-02-06 12:52:34,337 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_deployment' (1 discrepancies, 132 chars)...
+2026-02-06 12:52:40,628 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:52:40,636 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_deployment' (128 chars)
+2026-02-06 12:52:40,637 [INFO] Phase3.DomainRefiner:   Repairing 'move_mail_spool' (1 discrepancies, 200 chars)...
+2026-02-06 12:52:42,482 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:52:42,483 [INFO] Phase3.DomainRefiner:   LLM repaired action 'move_mail_spool' (198 chars)
+2026-02-06 12:52:42,483 [INFO] Phase3.DomainRefiner:   Repairing 'change_crontab_owner' (1 discrepancies, 178 chars)...
+2026-02-06 12:52:44,413 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:52:44,413 [INFO] Phase3.DomainRefiner:   LLM repaired action 'change_crontab_owner' (201 chars)
+2026-02-06 12:52:44,414 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_no_ask_password' (1 discrepancies, 142 chars)...
+2026-02-06 12:52:45,822 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:52:45,823 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_no_ask_password' (138 chars)
+2026-02-06 12:52:45,823 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_version' (1 discrepancies, 126 chars)...
+2026-02-06 12:52:47,102 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:52:47,103 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_version' (124 chars)
+2026-02-06 12:52:47,103 [INFO] Phase3.DomainRefiner: Targeted repair complete: 5 fixed, 0 kept original
+2026-02-06 12:52:47,154 [INFO] Phase3.DomainRefiner: Sanitizer applied 8 fixes: Added unbound var '?p' to action 'disable_pager', Added unbound var '?k' to action 'list', Added unbound var '?m' to action 'list', Added unbound var '?o' to action 'list', Added unbound var '?v' to action 'list'
+2026-02-06 12:52:47,155 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355802 chars)
+2026-02-06 12:52:47,165 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
+2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: Iteration 1 complete in 172.5s (eval: 159.7s, refine: 12.9s)
+2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 2/10
+============================================================
+2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
+2026-02-06 12:52:47,513 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:53:04,845 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:53:05,201 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:53:22,503 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:53:22,841 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:53:40,238 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:53:40,579 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:53:57,883 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:53:58,226 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:54:15,542 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:54:15,894 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:54:33,211 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:54:33,535 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:54:50,902 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:54:51,236 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:55:08,550 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:55:08,904 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:55:08,904 [WARNING] Phase3.ActionConcretizer: Could not concretize action: groupmod_set_password
+2026-02-06 12:55:26,208 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:55:26,533 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:55:26,534 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (1/2 steps, 2 discrepancies)
+2026-02-06 12:55:26,534 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (target: 0.9)
+2026-02-06 12:55:26,556 [INFO] Phase3.DomainRefiner: Targeted repair: 2 broken actions out of 1132 total
+2026-02-06 12:55:26,556 [INFO] Phase3.DomainRefiner:   Repairing 'modify_user_account' (1 discrepancies, 170 chars)...
+2026-02-06 12:55:28,165 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:55:28,165 [INFO] Phase3.DomainRefiner:   LLM repaired action 'modify_user_account' (168 chars)
+2026-02-06 12:55:28,166 [INFO] Phase3.DomainRefiner:   Repairing 'groupmod_set_password' (1 discrepancies, 165 chars)...
+2026-02-06 12:55:29,542 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:55:29,542 [INFO] Phase3.DomainRefiner:   LLM repaired action 'groupmod_set_password' (129 chars)
+2026-02-06 12:55:29,543 [INFO] Phase3.DomainRefiner: Targeted repair complete: 2 fixed, 0 kept original
+2026-02-06 12:55:29,599 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355764 chars)
+2026-02-06 12:55:29,612 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
+2026-02-06 12:55:29,612 [INFO] Phase3.DomainRefiner: Iteration 2 complete in 162.4s (eval: 159.4s, refine: 3.1s)
+2026-02-06 12:55:29,613 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 3/10
+============================================================
+2026-02-06 12:55:29,613 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
+2026-02-06 12:55:29,967 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:55:47,327 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:55:47,671 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:55:47,671 [WARNING] Phase3.ActionConcretizer: Missing binding for template remove_package: 'package'
+2026-02-06 12:56:05,031 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:56:05,405 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:56:22,772 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:56:23,113 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:56:23,113 [WARNING] Phase3.ActionConcretizer: Missing binding for template start_service: 'service'
+2026-02-06 12:56:40,485 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:56:40,835 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:56:40,836 [WARNING] Phase3.ActionConcretizer: Could not concretize action: groupmod_append_members
+2026-02-06 12:56:58,134 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:56:58,476 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:57:15,806 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:57:16,141 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:57:16,142 [WARNING] Phase3.ActionConcretizer: Missing binding for template remove_package: 'package'
+2026-02-06 12:57:33,532 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:57:33,862 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:57:51,178 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:57:51,509 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:58:08,828 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:58:09,175 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:58:09,217 [INFO] Phase3.DomainRefiner: EW Score: 0.333 (2/6 steps, 5 discrepancies)
+2026-02-06 12:58:09,217 [INFO] Phase3.DomainRefiner: EW Score: 0.333 (target: 0.9)
+2026-02-06 12:58:09,239 [INFO] Phase3.DomainRefiner: Targeted repair: 5 broken actions out of 1132 total
+2026-02-06 12:58:09,239 [INFO] Phase3.DomainRefiner:   Repairing 'remove_quota_group' (1 discrepancies, 185 chars)...
+2026-02-06 12:58:10,748 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:58:10,749 [INFO] Phase3.DomainRefiner:   LLM repaired action 'remove_quota_group' (149 chars)
+2026-02-06 12:58:10,749 [INFO] Phase3.DomainRefiner:   Repairing 'create_pty' (1 discrepancies, 158 chars)...
+2026-02-06 12:58:12,383 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:58:12,384 [INFO] Phase3.DomainRefiner:   LLM repaired action 'create_pty' (171 chars)
+2026-02-06 12:58:12,384 [INFO] Phase3.DomainRefiner:   Repairing 'start_login_shell' (1 discrepancies, 173 chars)...
+2026-02-06 12:58:13,810 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:58:13,811 [INFO] Phase3.DomainRefiner:   LLM repaired action 'start_login_shell' (137 chars)
+2026-02-06 12:58:13,812 [INFO] Phase3.DomainRefiner:   Repairing 'groupmod_append_members' (1 discrepancies, 167 chars)...
+2026-02-06 12:58:15,220 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:58:15,220 [INFO] Phase3.DomainRefiner:   LLM repaired action 'groupmod_append_members' (131 chars)
+2026-02-06 12:58:15,221 [INFO] Phase3.DomainRefiner:   Repairing 'remove_selinux_user' (1 discrepancies, 176 chars)...
+2026-02-06 12:58:16,895 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-06 12:58:16,896 [INFO] Phase3.DomainRefiner:   LLM repaired action 'remove_selinux_user' (174 chars)
+2026-02-06 12:58:16,896 [INFO] Phase3.DomainRefiner: Targeted repair complete: 5 fixed, 0 kept original
+2026-02-06 12:58:16,948 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355667 chars)
+2026-02-06 12:58:16,958 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
+2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: Iteration 3 complete in 167.3s (eval: 159.6s, refine: 7.7s)
+2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 4/10
+============================================================
+2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
+2026-02-06 12:58:17,306 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:58:34,611 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:58:34,944 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:58:34,988 [WARNING] Phase3.ActionConcretizer: Could not concretize action: download_diff_only
+2026-02-06 12:58:52,283 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:58:52,623 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:59:09,921 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:59:10,275 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:59:27,620 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:59:27,963 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 12:59:45,274 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 12:59:45,629 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 13:00:02,943 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 13:00:03,301 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 13:00:20,623 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 13:00:20,981 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 13:00:38,309 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 13:00:38,648 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 13:00:55,961 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-02-06 13:00:56,315 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
+2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: EW Score: 1.000 (3/3 steps, 1 discrepancies)
+2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: EW Score: 1.000 (target: 0.9)
+2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: New best score: 1.000
+2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: Target EW score 0.9 achieved!
+2026-02-06 13:01:01,480 [INFO] Phase3.DockerExecutor: Container stopped and removed

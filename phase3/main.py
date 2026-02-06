@@ -26,11 +26,31 @@ from pathlib import Path
 from .config import Phase3Config
 from .orchestrator import Phase3Orchestrator
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+
+def setup_logging(output_dir: str, level: int = logging.INFO):
+    """Configure logging to both console and phase3.log file."""
+    log_path = Path(output_dir) / "phase3.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    root = logging.getLogger()
+    root.setLevel(level)
+    root.handlers.clear()
+
+    # Console handler
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    console.setFormatter(logging.Formatter(LOG_FORMAT))
+    root.addHandler(console)
+
+    # File handler
+    file_handler = logging.FileHandler(str(log_path), mode="w")
+    file_handler.setLevel(logging.DEBUG)  # always capture full detail in file
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    root.addHandler(file_handler)
+
+    logging.info(f"Logging to {log_path}")
 
 
 def main():
@@ -116,6 +136,14 @@ Examples:
         help="LLM model name",
     )
 
+    # Planner configuration
+    parser.add_argument(
+        "--plan-timeout",
+        type=int,
+        default=None,
+        help="Planner timeout in seconds (default: 300)",
+    )
+
     # Mock/testing
     parser.add_argument(
         "--mock",
@@ -163,11 +191,9 @@ Examples:
 
     args = parser.parse_args()
 
-    # Configure logging
-    if args.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
-    elif args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+    # Configure logging (console + file)
+    log_level = logging.WARNING if args.quiet else logging.DEBUG if args.verbose else logging.INFO
+    setup_logging(args.output_dir, log_level)
 
     # Build configuration
     config = Phase3Config()
@@ -190,6 +216,10 @@ Examples:
     # LLM
     config.llm.base_url = args.llm_url
     config.llm.model_name = args.llm_model
+
+    # Planner
+    if args.plan_timeout is not None:
+        config.planner.plan_timeout = args.plan_timeout
 
     # Mock settings
     if args.mock:

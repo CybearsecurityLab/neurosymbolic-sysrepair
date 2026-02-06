@@ -1,0 +1,10 @@
+[
+  {
+    "action": "download_diff_only",
+    "type": "concretization",
+    "expected": "Valid bash command for (download_diff_only libsepol2)",
+    "actual": "No template found",
+    "context": "Action parameters: {'?pkg': 'libsepol2'}",
+    "severity": "high"
+  }
+]

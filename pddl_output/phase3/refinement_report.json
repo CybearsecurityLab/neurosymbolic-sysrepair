@@ -1,0 +1,53 @@
+{
+  "session_id": "20260206_124946",
+  "started_at": "2026-02-06T12:49:46.757678",
+  "completed": true,
+  "success": true,
+  "configuration": {
+    "target_score": 0.9,
+    "max_iterations": 10,
+    "walks_per_iteration": 10,
+    "walk_depth": 5,
+    "docker_image": "ubuntu:25.10"
+  },
+  "results": {
+    "final_score": 1.0,
+    "target_achieved": true,
+    "iterations_completed": 4,
+    "total_time_seconds": 669.64355635643
+  },
+  "score_history": [
+    {
+      "iteration": 1,
+      "score": 0.5,
+      "discrepancies": 5,
+      "eval_time": 159.65431809425354,
+      "refine_time": 12.85568380355835
+    },
+    {
+      "iteration": 2,
+      "score": 0.5,
+      "discrepancies": 2,
+      "eval_time": 159.36868715286255,
+      "refine_time": 3.078442335128784
+    },
+    {
+      "iteration": 3,
+      "score": 0.3333333333333333,
+      "discrepancies": 5,
+      "eval_time": 159.60432815551758,
+      "refine_time": 7.7418437004089355
+    },
+    {
+      "iteration": 4,
+      "score": 1.0,
+      "discrepancies": 1,
+      "eval_time": 159.44083833694458,
+      "refine_time": 0.0
+    }
+  ],
+  "domain_stats": {
+    "initial_size": 355809,
+    "final_size": 355667
+  }
+}
