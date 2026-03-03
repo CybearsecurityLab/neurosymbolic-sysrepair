@@ -1,174 +1,1361 @@
-2026-02-06 12:49:46,756 [INFO] root: Logging to pddl_output/phase3/phase3.log
-2026-02-06 12:49:46,757 [INFO] Phase3.DomainRefiner: Initializing DomainRefiner components...
-2026-02-06 12:49:46,839 [INFO] Phase3.DockerExecutor: Starting container with image: ubuntu:25.10
-2026-02-06 12:49:54,199 [INFO] Phase3.DockerExecutor: Container started: d1f8c91d5cec
-2026-02-06 12:49:54,209 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 935 actions
-2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: DomainRefiner initialized
-2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: Starting refinement loop (target: 0.9, max_iter: 10)
-2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: 
+2026-03-02 22:12:49,237 [INFO] root: Logging to pddl_output/phase3/phase3.log
+2026-03-02 22:12:49,238 [INFO] Phase3.Config: Auto-scaled EW params for 571 actions: walks=57, depth=8 (~456 total steps/iteration)
+2026-03-02 22:12:49,238 [INFO] Phase3.DomainRefiner: Initializing DomainRefiner components...
+2026-03-02 22:12:49,321 [INFO] Phase3.DockerExecutor: Starting container with image: ubuntu:25.10
+2026-03-02 22:12:56,704 [INFO] Phase3.DockerExecutor: Container started: aac030efd996
+2026-03-02 22:12:56,724 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-02 22:12:57,171 [INFO] Phase3.DomainRefiner: DomainRefiner initialized
+2026-03-02 22:12:57,171 [INFO] Phase3.DomainRefiner: Starting refinement loop (target: 0.9, max_iter: 10)
+2026-03-02 22:12:57,171 [INFO] Phase3.DomainRefiner: 
 ============================================================
 Iteration 1/10
 ============================================================
-2026-02-06 12:49:54,655 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
-2026-02-06 12:49:54,988 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:49:54,989 [WARNING] Phase3.ActionConcretizer: Missing binding for template hostnamectl_deployment: 'deployment'
-2026-02-06 12:50:12,302 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:50:12,642 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:50:29,991 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:50:30,335 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:50:47,637 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:50:47,974 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:51:05,286 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:51:05,617 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:51:23,004 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:51:23,401 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:51:40,824 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:51:41,156 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:51:58,533 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:51:58,873 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:52:16,237 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:52:16,570 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:52:33,928 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:52:34,263 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (4/8 steps, 5 discrepancies)
-2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (target: 0.9)
-2026-02-06 12:52:34,309 [INFO] Phase3.DomainRefiner: New best score: 0.500
-2026-02-06 12:52:34,337 [INFO] Phase3.DomainRefiner: Targeted repair: 5 broken actions out of 1132 total
-2026-02-06 12:52:34,337 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_deployment' (1 discrepancies, 132 chars)...
-2026-02-06 12:52:40,628 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:52:40,636 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_deployment' (128 chars)
-2026-02-06 12:52:40,637 [INFO] Phase3.DomainRefiner:   Repairing 'move_mail_spool' (1 discrepancies, 200 chars)...
-2026-02-06 12:52:42,482 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:52:42,483 [INFO] Phase3.DomainRefiner:   LLM repaired action 'move_mail_spool' (198 chars)
-2026-02-06 12:52:42,483 [INFO] Phase3.DomainRefiner:   Repairing 'change_crontab_owner' (1 discrepancies, 178 chars)...
-2026-02-06 12:52:44,413 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:52:44,413 [INFO] Phase3.DomainRefiner:   LLM repaired action 'change_crontab_owner' (201 chars)
-2026-02-06 12:52:44,414 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_no_ask_password' (1 discrepancies, 142 chars)...
-2026-02-06 12:52:45,822 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:52:45,823 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_no_ask_password' (138 chars)
-2026-02-06 12:52:45,823 [INFO] Phase3.DomainRefiner:   Repairing 'hostnamectl_version' (1 discrepancies, 126 chars)...
-2026-02-06 12:52:47,102 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:52:47,103 [INFO] Phase3.DomainRefiner:   LLM repaired action 'hostnamectl_version' (124 chars)
-2026-02-06 12:52:47,103 [INFO] Phase3.DomainRefiner: Targeted repair complete: 5 fixed, 0 kept original
-2026-02-06 12:52:47,154 [INFO] Phase3.DomainRefiner: Sanitizer applied 8 fixes: Added unbound var '?p' to action 'disable_pager', Added unbound var '?k' to action 'list', Added unbound var '?m' to action 'list', Added unbound var '?o' to action 'list', Added unbound var '?v' to action 'list'
-2026-02-06 12:52:47,155 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355802 chars)
-2026-02-06 12:52:47,165 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
-2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: Iteration 1 complete in 172.5s (eval: 159.7s, refine: 12.9s)
-2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: 
+2026-03-02 22:12:57,171 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-02 22:12:57,388 [INFO] Phase3.PlannerWrapper: FD validator: fixed undefined variables in 17 actions
+2026-03-02 22:12:57,406 [INFO] Phase3.PlannerWrapper: FD validator: domain is consistent, no missing predicates
+2026-03-02 22:12:57,408 [INFO] Phase3.PlannerWrapper: FD validator: extracted 509 declared predicates for arity checking
+2026-03-02 22:12:57,420 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-02 22:12:57,420 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-02 22:12:57,420 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-02 22:12:57,421 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-02 22:12:57,421 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-02 22:12:57,421 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-02 22:12:57,421 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-02 22:12:57,424 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,425 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,425 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-02 22:12:57,425 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,430 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-02 22:12:57,431 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,432 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-02 22:12:57,432 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,432 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-02 22:12:57,435 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-02 22:12:57,435 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-02 22:12:57,436 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-02 22:12:57,602 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpkks1pgmi/domain.pddl /tmp/tmpkks1pgmi/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.14s
+
+2026-03-02 22:13:15,065 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:13:32,785 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:13:50,405 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:14:07,997 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:14:25,681 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:14:43,313 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:15:00,952 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:15:18,642 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:15:18,822 [WARNING] Phase3.ActionConcretizer: Missing binding for template create_firewall_chain: nft add chain uucp {chain}
+2026-03-02 22:15:36,272 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:15:53,943 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:16:11,574 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:16:29,252 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:16:46,933 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:17:04,589 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:17:22,259 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:17:39,978 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:17:57,619 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:18:15,283 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:18:32,911 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:18:50,594 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:19:08,273 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:19:25,930 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:19:43,574 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:20:01,182 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:20:18,798 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:20:36,475 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:20:54,231 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:21:11,878 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:21:29,592 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:21:47,298 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:22:04,879 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:22:22,477 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:22:40,158 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:22:57,811 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:23:15,489 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:23:33,288 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:23:50,904 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:24:08,525 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:24:26,191 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:24:43,924 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:25:01,625 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:25:19,342 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:25:36,943 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:25:54,514 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:26:12,156 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:26:29,735 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:26:47,444 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:27:05,084 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:27:22,719 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:27:40,362 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:27:57,996 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:28:15,677 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:28:33,321 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:28:51,020 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:29:08,710 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:29:26,442 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 22:29:26,705 [INFO] Phase3.DomainRefiner: EW Score: 0.565 (48/85 steps, 37 discrepancies)
+2026-03-02 22:29:26,705 [INFO] Phase3.DomainRefiner: EW Score: 0.565 (target: 0.9)
+2026-03-02 22:29:26,705 [INFO] Phase3.DomainRefiner: New best score: 0.565
+2026-03-02 22:29:26,715 [INFO] Phase3.DomainRefiner: Targeted repair: 10 broken actions out of 571 total
+2026-03-02 22:29:26,715 [INFO] Phase3.DomainRefiner:   Repairing 'download_diff_only' (1 discrepancies, 178 chars)...
+2026-03-02 22:32:47,236 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:35:40,093 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:35:40,094 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_diff_only' after 2 attempts
+2026-03-02 22:35:40,094 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_diff_only', keeping original
+2026-03-02 22:35:40,094 [INFO] Phase3.DomainRefiner:   Repairing 'set_user_uid' (1 discrepancies, 153 chars)...
+2026-03-02 22:38:32,638 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:41:23,323 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:41:23,324 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'set_user_uid' after 2 attempts
+2026-03-02 22:41:23,324 [WARNING] Phase3.DomainRefiner:   Could not repair 'set_user_uid', keeping original
+2026-03-02 22:41:23,324 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find' (1 discrepancies, 158 chars)...
+2026-03-02 22:44:15,211 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:47:07,672 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:47:07,673 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find' after 2 attempts
+2026-03-02 22:47:07,673 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find', keeping original
+2026-03-02 22:47:07,673 [INFO] Phase3.DomainRefiner:   Repairing 'non_unique_user' (1 discrepancies, 169 chars)...
+2026-03-02 22:49:59,377 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:52:49,779 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:52:49,780 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'non_unique_user' after 2 attempts
+2026-03-02 22:52:49,780 [WARNING] Phase3.DomainRefiner:   Could not repair 'non_unique_user', keeping original
+2026-03-02 22:52:49,780 [INFO] Phase3.DomainRefiner:   Repairing 'remove_snap' (1 discrepancies, 177 chars)...
+2026-03-02 22:55:41,108 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:58:31,849 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 22:58:31,850 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'remove_snap' after 2 attempts
+2026-03-02 22:58:31,850 [WARNING] Phase3.DomainRefiner:   Could not repair 'remove_snap', keeping original
+2026-03-02 22:58:31,850 [INFO] Phase3.DomainRefiner:   Repairing 'run_login_shell' (1 discrepancies, 171 chars)...
+2026-03-02 23:01:22,843 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:04:14,648 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:04:14,650 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'run_login_shell' after 2 attempts
+2026-03-02 23:04:14,650 [WARNING] Phase3.DomainRefiner:   Could not repair 'run_login_shell', keeping original
+2026-03-02 23:04:14,650 [INFO] Phase3.DomainRefiner:   Repairing 'allocate_pty' (1 discrepancies, 298 chars)...
+2026-03-02 23:07:06,642 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:09:55,070 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:09:55,071 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'allocate_pty' after 2 attempts
+2026-03-02 23:09:55,071 [WARNING] Phase3.DomainRefiner:   Could not repair 'allocate_pty', keeping original
+2026-03-02 23:09:55,071 [INFO] Phase3.DomainRefiner:   Repairing 'create_firewall_chain' (1 discrepancies, 215 chars)...
+2026-03-02 23:12:44,439 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:15:29,391 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:15:29,392 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_firewall_chain' after 2 attempts
+2026-03-02 23:15:29,392 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_firewall_chain', keeping original
+2026-03-02 23:15:29,392 [INFO] Phase3.DomainRefiner:   Repairing 'change_user' (1 discrepancies, 161 chars)...
+2026-03-02 23:18:12,245 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:20:55,045 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:20:55,046 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'change_user' after 2 attempts
+2026-03-02 23:20:55,046 [WARNING] Phase3.DomainRefiner:   Could not repair 'change_user', keeping original
+2026-03-02 23:20:55,047 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_maxdays' (1 discrepancies, 232 chars)...
+2026-03-02 23:23:44,194 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:26:25,006 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:26:25,007 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_maxdays' after 2 attempts
+2026-03-02 23:26:25,007 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_maxdays', keeping original
+2026-03-02 23:26:25,007 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 10 kept original
+2026-03-02 23:26:25,039 [INFO] Phase3.DomainRefiner: Sanitizer applied 37 fixes: Added unbound var '?chain' to action 'add_firewall_rule', Added unbound var '?o' to action 'add_firewall_rule', Added unbound var '?table' to action 'add_firewall_rule', Added unbound var '?target' to action 'add_firewall_rule', Added unbound var '?c' to action 'apt'
+2026-03-02 23:26:25,039 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176065 chars)
+2026-03-02 23:26:25,060 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-02 23:26:25,060 [INFO] Phase3.DomainRefiner: Iteration 1 complete in 4407.9s (eval: 989.5s, refine: 3418.4s)
+2026-03-02 23:26:25,060 [INFO] Phase3.DomainRefiner: 
 ============================================================
 Iteration 2/10
 ============================================================
-2026-02-06 12:52:47,165 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
-2026-02-06 12:52:47,513 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:53:04,845 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:53:05,201 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:53:22,503 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:53:22,841 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:53:40,238 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:53:40,579 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:53:57,883 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:53:58,226 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:54:15,542 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:54:15,894 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:54:33,211 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:54:33,535 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:54:50,902 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:54:51,236 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:55:08,550 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:55:08,904 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:55:08,904 [WARNING] Phase3.ActionConcretizer: Could not concretize action: groupmod_set_password
-2026-02-06 12:55:26,208 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:55:26,533 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:55:26,534 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (1/2 steps, 2 discrepancies)
-2026-02-06 12:55:26,534 [INFO] Phase3.DomainRefiner: EW Score: 0.500 (target: 0.9)
-2026-02-06 12:55:26,556 [INFO] Phase3.DomainRefiner: Targeted repair: 2 broken actions out of 1132 total
-2026-02-06 12:55:26,556 [INFO] Phase3.DomainRefiner:   Repairing 'modify_user_account' (1 discrepancies, 170 chars)...
-2026-02-06 12:55:28,165 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:55:28,165 [INFO] Phase3.DomainRefiner:   LLM repaired action 'modify_user_account' (168 chars)
-2026-02-06 12:55:28,166 [INFO] Phase3.DomainRefiner:   Repairing 'groupmod_set_password' (1 discrepancies, 165 chars)...
-2026-02-06 12:55:29,542 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:55:29,542 [INFO] Phase3.DomainRefiner:   LLM repaired action 'groupmod_set_password' (129 chars)
-2026-02-06 12:55:29,543 [INFO] Phase3.DomainRefiner: Targeted repair complete: 2 fixed, 0 kept original
-2026-02-06 12:55:29,599 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355764 chars)
-2026-02-06 12:55:29,612 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
-2026-02-06 12:55:29,612 [INFO] Phase3.DomainRefiner: Iteration 2 complete in 162.4s (eval: 159.4s, refine: 3.1s)
-2026-02-06 12:55:29,613 [INFO] Phase3.DomainRefiner: 
+2026-03-02 23:26:25,060 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-02 23:26:25,319 [INFO] Phase3.PlannerWrapper: FD validator: domain is consistent, no missing predicates
+2026-03-02 23:26:25,321 [INFO] Phase3.PlannerWrapper: FD validator: extracted 509 declared predicates for arity checking
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-02 23:26:25,333 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-02 23:26:25,336 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,337 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,337 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-02 23:26:25,337 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,340 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-02 23:26:25,341 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,342 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-02 23:26:25,342 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,342 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-02 23:26:25,344 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-02 23:26:25,345 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-02 23:26:25,346 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-02 23:26:25,518 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpbeop9zo4/domain.pddl /tmp/tmpbeop9zo4/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.14s
+
+2026-03-02 23:26:42,969 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:27:00,721 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:27:18,509 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:27:36,214 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:27:53,852 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:28:11,469 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:28:29,158 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:28:46,837 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:29:04,460 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:29:22,087 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:29:39,714 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:29:57,371 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:30:15,011 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:30:32,632 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:30:50,245 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:31:07,893 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:31:25,519 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:31:43,196 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:32:00,886 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:32:18,512 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:32:36,164 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:32:53,805 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:33:11,495 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:33:29,180 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:33:46,835 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:34:04,480 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:34:22,151 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:34:39,852 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:34:57,488 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:35:15,118 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:35:32,712 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:35:50,334 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:36:08,003 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:36:25,684 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:36:43,324 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:37:01,030 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:37:18,712 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:37:36,353 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:37:53,958 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:38:11,595 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:38:29,234 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:38:46,939 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:39:04,619 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:39:22,258 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:39:39,924 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:39:57,577 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:40:15,276 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:40:33,042 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:40:50,660 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:41:08,352 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:41:25,975 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:41:43,658 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:42:01,286 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:42:18,915 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:42:36,602 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:42:54,257 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-02 23:42:54,540 [INFO] Phase3.DomainRefiner: EW Score: 0.590 (49/83 steps, 34 discrepancies)
+2026-03-02 23:42:54,540 [INFO] Phase3.DomainRefiner: EW Score: 0.590 (target: 0.9)
+2026-03-02 23:42:54,540 [INFO] Phase3.DomainRefiner: New best score: 0.590
+2026-03-02 23:42:54,550 [INFO] Phase3.DomainRefiner: Targeted repair: 9 broken actions out of 571 total
+2026-03-02 23:42:54,550 [INFO] Phase3.DomainRefiner:   Repairing 'snap_enable' (1 discrepancies, 213 chars)...
+2026-03-02 23:46:09,427 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:48:58,586 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:48:58,587 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_enable' after 2 attempts
+2026-03-02 23:48:58,587 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_enable', keeping original
+2026-03-02 23:48:58,588 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find' (2 discrepancies, 158 chars)...
+2026-03-02 23:51:46,254 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:54:33,371 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-02 23:54:33,372 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find' after 2 attempts
+2026-03-02 23:54:33,372 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find', keeping original
+2026-03-02 23:54:33,372 [INFO] Phase3.DomainRefiner:   Repairing 'initialize_environment' (1 discrepancies, 184 chars)...
+2026-03-02 23:57:21,895 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:00:07,568 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:00:07,569 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'initialize_environment' after 2 attempts
+2026-03-03 00:00:07,569 [WARNING] Phase3.DomainRefiner:   Could not repair 'initialize_environment', keeping original
+2026-03-03 00:00:07,570 [INFO] Phase3.DomainRefiner:   Repairing 'query_bpf_map_data' (1 discrepancies, 187 chars)...
+2026-03-03 00:02:49,124 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:05:36,790 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:05:36,791 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'query_bpf_map_data' after 2 attempts
+2026-03-03 00:05:36,792 [WARNING] Phase3.DomainRefiner:   Could not repair 'query_bpf_map_data', keeping original
+2026-03-03 00:05:36,792 [INFO] Phase3.DomainRefiner:   Repairing 'create_user' (1 discrepancies, 156 chars)...
+2026-03-03 00:08:24,877 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:11:12,867 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:11:12,868 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user' after 2 attempts
+2026-03-03 00:11:12,868 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user', keeping original
+2026-03-03 00:11:12,868 [INFO] Phase3.DomainRefiner:   Repairing 'create_group_entry' (1 discrepancies, 178 chars)...
+2026-03-03 00:14:01,763 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:16:50,865 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:16:50,866 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_group_entry' after 2 attempts
+2026-03-03 00:16:50,866 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_group_entry', keeping original
+2026-03-03 00:16:50,866 [INFO] Phase3.DomainRefiner:   Repairing 'remove_package' (1 discrepancies, 180 chars)...
+2026-03-03 00:18:51,866 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:18:51,868 [INFO] Phase3.DomainRefiner:   LLM repaired action 'remove_package' (221 chars)
+2026-03-03 00:18:51,869 [INFO] Phase3.DomainRefiner:   Repairing 'query_socket_by_state' (1 discrepancies, 214 chars)...
+2026-03-03 00:21:38,593 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:24:27,688 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:24:27,689 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'query_socket_by_state' after 2 attempts
+2026-03-03 00:24:27,689 [WARNING] Phase3.DomainRefiner:   Could not repair 'query_socket_by_state', keeping original
+2026-03-03 00:24:27,689 [INFO] Phase3.DomainRefiner:   Repairing 'refresh_snap' (1 discrepancies, 203 chars)...
+2026-03-03 00:27:15,013 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:30:03,717 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:30:03,718 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'refresh_snap' after 2 attempts
+2026-03-03 00:30:03,719 [WARNING] Phase3.DomainRefiner:   Could not repair 'refresh_snap', keeping original
+2026-03-03 00:30:03,719 [INFO] Phase3.DomainRefiner: Targeted repair complete: 1 fixed, 8 kept original
+2026-03-03 00:30:03,747 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176106 chars)
+2026-03-03 00:30:03,768 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 00:30:03,769 [INFO] Phase3.DomainRefiner: Iteration 2 complete in 3818.7s (eval: 989.5s, refine: 2829.2s)
+2026-03-03 00:30:03,769 [INFO] Phase3.DomainRefiner: 
 ============================================================
 Iteration 3/10
 ============================================================
-2026-02-06 12:55:29,613 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
-2026-02-06 12:55:29,967 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:55:47,327 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:55:47,671 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:55:47,671 [WARNING] Phase3.ActionConcretizer: Missing binding for template remove_package: 'package'
-2026-02-06 12:56:05,031 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:56:05,405 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:56:22,772 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:56:23,113 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:56:23,113 [WARNING] Phase3.ActionConcretizer: Missing binding for template start_service: 'service'
-2026-02-06 12:56:40,485 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:56:40,835 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:56:40,836 [WARNING] Phase3.ActionConcretizer: Could not concretize action: groupmod_append_members
-2026-02-06 12:56:58,134 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:56:58,476 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:57:15,806 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:57:16,141 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:57:16,142 [WARNING] Phase3.ActionConcretizer: Missing binding for template remove_package: 'package'
-2026-02-06 12:57:33,532 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:57:33,862 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:57:51,178 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:57:51,509 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:58:08,828 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:58:09,175 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:58:09,217 [INFO] Phase3.DomainRefiner: EW Score: 0.333 (2/6 steps, 5 discrepancies)
-2026-02-06 12:58:09,217 [INFO] Phase3.DomainRefiner: EW Score: 0.333 (target: 0.9)
-2026-02-06 12:58:09,239 [INFO] Phase3.DomainRefiner: Targeted repair: 5 broken actions out of 1132 total
-2026-02-06 12:58:09,239 [INFO] Phase3.DomainRefiner:   Repairing 'remove_quota_group' (1 discrepancies, 185 chars)...
-2026-02-06 12:58:10,748 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:58:10,749 [INFO] Phase3.DomainRefiner:   LLM repaired action 'remove_quota_group' (149 chars)
-2026-02-06 12:58:10,749 [INFO] Phase3.DomainRefiner:   Repairing 'create_pty' (1 discrepancies, 158 chars)...
-2026-02-06 12:58:12,383 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:58:12,384 [INFO] Phase3.DomainRefiner:   LLM repaired action 'create_pty' (171 chars)
-2026-02-06 12:58:12,384 [INFO] Phase3.DomainRefiner:   Repairing 'start_login_shell' (1 discrepancies, 173 chars)...
-2026-02-06 12:58:13,810 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:58:13,811 [INFO] Phase3.DomainRefiner:   LLM repaired action 'start_login_shell' (137 chars)
-2026-02-06 12:58:13,812 [INFO] Phase3.DomainRefiner:   Repairing 'groupmod_append_members' (1 discrepancies, 167 chars)...
-2026-02-06 12:58:15,220 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:58:15,220 [INFO] Phase3.DomainRefiner:   LLM repaired action 'groupmod_append_members' (131 chars)
-2026-02-06 12:58:15,221 [INFO] Phase3.DomainRefiner:   Repairing 'remove_selinux_user' (1 discrepancies, 176 chars)...
-2026-02-06 12:58:16,895 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
-2026-02-06 12:58:16,896 [INFO] Phase3.DomainRefiner:   LLM repaired action 'remove_selinux_user' (174 chars)
-2026-02-06 12:58:16,896 [INFO] Phase3.DomainRefiner: Targeted repair complete: 5 fixed, 0 kept original
-2026-02-06 12:58:16,948 [INFO] Phase3.DomainRefiner: Domain actions: 1132 -> 1132 (355667 chars)
-2026-02-06 12:58:16,958 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 880 actions
-2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: Iteration 3 complete in 167.3s (eval: 159.6s, refine: 7.7s)
-2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: 
+2026-03-03 00:30:03,769 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 00:30:04,003 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 1 missing predicates (sample: ['package_essential'])
+2026-03-03 00:30:04,006 [INFO] Phase3.PlannerWrapper: FD validator: extracted 510 declared predicates for arity checking
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 00:30:04,020 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 00:30:04,023 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,023 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,023 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 00:30:04,023 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,027 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 00:30:04,027 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,028 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 00:30:04,029 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,029 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 00:30:04,031 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 00:30:04,032 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 00:30:04,032 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 00:30:04,205 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpkxrie25b/domain.pddl /tmp/tmpkxrie25b/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.13s
+
+2026-03-03 00:30:21,667 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:30:39,347 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:30:57,025 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:31:14,637 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:31:32,368 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:31:50,026 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:32:07,677 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:32:25,298 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:32:43,095 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:33:00,726 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:33:18,364 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:33:36,017 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:33:53,654 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:34:11,309 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:34:28,950 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:34:46,576 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:35:04,321 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:35:21,967 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:35:22,154 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force irc
+2026-03-03 00:35:39,553 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:35:57,189 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:36:14,841 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:36:32,491 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:36:50,130 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:37:07,801 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:37:25,517 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:37:43,185 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:38:00,889 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:38:18,476 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:38:36,158 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:38:53,889 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:39:11,507 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:39:29,132 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:39:46,846 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:40:04,555 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:40:22,146 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:40:39,904 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:40:57,604 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:41:15,322 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:41:32,971 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:41:50,622 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:42:08,289 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:42:25,954 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:42:43,616 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:43:01,300 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:43:18,949 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:43:36,666 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:43:54,422 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:44:12,071 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:44:29,744 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:44:47,412 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:45:05,045 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:45:05,252 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel mail
+2026-03-03 00:45:22,647 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:45:40,318 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:45:57,989 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:46:15,609 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:46:33,280 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 00:46:33,548 [INFO] Phase3.DomainRefiner: EW Score: 0.701 (61/87 steps, 26 discrepancies)
+2026-03-03 00:46:33,548 [INFO] Phase3.DomainRefiner: EW Score: 0.701 (target: 0.9)
+2026-03-03 00:46:33,548 [INFO] Phase3.DomainRefiner: New best score: 0.701
+2026-03-03 00:46:33,560 [INFO] Phase3.DomainRefiner: Targeted repair: 10 broken actions out of 571 total
+2026-03-03 00:46:33,561 [INFO] Phase3.DomainRefiner:   Repairing 'enable_snap' (1 discrepancies, 204 chars)...
+2026-03-03 00:49:51,715 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:52:45,354 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:52:45,355 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'enable_snap' after 2 attempts
+2026-03-03 00:52:45,355 [WARNING] Phase3.DomainRefiner:   Could not repair 'enable_snap', keeping original
+2026-03-03 00:52:45,355 [INFO] Phase3.DomainRefiner:   Repairing 'query_socket_by_family' (1 discrepancies, 214 chars)...
+2026-03-03 00:55:39,163 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:58:31,858 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 00:58:31,859 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'query_socket_by_family' after 2 attempts
+2026-03-03 00:58:31,859 [WARNING] Phase3.DomainRefiner:   Could not repair 'query_socket_by_family', keeping original
+2026-03-03 00:58:31,859 [INFO] Phase3.DomainRefiner:   Repairing 'create_user' (1 discrepancies, 156 chars)...
+2026-03-03 01:01:25,907 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:04:17,880 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:04:17,881 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user' after 2 attempts
+2026-03-03 01:04:17,882 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user', keeping original
+2026-03-03 01:04:17,882 [INFO] Phase3.DomainRefiner:   Repairing 'reload_daemon' (1 discrepancies, 160 chars)...
+2026-03-03 01:07:09,572 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:10:03,593 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:10:03,594 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'reload_daemon' after 2 attempts
+2026-03-03 01:10:03,594 [WARNING] Phase3.DomainRefiner:   Could not repair 'reload_daemon', keeping original
+2026-03-03 01:10:03,594 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_expiredate' (1 discrepancies, 236 chars)...
+2026-03-03 01:12:56,933 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:15:50,723 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:15:50,724 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_expiredate' after 2 attempts
+2026-03-03 01:15:50,724 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_expiredate', keeping original
+2026-03-03 01:15:50,724 [INFO] Phase3.DomainRefiner:   Repairing 'compile_source' (1 discrepancies, 209 chars)...
+2026-03-03 01:18:44,285 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:21:37,558 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:21:37,559 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'compile_source' after 2 attempts
+2026-03-03 01:21:37,559 [WARNING] Phase3.DomainRefiner:   Could not repair 'compile_source', keeping original
+2026-03-03 01:21:37,559 [INFO] Phase3.DomainRefiner:   Repairing 'allocate_pty' (1 discrepancies, 298 chars)...
+2026-03-03 01:24:29,551 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:27:15,755 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:27:15,756 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'allocate_pty' after 2 attempts
+2026-03-03 01:27:15,756 [WARNING] Phase3.DomainRefiner:   Could not repair 'allocate_pty', keeping original
+2026-03-03 01:27:15,756 [INFO] Phase3.DomainRefiner:   Repairing 'create_system_group' (1 discrepancies, 179 chars)...
+2026-03-03 01:30:01,847 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:32:48,224 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:32:48,225 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_system_group' after 2 attempts
+2026-03-03 01:32:48,225 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_system_group', keeping original
+2026-03-03 01:32:48,225 [INFO] Phase3.DomainRefiner:   Repairing 'change_username' (1 discrepancies, 233 chars)...
+2026-03-03 01:35:33,693 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:38:20,673 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:38:20,674 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'change_username' after 2 attempts
+2026-03-03 01:38:20,674 [WARNING] Phase3.DomainRefiner:   Could not repair 'change_username', keeping original
+2026-03-03 01:38:20,674 [INFO] Phase3.DomainRefiner:   Repairing 'force_delete_user' (1 discrepancies, 171 chars)...
+2026-03-03 01:41:06,992 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:43:53,768 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 01:43:53,769 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'force_delete_user' after 2 attempts
+2026-03-03 01:43:53,769 [WARNING] Phase3.DomainRefiner:   Could not repair 'force_delete_user', keeping original
+2026-03-03 01:43:53,769 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 10 kept original
+2026-03-03 01:43:53,798 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176106 chars)
+2026-03-03 01:43:53,817 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 01:43:53,818 [INFO] Phase3.DomainRefiner: Iteration 3 complete in 4430.0s (eval: 989.8s, refine: 3440.3s)
+2026-03-03 01:43:53,818 [INFO] Phase3.DomainRefiner: 
 ============================================================
 Iteration 4/10
 ============================================================
-2026-02-06 12:58:16,959 [INFO] Phase3.DomainRefiner: Calculating EW score with N=10, T_max=5
-2026-02-06 12:58:17,306 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:58:34,611 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:58:34,944 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:58:34,988 [WARNING] Phase3.ActionConcretizer: Could not concretize action: download_diff_only
-2026-02-06 12:58:52,283 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:58:52,623 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:59:09,921 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:59:10,275 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:59:27,620 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:59:27,963 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 12:59:45,274 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 12:59:45,629 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 13:00:02,943 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 13:00:03,301 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 13:00:20,623 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 13:00:20,981 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 13:00:38,309 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 13:00:38,648 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 13:00:55,961 [INFO] Phase3.DockerExecutor: Container reset to clean state
-2026-02-06 13:00:56,315 [WARNING] Phase3.PlannerWrapper: Fast Downward returned 31
-2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: EW Score: 1.000 (3/3 steps, 1 discrepancies)
-2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: EW Score: 1.000 (target: 0.9)
-2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: New best score: 1.000
-2026-02-06 13:00:56,400 [INFO] Phase3.DomainRefiner: Target EW score 0.9 achieved!
-2026-02-06 13:01:01,480 [INFO] Phase3.DockerExecutor: Container stopped and removed
+2026-03-03 01:43:53,818 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 01:43:54,061 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 1 missing predicates (sample: ['package_essential'])
+2026-03-03 01:43:54,063 [INFO] Phase3.PlannerWrapper: FD validator: extracted 510 declared predicates for arity checking
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 01:43:54,075 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 01:43:54,078 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,078 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,079 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 01:43:54,079 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,082 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 01:43:54,083 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,084 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 01:43:54,084 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,084 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 01:43:54,087 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 01:43:54,088 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 01:43:54,088 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 01:43:54,318 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpn55orptt/domain.pddl /tmp/tmpn55orptt/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.16s
+
+2026-03-03 01:44:11,897 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:44:29,566 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:44:47,206 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:45:04,897 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:45:22,511 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:45:40,262 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:45:57,984 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:46:15,627 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:46:33,392 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:46:51,018 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:47:08,692 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:47:26,463 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:47:44,148 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:48:01,793 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:48:19,480 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:48:37,125 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:48:54,820 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:49:12,474 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:49:30,081 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:49:47,701 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:50:05,387 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:50:23,133 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:50:40,812 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:50:58,548 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:51:16,139 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:51:33,787 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:51:51,424 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:52:09,158 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:52:26,845 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:52:27,037 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force backup
+2026-03-03 01:52:44,456 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:53:02,090 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:53:19,745 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:53:37,476 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:53:55,106 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:54:12,685 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:54:30,310 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:54:47,921 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:55:05,510 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:55:23,200 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:55:40,788 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:55:58,396 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:56:16,013 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:56:33,725 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:56:51,367 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:57:09,000 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:57:26,694 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:57:44,385 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:58:02,006 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:58:19,645 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:58:37,273 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:58:54,916 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:59:12,531 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:59:30,159 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 01:59:47,796 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:00:05,498 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:00:23,092 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:00:23,369 [INFO] Phase3.DomainRefiner: EW Score: 0.616 (53/86 steps, 33 discrepancies)
+2026-03-03 02:00:23,369 [INFO] Phase3.DomainRefiner: EW Score: 0.616 (target: 0.9)
+2026-03-03 02:00:23,381 [INFO] Phase3.DomainRefiner: Targeted repair: 9 broken actions out of 571 total
+2026-03-03 02:00:23,382 [INFO] Phase3.DomainRefiner:   Repairing 'compile_source' (1 discrepancies, 209 chars)...
+2026-03-03 02:03:42,308 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:06:37,903 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:06:37,904 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'compile_source' after 2 attempts
+2026-03-03 02:06:37,904 [WARNING] Phase3.DomainRefiner:   Could not repair 'compile_source', keeping original
+2026-03-03 02:06:37,904 [INFO] Phase3.DomainRefiner:   Repairing 'create_user' (1 discrepancies, 156 chars)...
+2026-03-03 02:09:33,345 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:12:22,910 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:12:22,911 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user' after 2 attempts
+2026-03-03 02:12:22,911 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user', keeping original
+2026-03-03 02:12:22,911 [INFO] Phase3.DomainRefiner:   Repairing 'download_diff_only' (2 discrepancies, 178 chars)...
+2026-03-03 02:15:11,236 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:17:59,333 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:17:59,334 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_diff_only' after 2 attempts
+2026-03-03 02:17:59,334 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_diff_only', keeping original
+2026-03-03 02:17:59,334 [INFO] Phase3.DomainRefiner:   Repairing 'allocate_pty' (1 discrepancies, 298 chars)...
+2026-03-03 02:20:48,577 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:23:36,434 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:23:36,435 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'allocate_pty' after 2 attempts
+2026-03-03 02:23:36,435 [WARNING] Phase3.DomainRefiner:   Could not repair 'allocate_pty', keeping original
+2026-03-03 02:23:36,435 [INFO] Phase3.DomainRefiner:   Repairing 'revert_snap' (1 discrepancies, 170 chars)...
+2026-03-03 02:26:24,329 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:29:11,547 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:29:11,548 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'revert_snap' after 2 attempts
+2026-03-03 02:29:11,548 [WARNING] Phase3.DomainRefiner:   Could not repair 'revert_snap', keeping original
+2026-03-03 02:29:11,548 [INFO] Phase3.DomainRefiner:   Repairing 'switch_user' (1 discrepancies, 302 chars)...
+2026-03-03 02:31:56,747 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:34:42,495 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:34:42,496 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'switch_user' after 2 attempts
+2026-03-03 02:34:42,496 [WARNING] Phase3.DomainRefiner:   Could not repair 'switch_user', keeping original
+2026-03-03 02:34:42,496 [INFO] Phase3.DomainRefiner:   Repairing 'create_group_entry' (1 discrepancies, 178 chars)...
+2026-03-03 02:37:32,023 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:40:19,707 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:40:19,708 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_group_entry' after 2 attempts
+2026-03-03 02:40:19,708 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_group_entry', keeping original
+2026-03-03 02:40:19,708 [INFO] Phase3.DomainRefiner:   Repairing 'enable_firewall' (1 discrepancies, 155 chars)...
+2026-03-03 02:43:07,366 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:45:53,286 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:45:53,287 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'enable_firewall' after 2 attempts
+2026-03-03 02:45:53,287 [WARNING] Phase3.DomainRefiner:   Could not repair 'enable_firewall', keeping original
+2026-03-03 02:45:53,287 [INFO] Phase3.DomainRefiner:   Repairing 'download_package' (1 discrepancies, 165 chars)...
+2026-03-03 02:48:42,432 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:51:30,508 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 02:51:30,509 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_package' after 2 attempts
+2026-03-03 02:51:30,509 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_package', keeping original
+2026-03-03 02:51:30,509 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 9 kept original
+2026-03-03 02:51:30,537 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176106 chars)
+2026-03-03 02:51:30,558 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 02:51:30,559 [INFO] Phase3.DomainRefiner: Iteration 4 complete in 4056.7s (eval: 989.6s, refine: 3067.2s)
+2026-03-03 02:51:30,559 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 5/10
+============================================================
+2026-03-03 02:51:30,559 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 02:51:30,800 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 1 missing predicates (sample: ['package_essential'])
+2026-03-03 02:51:30,802 [INFO] Phase3.PlannerWrapper: FD validator: extracted 510 declared predicates for arity checking
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 02:51:30,814 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 02:51:30,815 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 02:51:30,817 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,818 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,818 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 02:51:30,818 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,822 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 02:51:30,822 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,823 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 02:51:30,823 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,824 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 02:51:30,826 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 02:51:30,826 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 02:51:30,827 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 02:51:30,994 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmp1qb5f_ir/domain.pddl /tmp/tmp1qb5f_ir/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.13s
+
+2026-03-03 02:51:48,498 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:52:06,241 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:52:23,863 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:52:41,560 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:52:59,149 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:53:16,819 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:53:34,428 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:53:52,045 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:54:09,685 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:54:27,350 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:54:45,030 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:55:02,652 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:55:20,294 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:55:37,934 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:55:55,555 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:56:13,187 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:56:30,854 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:56:48,554 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:57:06,264 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:57:23,900 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:57:41,539 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:57:59,235 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:58:16,976 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:58:34,663 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:58:52,280 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:59:09,951 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:59:27,585 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 02:59:45,175 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:00:02,853 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:00:20,495 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:00:38,197 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:00:55,858 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:01:13,507 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:01:31,148 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:01:48,740 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:02:06,390 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:02:23,991 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:02:41,601 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:02:59,230 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:03:16,875 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:03:34,570 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:03:52,198 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:04:09,929 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:04:27,602 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:04:45,330 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:05:03,101 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:05:20,733 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:05:38,379 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:05:56,162 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:06:13,777 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:06:31,477 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:06:49,115 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:07:06,754 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:07:24,449 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:07:24,624 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force _apt
+2026-03-03 03:07:42,036 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:07:59,687 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 03:07:59,990 [INFO] Phase3.DomainRefiner: EW Score: 0.641 (50/78 steps, 28 discrepancies)
+2026-03-03 03:07:59,990 [INFO] Phase3.DomainRefiner: EW Score: 0.641 (target: 0.9)
+2026-03-03 03:08:00,001 [INFO] Phase3.DomainRefiner: Targeted repair: 10 broken actions out of 571 total
+2026-03-03 03:08:00,001 [INFO] Phase3.DomainRefiner:   Repairing 'build_dependencies' (1 discrepancies, 212 chars)...
+2026-03-03 03:11:20,564 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:14:06,130 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:14:06,132 [INFO] Phase3.DomainRefiner:   LLM repaired action 'build_dependencies' (247 chars)
+2026-03-03 03:14:06,132 [INFO] Phase3.DomainRefiner:   Repairing 'install_snap' (1 discrepancies, 204 chars)...
+2026-03-03 03:16:56,679 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:19:48,485 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:19:48,486 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'install_snap' after 2 attempts
+2026-03-03 03:19:48,487 [WARNING] Phase3.DomainRefiner:   Could not repair 'install_snap', keeping original
+2026-03-03 03:19:48,487 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find_private' (1 discrepancies, 205 chars)...
+2026-03-03 03:22:34,591 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:25:18,366 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:25:18,367 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find_private' after 2 attempts
+2026-03-03 03:25:18,367 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find_private', keeping original
+2026-03-03 03:25:18,367 [INFO] Phase3.DomainRefiner:   Repairing 'enable_snap' (1 discrepancies, 204 chars)...
+2026-03-03 03:28:03,048 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:30:50,379 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:30:50,380 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'enable_snap' after 2 attempts
+2026-03-03 03:30:50,380 [WARNING] Phase3.DomainRefiner:   Could not repair 'enable_snap', keeping original
+2026-03-03 03:30:50,380 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_mindays' (1 discrepancies, 232 chars)...
+2026-03-03 03:33:36,187 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:36:25,044 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:36:25,045 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_mindays' after 2 attempts
+2026-03-03 03:36:25,046 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_mindays', keeping original
+2026-03-03 03:36:25,046 [INFO] Phase3.DomainRefiner:   Repairing 'remove_user_from_group' (1 discrepancies, 226 chars)...
+2026-03-03 03:39:14,640 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:42:05,091 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:42:05,092 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'remove_user_from_group' after 2 attempts
+2026-03-03 03:42:05,092 [WARNING] Phase3.DomainRefiner:   Could not repair 'remove_user_from_group', keeping original
+2026-03-03 03:42:05,092 [INFO] Phase3.DomainRefiner:   Repairing 'refresh_snap' (1 discrepancies, 203 chars)...
+2026-03-03 03:44:54,765 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:47:42,158 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:47:42,159 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'refresh_snap' after 2 attempts
+2026-03-03 03:47:42,159 [WARNING] Phase3.DomainRefiner:   Could not repair 'refresh_snap', keeping original
+2026-03-03 03:47:42,159 [INFO] Phase3.DomainRefiner:   Repairing 'run_login_shell' (1 discrepancies, 171 chars)...
+2026-03-03 03:50:28,226 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:53:18,213 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:53:18,214 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'run_login_shell' after 2 attempts
+2026-03-03 03:53:18,214 [WARNING] Phase3.DomainRefiner:   Could not repair 'run_login_shell', keeping original
+2026-03-03 03:53:18,214 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_inactive' (1 discrepancies, 238 chars)...
+2026-03-03 03:56:06,280 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:58:55,607 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 03:58:55,608 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_inactive' after 2 attempts
+2026-03-03 03:58:55,608 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_inactive', keeping original
+2026-03-03 03:58:55,608 [INFO] Phase3.DomainRefiner:   Repairing 'query_socket_by_state' (1 discrepancies, 214 chars)...
+2026-03-03 04:01:45,694 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:04:31,702 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:04:31,703 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'query_socket_by_state' after 2 attempts
+2026-03-03 04:04:31,703 [WARNING] Phase3.DomainRefiner:   Could not repair 'query_socket_by_state', keeping original
+2026-03-03 04:04:31,703 [INFO] Phase3.DomainRefiner: Targeted repair complete: 1 fixed, 9 kept original
+2026-03-03 04:04:31,733 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176141 chars)
+2026-03-03 04:04:31,755 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 04:04:31,755 [INFO] Phase3.DomainRefiner: Iteration 5 complete in 4381.2s (eval: 989.4s, refine: 3391.8s)
+2026-03-03 04:04:31,755 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 6/10
+============================================================
+2026-03-03 04:04:31,755 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 04:04:32,009 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 2 missing predicates (sample: ['source_repos_enabled', 'package_essential'])
+2026-03-03 04:04:32,012 [INFO] Phase3.PlannerWrapper: FD validator: extracted 511 declared predicates for arity checking
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 04:04:32,025 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 04:04:32,026 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 04:04:32,028 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,029 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,029 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 04:04:32,029 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,032 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 04:04:32,033 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,034 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 04:04:32,034 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,034 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 04:04:32,036 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 04:04:32,037 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 04:04:32,038 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 04:04:32,204 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpmekfuin1/domain.pddl /tmp/tmpmekfuin1/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.13s
+
+2026-03-03 04:04:49,665 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:05:07,386 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:05:25,032 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:05:42,679 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:06:00,354 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:06:18,090 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:06:35,765 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:06:53,366 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:07:10,983 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:07:28,672 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:07:46,374 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:08:04,098 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:08:04,287 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force lp
+2026-03-03 04:08:21,696 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:08:39,469 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:08:57,106 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:09:14,721 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:09:32,395 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:09:50,091 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:10:07,778 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:10:25,431 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:10:43,061 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:11:00,770 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:11:18,408 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:11:36,029 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:11:36,214 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force www-data
+2026-03-03 04:11:53,651 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:12:11,261 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:12:29,008 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:12:46,621 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:13:04,273 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:13:22,020 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:13:39,623 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:13:57,215 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:14:14,837 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:14:32,461 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:14:50,313 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:15:08,022 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:15:25,608 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:15:43,238 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:16:00,898 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:16:18,539 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:16:36,176 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:16:53,869 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:17:11,526 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:17:29,184 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:17:46,905 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:18:04,532 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:18:22,122 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:18:39,757 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:18:57,383 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:19:15,029 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:19:32,724 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:19:50,414 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:20:08,041 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:20:25,720 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:20:43,386 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:21:01,009 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 04:21:01,317 [INFO] Phase3.DomainRefiner: EW Score: 0.704 (57/81 steps, 24 discrepancies)
+2026-03-03 04:21:01,317 [INFO] Phase3.DomainRefiner: EW Score: 0.704 (target: 0.9)
+2026-03-03 04:21:01,317 [INFO] Phase3.DomainRefiner: New best score: 0.704
+2026-03-03 04:21:01,327 [INFO] Phase3.DomainRefiner: Targeted repair: 9 broken actions out of 571 total
+2026-03-03 04:21:01,327 [INFO] Phase3.DomainRefiner:   Repairing 'create_user_group' (1 discrepancies, 233 chars)...
+2026-03-03 04:24:20,463 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:27:17,028 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:27:17,029 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user_group' after 2 attempts
+2026-03-03 04:27:17,029 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user_group', keeping original
+2026-03-03 04:27:17,030 [INFO] Phase3.DomainRefiner:   Repairing 'create_group' (1 discrepancies, 160 chars)...
+2026-03-03 04:30:08,764 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:33:05,110 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:33:05,111 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_group' after 2 attempts
+2026-03-03 04:33:05,111 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_group', keeping original
+2026-03-03 04:33:05,111 [INFO] Phase3.DomainRefiner:   Repairing 'change_owner_group_reference' (2 discrepancies, 102 chars)...
+2026-03-03 04:35:57,484 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:38:45,010 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:38:45,011 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'change_owner_group_reference' after 2 attempts
+2026-03-03 04:38:45,011 [WARNING] Phase3.DomainRefiner:   Could not repair 'change_owner_group_reference', keeping original
+2026-03-03 04:38:45,011 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find_private' (1 discrepancies, 205 chars)...
+2026-03-03 04:41:32,591 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:44:20,394 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:44:20,395 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find_private' after 2 attempts
+2026-03-03 04:44:20,396 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find_private', keeping original
+2026-03-03 04:44:20,396 [INFO] Phase3.DomainRefiner:   Repairing 'force_remove_user' (1 discrepancies, 171 chars)...
+2026-03-03 04:47:07,192 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:49:54,769 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:49:54,770 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'force_remove_user' after 2 attempts
+2026-03-03 04:49:54,770 [WARNING] Phase3.DomainRefiner:   Could not repair 'force_remove_user', keeping original
+2026-03-03 04:49:54,770 [INFO] Phase3.DomainRefiner:   Repairing 'non_unique_user' (1 discrepancies, 169 chars)...
+2026-03-03 04:52:41,616 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:55:28,780 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 04:55:28,781 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'non_unique_user' after 2 attempts
+2026-03-03 04:55:28,781 [WARNING] Phase3.DomainRefiner:   Could not repair 'non_unique_user', keeping original
+2026-03-03 04:55:28,781 [INFO] Phase3.DomainRefiner:   Repairing 'create_user_default_home' (1 discrepancies, 178 chars)...
+2026-03-03 04:58:16,084 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:01:00,382 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:01:00,383 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user_default_home' after 2 attempts
+2026-03-03 05:01:00,383 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user_default_home', keeping original
+2026-03-03 05:01:00,383 [INFO] Phase3.DomainRefiner:   Repairing 'download_package' (1 discrepancies, 165 chars)...
+2026-03-03 05:03:47,059 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:06:33,625 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:06:33,626 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_package' after 2 attempts
+2026-03-03 05:06:33,626 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_package', keeping original
+2026-03-03 05:06:33,626 [INFO] Phase3.DomainRefiner:   Repairing 'force_delete_user' (1 discrepancies, 171 chars)...
+2026-03-03 05:09:19,675 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:12:06,481 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:12:06,482 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'force_delete_user' after 2 attempts
+2026-03-03 05:12:06,482 [WARNING] Phase3.DomainRefiner:   Could not repair 'force_delete_user', keeping original
+2026-03-03 05:12:06,482 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 9 kept original
+2026-03-03 05:12:06,510 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176141 chars)
+2026-03-03 05:12:06,586 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 05:12:06,586 [INFO] Phase3.DomainRefiner: Iteration 6 complete in 4054.8s (eval: 989.6s, refine: 3065.3s)
+2026-03-03 05:12:06,586 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 7/10
+============================================================
+2026-03-03 05:12:06,586 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 05:12:06,820 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 2 missing predicates (sample: ['source_repos_enabled', 'package_essential'])
+2026-03-03 05:12:06,822 [INFO] Phase3.PlannerWrapper: FD validator: extracted 511 declared predicates for arity checking
+2026-03-03 05:12:06,833 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 05:12:06,834 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 05:12:06,836 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,837 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,837 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 05:12:06,837 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,841 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 05:12:06,842 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,843 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 05:12:06,843 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,843 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 05:12:06,845 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 05:12:06,846 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 05:12:06,847 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 05:12:07,020 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmp0s1pf8vm/domain.pddl /tmp/tmp0s1pf8vm/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.14s
+
+2026-03-03 05:12:24,440 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:12:42,077 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:12:59,659 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:13:17,314 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:13:34,970 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:13:52,794 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:14:10,426 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:14:28,057 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:14:45,804 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:15:03,524 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:15:21,157 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:15:38,838 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:15:56,441 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:16:14,122 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:16:31,795 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:16:49,489 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:17:07,105 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:17:24,764 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:17:42,437 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:18:00,088 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:18:17,722 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:18:35,347 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:18:52,987 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:19:10,617 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:19:28,298 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:19:45,922 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:19:46,125 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force daemon
+2026-03-03 05:20:03,546 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:20:21,169 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:20:38,790 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:20:56,532 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:21:14,264 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:21:31,956 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:21:49,536 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:22:07,168 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:22:24,792 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:22:42,432 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:23:00,090 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:23:17,806 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:23:35,487 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:23:53,118 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:24:10,831 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:24:28,429 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:24:46,025 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:25:03,617 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:25:21,256 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:25:38,922 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:25:56,676 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:26:14,369 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:26:32,065 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:26:49,736 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:27:07,417 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:27:25,227 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:27:42,930 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:28:00,512 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:28:18,241 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:28:35,872 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 05:28:36,121 [INFO] Phase3.DomainRefiner: EW Score: 0.628 (54/86 steps, 32 discrepancies)
+2026-03-03 05:28:36,121 [INFO] Phase3.DomainRefiner: EW Score: 0.628 (target: 0.9)
+2026-03-03 05:28:36,132 [INFO] Phase3.DomainRefiner: Targeted repair: 9 broken actions out of 571 total
+2026-03-03 05:28:36,132 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_maxdays' (1 discrepancies, 232 chars)...
+2026-03-03 05:31:56,733 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:34:50,806 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:34:50,807 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_maxdays' after 2 attempts
+2026-03-03 05:34:50,807 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_maxdays', keeping original
+2026-03-03 05:34:50,807 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_inactive' (2 discrepancies, 238 chars)...
+2026-03-03 05:37:44,736 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:40:41,900 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:40:41,901 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'chage_set_inactive' after 2 attempts
+2026-03-03 05:40:41,901 [WARNING] Phase3.DomainRefiner:   Could not repair 'chage_set_inactive', keeping original
+2026-03-03 05:40:41,901 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find_private' (1 discrepancies, 205 chars)...
+2026-03-03 05:43:36,857 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:46:32,034 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:46:32,035 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find_private' after 2 attempts
+2026-03-03 05:46:32,036 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find_private', keeping original
+2026-03-03 05:46:32,036 [INFO] Phase3.DomainRefiner:   Repairing 'remove_user_from_group' (1 discrepancies, 226 chars)...
+2026-03-03 05:49:24,569 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:52:18,095 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:52:18,097 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'remove_user_from_group' after 2 attempts
+2026-03-03 05:52:18,097 [WARNING] Phase3.DomainRefiner:   Could not repair 'remove_user_from_group', keeping original
+2026-03-03 05:52:18,097 [INFO] Phase3.DomainRefiner:   Repairing 'refresh_snap' (1 discrepancies, 203 chars)...
+2026-03-03 05:55:09,248 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:58:00,444 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 05:58:00,445 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'refresh_snap' after 2 attempts
+2026-03-03 05:58:00,445 [WARNING] Phase3.DomainRefiner:   Could not repair 'refresh_snap', keeping original
+2026-03-03 05:58:00,445 [INFO] Phase3.DomainRefiner:   Repairing 'create_user_with_group' (1 discrepancies, 203 chars)...
+2026-03-03 06:00:50,657 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:03:41,103 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:03:41,104 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_user_with_group' after 2 attempts
+2026-03-03 06:03:41,104 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_user_with_group', keeping original
+2026-03-03 06:03:41,104 [INFO] Phase3.DomainRefiner:   Repairing 'switch_user' (1 discrepancies, 302 chars)...
+2026-03-03 06:06:30,464 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:09:21,489 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:09:21,490 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'switch_user' after 2 attempts
+2026-03-03 06:09:21,490 [WARNING] Phase3.DomainRefiner:   Could not repair 'switch_user', keeping original
+2026-03-03 06:09:21,490 [INFO] Phase3.DomainRefiner:   Repairing 'snap_debug_seeding' (1 discrepancies, 164 chars)...
+2026-03-03 06:12:07,063 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:14:53,438 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:14:53,439 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_debug_seeding' after 2 attempts
+2026-03-03 06:14:53,439 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_debug_seeding', keeping original
+2026-03-03 06:14:53,439 [INFO] Phase3.DomainRefiner:   Repairing 'compile_source' (1 discrepancies, 209 chars)...
+2026-03-03 06:17:45,845 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:20:36,274 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:20:36,275 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'compile_source' after 2 attempts
+2026-03-03 06:20:36,275 [WARNING] Phase3.DomainRefiner:   Could not repair 'compile_source', keeping original
+2026-03-03 06:20:36,275 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 9 kept original
+2026-03-03 06:20:36,305 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176141 chars)
+2026-03-03 06:20:36,324 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 06:20:36,325 [INFO] Phase3.DomainRefiner: Iteration 7 complete in 4109.7s (eval: 989.5s, refine: 3120.2s)
+2026-03-03 06:20:36,325 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 8/10
+============================================================
+2026-03-03 06:20:36,325 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 06:20:36,566 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 2 missing predicates (sample: ['source_repos_enabled', 'package_essential'])
+2026-03-03 06:20:36,568 [INFO] Phase3.PlannerWrapper: FD validator: extracted 511 declared predicates for arity checking
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 06:20:36,580 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 06:20:36,583 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,584 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,584 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 06:20:36,584 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,587 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 06:20:36,588 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,589 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 06:20:36,589 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,590 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 06:20:36,592 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 06:20:36,593 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 06:20:36,593 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 06:20:36,763 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmphkljiec_/domain.pddl /tmp/tmphkljiec_/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.14s
+
+2026-03-03 06:20:54,273 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:21:11,887 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:21:29,519 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:21:47,090 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:22:04,713 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:22:22,289 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:22:39,929 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:22:57,664 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:23:15,297 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:23:32,990 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:23:50,615 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:24:08,296 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:24:25,993 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:24:43,585 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:25:01,301 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:25:18,949 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:25:36,616 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:25:54,250 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:26:11,827 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:26:29,524 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:26:47,210 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:27:04,959 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:27:22,591 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:27:40,240 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:27:57,993 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:28:15,640 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:28:33,349 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:28:51,063 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:29:08,640 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:29:26,371 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:29:44,090 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:30:01,745 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:30:19,402 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:30:37,086 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:30:54,671 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:31:12,338 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:31:30,001 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:31:47,673 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:32:05,253 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:32:23,037 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:32:40,662 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:32:58,326 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:33:15,967 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:33:33,598 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:33:51,226 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:34:08,848 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:34:26,441 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:34:44,075 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:35:01,763 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:35:19,443 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:35:37,132 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:35:54,788 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:36:12,458 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:36:30,104 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:36:47,815 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:37:05,459 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 06:37:05,760 [INFO] Phase3.DomainRefiner: EW Score: 0.543 (44/81 steps, 37 discrepancies)
+2026-03-03 06:37:05,760 [INFO] Phase3.DomainRefiner: EW Score: 0.543 (target: 0.9)
+2026-03-03 06:37:05,774 [INFO] Phase3.DomainRefiner: Targeted repair: 10 broken actions out of 571 total
+2026-03-03 06:37:05,775 [INFO] Phase3.DomainRefiner:   Repairing 'refresh_snap' (1 discrepancies, 203 chars)...
+2026-03-03 06:40:19,922 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:43:09,027 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:43:09,028 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'refresh_snap' after 2 attempts
+2026-03-03 06:43:09,028 [WARNING] Phase3.DomainRefiner:   Could not repair 'refresh_snap', keeping original
+2026-03-03 06:43:09,028 [INFO] Phase3.DomainRefiner:   Repairing 'snap_find_private' (1 discrepancies, 205 chars)...
+2026-03-03 06:45:59,439 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:48:49,063 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:48:49,063 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'snap_find_private' after 2 attempts
+2026-03-03 06:48:49,064 [WARNING] Phase3.DomainRefiner:   Could not repair 'snap_find_private', keeping original
+2026-03-03 06:48:49,064 [INFO] Phase3.DomainRefiner:   Repairing 'adapt_file_ownership' (1 discrepancies, 179 chars)...
+2026-03-03 06:51:39,644 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:54:30,636 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 06:54:30,637 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'adapt_file_ownership' after 2 attempts
+2026-03-03 06:54:30,637 [WARNING] Phase3.DomainRefiner:   Could not repair 'adapt_file_ownership', keeping original
+2026-03-03 06:54:30,637 [INFO] Phase3.DomainRefiner:   Repairing 'start_login_shell' (1 discrepancies, 173 chars)...
+2026-03-03 06:57:21,334 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:00:11,776 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:00:11,777 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'start_login_shell' after 2 attempts
+2026-03-03 07:00:11,777 [WARNING] Phase3.DomainRefiner:   Could not repair 'start_login_shell', keeping original
+2026-03-03 07:00:11,777 [INFO] Phase3.DomainRefiner:   Repairing 'enable_snap' (1 discrepancies, 204 chars)...
+2026-03-03 07:03:00,347 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:05:49,851 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:05:49,853 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'enable_snap' after 2 attempts
+2026-03-03 07:05:49,853 [WARNING] Phase3.DomainRefiner:   Could not repair 'enable_snap', keeping original
+2026-03-03 07:05:49,853 [INFO] Phase3.DomainRefiner:   Repairing 'download_package' (1 discrepancies, 165 chars)...
+2026-03-03 07:08:40,458 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:11:23,118 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:11:23,119 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_package' after 2 attempts
+2026-03-03 07:11:23,119 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_package', keeping original
+2026-03-03 07:11:23,119 [INFO] Phase3.DomainRefiner:   Repairing 'download_source' (1 discrepancies, 198 chars)...
+2026-03-03 07:14:11,193 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:17:01,704 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:17:01,705 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_source' after 2 attempts
+2026-03-03 07:17:01,705 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_source', keeping original
+2026-03-03 07:17:01,705 [INFO] Phase3.DomainRefiner:   Repairing 'install_snap' (1 discrepancies, 204 chars)...
+2026-03-03 07:19:52,639 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:22:43,526 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:22:43,527 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'install_snap' after 2 attempts
+2026-03-03 07:22:43,527 [WARNING] Phase3.DomainRefiner:   Could not repair 'install_snap', keeping original
+2026-03-03 07:22:43,527 [INFO] Phase3.DomainRefiner:   Repairing 'set_user_uid' (1 discrepancies, 153 chars)...
+2026-03-03 07:25:32,735 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:28:23,469 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:28:23,471 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'set_user_uid' after 2 attempts
+2026-03-03 07:28:23,471 [WARNING] Phase3.DomainRefiner:   Could not repair 'set_user_uid', keeping original
+2026-03-03 07:28:23,471 [INFO] Phase3.DomainRefiner:   Repairing 'run_as_user' (1 discrepancies, 172 chars)...
+2026-03-03 07:31:11,754 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:34:01,321 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:34:01,322 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'run_as_user' after 2 attempts
+2026-03-03 07:34:01,322 [WARNING] Phase3.DomainRefiner:   Could not repair 'run_as_user', keeping original
+2026-03-03 07:34:01,322 [INFO] Phase3.DomainRefiner: Targeted repair complete: 0 fixed, 10 kept original
+2026-03-03 07:34:01,351 [INFO] Phase3.DomainRefiner: Domain actions: 571 -> 571 (176141 chars)
+2026-03-03 07:34:01,372 [INFO] Phase3.PlannerWrapper: Parsed domain 'sysadmin' with 571 actions
+2026-03-03 07:34:01,372 [INFO] Phase3.DomainRefiner: Iteration 8 complete in 4405.0s (eval: 989.4s, refine: 3415.6s)
+2026-03-03 07:34:01,372 [INFO] Phase3.DomainRefiner: 
+============================================================
+Iteration 9/10
+============================================================
+2026-03-03 07:34:01,373 [INFO] Phase3.DomainRefiner: Calculating EW score with N=57, T_max=8
+2026-03-03 07:34:01,637 [INFO] Phase3.PlannerWrapper: FD validator: forward-declaring 2 missing predicates (sample: ['source_repos_enabled', 'package_essential'])
+2026-03-03 07:34:01,639 [INFO] Phase3.PlannerWrapper: FD validator: extracted 511 declared predicates for arity checking
+2026-03-03 07:34:01,653 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'table_exists' declaration from arity 0 to 1
+2026-03-03 07:34:01,653 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_mode_changed' declaration from arity 1 to 2
+2026-03-03 07:34:01,653 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'file_owned_by' declaration from arity 2 to 3
+2026-03-03 07:34:01,654 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced' declaration from arity 1 to 2
+2026-03-03 07:34:01,654 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'files_replaced_if_older' declaration from arity 1 to 2
+2026-03-03 07:34:01,654 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_count_matches' declaration from arity 0 to 1
+2026-03-03 07:34:01,654 [INFO] Phase3.PlannerWrapper: FD validator: upgraded predicate 'process_inverse_match' declaration from arity 0 to 1
+2026-03-03 07:34:01,656 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'set_chain_policy': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,657 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_older_files': predicate 'files_replaced_if_older' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,657 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 07:34:01,657 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'replace_all_files': predicate 'files_replaced' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,661 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'insert_iptables_rule': predicate 'firewall_rule_inserted' used with 1 args but declared with 4 → padding
+2026-03-03 07:34:01,662 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'flush_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,663 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_iptables_rule': predicate 'firewall_rule_deleted' used with 1 args but declared with 3 → padding
+2026-03-03 07:34:01,663 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_firewall_chain': predicate 'chain_policy_set' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,663 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'delete_empty_chains': predicate 'table_exists' used with 0 args but declared with 1 → padding
+2026-03-03 07:34:01,665 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'change_file_mode': predicate 'file_mode_changed' used with 1 args but declared with 2 → padding
+2026-03-03 07:34:01,666 [INFO] Phase3.PlannerWrapper: FD validator: arity mismatch in 'append_iptables_rule': predicate 'firewall_rule_modified' used with 1 args but declared with 3 → padding
+2026-03-03 07:34:01,667 [INFO] Phase3.PlannerWrapper: FD validator: fixed predicate arity mismatches in 11 actions
+2026-03-03 07:34:01,836 [WARNING] Phase3.PlannerWrapper: Fast Downward translate failed (exit 31), skipping FD for remaining walks on this domain.
+  STDOUT (last 500):   translator memory limit: None
+INFO     translator command line string: /home/resbears/projects/auto-sysrepair/.venv/bin/python3 -m translate /tmp/tmpe2f8lltt/domain.pddl /tmp/tmpe2f8lltt/problem.pddl --sas-file output.sas
+Parsing...
+Parsing task
+	->Parsing element #771 in init block
+Predicate 'file_owned_by' of arity 3 used with 2 arguments.
+Got: (file_owned_by configuration_file__etc_adduser_conf user_root)
+translate exit code: 31
+
+Driver aborting after translate
+INFO     Planner time: 0.14s
+
+2026-03-03 07:34:19,249 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:34:36,900 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:34:54,515 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:35:12,215 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:35:29,891 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:35:47,514 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:35:47,799 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force list
+2026-03-03 07:36:05,217 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:36:22,856 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:36:40,487 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:36:58,133 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:37:15,764 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:37:33,403 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:37:51,122 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:38:08,834 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:38:26,505 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:38:44,129 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:39:01,759 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:39:19,403 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:39:37,145 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:39:54,782 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:40:12,594 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:40:30,332 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:40:47,990 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:41:05,586 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:41:23,216 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:41:23,403 [WARNING] Phase3.DockerExecutor: Blocked dangerous command: userdel --force proxy
+2026-03-03 07:41:40,807 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:41:58,585 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:42:16,207 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:42:33,890 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:42:51,621 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:43:09,258 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:43:26,890 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:43:44,524 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:44:02,310 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:44:19,892 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:44:37,556 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:44:55,184 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:45:12,827 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:45:30,449 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:45:48,075 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:46:05,754 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:46:23,538 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:46:41,130 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:46:58,751 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:47:16,416 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:47:34,089 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:47:51,738 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:48:09,434 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:48:27,088 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:48:44,723 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:49:02,358 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:49:20,031 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:49:37,715 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:49:55,394 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:50:12,982 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:50:30,787 [INFO] Phase3.DockerExecutor: Container reset to clean state
+2026-03-03 07:50:31,010 [INFO] Phase3.DomainRefiner: EW Score: 0.652 (58/89 steps, 31 discrepancies)
+2026-03-03 07:50:31,010 [INFO] Phase3.DomainRefiner: EW Score: 0.652 (target: 0.9)
+2026-03-03 07:50:31,022 [INFO] Phase3.DomainRefiner: Targeted repair: 10 broken actions out of 571 total
+2026-03-03 07:50:31,023 [INFO] Phase3.DomainRefiner:   Repairing 'change_user' (1 discrepancies, 161 chars)...
+2026-03-03 07:53:44,902 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:56:32,477 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 07:56:32,478 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'change_user' after 2 attempts
+2026-03-03 07:56:32,478 [WARNING] Phase3.DomainRefiner:   Could not repair 'change_user', keeping original
+2026-03-03 07:56:32,479 [INFO] Phase3.DomainRefiner:   Repairing 'execute_command_as_user' (1 discrepancies, 322 chars)...
+2026-03-03 07:59:20,632 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:02:10,114 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:02:10,115 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'execute_command_as_user' after 2 attempts
+2026-03-03 08:02:10,115 [WARNING] Phase3.DomainRefiner:   Could not repair 'execute_command_as_user', keeping original
+2026-03-03 08:02:10,115 [INFO] Phase3.DomainRefiner:   Repairing 'list_rules' (1 discrepancies, 153 chars)...
+2026-03-03 08:04:58,391 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:07:47,484 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:07:47,485 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'list_rules' after 2 attempts
+2026-03-03 08:07:47,485 [WARNING] Phase3.DomainRefiner:   Could not repair 'list_rules', keeping original
+2026-03-03 08:07:47,485 [INFO] Phase3.DomainRefiner:   Repairing 'force_remove_user' (1 discrepancies, 171 chars)...
+2026-03-03 08:10:35,326 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:13:22,705 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:13:22,706 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'force_remove_user' after 2 attempts
+2026-03-03 08:13:22,706 [WARNING] Phase3.DomainRefiner:   Could not repair 'force_remove_user', keeping original
+2026-03-03 08:13:22,706 [INFO] Phase3.DomainRefiner:   Repairing 'enable_firewall' (1 discrepancies, 155 chars)...
+2026-03-03 08:16:09,961 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:18:57,042 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:18:57,043 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'enable_firewall' after 2 attempts
+2026-03-03 08:18:57,043 [WARNING] Phase3.DomainRefiner:   Could not repair 'enable_firewall', keeping original
+2026-03-03 08:18:57,044 [INFO] Phase3.DomainRefiner:   Repairing 'adapt_file_ownership' (1 discrepancies, 179 chars)...
+2026-03-03 08:21:45,066 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:24:32,035 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:24:32,036 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'adapt_file_ownership' after 2 attempts
+2026-03-03 08:24:32,036 [WARNING] Phase3.DomainRefiner:   Could not repair 'adapt_file_ownership', keeping original
+2026-03-03 08:24:32,036 [INFO] Phase3.DomainRefiner:   Repairing 'create_group' (1 discrepancies, 160 chars)...
+2026-03-03 08:27:16,771 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:30:01,289 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:30:01,290 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'create_group' after 2 attempts
+2026-03-03 08:30:01,290 [WARNING] Phase3.DomainRefiner:   Could not repair 'create_group', keeping original
+2026-03-03 08:30:01,290 [INFO] Phase3.DomainRefiner:   Repairing 'download_diff_only' (1 discrepancies, 178 chars)...
+2026-03-03 08:32:47,541 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:35:33,264 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:35:33,265 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'download_diff_only' after 2 attempts
+2026-03-03 08:35:33,266 [WARNING] Phase3.DomainRefiner:   Could not repair 'download_diff_only', keeping original
+2026-03-03 08:35:33,266 [INFO] Phase3.DomainRefiner:   Repairing 'change_owner_group_reference' (1 discrepancies, 102 chars)...
+2026-03-03 08:38:19,388 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:41:04,823 [INFO] httpx: HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-03 08:41:04,825 [WARNING] Phase3.DomainRefiner:   LLM returned empty response for 'change_owner_group_reference' after 2 attempts
+2026-03-03 08:41:04,825 [WARNING] Phase3.DomainRefiner:   Could not repair 'change_owner_group_reference', keeping original
+2026-03-03 08:41:04,825 [INFO] Phase3.DomainRefiner:   Repairing 'chage_set_mindays' (1 discrepancies, 232 chars)...

@@ -136,6 +136,27 @@ class DockerExecutor:
             except Exception as e:
                 logger.warning(f"Init command failed: {cmd} - {e}")
 
+    # Commands that can destroy critical system files (/etc/passwd, /etc/shadow)
+    _DANGEROUS_PATTERNS = [
+        "userdel",       # Can corrupt /etc/passwd
+        "vipw",          # Direct passwd editing
+        "pwck",          # Passwd consistency check (can delete entries)
+        "> /etc/passwd", # Overwrite passwd
+        "> /etc/shadow", # Overwrite shadow
+        "rm /etc/passwd",
+        "rm /etc/shadow",
+        "rm -f /etc/passwd",
+        "rm -f /etc/shadow",
+    ]
+
+    def _is_dangerous_command(self, command: str) -> bool:
+        """Check if a command could corrupt critical system files."""
+        cmd_lower = command.lower().strip()
+        for pattern in self._DANGEROUS_PATTERNS:
+            if pattern in cmd_lower:
+                return True
+        return False
+
     def execute_command(
         self,
         command: str,
@@ -155,6 +176,11 @@ class DockerExecutor:
         if not self.container:
             raise RuntimeError("Container not started")
 
+        # Block commands that could corrupt the container filesystem
+        if self._is_dangerous_command(command):
+            logger.warning(f"Blocked dangerous command: {command[:80]}")
+            return 1, "", "Command blocked: could corrupt container filesystem"
+
         try:
             start_time = time.time()
             result = self.container.exec_run(
@@ -169,6 +195,10 @@ class DockerExecutor:
 
             if self.state:
                 self.state.commands_executed += 1
+
+            # Detect corruption indicators in stderr
+            if "unable to find user" in stderr or "no matching entries in passwd" in stderr:
+                logger.error(f"Container corruption detected after command: {command[:80]}")
 
             logger.debug(f"Executed ({elapsed:.2f}s): {command[:50]}... -> {result.exit_code}")
 
@@ -346,19 +376,96 @@ class DockerExecutor:
             files=[],
         )
 
+    def _is_container_corrupted(self) -> bool:
+        """Check if the container filesystem is corrupted (e.g. /etc/passwd destroyed)."""
+        if not self.container:
+            return True
+        try:
+            result = self.container.exec_run(
+                ["bash", "-c", "id root"],
+                user="root",
+            )
+            if result.exit_code != 0:
+                stderr = result.output.decode() if result.output else ""
+                logger.warning(f"Container corruption detected: 'id root' failed: {stderr.strip()}")
+                return True
+            return False
+        except Exception as e:
+            logger.warning(f"Container corruption check failed: {e}")
+            return True
+
+    def _recreate_container(self) -> bool:
+        """Stop, remove, and recreate the container from a fresh image."""
+        logger.info("Recreating container from fresh image...")
+        try:
+            if self.container:
+                try:
+                    self.container.stop(timeout=5)
+                except Exception:
+                    pass
+                try:
+                    self.container.remove(force=True)
+                except Exception:
+                    pass
+                self.container = None
+
+            # Start a fresh container
+            self.container = self.client.containers.run(
+                **self.config.to_docker_kwargs()
+            )
+
+            # Wait for container to be ready
+            deadline = time.time() + self.config.startup_timeout
+            while time.time() < deadline:
+                self.container.reload()
+                if self.container.status == "running":
+                    break
+                time.sleep(0.5)
+
+            if self.container.status != "running":
+                raise RuntimeError(f"Recreated container failed to start: {self.container.status}")
+
+            self.state = ContainerState(
+                container_id=self.container.id,
+                running=True,
+                created_at=time.time()
+            )
+
+            self._initialize_container()
+            logger.info(f"Container recreated successfully: {self.container.short_id}")
+            return True
+
+        except Exception as e:
+            logger.exception(f"Failed to recreate container: {e}")
+            return False
+
     def reset_container(self):
-        """Reset container to clean state (restart it)."""
+        """Reset container to clean state. Recreates if filesystem is corrupted."""
         if self.use_mock:
             logger.info("[MOCK] Resetting mock container")
             return
 
         if self.container:
             try:
+                # Check if the container filesystem is corrupted
+                if self._is_container_corrupted():
+                    logger.warning("Container filesystem corrupted, performing full recreate")
+                    self._recreate_container()
+                    return
+
                 self.container.restart()
                 self._initialize_container()
+
+                # Verify the restart succeeded (sometimes restart inherits corruption)
+                if self._is_container_corrupted():
+                    logger.warning("Container still corrupted after restart, performing full recreate")
+                    self._recreate_container()
+                    return
+
                 logger.info("Container reset to clean state")
             except Exception as e:
-                logger.error(f"Failed to reset container: {e}")
+                logger.error(f"Failed to reset container: {e}, attempting full recreate")
+                self._recreate_container()
 
     def stop_container(self):
         """Stop and remove the container."""

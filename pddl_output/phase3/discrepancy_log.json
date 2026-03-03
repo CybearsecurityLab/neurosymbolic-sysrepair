@@ -1,10 +1,106 @@
 [
   {
-    "action": "download_diff_only",
-    "type": "concretization",
-    "expected": "Valid bash command for (download_diff_only libsepol2)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?pkg': 'libsepol2'}",
+    "action": "prompt_once_before_removal",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "download_tar_only",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "process_arch_only",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "exact_output",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "execute_command_on_all_objects",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "execute_command_on_all_objects",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "allow_unauthenticated",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "set_only_source",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "allow_unauthenticated",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "exact_output",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "prompt_once_before_removal",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "download_dsc_only",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
+    "severity": "high"
+  },
+  {
+    "action": "prompt_once_before_removal",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code -1: 400 Client Error for http+docker://localhost/v1.53/containers/de58e002d8e3352562a6b219636bdeadab1cc9b45c6796892f571f0adb330123/exec: Bad Request (\"unable to find user root: no matching entries in pass",
+    "context": "Command: true",
     "severity": "high"
   }
 ]

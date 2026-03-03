@@ -553,7 +553,10 @@ class PDDLSanitizer:
         """Fix empty (and) blocks."""
         pddl = re.sub(r":effect\s*\(and\s*\)", ":effect (and)", pddl)
         pddl = re.sub(r":precondition\s*\(and\s*\)", ":precondition (and)", pddl)
+        # Remove empty () pairs but preserve :parameters () which is valid PDDL
+        pddl = re.sub(r":parameters\s*\(\s*\)", ":parameters (_EMPTY_PARAMS_)", pddl)
         pddl = re.sub(r"\(\s*\)", "", pddl)
+        pddl = pddl.replace(":parameters (_EMPTY_PARAMS_)", ":parameters ()")
         pddl = re.sub(r"\(\s*\(and", "(and", pddl)
         return pddl
     

@@ -188,6 +188,16 @@ class MergerAgent:
             logger.warning("pddl library missing - cannot perform targeted repair.")
         # --------------------------------------
 
+        # Step 4.5: Validate all predicates used in actions are declared
+        logger.info("\n[4.5/5] Validating action predicates...")
+        pred_count_before = len(self.unified_predicates)
+        self._validate_action_predicates()
+        new_preds = len(self.unified_predicates) - pred_count_before
+        if new_preds > 0:
+            logger.info(f"  → Declared {new_preds} predicates found in action bodies")
+        else:
+            logger.info("  → All predicates already declared")
+
         # Step 5: Construct Final Domain
         logger.info(
             f"\n[5/5] Constructing unified domain "
@@ -624,7 +634,11 @@ class MergerAgent:
         """Extract a predicate definition from a condition string."""
         cond = condition.strip()
         if cond.startswith("(not"):
-            cond = cond[4:].strip().rstrip(")")
+            # Remove the (not wrapper: "(not (pred ?x))" → "(pred ?x)"
+            # Only strip ONE trailing ')' (the one from 'not'), not all of them
+            cond = cond[4:].strip()
+            if cond.endswith(")"):
+                cond = cond[:-1].strip()
 
         match = re.match(r"\((\w+)((?:\s+\?\w+(?:\s*-\s*\w+)?)*)\)", cond)
         if match:
@@ -663,7 +677,9 @@ class MergerAgent:
             for cond in action.preconditions + action.effects:
                 cond_clean = cond.strip()
                 if cond_clean.startswith("(not"):
-                    cond_clean = cond_clean[4:].strip().rstrip(")")
+                    cond_clean = cond_clean[4:].strip()
+                    if cond_clean.endswith(")"):
+                        cond_clean = cond_clean[:-1].strip()
 
                 match = re.match(r"\((\w+)", cond_clean)
                 if match:

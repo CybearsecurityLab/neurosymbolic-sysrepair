@@ -48,12 +48,17 @@ class ActionConcretizer:
 
         # 1. Try direct template lookup
         if action_name in self.templates:
-            return self._apply_template(action_name, action.bindings)
+            result = self._apply_template(action_name, action.bindings)
+            if result:
+                return result
+            # Template exists but binding failed; fall through to inference
 
         # 2. Try pattern matching (e.g., "apt_install_pkg" -> "install_package")
         matched_template = self._match_pattern(action_name)
         if matched_template:
-            return self._apply_template(matched_template, action.bindings)
+            result = self._apply_template(matched_template, action.bindings)
+            if result:
+                return result
 
         # 3. Try to infer from action name
         inferred = self._infer_command(action)
@@ -101,6 +106,67 @@ class ActionConcretizer:
         "uid": "uid", "gid": "gid", "shell": "shell",
         "alias": "alias", "command": "command", "cmd": "command",
         "members": "members", "member": "members",
+        # firewall / nft
+        "r": "rule", "chain": "chain", "table": "table",
+        "rule": "rule", "rulenum": "number",
+        # generic value-like params used in nft/iptables
+        "dscp": "value", "ecn": "value", "proto": "protocol",
+        "protocol": "protocol",
+        # link
+        "link": "file", "rfile": "reference",
+        # days (used by chage/passwd)
+        "days": "days",
+        # tunnel
+        "tunnel": "tunnel",
+        # process
+        "pattern": "pattern", "process": "process", "name": "name",
+        # namespace
+        "ns": "namespace", "namespace": "namespace",
+        # module
+        "module": "module", "mod": "module",
+        # key/value for sysctl
+        "key": "key", "parameter": "key", "val": "value",
+        "value": "value",
+        # layout (localectl)
+        "layout": "layout", "keymap": "layout",
+        # locale
+        "locale": "locale", "lang": "locale",
+        # setting (netplan)
+        "setting": "setting",
+        # priority (nice)
+        "priority": "priority", "n": "priority",
+        # signal
+        "signal": "signal", "sig": "signal",
+        # acl
+        "acl": "acl",
+        # date
+        "date": "date", "expiry": "date",
+        # comment/gecos
+        "comment": "comment", "gecos": "comment",
+        # suffix
+        "suffix": "suffix",
+        # release
+        "release": "release",
+        # range
+        "range": "range",
+        # format
+        "format": "format",
+        # user aliases (su/sudo actions)
+        "target_user": "user", "caller": "user",
+        "old_login": "user", "new_login": "user",
+        # process aliases
+        "pr": "process", "pp": "process", "pid": "process",
+        # firewall chain rename
+        "o_old": "chain", "o_new": "new_chain",
+        # socket / query
+        "st": "state", "family": "family", "session": "session",
+        "map_id": "value",
+        # backup
+        "backup": "file",
+        # chage days/values (d is already mapped to directory, so use object)
+        "inactive": "value", "expire_date": "date",
+        # reference
+        "reference": "reference", "ref": "reference",
     }
 
     def _apply_template(self, template_name: str, bindings: dict[str, str]) -> Optional[str]:
@@ -153,7 +219,10 @@ class ActionConcretizer:
             if "{" not in result:
                 return result
 
-            logger.warning(f"Missing binding for template {template_name}: {result}")
+            if bindings:
+                logger.warning(f"Missing binding for template {template_name}: {result}")
+            else:
+                logger.debug(f"No bindings for template {template_name}, falling through to inference")
             return None
 
     def _match_pattern(self, action_name: str) -> Optional[str]:
@@ -839,6 +908,203 @@ class ActionConcretizer:
         # Groupadd variants
         if name.startswith("groupadd"):
             return f"groupadd {_get('group', 'name')}"
+
+        # Userdel variants
+        if name.startswith("userdel"):
+            return f"userdel {_get('user', 'login')}"
+
+        # chmod variants
+        if name.startswith("chmod"):
+            mode = _get("mode", "m", "permissions")
+            file = _get("file", "f", "path")
+            if "recursive" in name:
+                return f"chmod -R {mode} {file}"
+            elif "verbose" in name:
+                return f"chmod -v {mode} {file}"
+            elif "silent" in name:
+                return f"chmod -f {mode} {file}"
+            elif "reference" in name:
+                return f"chmod --reference={_get('reference', 'ref')} {file}"
+            elif "no_dereference" in name:
+                return f"chmod -h {mode} {file}"
+            elif "no_preserve_root" in name:
+                return f"chmod --no-preserve-root {mode} {file}"
+            elif "preserve_root" in name:
+                return f"chmod --preserve-root {mode} {file}"
+            return f"chmod {mode} {file}"
+
+        # chown variants
+        if name.startswith("chown"):
+            user = _get("user", "owner", "u")
+            group = _get("group", "g")
+            file = _get("file", "f", "path")
+            owner = f"{user}:{group}" if group else user
+            if "recursive" in name:
+                return f"chown -R {owner} {file}"
+            elif "verbose" in name:
+                return f"chown -v {owner} {file}"
+            elif "silent" in name:
+                return f"chown -f {owner} {file}"
+            elif "changes" in name:
+                return f"chown -c {owner} {file}"
+            elif "no_dereference" in name:
+                return f"chown -h {owner} {file}"
+            elif "preserve_root" in name:
+                return f"chown --preserve-root {owner} {file}"
+            return f"chown {owner} {file}"
+
+        # Socket (ss) operations
+        if name.startswith("socket_"):
+            sub = name[7:]
+            flag_map = {
+                "tcp": "-t", "udp": "-u", "unix": "-x", "raw": "-w",
+                "dccp": "--dccp", "sctp": "--sctp", "ipv4": "-4", "ipv6": "-6",
+                "packet": "-0", "summary": "-s", "extended_info": "-e",
+                "memory_usage": "-m", "process_info": "-p", "timer_info": "-o",
+                "internal_info": "-i", "bpf_info": "--bpf", "cgroup_info": "--cgroup",
+                "tos_info": "--tos", "thread_info": "--threads", "tipc": "--tipc",
+                "mptcp": "--mptcp", "vsock": "--vsock", "xdp": "--xdp",
+                "context": "-Z", "contexts": "-Z", "events": "-E", "close": "-K",
+            }
+            if sub in flag_map:
+                return f"ss {flag_map[sub]}"
+            if "exists" in sub:
+                return "ss -tuln"
+            if "namespace" in sub:
+                return f"ss -N {_get('namespace', 'ns')}"
+            return "ss -a"
+
+        # getfacl variants
+        if name.startswith("getfacl"):
+            file = _get("file", "f", "path")
+            sub = name[8:] if name.startswith("getfacl_") else ""
+            flag_map = {
+                "access": "--access", "default": "--default", "recursive": "-R",
+                "numeric": "--numeric", "tabular": "--tabular",
+                "omit_header": "--omit-header", "absolute_names": "--absolute-names",
+                "all_effective": "--all-effective", "no_effective": "--no-effective",
+                "logical": "-L", "physical": "-P", "skip_base": "--skip-base",
+            }
+            if sub in flag_map:
+                return f"getfacl {flag_map[sub]} {file}"
+            return f"getfacl {file}"
+
+        # Firewall rule action types (nft actions)
+        if name.startswith("firewall_rule_"):
+            return "true"
+
+        # Add firewall rule variants (nft)
+        if name.startswith("add_firewall_rule_"):
+            chain = _get("chain", "table")
+            return f"nft add rule {chain}"
+
+        # UFW variants
+        if name.startswith("ufw_"):
+            sub = name[4:]
+            port = _get("port", "rule")
+            if "allow" in sub:
+                return f"ufw allow {port}"
+            elif "deny" in sub or "drop" in sub:
+                return f"ufw deny {port}"
+            elif "reject" in sub:
+                return f"ufw reject {port}"
+            elif "disable" in sub:
+                return "ufw disable"
+            elif "enable" in sub:
+                return "ufw --force enable"
+            elif "status" in sub:
+                return "ufw status"
+            return f"ufw {sub.replace('_', ' ')}"
+
+        # Touch variants
+        if name.startswith("touch_"):
+            file = _get("file", "f", "path")
+            if "no_create" in name:
+                return f"touch -c {file}"
+            elif "no_dereference" in name:
+                return f"touch -h {file}"
+            elif "reference" in name:
+                return f"touch --reference={_get('reference', 'ref')} {file}"
+            elif "time" in name:
+                return f"touch -t {_get('time', 'stamp')} {file}"
+            return f"touch {file}"
+
+        # Passwd variants
+        if name.startswith("passwd_"):
+            user = _get("user", "u", "login")
+            sub = name[7:]
+            if "delete" in sub:
+                return f"passwd -d {user}"
+            elif "lock" in sub:
+                return f"passwd -l {user}"
+            elif "unlock" in sub:
+                return f"passwd -u {user}"
+            elif "expire" in sub:
+                return f"passwd -e {user}"
+            elif "status" in sub or "display" in sub:
+                return f"passwd -S {user}"
+            elif "help" in sub:
+                return "passwd --help"
+            return "true"
+
+        # Localectl variants
+        if name.startswith("localectl_"):
+            sub = name[10:]
+            if "set_locale" in sub:
+                return f"localectl set-locale {_get('locale', 'lang', default='C')}"
+            elif "set_keyboard" in sub or "set_keymap" in sub:
+                return f"localectl set-keymap {_get('layout', 'keymap')}"
+            return "true"
+
+        # Netplan variants
+        if name.startswith("netplan_"):
+            sub = name[8:]
+            return f"netplan {sub}"
+
+        # Sysctl variants
+        if name.startswith("sysctl_"):
+            key = _get("key", "parameter", "name")
+            value = _get("value", "val")
+            if "load" in name:
+                return "sysctl -p"
+            return f"sysctl -w {key}={value}"
+
+        # NFT variants
+        if name.startswith("nft_"):
+            sub = name[4:].replace("_", " ")
+            return f"nft {sub}"
+
+        # Groupmod variants
+        if name.startswith("groupmod_"):
+            return f"groupmod {_get('group', 'name')}"
+
+        # Service variants (service_start, service_stop, etc.)
+        if name.startswith("service_"):
+            service = _get("service", "s", "svc", "unit")
+            if "start" in name:
+                return f"systemctl start {service}"
+            elif "stop" in name:
+                return f"systemctl stop {service}"
+            elif "restart" in name:
+                return f"systemctl restart {service}"
+            elif "status" in name:
+                return f"systemctl status {service} --no-pager"
+            return f"systemctl {name[8:].replace('_', '-')} {service}"
+
+        # Backup / preserve / traverse / symlink flags (all safe no-ops)
+        noop_prefixes = (
+            "backup_", "preserve_", "traverse_", "follow_", "dereference_",
+            "recursive_", "reference_", "prompt_", "force_", "interactive_",
+            "hard_link_", "lightweight_", "make_", "replace_",
+        )
+        for prefix in noop_prefixes:
+            if name.startswith(prefix):
+                return "true"
+
+        # Actions with no parameters are stubs (empty preconditions/effects);
+        # treat as no-ops since they can't meaningfully interact with the env
+        if not bindings:
+            return "true"
 
         return None
 

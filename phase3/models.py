@@ -200,4 +200,15 @@ class EnvironmentState:
             "file": [f["path"] for f in self.files],
             "directory": [f["path"] for f in self.files if f.get("is_dir")],
         }
-        return type_map.get(type_name, [])
+        result = type_map.get(type_name)
+        if result is not None:
+            return result
+
+        # "object" is the PDDL supertype — return all available objects
+        if type_name == "object":
+            all_objects = []
+            for key in ("user", "package", "service", "group", "file"):
+                all_objects.extend(type_map.get(key, []))
+            return all_objects
+
+        return []

@@ -448,67 +448,156 @@ class DomainRefiner:
 
         errors_str = "\n".join(f"- {e}" for e in errors[:5])
 
+        system_msg = (
+            "You output ONLY valid PDDL. No explanation, no markdown. "
+            "Your entire response must be a single (:action ...) block."
+        )
+
         prompt = (
-            f"You are a PDDL repair engine. I have a single action that has "
-            f"discrepancies when tested against a real Ubuntu 25.10 environment.\n\n"
-            f"ERRORS/DISCREPANCIES:\n{errors_str}\n\n"
-            f"ACTION TO FIX:\n{action_pddl}\n\n"
-            f"=== OFFICIAL SYNTAX RULES ===\n"
-            f"{PDDL_SYNTAX_GUIDE}\n"
-            f"=============================\n\n"
-            f"INSTRUCTIONS:\n"
-            f"1. Fix the specific errors listed above.\n"
-            f"2. Ensure all variables in preconditions/effects are declared "
-            f"in :parameters.\n"
-            f"3. Do not use reserved keywords (like 'exists', 'forall', 'call') "
-            f"as predicate names.\n"
-            f"4. Do not change the action name '{action_name}'.\n"
-            f"5. Keep preconditions and effects minimal and correct.\n\n"
-            f"Return ONLY the fixed (:action ...) PDDL block. "
-            f"No markdown, no comments, no explanation."
+            f"Fix this PDDL action based on the discrepancies below.\n\n"
+            f"ERRORS:\n{errors_str}\n\n"
+            f"ACTION:\n{action_pddl}\n\n"
+            f"PDDL SYNTAX RULES:\n{PDDL_SYNTAX_GUIDE}\n\n"
+            f"RULES:\n"
+            f"- Keep the action name '{action_name}' unchanged.\n"
+            f"- Declare all variables used in :precondition/:effect in :parameters.\n"
+            f"- Do not use reserved keywords as predicate names.\n"
+            f"- Output ONLY the fixed (:action ...) block, nothing else."
         )
 
         try:
-            response = self.llm.chat.completions.create(
-                model=self.config.llm.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.config.llm.max_tokens,
-                temperature=0.1,
-            )
+            # Try with system message first; fall back to single user
+            # message if the model returns empty (some Ollama models
+            # don't handle system messages well).
+            messages_variants = [
+                [
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": prompt},
+                ],
+                [
+                    {"role": "user", "content": system_msg + "\n\n" + prompt},
+                ],
+            ]
 
-            content = response.choices[0].message.content
-            if not content:
+            content = None
+            for msg_variant in messages_variants:
+                response = self.llm.chat.completions.create(
+                    model=self.config.llm.model_name,
+                    messages=msg_variant,
+                    max_tokens=self.config.llm.max_tokens,
+                    temperature=0.1,
+                )
+
+                # Try multiple ways to extract content from the response
+                content = None
+                if response.choices:
+                    choice = response.choices[0]
+                    content = getattr(choice.message, 'content', None)
+                    # Some APIs put content in different fields
+                    if not content:
+                        content = getattr(choice, 'text', None)
+                    if not content:
+                        # Try serializing the message to find any content
+                        try:
+                            msg_dict = choice.message.model_dump()
+                            content = msg_dict.get('content')
+                        except Exception:
+                            pass
+
+                    finish_reason = getattr(choice, 'finish_reason', 'unknown')
+                else:
+                    finish_reason = 'no_choices'
+
+                if content and content.strip():
+                    break  # Got valid content
+
+                logger.debug(
+                    f"  LLM empty content for '{action_name}' "
+                    f"(finish_reason={finish_reason}, "
+                    f"n_choices={len(response.choices) if response.choices else 0})"
+                )
+
+            if not content or not content.strip():
+                logger.warning(
+                    f"  LLM returned empty response for '{action_name}' "
+                    f"after {len(messages_variants)} attempts"
+                )
                 return None
 
-            # Strip markdown fences if present
-            content = content.strip()
-            content = re.sub(r'^```(?:pddl)?\s*', '', content)
-            content = re.sub(r'\s*```$', '', content)
+            raw_response = content[:300]  # for logging
             content = content.strip()
 
-            # Verify it looks like a valid action block
-            if not re.match(r'\(:action\s+', content):
-                # Try to extract action block from response
-                match = re.search(
-                    r'(\(:action\s+' + re.escape(action_name) + r'\s.*)',
-                    content, re.DOTALL
+            # Strip markdown fences (various formats LLMs use)
+            content = re.sub(r'^```(?:pddl|lisp|scheme|plaintext)?\s*\n?', '', content)
+            content = re.sub(r'\n?\s*```\s*$', '', content)
+            content = content.strip()
+
+            # --- Robust action block extraction ---
+            # Strategy 1: Find (:action action_name using exact match
+            action_start = None
+            pattern_exact = re.search(
+                r'\(:action\s+' + re.escape(action_name) + r'\b',
+                content
+            )
+            if pattern_exact:
+                action_start = pattern_exact.start()
+
+            # Strategy 2: Find any (:action with case-insensitive match
+            if action_start is None:
+                pattern_any = re.search(
+                    r'\(:action\s+' + re.escape(action_name) + r'\b',
+                    content, re.IGNORECASE
                 )
-                if match:
-                    content = match.group(1)
-                else:
-                    logger.warning(
-                        f"LLM response doesn't contain valid action block "
-                        f"for '{action_name}'"
-                    )
-                    return None
+                if pattern_any:
+                    action_start = pattern_any.start()
 
-            # Balance parentheses
+            # Strategy 3: Find any (:action block at all
+            if action_start is None:
+                pattern_generic = re.search(r'\(:action\s+\w+', content)
+                if pattern_generic:
+                    action_start = pattern_generic.start()
+                    found_name = re.match(
+                        r'\(:action\s+(\S+)', content[action_start:]
+                    )
+                    if found_name:
+                        logger.debug(
+                            f"  LLM returned action '{found_name.group(1)}' "
+                            f"instead of '{action_name}'"
+                        )
+
+            if action_start is None:
+                logger.warning(
+                    f"  LLM response has no (:action block for '{action_name}'. "
+                    f"Response start: {raw_response!r}"
+                )
+                return None
+
+            # Use balanced-paren extraction from action_start
+            depth = 0
+            action_end = action_start
+            for j in range(action_start, len(content)):
+                if content[j] == '(':
+                    depth += 1
+                elif content[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        action_end = j + 1
+                        break
+            else:
+                # Never balanced - add missing closing parens
+                needed = depth
+                action_end = len(content)
+                content = content + ')' * needed
+                action_end = len(content)
+
+            content = content[action_start:action_end]
+
+            # Ensure parentheses are balanced after extraction
             open_count = content.count('(')
             close_count = content.count(')')
             if open_count > close_count:
                 content += ')' * (open_count - close_count)
             elif close_count > open_count:
-                # Trim excess closing parens from the end
                 excess = close_count - open_count
                 for _ in range(excess):
                     last = content.rfind(')')
@@ -518,12 +607,31 @@ class DomainRefiner:
             # Run through PDDLSanitizer for common fixes
             content = self.sanitizer.repair(content)
 
-            # Verify the action name wasn't changed
+            # Verify the result starts with (:action
             name_match = re.match(r'\(:action\s+(\S+)', content)
-            if not name_match or name_match.group(1) != action_name:
+            if not name_match:
                 logger.warning(
-                    f"LLM changed action name from '{action_name}' to "
-                    f"'{name_match.group(1) if name_match else '???'}'"
+                    f"  After sanitizer, no (:action found for '{action_name}'"
+                )
+                return None
+
+            # Accept the action even if the LLM changed the name -
+            # just fix it back to the original
+            extracted_name = name_match.group(1)
+            if extracted_name != action_name:
+                logger.debug(
+                    f"  Fixing LLM action name: '{extracted_name}' -> '{action_name}'"
+                )
+                content = (
+                    content[:name_match.start(1)]
+                    + action_name
+                    + content[name_match.end(1):]
+                )
+
+            # Minimal validation: must have :parameters, :precondition or :effect
+            if ':parameters' not in content and ':effect' not in content:
+                logger.warning(
+                    f"  LLM repair for '{action_name}' missing required sections"
                 )
                 return None
 
@@ -781,12 +889,12 @@ class DomainRefiner:
                 ))
                 continue
 
-            # Case 2: Score dropped significantly from previous iteration
-            if previous_score > 0 and ew_score.score < previous_score * 0.5:
+            # Case 2: Score dropped significantly from best score
+            # Use 25% threshold from best (not previous) to catch gradual decay
+            if best_score > 0 and ew_score.score < best_score * 0.75:
                 logger.warning(
-                    f"Score dropped significantly: {previous_score:.3f} -> "
-                    f"{ew_score.score:.3f}. Reverting to best domain "
-                    f"(score: {best_score:.3f})."
+                    f"Score dropped significantly from best: {best_score:.3f} -> "
+                    f"{ew_score.score:.3f} (>{25}% drop). Reverting to best domain."
                 )
                 self.domain_pddl = best_domain
                 self.planner.load_domain_string(self.domain_pddl, self.problem_pddl)

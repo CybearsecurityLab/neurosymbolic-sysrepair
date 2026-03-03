@@ -28,6 +28,10 @@ class PDDLParser:
         """
         Parse PDDL domain and extract key components.
 
+        Uses balanced-parenthesis extraction to find all action blocks,
+        including those with deeply nested preconditions/effects that
+        simple regex patterns miss.
+
         Returns dict with: types, predicates, actions
         """
         result = {
@@ -43,43 +47,75 @@ class PDDLParser:
         if match:
             result["domain_name"] = match.group(1)
 
-        # Extract actions
-        action_pattern = re.compile(
-            r'\(:action\s+(\w+)\s*'
-            r':parameters\s*\(([^)]*)\)\s*'
-            r':precondition\s*(\([^)]*(?:\([^)]*\)[^)]*)*\))\s*'
-            r':effect\s*(\([^)]*(?:\([^)]*\)[^)]*)*\))',
-            re.DOTALL | re.IGNORECASE
-        )
+        # Extract actions using balanced-paren matching
+        i = 0
+        while i < len(domain_pddl):
+            action_match = re.search(r'\(:action\s+(\S+)', domain_pddl[i:])
+            if not action_match:
+                break
 
-        for match in action_pattern.finditer(domain_pddl):
-            action_name = match.group(1)
-            params_str = match.group(2)
-            precond_str = match.group(3)
-            effect_str = match.group(4)
+            action_start = i + action_match.start()
+            action_name = action_match.group(1)
+
+            # Find balanced closing paren for the entire action block
+            depth = 0
+            action_end = action_start
+            for j in range(action_start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        action_end = j + 1
+                        break
+
+            action_block = domain_pddl[action_start:action_end]
 
             # Parse parameters
             parameters = []
-            param_pattern = re.compile(r'\?(\w+)\s*-\s*(\w+)')
-            for param_match in param_pattern.finditer(params_str):
-                parameters.append((f"?{param_match.group(1)}", param_match.group(2)))
+            params_match = re.search(r':parameters\s*\(([^)]*)\)', action_block)
+            if params_match:
+                param_pattern = re.compile(r'\?(\w+)\s*-\s*(\w+)')
+                for param_match in param_pattern.finditer(params_match.group(1)):
+                    parameters.append((f"?{param_match.group(1)}", param_match.group(2)))
 
-            # Extract preconditions as list
-            preconditions = PDDLParser._extract_atoms(precond_str)
+            # Extract precondition section via balanced parens
+            precond_str = PDDLParser._extract_section(action_block, ':precondition')
+            preconditions = PDDLParser._extract_atoms(precond_str) if precond_str else []
 
-            # Extract effects as list
-            effects = PDDLParser._extract_atoms(effect_str)
+            # Extract effect section via balanced parens
+            effect_str = PDDLParser._extract_section(action_block, ':effect')
+            effects = PDDLParser._extract_atoms(effect_str) if effect_str else []
 
             result["actions"].append(PDDLAction(
                 name=action_name,
                 parameters=parameters,
                 preconditions=preconditions,
                 effects=effects,
-                raw_pddl=match.group(0),
+                raw_pddl=action_block,
             ))
+
+            i = action_end
 
         logger.info(f"Parsed domain '{result['domain_name']}' with {len(result['actions'])} actions")
         return result
+
+    @staticmethod
+    def _extract_section(action_block: str, section_keyword: str) -> str:
+        """Extract a section (:precondition or :effect) using balanced parens."""
+        sec_match = re.search(rf'{section_keyword}\s*\(', action_block)
+        if not sec_match:
+            return ""
+
+        sdepth = 0
+        for j in range(sec_match.end() - 1, len(action_block)):
+            if action_block[j] == '(':
+                sdepth += 1
+            elif action_block[j] == ')':
+                sdepth -= 1
+                if sdepth == 0:
+                    return action_block[sec_match.end() - 1:j + 1]
+        return ""
 
     @staticmethod
     def _extract_atoms(expr: str) -> list[str]:
@@ -108,6 +144,7 @@ class RandomWalkGenerator:
         self.domain_pddl: str = ""
         self.problem_pddl: str = ""
         self.parsed_domain: dict = {}
+        self._fd_translate_failed: bool = False  # Cache FD translate failures
 
     def load_domain(self, domain_path: str, problem_path: Optional[str] = None):
         """Load PDDL domain and optionally problem file."""
@@ -118,6 +155,7 @@ class RandomWalkGenerator:
             with open(problem_path) as f:
                 self.problem_pddl = f.read()
 
+        self._fd_translate_failed = False  # Reset cache on new domain
         self.parsed_domain = PDDLParser.parse_domain(self.domain_pddl)
         logger.info(f"Loaded domain with {len(self.parsed_domain['actions'])} actions")
 
@@ -125,6 +163,7 @@ class RandomWalkGenerator:
         """Load PDDL domain from string."""
         self.domain_pddl = domain_pddl
         self.problem_pddl = problem_pddl
+        self._fd_translate_failed = False  # Reset cache on new domain
         self.parsed_domain = PDDLParser.parse_domain(self.domain_pddl)
 
     def _validate_pddl_for_fd(self, domain_pddl: str) -> str:
@@ -132,14 +171,24 @@ class RandomWalkGenerator:
         Validate and clean PDDL domain for Fast Downward translator compatibility.
 
         The FD translator (exit code 31) fails when actions reference predicates
-        or types not declared in the domain header. This method:
-        1. Extracts declared predicates and types
-        2. Scans actions for undeclared predicate references
-        3. Forward-declares missing predicates into (:predicates)
+        or types not declared in the domain header, OR when actions use variables
+        not declared in :parameters. This method:
+        1. Fixes actions with malformed :parameters blocks
+        2. Removes/fixes actions with undefined variables
+        3. Extracts declared predicates and types
+        4. Scans actions for undeclared predicate references
+        5. Forward-declares missing predicates into (:predicates)
+        6. Fixes predicate arity mismatches
 
         Returns:
             Cleaned domain PDDL string safe for FD translator.
         """
+        # --- Phase 0: Fix malformed :parameters blocks ---
+        domain_pddl = self._fix_malformed_parameters(domain_pddl)
+
+        # --- Phase A: Fix actions with undefined variables ---
+        domain_pddl = self._fix_undefined_variables(domain_pddl)
+
         # Extract declared types (including 'object' which is always implicit)
         declared_types = {"object"}
         types_match = re.search(r'\(:types\s+(.*?)\)', domain_pddl, re.DOTALL)
@@ -148,14 +197,27 @@ class RandomWalkGenerator:
                 declared_types.add(token)
 
         # Extract declared predicate names from (:predicates ...) block
+        # Use balanced-paren extraction for robustness on large predicates blocks
         declared_predicates = set()
-        pred_match = re.search(
-            r'\(:predicates\s+(.*?)\)\s*(?=\s*(?:;|\(:action))',
-            domain_pddl, re.DOTALL
-        )
+        pred_match = re.search(r'\(:predicates\s', domain_pddl)
+        pred_block_text = None
         if pred_match:
-            for pm in re.finditer(r'\((\w+)', pred_match.group(1)):
-                declared_predicates.add(pm.group(1))
+            pd_start = pred_match.start()
+            pd_depth = 0
+            pd_end = pd_start
+            for j in range(pd_start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    pd_depth += 1
+                elif domain_pddl[j] == ')':
+                    pd_depth -= 1
+                    if pd_depth == 0:
+                        pd_end = j + 1
+                        break
+            pred_block_text = domain_pddl[pd_start:pd_end]
+            for pm in re.finditer(r'\((\w+)', pred_block_text):
+                pname = pm.group(1)
+                if pname != 'predicates':
+                    declared_predicates.add(pname)
 
         if not declared_predicates:
             logger.warning("FD validator: no predicates found in domain, skipping validation")
@@ -218,37 +280,448 @@ class RandomWalkGenerator:
                         missing_predicates.get(pname, 0), len(args)
                     )
 
-        if not missing_predicates:
+        if missing_predicates:
+            # Forward-declare missing predicates
+            logger.info(
+                f"FD validator: forward-declaring {len(missing_predicates)} missing predicates "
+                f"(sample: {list(missing_predicates.keys())[:5]})"
+            )
+
+            additional_preds = []
+            for pred_name, arity in sorted(missing_predicates.items()):
+                if arity > 0:
+                    params = " ".join(f"?x{i} - object" for i in range(arity))
+                    additional_preds.append(f"    ({pred_name} {params})")
+                else:
+                    additional_preds.append(f"    ({pred_name})")
+
+            # Insert before the closing ) of the (:predicates ...) block
+            if pred_block_text is not None:
+                # pd_end points one past the closing ), so insert at pd_end - 1
+                insert_pos = pred_match.start() + len(pred_block_text) - 1
+                additions = (
+                    "\n    ; Auto-declared for Fast Downward compatibility\n"
+                    + "\n".join(additional_preds)
+                    + "\n  "
+                )
+                domain_pddl = (
+                    domain_pddl[:insert_pos]
+                    + additions
+                    + domain_pddl[insert_pos:]
+                )
+        else:
             logger.info("FD validator: domain is consistent, no missing predicates")
+
+        # --- Phase C: Fix predicate arity mismatches ---
+        # Must run AFTER forward-declaration so newly declared predicates
+        # also get their usages checked.
+        domain_pddl = self._fix_predicate_arity_mismatches(domain_pddl)
+
+        return domain_pddl
+
+    def _fix_malformed_parameters(self, domain_pddl: str) -> str:
+        """
+        Fix actions that have :parameters without a proper parenthesized block.
+
+        FD translator fails with 'Parameters is expected to be a block' when
+        :parameters is present but not followed by (...).  This can happen when
+        the PDDLSanitizer or LLM strips empty parentheses.
+
+        Also adds :parameters () to actions that are missing :parameters entirely.
+        """
+        fixed_count = 0
+        action_starts = [m.start() for m in re.finditer(r'\(:action\s+', domain_pddl)]
+
+        for start in reversed(action_starts):
+            depth = 0
+            end = start
+            for j in range(start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end = j + 1
+                        break
+
+            action_block = domain_pddl[start:end]
+            name_match = re.match(r'\(:action\s+(\S+)', action_block)
+            action_name = name_match.group(1) if name_match else "?"
+
+            # Case 1: :parameters keyword present but no parenthesized block
+            malformed = re.search(
+                r':parameters\s+(?=:(?:precondition|effect))',
+                action_block
+            )
+            if malformed:
+                fixed_block = action_block[:malformed.start()] + \
+                    ':parameters ()' + \
+                    action_block[malformed.end():]
+                domain_pddl = domain_pddl[:start] + fixed_block + domain_pddl[end:]
+                fixed_count += 1
+                logger.debug(
+                    f"Fixed malformed :parameters in '{action_name}'"
+                )
+                continue
+
+            # Case 2: :parameters keyword missing entirely
+            if ':parameters' not in action_block:
+                # Insert :parameters () after action name
+                insert_match = re.match(r'(\(:action\s+\S+)', action_block)
+                if insert_match:
+                    insert_pos = insert_match.end()
+                    fixed_block = (
+                        action_block[:insert_pos]
+                        + '\n    :parameters ()'
+                        + action_block[insert_pos:]
+                    )
+                    domain_pddl = domain_pddl[:start] + fixed_block + domain_pddl[end:]
+                    fixed_count += 1
+                    logger.debug(
+                        f"Added missing :parameters to '{action_name}'"
+                    )
+
+        if fixed_count > 0:
+            logger.info(
+                f"FD validator: fixed malformed/missing :parameters in "
+                f"{fixed_count} actions"
+            )
+
+        return domain_pddl
+
+    def _fix_predicate_arity_mismatches(self, domain_pddl: str) -> str:
+        """
+        Fix predicate arity mismatches that cause FD translator to abort.
+
+        When a predicate is declared with N parameters but an action uses it
+        with fewer arguments, pad the usage with dummy variables and add them
+        to the action's :parameters block.
+
+        Example: (firewall_rule_modified ?chain) where declared arity is 3
+        → (firewall_rule_modified ?chain ?_pad_0 ?_pad_1)
+        """
+        # Step 1: Extract declared predicates with their arities
+        # Use balanced-paren extraction for robust parsing of the predicates block
+        declared_preds = {}  # name -> arity
+        pred_start_match = re.search(r'\(:predicates\s', domain_pddl)
+        if not pred_start_match:
             return domain_pddl
 
-        # Forward-declare missing predicates
+        # Find balanced end of predicates block
+        pred_block_start = pred_start_match.start()
+        depth = 0
+        pred_block_end = pred_block_start
+        for j in range(pred_block_start, len(domain_pddl)):
+            if domain_pddl[j] == '(':
+                depth += 1
+            elif domain_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    pred_block_end = j + 1
+                    break
+
+        pred_text = domain_pddl[pred_block_start:pred_block_end]
+        for pm in re.finditer(r'\((\w+)((?:\s+\?\w+(?:\s*-\s*\w+)?)*)\s*\)', pred_text):
+            pname = pm.group(1)
+            if pname == 'predicates':
+                continue
+            args = re.findall(r'\?\w+', pm.group(2))
+            declared_preds[pname] = len(args)
+
+        if not declared_preds:
+            logger.info("FD validator: no predicates found in predicates block, skipping arity fix")
+            return domain_pddl
+
         logger.info(
-            f"FD validator: forward-declaring {len(missing_predicates)} missing predicates "
-            f"(sample: {list(missing_predicates.keys())[:5]})"
+            f"FD validator: extracted {len(declared_preds)} declared predicates for arity checking"
         )
 
-        additional_preds = []
-        for pred_name, arity in sorted(missing_predicates.items()):
-            if arity > 0:
-                params = " ".join(f"?x{i} - object" for i in range(arity))
-                additional_preds.append(f"    ({pred_name} {params})")
-            else:
-                additional_preds.append(f"    ({pred_name})")
+        pddl_keywords = {
+            'and', 'or', 'not', 'when', 'forall', 'exists', 'imply',
+            'increase', 'decrease', 'assign', 'define', 'domain',
+        }
 
-        # Insert before the closing ) of the (:predicates ...) block
-        # Find the last predicate declaration line and insert after it
-        if pred_match:
-            insert_pos = pred_match.start(1) + len(pred_match.group(1))
-            additions = (
-                "\n    ; Auto-declared for Fast Downward compatibility\n"
-                + "\n".join(additional_preds)
-                + "\n  "
-            )
+        # Step 2: First pass - find max observed arity for each predicate
+        # across all actions to detect cases where usage > declaration
+        max_observed_arity = {}  # pred_name -> max args seen
+        action_starts = [m.start() for m in re.finditer(r'\(:action\s+', domain_pddl)]
+
+        for start in action_starts:
+            depth = 0
+            end = start
+            for j in range(start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end = j + 1
+                        break
+            action_block = domain_pddl[start:end]
+            for pred_ref in re.finditer(
+                r'\((\w+)((?:\s+\?\w+)*)\s*\)', action_block
+            ):
+                pname = pred_ref.group(1)
+                if pname in pddl_keywords or pname not in declared_preds:
+                    continue
+                args = re.findall(r'\?\w+', pred_ref.group(2))
+                max_observed_arity[pname] = max(
+                    max_observed_arity.get(pname, 0), len(args)
+                )
+
+        # Step 2b: Update predicate declarations where usage > declaration
+        preds_upgraded = {}
+        for pname, max_arity in max_observed_arity.items():
+            if pname in declared_preds and max_arity > declared_preds[pname]:
+                preds_upgraded[pname] = (declared_preds[pname], max_arity)
+
+        if preds_upgraded:
+            # Update declarations in the predicates block
+            pred_text_new = pred_text
+            for pname, (old_arity, new_arity) in preds_upgraded.items():
+                # Find the predicate declaration in pred_text
+                for pm in re.finditer(
+                    r'\(' + re.escape(pname) + r'((?:\s+\?\w+(?:\s*-\s*\w+)?)*)\s*\)',
+                    pred_text_new
+                ):
+                    old_decl = pm.group(0)
+                    # Build new declaration with extra params
+                    existing_args = pm.group(1)
+                    extra_params = " ".join(
+                        f"?x{i} - object"
+                        for i in range(old_arity, new_arity)
+                    )
+                    if existing_args.strip():
+                        new_decl = f"({pname}{existing_args} {extra_params})"
+                    else:
+                        new_decl = f"({pname} {extra_params})"
+                    pred_text_new = pred_text_new.replace(old_decl, new_decl, 1)
+                    logger.info(
+                        f"FD validator: upgraded predicate '{pname}' declaration "
+                        f"from arity {old_arity} to {new_arity}"
+                    )
+                    declared_preds[pname] = new_arity
+                    break
+
+            # Replace the predicates block in the domain
             domain_pddl = (
-                domain_pddl[:insert_pos]
-                + additions
-                + domain_pddl[insert_pos:]
+                domain_pddl[:pred_block_start]
+                + pred_text_new
+                + domain_pddl[pred_block_end:]
+            )
+            # Recalculate action_starts since domain changed
+            action_starts = [m.start() for m in re.finditer(r'\(:action\s+', domain_pddl)]
+
+        # Step 3: Second pass - pad action usages where usage < declaration
+        fixed_count = 0
+
+        for start in reversed(action_starts):
+            depth = 0
+            end = start
+            for j in range(start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end = j + 1
+                        break
+
+            action_block = domain_pddl[start:end]
+            name_match = re.match(r'\(:action\s+(\S+)', action_block)
+            action_name = name_match.group(1) if name_match else "?"
+
+            # Find arity-mismatched predicate usages in this action
+            replacements = []  # (start, end, new_text) within action_block
+            pad_vars = []  # dummy vars to add to :parameters
+            pad_counter = 0
+
+            for pred_ref in re.finditer(
+                r'\((\w+)((?:\s+\?\w+)*)\s*\)', action_block
+            ):
+                pname = pred_ref.group(1)
+                if pname in pddl_keywords or pname not in declared_preds:
+                    continue
+
+                args = re.findall(r'\?\w+', pred_ref.group(2))
+                declared_arity = declared_preds[pname]
+
+                if len(args) < declared_arity:
+                    logger.info(
+                        f"FD validator: arity mismatch in '{action_name}': "
+                        f"predicate '{pname}' used with {len(args)} args "
+                        f"but declared with {declared_arity} → padding"
+                    )
+                    pad_count = declared_arity - len(args)
+                    new_vars = []
+                    for _ in range(pad_count):
+                        var_name = f"?_pad_{pad_counter}"
+                        pad_counter += 1
+                        new_vars.append(var_name)
+                        pad_vars.append(var_name)
+
+                    all_args = " ".join(args + new_vars)
+                    new_text = f"({pname} {all_args})"
+                    replacements.append(
+                        (pred_ref.start(), pred_ref.end(), new_text)
+                    )
+
+            if not replacements:
+                continue
+
+            # Apply replacements in reverse order within action_block
+            new_action_block = action_block
+            for r_start, r_end, r_new in sorted(
+                replacements, key=lambda x: x[0], reverse=True
+            ):
+                new_action_block = (
+                    new_action_block[:r_start]
+                    + r_new
+                    + new_action_block[r_end:]
+                )
+
+            # Add dummy vars to :parameters
+            if pad_vars:
+                params_match = re.search(
+                    r':parameters\s*\(([^)]*)\)', new_action_block
+                )
+                if params_match:
+                    additions = " ".join(
+                        f"{v} - object" for v in pad_vars
+                    )
+                    old_params = params_match.group(1).strip()
+                    if old_params:
+                        new_params = f"{old_params} {additions}"
+                    else:
+                        new_params = additions
+                    new_action_block = (
+                        new_action_block[:params_match.start(1)]
+                        + new_params
+                        + new_action_block[params_match.end(1):]
+                    )
+
+            domain_pddl = domain_pddl[:start] + new_action_block + domain_pddl[end:]
+            fixed_count += 1
+            logger.debug(
+                f"Fixed arity mismatch in '{action_name}': "
+                f"padded {len(replacements)} predicate usage(s)"
+            )
+
+        if fixed_count > 0:
+            logger.info(
+                f"FD validator: fixed predicate arity mismatches in "
+                f"{fixed_count} actions"
+            )
+
+        return domain_pddl
+
+    def _fix_undefined_variables(self, domain_pddl: str) -> str:
+        """
+        Scan each action for variables used in :precondition/:effect that
+        are not declared in :parameters. Such actions cause FD translator
+        to abort with 'Undefined variable' (exit code 31).
+
+        For each broken action, adds missing variables to :parameters
+        with type 'object'. This is preferred over removing the action
+        because it preserves domain coverage.
+
+        Returns:
+            Domain with broken actions fixed.
+        """
+        pddl_keywords = {
+            'and', 'or', 'not', 'when', 'forall', 'exists', 'imply',
+            'increase', 'decrease', 'assign', 'define', 'domain',
+        }
+
+        fixed_count = 0
+        action_starts = [m.start() for m in re.finditer(r'\(:action\s+', domain_pddl)]
+
+        # Process in reverse order so string indices remain valid after edits
+        for start in reversed(action_starts):
+            # Find balanced end of this action block
+            depth = 0
+            end = start
+            for j in range(start, len(domain_pddl)):
+                if domain_pddl[j] == '(':
+                    depth += 1
+                elif domain_pddl[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end = j + 1
+                        break
+
+            action_block = domain_pddl[start:end]
+
+            # Extract action name
+            name_match = re.match(r'\(:action\s+(\S+)', action_block)
+            if not name_match:
+                continue
+            action_name = name_match.group(1)
+
+            # Extract declared parameters
+            params_match = re.search(r':parameters\s*\(([^)]*)\)', action_block)
+            declared_vars = set()
+            if params_match:
+                declared_vars = set(re.findall(r'\?\w+', params_match.group(1)))
+
+            # Also collect variables bound by forall/exists quantifiers
+            for quant_match in re.finditer(
+                r'(?:forall|exists)\s*\(([^)]*)\)', action_block
+            ):
+                declared_vars.update(re.findall(r'\?\w+', quant_match.group(1)))
+
+            # Find all variables used in preconditions and effects
+            used_vars = set()
+            for section in [':precondition', ':effect']:
+                sec_match = re.search(rf'{section}\s*\(', action_block)
+                if not sec_match:
+                    continue
+
+                sdepth = 0
+                sec_text = ""
+                for j in range(sec_match.end() - 1, len(action_block)):
+                    if action_block[j] == '(':
+                        sdepth += 1
+                    elif action_block[j] == ')':
+                        sdepth -= 1
+                        if sdepth == 0:
+                            sec_text = action_block[sec_match.end() - 1:j + 1]
+                            break
+
+                used_vars.update(re.findall(r'\?\w+', sec_text))
+
+            # Find undefined variables
+            undefined = used_vars - declared_vars
+            if not undefined:
+                continue
+
+            # Add missing variables to :parameters
+            if params_match:
+                additions = " ".join(f"{v} - object" for v in sorted(undefined))
+                old_params = params_match.group(1).strip()
+                if old_params:
+                    new_params = f"{old_params} {additions}"
+                else:
+                    new_params = additions
+
+                fixed_block = (
+                    action_block[:params_match.start(1)]
+                    + new_params
+                    + action_block[params_match.end(1):]
+                )
+
+                domain_pddl = domain_pddl[:start] + fixed_block + domain_pddl[end:]
+                fixed_count += 1
+
+                logger.debug(
+                    f"Fixed undefined vars in '{action_name}': "
+                    f"{sorted(undefined)}"
+                )
+
+        if fixed_count > 0:
+            logger.info(
+                f"FD validator: fixed undefined variables in "
+                f"{fixed_count} actions"
             )
 
         return domain_pddl
@@ -286,6 +759,10 @@ class RandomWalkGenerator:
         """
         Use Fast Downward to generate a valid plan (random walk).
         """
+        # Skip FD entirely if we already know it fails on this domain
+        if self._fd_translate_failed:
+            return self._sample_random_walk(depth, env_state)
+
         # Create temporary directory for planning
         with tempfile.TemporaryDirectory() as tmpdir:
             domain_file = Path(tmpdir) / "domain.pddl"
@@ -325,11 +802,23 @@ class RandomWalkGenerator:
                 if result.returncode == 0 and plan_file.exists():
                     return self._parse_plan(plan_file.read_text(), env_state)
                 else:
-                    logger.warning(
-                        f"Fast Downward returned {result.returncode}\n"
-                        f"  STDOUT (last 500): {result.stdout[-500:] if result.stdout else '(empty)'}\n"
-                        f"  STDERR (last 500): {result.stderr[-500:] if result.stderr else '(empty)'}"
-                    )
+                    # Exit code 31 = translate error (domain-level, won't change
+                    # between walks). Cache to skip FD for remaining walks.
+                    if result.returncode == 31:
+                        if not self._fd_translate_failed:
+                            logger.warning(
+                                f"Fast Downward translate failed (exit 31), "
+                                f"skipping FD for remaining walks on this domain.\n"
+                                f"  STDOUT (last 500): "
+                                f"{result.stdout[-500:] if result.stdout else '(empty)'}"
+                            )
+                            self._fd_translate_failed = True
+                    else:
+                        logger.warning(
+                            f"Fast Downward returned {result.returncode}\n"
+                            f"  STDOUT (last 500): {result.stdout[-500:] if result.stdout else '(empty)'}\n"
+                            f"  STDERR (last 500): {result.stderr[-500:] if result.stderr else '(empty)'}"
+                        )
                     return self._sample_random_walk(depth, env_state)
 
             except subprocess.TimeoutExpired:

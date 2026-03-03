@@ -598,7 +598,7 @@
 
   ;; Action: add_firewall_rule
   (:action add_firewall_rule
-    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object)
+    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object ?chain - firewall_rule ?o - file ?table - object ?target - object)
     :precondition (and
       (firewall_chain_exists ?chain)
       (chain_exists ?o)
@@ -1065,7 +1065,7 @@
 
   ;; Action: apt
   (:action apt
-    :parameters (?p - package ?r - repository)
+    :parameters (?p - package ?r - repository ?c - file ?f - file)
     :precondition (and
       (package_installed ?p)
       (file_exists ?c)
@@ -1726,7 +1726,7 @@
 
   ;; Action: check
   (:action check
-    :parameters (?u - object)
+    :parameters (?u - object ?a - file ?p - package ?s - service ?t - file)
     :precondition (and
       (timer_exists ?t)
       (automount_exists ?a)
@@ -2454,7 +2454,7 @@
   ;; Action: create_chain
   ;; Source: iptables
   (:action create_chain
-    :parameters (?chain - firewall_rule)
+    :parameters (?chain - firewall_rule ?c - file ?t - file)
     :precondition (and
       (table_exists ?t)
       (not (firewall_rule_exists ?chain))
@@ -2467,7 +2467,7 @@
 
   ;; Action: create_firewall_chain
   (:action create_firewall_chain
-    :parameters (?o - object)
+    :parameters (?o - object ?chain - firewall_rule ?table - object)
     :precondition (and
       (not (chain_exists ?o))
     )
@@ -2780,7 +2780,7 @@
   ;; Action: delete_chain
   ;; Source: iptables
   (:action delete_chain
-    :parameters (?chain - firewall_rule)
+    :parameters (?chain - firewall_rule ?c - file)
     :precondition (and
       (firewall_rule_exists ?chain)
       (chain_exists ?c)
@@ -2820,7 +2820,7 @@
 
   ;; Action: delete_firewall_chain
   (:action delete_firewall_chain
-    :parameters (?o - object)
+    :parameters (?o - object ?chain - firewall_rule ?table - object)
     :precondition (and
       (chain_exists ?o)
       (not (chain_policy_set ?o))
@@ -2834,7 +2834,7 @@
 
   ;; Action: delete_firewall_rule
   (:action delete_firewall_rule
-    :parameters (?r - firewall_rule)
+    :parameters (?r - firewall_rule ?chain - firewall_rule ?o - object ?rulenum - repository ?table - object)
     :precondition (and
       (rule_appends_to ?r ?o)
       (firewall_rule_exists ?r)
@@ -3049,7 +3049,7 @@
 
   ;; Action: disable_service
   (:action disable_service
-    :parameters (?s - service ?u - user)
+    :parameters (?s - service ?u - user ?svc - service)
     :precondition (and
       (service_enabled ?s)
       (service_exists ?s)
@@ -3214,13 +3214,14 @@
   (:action download_source
     :parameters (?src - package)
     :precondition (and
-      (package_exists ?src)
-      (network_available)
+        (package_exists ?src)
+        (network_available)
+        (source_repos_enabled)
     )
     :effect (and
-      (source_downloaded ?src)
+        (source_downloaded ?src)
     )
-  )
+)
 
   ;; Action: download_tar_only
   ;; Source: apt-get
@@ -3384,7 +3385,7 @@
 
   ;; Action: enable_service
   (:action enable_service
-    :parameters (?s - service ?u - user)
+    :parameters (?s - service ?u - user ?svc - service)
     :precondition (and
       (service_exists ?svc)
       (file_exists ?s)
@@ -3576,7 +3577,7 @@
 
   ;; Action: flush_chain
   (:action flush_chain
-    :parameters (?o - object)
+    :parameters (?o - object ?c - file ?chain - firewall_rule)
     :precondition (and
       (chain_exists ?o)
       (firewall_rule_exists ?chain)
@@ -3807,7 +3808,7 @@
 
   ;; Action: insert_firewall_rule
   (:action insert_firewall_rule
-    :parameters (?r - firewall_rule ?num - object)
+    :parameters (?r - firewall_rule ?num - object ?chain - firewall_rule ?rule_spec - repository ?rulenum - repository ?table - object)
     :precondition (and
       (firewall_rule_exists ?r)
     )
@@ -5175,7 +5176,7 @@
 
   ;; Action: preserve_environment
   (:action preserve_environment
-    :parameters (?target_user - user ?caller - user)
+    :parameters (?target_user - user ?caller - user ?user - user)
     :precondition (and
       (user_exists ?target_user)
       (user_exists ?user)
@@ -6028,7 +6029,7 @@
 
   ;; Action: rename_chain
   (:action rename_chain
-    :parameters (?old - object ?new - object)
+    :parameters (?old - object ?new - object ?new_chain - firewall_rule ?old_chain - firewall_rule)
     :precondition (and
       (chain_exists ?old)
       (firewall_rule_exists ?old_chain)
@@ -6055,7 +6056,7 @@
 
   ;; Action: rename_firewall_chain
   (:action rename_firewall_chain
-    :parameters (?o_old - object ?o_new - object)
+    :parameters (?o_old - object ?o_new - object ?new_chain - firewall_rule ?old_chain - firewall_rule ?table - object)
     :precondition (and
       (not (chain_exists ?o_new))
       (chain_exists ?o_old)
@@ -6387,7 +6388,7 @@
   ;; Action: set_chain_policy
   ;; Source: iptables
   (:action set_chain_policy
-    :parameters (?chain - firewall_rule ?target - file)
+    :parameters (?chain - firewall_rule ?target - file ?o - file)
     :precondition (and
       (chain_exists ?o)
       (firewall_rule_exists ?chain)
@@ -7477,17 +7478,7 @@
 
   ;; Action: switch_user
   (:action switch_user
-    :parameters (?target_user - user ?caller - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?caller)
-      (can_switch_to ?target_user)
-    )
-    :effect (and
-      (session_created ?target_user)
-      (user_authenticated ?target_user)
-    )
-  )
+    :parameters (?target_user))
 
   ;; Action: terminate_child
   ;; Source: su
@@ -7954,7 +7945,7 @@
   ;; Action: zero_counters
   ;; Source: iptables
   (:action zero_counters
-    :parameters (?chain - firewall_rule)
+    :parameters (?chain - firewall_rule ?c - file)
     :precondition (and
       (firewall_rule_exists ?chain)
       (chain_exists ?c)
