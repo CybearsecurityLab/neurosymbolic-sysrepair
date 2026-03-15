@@ -15,6 +15,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import httpx
+
 from .config import PREDICATE_CHECKS
 from .models import GroundedAction
 
@@ -48,8 +50,8 @@ class ActionConcretizer:
         phase1_metadata_path: str = "",
         llm_client=None,
         llm_model: str = "qwen3.5:35b",
-        llm_max_tokens: int = 256,
-        llm_temperature: float = 0.0,
+        llm_max_tokens: int = 4096,
+        llm_temperature: float = 0.6,
         cache_path: str = "",
     ):
         # Phase 1 metadata index: action_name -> {command_template, source_utility, ...}
@@ -61,7 +63,17 @@ class ActionConcretizer:
                 f"with command templates"
             )
 
-        # LLM client for Tier 2 concretization
+        # LLM: use native Ollama API (for thinking mode support)
+        # Extract base URL from OpenAI client if provided
+        self._llm_base_url = ""
+        if llm_client:
+            base = str(llm_client.base_url).rstrip("/")
+            # Convert OpenAI-compat URL to native Ollama URL
+            # http://host:port/v1 -> http://host:port/api/chat
+            if base.endswith("/v1"):
+                self._llm_base_url = base[:-3] + "/api/chat"
+            else:
+                self._llm_base_url = base + "/api/chat"
         self._llm = llm_client
         self._llm_model = llm_model
         self._llm_max_tokens = llm_max_tokens
@@ -380,40 +392,57 @@ class ActionConcretizer:
         action: GroundedAction,
         normalized_bindings: dict,
     ) -> Optional[str]:
-        """Use LLM to generate a bash command for this action."""
-        if not self._llm:
+        """Use LLM to generate a bash command for this action.
+
+        Uses native Ollama API to support thinking mode (think=true),
+        which gives better results than non-thinking mode.
+        Requires num_predict high enough for thinking + answer.
+        """
+        if not self._llm_base_url:
             return None
 
         prompt = self._build_llm_prompt(action_name, action, normalized_bindings)
 
         try:
-            response = self._llm.chat.completions.create(
-                model=self._llm_model,
-                messages=[
-                    {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=self._llm_max_tokens,
-                temperature=self._llm_temperature,
+            response = httpx.post(
+                self._llm_base_url,
+                json={
+                    "model": self._llm_model,
+                    "messages": [
+                        {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "stream": False,
+                    "options": {
+                        "temperature": self._llm_temperature,
+                        "num_predict": self._llm_max_tokens,
+                    },
+                },
+                timeout=60.0,
             )
-
-            content = None
-            if response.choices:
-                content = getattr(response.choices[0].message, "content", None)
+            response.raise_for_status()
+            data = response.json()
+            msg = data.get("message", {})
+            content = msg.get("content", "").strip()
 
             if not content:
-                logger.debug(f"LLM returned empty for concretize({action_name})")
+                thinking = msg.get("thinking", "")
+                logger.debug(
+                    f"LLM empty content for {action_name}, "
+                    f"thinking_len={len(thinking)}"
+                )
                 return None
 
             command = self._clean_llm_response(content)
             logger.debug(
-                f"LLM raw for {action_name}: {content[:150]!r} → cleaned: {command!r}"
+                f"LLM for {action_name}: {content[:100]!r} → {command!r}"
             )
             if self._validate_command(command):
                 return command
 
             logger.info(
-                f"LLM command failed validation for {action_name}: {command[:100]!r}"
+                f"LLM command failed validation for {action_name}: "
+                f"{command[:100]!r}"
             )
             return None
 

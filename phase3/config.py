@@ -88,9 +88,11 @@ class LLMRefinementConfig:
     max_retries: int = 3  # Retries per refinement attempt
 
     # Concretizer LLM (separate, smaller model for action→bash translation)
+    # Uses native Ollama API with thinking mode for better results
+    # num_predict must be high enough for thinking + answer (~4096)
     concretizer_model: str = "qwen3.5:35b"
-    concretizer_max_tokens: int = 256
-    concretizer_temperature: float = 0.0
+    concretizer_max_tokens: int = 4096
+    concretizer_temperature: float = 0.6
 
 
 @dataclass
