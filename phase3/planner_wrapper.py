@@ -615,6 +615,265 @@ class RandomWalkGenerator:
 
         return domain_pddl
 
+    def _fix_problem_predicate_arities(
+        self, problem_pddl: str, domain_pddl: str
+    ) -> str:
+        """
+        Fix predicate arity mismatches in the problem file to match domain
+        declarations.  The domain's _fix_predicate_arity_mismatches() may
+        upgrade a predicate's arity (e.g. file_owned_by from 2 → 3), but
+        the problem's :init block still uses the old arity.  FD's translator
+        rejects this with exit-code 31.
+
+        Strategy: extract declared arities from the (cleaned) domain, scan
+        the problem's :init facts, and pad any that are too short with
+        dummy_pad_N objects.  The dummy objects are added to :objects.
+        """
+        # --- Step 1: extract declared arities from domain ---
+        declared_preds: dict[str, int] = {}
+        pred_start_match = re.search(r'\(:predicates\s', domain_pddl)
+        if not pred_start_match:
+            return problem_pddl
+
+        pred_block_start = pred_start_match.start()
+        depth = 0
+        pred_block_end = pred_block_start
+        for j in range(pred_block_start, len(domain_pddl)):
+            if domain_pddl[j] == '(':
+                depth += 1
+            elif domain_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    pred_block_end = j + 1
+                    break
+
+        pred_text = domain_pddl[pred_block_start:pred_block_end]
+        for pm in re.finditer(
+            r'\((\w+)((?:\s+\?\w+(?:\s*-\s*\w+)?)*)\s*\)', pred_text
+        ):
+            pname = pm.group(1)
+            if pname == 'predicates':
+                continue
+            args = re.findall(r'\?\w+', pm.group(2))
+            declared_preds[pname] = len(args)
+
+        if not declared_preds:
+            return problem_pddl
+
+        # --- Step 2: find and fix :init facts ---
+        init_match = re.search(r'\(:init\b', problem_pddl)
+        if not init_match:
+            return problem_pddl
+
+        # balanced-paren extraction for the init block
+        init_start = init_match.start()
+        depth = 0
+        init_end = init_start
+        for j in range(init_start, len(problem_pddl)):
+            if problem_pddl[j] == '(':
+                depth += 1
+            elif problem_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    init_end = j + 1
+                    break
+
+        init_block = problem_pddl[init_start:init_end]
+
+        dummy_counter = 0
+        dummy_objects: set[str] = set()
+
+        # Match each top-level fact inside (:init ...)
+        # Facts look like (pred_name arg1 arg2 ...)
+        fixed_init = init_block
+        # Process from end to start so replacements don't shift indices
+        fact_positions: list[tuple[int, int, str]] = []
+        i = 0
+        while i < len(init_block):
+            # Find a fact: opening paren followed by a predicate name
+            m = re.search(r'\(([\w-]+)((?:\s+[\w-]+)*)\s*\)', init_block[i:])
+            if not m:
+                break
+            fact_start = i + m.start()
+            fact_end = i + m.end()
+            pred_name = m.group(1)
+
+            if pred_name in ('init',):
+                i = i + m.start() + 1
+                continue
+
+            if pred_name in declared_preds:
+                arg_strs = m.group(2).split() if m.group(2).strip() else []
+                declared_arity = declared_preds[pred_name]
+                if len(arg_strs) < declared_arity:
+                    # Pad with dummy objects
+                    pad_needed = declared_arity - len(arg_strs)
+                    pads = []
+                    for _ in range(pad_needed):
+                        pad_name = f"dummy_pad_{dummy_counter}"
+                        dummy_counter += 1
+                        dummy_objects.add(pad_name)
+                        pads.append(pad_name)
+                    new_fact = f"({pred_name} {' '.join(arg_strs + pads)})"
+                    fact_positions.append((fact_start, fact_end, new_fact))
+
+            i = fact_end
+
+        # Apply replacements in reverse order
+        for start_pos, end_pos, replacement in reversed(fact_positions):
+            init_block = init_block[:start_pos] + replacement + init_block[end_pos:]
+
+        problem_pddl = problem_pddl[:init_start] + init_block + problem_pddl[init_end:]
+
+        # --- Step 3: add dummy objects to :objects section ---
+        if dummy_objects:
+            objs_match = re.search(r'\(:objects\b', problem_pddl)
+            if objs_match:
+                # Find the closing paren of the :objects block
+                depth = 0
+                objs_end = objs_match.start()
+                for j in range(objs_match.start(), len(problem_pddl)):
+                    if problem_pddl[j] == '(':
+                        depth += 1
+                    elif problem_pddl[j] == ')':
+                        depth -= 1
+                        if depth == 0:
+                            objs_end = j
+                            break
+                dummy_decl = "\n    " + " ".join(sorted(dummy_objects)) + " - object"
+                problem_pddl = (
+                    problem_pddl[:objs_end]
+                    + dummy_decl
+                    + "\n  "
+                    + problem_pddl[objs_end:]
+                )
+
+            padded_count = len(fact_positions)
+            if padded_count > 0:
+                logger.info(
+                    f"FD validator: padded {padded_count} init facts in problem file "
+                    f"(added {len(dummy_objects)} dummy objects)"
+                )
+
+        return problem_pddl
+
+    def _forward_declare_problem_predicates(
+        self, domain_pddl: str, problem_pddl: str
+    ) -> str:
+        """
+        Find predicates used in the problem file's :init block that are NOT
+        declared in the domain's (:predicates ...) block, and add them.
+        FD's translator rejects undefined predicates with exit-code 31.
+
+        Returns the patched domain string.
+        """
+        # Extract declared predicate names from domain
+        declared: set[str] = set()
+        pred_start = re.search(r'\(:predicates\s', domain_pddl)
+        if not pred_start:
+            return domain_pddl
+
+        pbs = pred_start.start()
+        depth = 0
+        pbe = pbs
+        for j in range(pbs, len(domain_pddl)):
+            if domain_pddl[j] == '(':
+                depth += 1
+            elif domain_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    pbe = j  # position of closing paren
+                    break
+
+        pred_text = domain_pddl[pbs:pbe + 1]
+        for pm in re.finditer(
+            r'\((\w+)(?:\s+\?\w+(?:\s*-\s*\w+)?)*\s*\)', pred_text
+        ):
+            pname = pm.group(1)
+            if pname != 'predicates':
+                declared.add(pname)
+
+        # Extract predicates used in problem :init
+        init_match = re.search(r'\(:init\b', problem_pddl)
+        if not init_match:
+            return domain_pddl
+
+        ibs = init_match.start()
+        depth = 0
+        ibe = ibs
+        for j in range(ibs, len(problem_pddl)):
+            if problem_pddl[j] == '(':
+                depth += 1
+            elif problem_pddl[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    ibe = j + 1
+                    break
+
+        init_text = problem_pddl[ibs:ibe]
+        # Find all predicate usages and their arities
+        missing: dict[str, int] = {}  # pred_name -> max_arity
+        for m in re.finditer(r'\(([\w-]+)((?:\s+[\w-]+)*)\s*\)', init_text):
+            pname = m.group(1)
+            if pname in ('init',):
+                continue
+            if pname not in declared:
+                arg_count = len(m.group(2).split()) if m.group(2).strip() else 0
+                missing[pname] = max(missing.get(pname, 0), arg_count)
+
+        if not missing:
+            return domain_pddl
+
+        # Build forward declarations and insert before the closing paren
+        # of the predicates block
+        new_decls = []
+        for pname, arity in sorted(missing.items()):
+            params = " ".join(
+                f"?p{i} - object" for i in range(arity)
+            )
+            new_decls.append(f"  ({pname} {params})" if params else f"  ({pname})")
+
+        insert_text = "\n" + "\n".join(new_decls) + "\n"
+        # Insert before the closing paren of (:predicates ...)
+        domain_pddl = domain_pddl[:pbe] + insert_text + domain_pddl[pbe:]
+
+        logger.info(
+            f"FD validator: forward-declared {len(missing)} predicates "
+            f"from problem file: {sorted(missing.keys())}"
+        )
+
+        return domain_pddl
+
+    @staticmethod
+    def _infer_param_type(var_name: str) -> str:
+        """Infer a PDDL type from a variable name to avoid the catch-all 'object' type."""
+        name = var_name.lstrip("?").lower().replace("-", "_")
+        _TYPE_INFERENCES = {
+            "days": "days", "day": "days", "maxdays": "days",
+            "mindays": "days", "warndays": "days", "inactive": "days",
+            "date": "date", "expiredate": "date", "expire_date": "date",
+            "lastday": "date",
+            "mode": "mode", "permissions": "mode", "perm": "mode",
+            "port": "port_number",
+            "priority": "priority", "nice": "priority",
+            "signal": "signal", "sig": "signal",
+            "uid": "uid", "gid": "gid",
+            "count": "count", "num": "count", "number": "number",
+            "value": "number", "val": "number",
+            "chain": "chain", "new_chain": "chain",
+            "table": "table",
+            "target": "target", "jump": "target",
+            "protocol": "protocol", "proto": "protocol",
+            "interface": "interface", "iface": "interface",
+            "shell": "shell", "login_shell": "shell",
+            "home": "home_directory", "homedir": "home_directory",
+            "home_directory": "home_directory",
+        }
+        for suffix, ptype in _TYPE_INFERENCES.items():
+            if name == suffix or name.endswith("_" + suffix):
+                return ptype
+        return "object"
+
     def _fix_undefined_variables(self, domain_pddl: str) -> str:
         """
         Scan each action for variables used in :precondition/:effect that
@@ -697,7 +956,9 @@ class RandomWalkGenerator:
 
             # Add missing variables to :parameters
             if params_match:
-                additions = " ".join(f"{v} - object" for v in sorted(undefined))
+                additions = " ".join(
+                    f"{v} - {self._infer_param_type(v)}" for v in sorted(undefined)
+                )
                 old_params = params_match.group(1).strip()
                 if old_params:
                     new_params = f"{old_params} {additions}"
@@ -771,14 +1032,21 @@ class RandomWalkGenerator:
 
             # Validate and clean domain for FD translator compatibility
             cleaned_domain = self._validate_pddl_for_fd(self.domain_pddl)
+
+            # Resolve problem file
+            raw_problem = self.problem_pddl or self._generate_problem(env_state)
+
+            # Forward-declare predicates from problem that are missing in domain
+            cleaned_domain = self._forward_declare_problem_predicates(
+                cleaned_domain, raw_problem
+            )
             domain_file.write_text(cleaned_domain)
 
-            # Generate problem file if not provided
-            if self.problem_pddl:
-                problem_file.write_text(self.problem_pddl)
-            else:
-                problem_pddl = self._generate_problem(env_state)
-                problem_file.write_text(problem_pddl)
+            # Fix arity mismatches in problem to match (possibly upgraded) domain
+            fixed_problem = self._fix_problem_predicate_arities(
+                raw_problem, cleaned_domain
+            )
+            problem_file.write_text(fixed_problem)
 
             # Run Fast Downward
             fd_time_limit = max(30, self.config.plan_timeout - 10)
@@ -800,7 +1068,18 @@ class RandomWalkGenerator:
                 )
 
                 if result.returncode == 0 and plan_file.exists():
-                    return self._parse_plan(plan_file.read_text(), env_state)
+                    plan_actions = self._parse_plan(plan_file.read_text(), env_state)
+                    if plan_actions:
+                        return plan_actions
+                    # FD solved trivially (empty plan, e.g. goal=(and)).
+                    # Fall back to random sampling for this and future walks.
+                    if not self._fd_translate_failed:
+                        logger.info(
+                            "FD produced empty plan (trivial goal), "
+                            "switching to random sampling for remaining walks"
+                        )
+                        self._fd_translate_failed = True
+                    return self._sample_random_walk(depth, env_state)
                 else:
                     # Exit code 31 = translate error (domain-level, won't change
                     # between walks). Cache to skip FD for remaining walks.
@@ -845,15 +1124,62 @@ class RandomWalkGenerator:
 
         walk = []
         for _ in range(depth):
-            # Pick random action
-            action = random.choice(actions)
+            # Try up to 5 actions per step to find one passing preconditions
+            grounded = None
+            for _attempt in range(5):
+                action = random.choice(actions)
+                candidate = self._ground_action(action, env_state)
+                if candidate and self._check_basic_preconditions(action, candidate, env_state):
+                    grounded = candidate
+                    break
+                elif candidate:
+                    grounded = candidate  # Keep as fallback
 
-            # Try to ground it
-            grounded = self._ground_action(action, env_state)
             if grounded:
                 walk.append(grounded)
 
         return walk
+
+    def _check_basic_preconditions(
+        self,
+        action: PDDLAction,
+        grounded: GroundedAction,
+        env_state: EnvironmentState,
+    ) -> bool:
+        """
+        Quick sanity check of basic preconditions to avoid guaranteed failures.
+
+        Checks the raw PDDL for negated existence predicates (e.g.,
+        (not (user_exists ?u)) means the user must NOT exist).
+        """
+        existing_users = {u["name"] for u in env_state.users}
+        existing_groups = {g["name"] for g in env_state.groups}
+        raw = action.raw_pddl.lower()
+
+        # Check (not (user_exists ?var)) — user must NOT exist
+        for param_name, param_type in action.parameters:
+            if param_type in ("user", "system_user", "human_user"):
+                val = grounded.bindings.get(param_name, "")
+                var_lower = param_name.lstrip("?").lower()
+                # Pattern: (not (user_exists ?var))
+                if re.search(
+                    rf'\(not\s*\(user_exists\s+\?{re.escape(var_lower)}\s*\)',
+                    raw,
+                ):
+                    if val in existing_users:
+                        return False
+
+            if param_type == "group":
+                val = grounded.bindings.get(param_name, "")
+                var_lower = param_name.lstrip("?").lower()
+                if re.search(
+                    rf'\(not\s*\(group_exists\s+\?{re.escape(var_lower)}\s*\)',
+                    raw,
+                ):
+                    if val in existing_groups:
+                        return False
+
+        return True
 
     def _ground_action(
         self,

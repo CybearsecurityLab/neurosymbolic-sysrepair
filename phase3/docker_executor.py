@@ -122,12 +122,10 @@ class DockerExecutor:
     def _initialize_container(self):
         """Initialize container environment for PDDL action execution."""
         init_commands = [
-            # Update package lists
-            "apt-get update -qq",
-            # Install essential utilities
-            "apt-get install -y -qq sudo systemctl-shim 2>/dev/null || true",
-            # Create a test user
+            # Ensure test user exists (pre-created in Dockerfile, re-ensure after reset)
             "useradd -m testuser 2>/dev/null || true",
+            # Create essential directories that some actions expect
+            "mkdir -p /var/mail /var/spool/cron/crontabs 2>/dev/null || true",
         ]
 
         for cmd in init_commands:

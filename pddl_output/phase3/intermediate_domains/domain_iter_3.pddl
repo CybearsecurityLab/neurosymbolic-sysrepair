@@ -3566,13 +3566,13 @@
   (:action fetch_source_package
     :parameters (?pkg - package)
     :precondition (and
-      (network_available)
-      (not (package_installed ?pkg))
+        (network_available)
+        (source_repos_enabled)
     )
     :effect (and
-      (package_installed ?pkg)
+        (source_fetched ?pkg)
     )
-  )
+)
 
   ;; Action: flush_chain
   (:action flush_chain
@@ -3724,11 +3724,12 @@
     :parameters (?src - file ?dest - file)
     :precondition (and
       (file_exists ?src)
+      (not (file_exists ?dest))
     )
     :effect (and
       (file_exists ?dest)
     )
-  )
+)
 
   ;; Action: hard_link_files
   ;; Source: cp
@@ -5151,12 +5152,14 @@
   ;; Source: cp
   ;; Reused from Phase 1
   (:action preserve_attributes_copy
-    :parameters (?src - file ?dest - file ?attrs - file)
+    :parameters (?src - file ?dest - file ?attrs - object)
     :precondition (and
       (file_exists ?src)
+      (not (file_exists ?dest))
     )
     :effect (and
       (file_exists ?dest)
+      (attributes_preserved ?dest ?attrs)
     )
   )
 

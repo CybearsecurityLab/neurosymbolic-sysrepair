@@ -18,6 +18,7 @@ Follows Phase 2's targeted repair pattern:
 """
 
 import logging
+import random
 import re
 import sys
 import os
@@ -40,6 +41,7 @@ from .models import (
 from .docker_executor import DockerExecutor
 from .planner_wrapper import RandomWalkGenerator, PDDLParser
 from .action_concretizer import ActionConcretizer, EffectVerifier
+from .pddl_simulator import PDDLStateSimulator
 
 # Import Phase 2 shared tools
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -81,7 +83,7 @@ class DomainRefiner:
         # Components
         self.docker: Optional[DockerExecutor] = None
         self.planner: Optional[RandomWalkGenerator] = None
-        self.concretizer = ActionConcretizer()
+        self.concretizer: Optional[ActionConcretizer] = None
         self.effect_verifier: Optional[EffectVerifier] = None
         self.llm = None
         self.sanitizer = PDDLSanitizer()
@@ -116,6 +118,19 @@ class DomainRefiner:
         if not self.config.use_mock_llm:
             self._initialize_llm()
 
+        # Initialize concretizer with Phase 1 metadata and LLM client
+        cache_path = self.config.concretizer_cache_path or os.path.join(
+            self.config.output_dir, "concretizer_cache.json"
+        )
+        self.concretizer = ActionConcretizer(
+            phase1_metadata_path=self.config.phase1_metadata_path,
+            llm_client=self.llm,
+            llm_model=self.config.llm.concretizer_model,
+            llm_max_tokens=self.config.llm.concretizer_max_tokens,
+            llm_temperature=self.config.llm.concretizer_temperature,
+            cache_path=cache_path,
+        )
+
         logger.info("DomainRefiner initialized")
 
     def _initialize_llm(self):
@@ -147,6 +162,13 @@ class DomainRefiner:
         """
         Calculate the Exploration Walk (EW) score for the current domain.
 
+        Implements the paper's algorithm (arxiv 2407.12979):
+        1. Maintain PDDL state (set of ground facts, closed-world assumption)
+        2. At each step, find all LEGAL actions (preconditions satisfied in state)
+        3. Sample uniformly from legal actions
+        4. Execute in Docker, apply PDDL effects to update state
+        5. Docker failure on a PDDL-legal action = discrepancy
+
         EW(d) = (1 / (N * T_max)) * Σᵢ Σₜ E_env(qᵢₜ)
 
         Args:
@@ -172,74 +194,101 @@ class DomainRefiner:
         # Get current environment state
         env_state = self.docker.get_environment_state()
 
+        # Track action diversity across all walks
+        action_counts: dict[str, int] = defaultdict(int)
+        concretization_failures = 0
+        execution_failures = 0
+        effect_mismatches = 0
+
         for walk_id in range(num_walks):
-            logger.debug(f"Starting exploration walk {walk_id + 1}/{num_walks}")
-
-            # Generate random walk
-            planned_actions = self.planner.generate_random_walk(walk_depth, env_state)
-
-            walk = ExplorationWalk(
-                walk_id=walk_id,
-                planned_actions=planned_actions,
-                executed_actions=[],
-                steps_planned=len(planned_actions),
+            # Build fresh simulator per walk (fresh PDDL state)
+            simulator = PDDLStateSimulator(
+                domain_pddl=self.planner.domain_pddl,
+                env_state=env_state,
+                problem_pddl=self.planner.problem_pddl,
             )
 
             walk_successes = 0
+            walk_steps = 0
 
-            for action in planned_actions:
+            for step in range(walk_depth):
+                # Find all LEGAL actions (preconditions satisfied in PDDL state)
+                applicable = simulator.get_applicable_actions()
+                if not applicable:
+                    logger.info(
+                        f"Walk {walk_id + 1}: no applicable actions at step "
+                        f"{step}, terminating ({walk_steps} steps completed)"
+                    )
+                    break  # Walk terminates naturally
+
+                # Sample uniformly from legal actions
+                grounded = random.choice(applicable)
+                walk_steps += 1
+                total_steps += 1
+                action_counts[grounded.name] += 1
+
+                # Find the ParsedAction for effect application
+                parsed_action = None
+                for pa in simulator.actions:
+                    if pa.name == grounded.name:
+                        parsed_action = pa
+                        break
+
                 # Concretize action to bash command
-                command = self.concretizer.concretize(action)
+                command = self.concretizer.concretize(grounded)
 
-                if not command:
-                    # Can't concretize - log as discrepancy
+                if not command or command.strip() == "true":
+                    # Can't concretize — model has action but no bash mapping
+                    # "true" is a bash no-op that always exits 0 — it tests
+                    # nothing, so treat it the same as a missing template.
+                    concretization_failures += 1
                     discrepancy = Discrepancy(
-                        action_name=action.name,
+                        action_name=grounded.name,
                         discrepancy_type="concretization",
-                        expected=f"Valid bash command for {action.get_grounded_name()}",
-                        actual="No template found",
-                        context=f"Action parameters: {action.bindings}",
+                        expected=f"Valid bash command for {grounded.get_grounded_name()}",
+                        actual="No template found" if not command else "No-op (true)",
+                        context=f"Action parameters: {grounded.bindings}",
                         severity="high",
                     )
                     all_discrepancies.append(discrepancy)
-                    walk.terminated_early = True
-                    walk.termination_reason = "Cannot concretize action"
-                    break
+                    # Still apply effects (model believes action succeeded)
+                    if parsed_action:
+                        simulator.apply_effects(parsed_action, grounded.bindings)
+                    continue
 
-                # Execute action in container
-                result = self.docker.execute_action(action, command)
-                walk.executed_actions.append(result)
-                walk.steps_executed += 1
-                total_steps += 1
+                # Execute action in Docker
+                result = self.docker.execute_action(grounded, command)
 
                 if result.outcome == ActionOutcome.SUCCESS:
                     # Verify effects match PDDL predictions
                     matched, mismatched = self.effect_verifier.verify_effects(
-                        action, action.action.effects
+                        grounded, grounded.action.effects
                     )
 
                     if not mismatched:
-                        # Full success
+                        # Full success — PDDL model matches environment
                         walk_successes += 1
                         successful_steps += 1
                     else:
                         # Effect mismatch
+                        effect_mismatches += 1
                         result.outcome = ActionOutcome.EFFECT_MISMATCH
                         result.mismatched_effects = mismatched
 
                         discrepancy = Discrepancy(
-                            action_name=action.name,
+                            action_name=grounded.name,
                             discrepancy_type="effect",
-                            expected=str(action.action.effects),
+                            expected=str(grounded.action.effects),
                             actual=str(mismatched),
                             context=f"Command: {command}, Exit: {result.exit_code}",
                             severity="medium",
                         )
                         all_discrepancies.append(discrepancy)
                 else:
-                    # Execution failed
+                    # Docker failure on PDDL-legal action = THE discrepancy
+                    execution_failures += 1
                     discrepancy = Discrepancy(
-                        action_name=action.name,
+                        action_name=grounded.name,
                         discrepancy_type="execution",
                         expected="Exit code 0",
                         actual=f"Exit code {result.exit_code}: {result.stderr[:200]}",
@@ -248,18 +297,16 @@ class DomainRefiner:
                     )
                     all_discrepancies.append(discrepancy)
 
-                    # Stop walk on failure
-                    walk.terminated_early = True
-                    walk.termination_reason = f"Action failed: {result.outcome.value}"
-                    break
+                # Apply PDDL effects to update state (model assumes success)
+                if parsed_action:
+                    simulator.apply_effects(parsed_action, grounded.bindings)
 
             # Calculate walk score
-            walk.steps_successful = walk_successes
-            walk_score = walk.calculate_success_rate()
+            walk_score = walk_successes / walk_steps if walk_steps > 0 else 0.0
             walk_scores.append(walk_score)
 
-            logger.debug(
-                f"Walk {walk_id + 1}: {walk_successes}/{walk.steps_executed} "
+            logger.info(
+                f"Walk {walk_id + 1}/{num_walks}: {walk_successes}/{walk_steps} "
                 f"steps successful (score: {walk_score:.3f})"
             )
 
@@ -267,6 +314,29 @@ class DomainRefiner:
             if walk_id < num_walks - 1:
                 self.docker.reset_container()
                 env_state = self.docker.get_environment_state()
+
+        # Log diagnostic summary
+        unique_actions = len(action_counts)
+        top_actions = sorted(action_counts.items(), key=lambda x: -x[1])[:10]
+        logger.info(
+            f"Walk diagnostics: {unique_actions} unique actions sampled, "
+            f"concretization_failures={concretization_failures}, "
+            f"execution_failures={execution_failures}, "
+            f"effect_mismatches={effect_mismatches}"
+        )
+        logger.info(
+            f"Top 10 actions: "
+            + ", ".join(f"{name}({count})" for name, count in top_actions)
+        )
+
+        # Log concretizer tier stats
+        if self.concretizer:
+            stats = self.concretizer.get_stats()
+            logger.info(
+                f"Concretizer stats: phase1={stats['phase1_hits']}, "
+                f"cache={stats['cache_hits']}, llm={stats['llm_hits']}, "
+                f"failures={stats['failures']}"
+            )
 
         # Calculate overall EW score
         if total_steps > 0:
@@ -469,23 +539,37 @@ class DomainRefiner:
             # Try with system message first; fall back to single user
             # message if the model returns empty (some Ollama models
             # don't handle system messages well).
+            # Simplified direct prompt (no PDDL_SYNTAX_GUIDE) as a fallback
+            simple_prompt = (
+                f"Fix this PDDL action. Output ONLY the fixed (:action ...) block.\n\n"
+                f"ERRORS:\n{errors_str}\n\n"
+                f"ACTION:\n{action_pddl}\n\n"
+                f"Output the corrected (:action {action_name} ...) block:"
+            )
+
             messages_variants = [
+                # Variant 1: system + user (standard)
                 [
                     {"role": "system", "content": system_msg},
                     {"role": "user", "content": prompt},
                 ],
+                # Variant 2: combined single user message
                 [
                     {"role": "user", "content": system_msg + "\n\n" + prompt},
+                ],
+                # Variant 3: simplified direct prompt (no PDDL guide)
+                [
+                    {"role": "user", "content": simple_prompt},
                 ],
             ]
 
             content = None
-            for msg_variant in messages_variants:
+            for variant_idx, msg_variant in enumerate(messages_variants):
                 response = self.llm.chat.completions.create(
                     model=self.config.llm.model_name,
                     messages=msg_variant,
                     max_tokens=self.config.llm.max_tokens,
-                    temperature=0.1,
+                    temperature=self.config.llm.temperature,
                 )
 
                 # Try multiple ways to extract content from the response
@@ -511,20 +595,34 @@ class DomainRefiner:
                 if content and content.strip():
                     break  # Got valid content
 
-                logger.debug(
-                    f"  LLM empty content for '{action_name}' "
-                    f"(finish_reason={finish_reason}, "
-                    f"n_choices={len(response.choices) if response.choices else 0})"
-                )
+                # Log detailed response info for debugging empty responses
+                try:
+                    raw_dump = response.model_dump()
+                    logger.debug(
+                        f"  LLM empty content for '{action_name}' "
+                        f"(variant={variant_idx}, finish_reason={finish_reason}, "
+                        f"n_choices={len(response.choices) if response.choices else 0}, "
+                        f"raw_keys={list(raw_dump.get('choices', [{}])[0].get('message', {}).keys()) if raw_dump.get('choices') else 'none'})"
+                    )
+                except Exception:
+                    logger.debug(
+                        f"  LLM empty content for '{action_name}' "
+                        f"(variant={variant_idx}, finish_reason={finish_reason})"
+                    )
 
             if not content or not content.strip():
                 logger.warning(
                     f"  LLM returned empty response for '{action_name}' "
-                    f"after {len(messages_variants)} attempts"
+                    f"after {len(messages_variants)} variants"
                 )
                 return None
 
             raw_response = content[:300]  # for logging
+            content = content.strip()
+
+            # Strip thinking tags (Qwen3, DeepSeek-R1, etc. wrap output
+            # in <think>...</think> before the actual PDDL)
+            content = re.sub(r'<think>.*?</think>\s*', '', content, flags=re.DOTALL)
             content = content.strip()
 
             # Strip markdown fences (various formats LLMs use)
@@ -664,9 +762,15 @@ class DomainRefiner:
         original_domain = self.domain_pddl
         original_action_count = self._count_actions(original_domain)
 
-        # Group discrepancies by action name
+        # Group discrepancies by action name — only include execution and
+        # effect failures (actual PDDL problems). Concretization failures are
+        # mapping issues in the concretizer, NOT broken PDDL.
         action_errors: dict[str, list[str]] = defaultdict(list)
+        skipped_concretization = 0
         for d in discrepancies[:self.config.llm.max_feedback_items]:
+            if d.discrepancy_type == "concretization":
+                skipped_concretization += 1
+                continue
             error_desc = (
                 f"[{d.discrepancy_type}] Expected: {d.expected[:150]} | "
                 f"Actual: {d.actual[:150]}"
@@ -675,9 +779,28 @@ class DomainRefiner:
                 error_desc += f" | Context: {d.context[:100]}"
             action_errors[d.action_name].append(error_desc)
 
+        if skipped_concretization:
+            logger.info(
+                f"Skipped {skipped_concretization} concretization discrepancies "
+                f"(not PDDL issues)"
+            )
+
         if not action_errors:
             logger.info("No actionable discrepancies to repair")
             return original_domain
+
+        # Prioritize: repair actions with the most discrepancies first,
+        # cap at 5 per iteration to avoid spending hours on LLM calls
+        max_repairs_per_iter = 5
+        if len(action_errors) > max_repairs_per_iter:
+            sorted_actions = sorted(
+                action_errors.items(), key=lambda x: -len(x[1])
+            )
+            action_errors = dict(sorted_actions[:max_repairs_per_iter])
+            logger.info(
+                f"Capping repairs to top {max_repairs_per_iter} most "
+                f"frequently failing actions"
+            )
 
         # Extract all action blocks from current domain
         action_blocks = self._extract_action_blocks(original_domain)

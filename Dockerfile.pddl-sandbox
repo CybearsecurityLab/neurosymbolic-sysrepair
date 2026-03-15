@@ -1,0 +1,31 @@
+FROM ubuntu:25.10
+
+# Install tools needed by PDDL domain actions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
+    iproute2 \
+    iptables \
+    net-tools \
+    passwd \
+    adduser \
+    coreutils \
+    snapd \
+    ufw \
+    nftables \
+    procps \
+    login \
+    kmod \
+    acl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure /sbin and /usr/sbin are in PATH (for ip, modprobe, iptables, etc.)
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Create test user for exploration walks
+RUN useradd -m testuser
+
+# Ensure essential directories exist
+RUN mkdir -p /var/mail /var/spool/cron/crontabs
+
+CMD ["sleep", "infinity"]

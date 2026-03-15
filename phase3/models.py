@@ -190,6 +190,27 @@ class EnvironmentState:
     groups: list[dict]  # [{name, gid, members}]
     files: list[dict]  # [{path, exists, permissions}]
 
+    # Semantic value types for parameters added by _fix_undefined_variables
+    _SEMANTIC_TYPES = {
+        "number": ["7", "30", "90", "180", "365"],
+        "count": ["1", "5", "10", "50", "100"],
+        "days": ["7", "30", "90", "180", "365"],
+        "date": ["2026-01-01", "2026-06-15", "2026-12-31"],
+        "mode": ["644", "755", "600", "700"],
+        "port_number": ["22", "80", "443", "8080", "3306"],
+        "signal": ["SIGTERM", "SIGKILL", "SIGHUP", "SIGUSR1"],
+        "priority": ["0", "5", "10", "-5", "-10"],
+        "uid": ["1001", "1002", "1003", "1004", "1005"],
+        "gid": ["1001", "1002", "1003", "1004", "1005"],
+        "chain": ["INPUT", "OUTPUT", "FORWARD", "PREROUTING", "POSTROUTING"],
+        "table": ["filter", "nat", "mangle", "raw"],
+        "target": ["ACCEPT", "DROP", "REJECT", "LOG"],
+        "protocol": ["tcp", "udp", "icmp"],
+        "interface": ["lo", "eth0"],
+        "shell": ["/bin/bash", "/bin/sh", "/usr/sbin/nologin"],
+        "home_directory": ["/home/testuser", "/tmp"],
+    }
+
     def get_objects_by_type(self, type_name: str) -> list[str]:
         """Get object names for a given PDDL type."""
         type_map = {
@@ -203,6 +224,11 @@ class EnvironmentState:
         result = type_map.get(type_name)
         if result is not None:
             return result
+
+        # Check semantic value types
+        semantic = self._SEMANTIC_TYPES.get(type_name)
+        if semantic is not None:
+            return semantic
 
         # "object" is the PDDL supertype — return all available objects
         if type_name == "object":

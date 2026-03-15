@@ -3214,14 +3214,13 @@
   (:action download_source
     :parameters (?src - package)
     :precondition (and
-        (package_exists ?src)
-        (network_available)
-        (source_repos_enabled)
+      (package_exists ?src)
+      (network_available)
     )
     :effect (and
-        (source_downloaded ?src)
+      (source_downloaded ?src)
     )
-)
+  )
 
   ;; Action: download_tar_only
   ;; Source: apt-get
@@ -3567,13 +3566,13 @@
   (:action fetch_source_package
     :parameters (?pkg - package)
     :precondition (and
-      (network_available)
-      (not (package_installed ?pkg))
+        (network_available)
+        (source_repos_enabled)
     )
     :effect (and
-      (package_installed ?pkg)
+        (source_fetched ?pkg)
     )
-  )
+)
 
   ;; Action: flush_chain
   (:action flush_chain
@@ -3725,11 +3724,12 @@
     :parameters (?src - file ?dest - file)
     :precondition (and
       (file_exists ?src)
+      (not (file_exists ?dest))
     )
     :effect (and
       (file_exists ?dest)
     )
-  )
+)
 
   ;; Action: hard_link_files
   ;; Source: cp
@@ -5152,12 +5152,14 @@
   ;; Source: cp
   ;; Reused from Phase 1
   (:action preserve_attributes_copy
-    :parameters (?src - file ?dest - file ?attrs - file)
+    :parameters (?src - file ?dest - file ?attrs - object)
     :precondition (and
       (file_exists ?src)
+      (not (file_exists ?dest))
     )
     :effect (and
       (file_exists ?dest)
+      (attributes_preserved ?dest ?attrs)
     )
   )
 
@@ -5768,12 +5770,12 @@
     :parameters (?src - file ?dst - file)
     :precondition (and
       (file_exists ?src)
-      (file_exists ?dst)
     )
     :effect (and
       (file_exists ?dst)
+      (copied_from ?dst ?src)
     )
-  )
+)
 
   ;; Action: remove_directory
   ;; Source: rm
@@ -7478,7 +7480,17 @@
 
   ;; Action: switch_user
   (:action switch_user
-    :parameters (?target_user))
+    :parameters (?target_user - user ?caller - user)
+    :precondition (and
+      (user_exists ?target_user)
+      (user_exists ?caller)
+      (can_switch_to ?target_user)
+    )
+    :effect (and
+      (session_created ?target_user)
+      (user_authenticated ?target_user)
+    )
+  )
 
   ;; Action: terminate_child
   ;; Source: su

@@ -77,12 +77,12 @@ Examples:
     # Input/Output
     parser.add_argument(
         "--domain", "-d",
-        default="./pddl_output/sysadmin.pddl",
+        default="./pddl_output/phase2/sysadmin.pddl",
         help="Path to input PDDL domain file",
     )
     parser.add_argument(
         "--problem", "-p",
-        default="./pddl_output/problem.pddl",
+        default="./pddl_output/phase2/sysadmin_problem.pddl",
         help="Path to input PDDL problem file",
     )
     parser.add_argument(
@@ -120,20 +120,37 @@ Examples:
     # Docker configuration
     parser.add_argument(
         "--docker-image",
-        default="ubuntu:25.10",
-        help="Docker image for sandbox (default: ubuntu:25.10)",
+        default="pddl-sandbox:latest",
+        help="Docker image for sandbox (default: pddl-sandbox:latest)",
     )
 
     # LLM configuration
     parser.add_argument(
         "--llm-url",
-        default="http://localhost:8000/v1",
-        help="LLM API base URL (default: http://localhost:8000/v1)",
+        default="http://10.100.203.130:11434/v1",
+        help="LLM API base URL (default: http://10.100.203.130:11434/v1)",
     )
     parser.add_argument(
         "--llm-model",
-        default="mistralai/Mistral-7B-Instruct-v0.3",
+        default="qwen3.5:122b",
         help="LLM model name",
+    )
+
+    # Concretizer configuration
+    parser.add_argument(
+        "--concretizer-model",
+        default="qwen3.5:35b",
+        help="LLM model for action concretization (default: qwen3.5:35b)",
+    )
+    parser.add_argument(
+        "--phase1-metadata",
+        default="./pddl_output/phase1/phase1_statep2.json",
+        help="Path to Phase 1 metadata (phase1_statep2.json)",
+    )
+    parser.add_argument(
+        "--concretizer-cache",
+        default="",
+        help="Path to concretizer cache file (default: output_dir/concretizer_cache.json)",
     )
 
     # Planner configuration
@@ -222,6 +239,11 @@ Examples:
     # LLM
     config.llm.base_url = args.llm_url
     config.llm.model_name = args.llm_model
+    config.llm.concretizer_model = args.concretizer_model
+
+    # Concretizer
+    config.phase1_metadata_path = args.phase1_metadata
+    config.concretizer_cache_path = args.concretizer_cache
 
     # Planner
     if args.plan_timeout is not None:
