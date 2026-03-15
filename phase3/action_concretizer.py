@@ -503,7 +503,7 @@ class ActionConcretizer:
     # ─── Template / Cache Helpers ────────────────────────────────────
 
     def _fill_template(self, template: str, bindings: dict) -> Optional[str]:
-        """Fill a cached template with binding values (name match only)."""
+        """Fill a cached template with binding values (name match + canonical lookup)."""
         result = template
         placeholders = re.findall(r"\{(\w+)\}", template)
 
@@ -513,9 +513,14 @@ class ActionConcretizer:
         for ph in placeholders:
             if ph in bindings:
                 result = result.replace(f"{{{ph}}}", bindings[ph])
+            else:
+                # Try canonical form: {src} → "source"
+                canonical = self._KEY_MAPPINGS.get(ph, ph)
+                if canonical != ph and canonical in bindings:
+                    result = result.replace(f"{{{ph}}}", bindings[canonical])
 
         if "{" in result:
-            return None  # Can't fill all placeholders — no positional fallback
+            return None  # Can't fill all placeholders
         return result
 
     def _extract_template_form(self, concrete: str, bindings: dict) -> str:
