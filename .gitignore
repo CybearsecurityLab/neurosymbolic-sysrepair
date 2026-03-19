@@ -20,3 +20,4 @@ pddl_output/phase2/llm_logs/
 eval/results/traces
 !README.md
 *.md
+eval/results/eval_run.log
