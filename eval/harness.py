@@ -1,3 +1,4 @@
+import json
 import time
 import uuid
 import logging
@@ -75,7 +76,10 @@ class EvalHarness:
                         f"EW={record.ew_score:.2f} | HR={record.hallucination_rate:.2f}"
                     )
                 except Exception as e:
-                    logger.error(f"FAILED {s.id} | {b} | {m}: {e}", exc_info=True)
+                    logger.error(
+                        f"FAILED {s.id} | {b} | {m} | error_type={type(e).__name__} | {e}",
+                        exc_info=True,
+                    )
 
         return records
 
@@ -99,10 +103,16 @@ class EvalHarness:
         # 2. Spawn container
         container = self.docker.spawn_container(image_tag, run_id)
 
+        # Mutable container holder so recreation is transparent to the agent
+        ctr_holder = [container]
+
         try:
+            # 2b. Copy verify.sh into container
+            self.docker.copy_verify_script(ctr_holder[0], scenario.verify_sh_path)
+
             # 3. Shell introspection (no osquery)
             system_state = extract_system_state(
-                container,
+                ctr_holder[0],
                 exec_fn=lambda ctr, cmd: self.docker.exec(ctr, cmd),
             )
 
@@ -111,18 +121,30 @@ class EvalHarness:
 
             # 5. Start safety monitor
             monitor = SafetyMonitor(
-                container,
+                ctr_holder[0],
                 scenario,
                 exec_fn=lambda ctr, cmd: self.docker.exec(ctr, cmd),
             )
             monitor.start()
 
-            # 6. Create exec_fn for agent (curried with container)
+            # 6. Create exec_fn and verify_fn that check for container recreation
             def exec_fn(cmd: str) -> CommandRecord:
-                return self.docker.exec(container, cmd)
+                record = self.docker.exec(ctr_holder[0], cmd)
+                # If a crash triggered recreation, swap to the new container
+                new_ctr = self.docker.get_recreated_container()
+                if new_ctr is not None:
+                    logger.warning(
+                        f"[{run_id}] {scenario.id} | {baseline_name} | {model_name} | "
+                        f"Container recreated after crash, swapping reference"
+                    )
+                    ctr_holder[0] = new_ctr
+                return record
+
+            def verify_fn() -> tuple[bool, str]:
+                return self.docker.exec_verify(ctr_holder[0])
 
             # 7. Load agent
-            agent = baseline_factory(baseline_name, model_name, exec_fn, self.ollama_url)
+            agent = baseline_factory(baseline_name, model_name, exec_fn, self.ollama_url, verify_fn=verify_fn)
 
             # 8. Run agent
             result = agent.run(system_prompt=system_prompt)
@@ -130,6 +152,14 @@ class EvalHarness:
 
             # 9. Stop monitor
             violations = monitor.stop()
+
+            # Log crash count for this run
+            crash_count = self.docker.get_crash_count(ctr_holder[0])
+            if crash_count > 0:
+                logger.warning(
+                    f"[{run_id}] {scenario.id} | {baseline_name} | {model_name} | "
+                    f"Container crashed {crash_count} time(s) during run"
+                )
 
             # 10. LLM judge for hallucinations (batch)
             os_info = f"{scenario.base_image} ({scenario.collection})"
@@ -140,17 +170,24 @@ class EvalHarness:
             )
 
             # 11. Run verify.sh oracle
-            verify_passed, verify_output = self.docker.exec_verify(container)
+            verify_passed, verify_output = self.docker.exec_verify(ctr_holder[0])
 
             # 12. Compute metrics
             metrics = compute_all_metrics(result, violations, verify_passed)
 
-            # 13. Build and store EvalRecord
+            # 13. Save trace log file
+            trace_dir = self.db.db_path.parent / "traces" / scenario.id / baseline_name
+            trace_dir.mkdir(parents=True, exist_ok=True)
+            trace_file = trace_dir / f"{model_name}.json"
+            trace_file.write_text(json.dumps(result.trace, indent=2, default=str))
+            logger.info(f"Trace saved to {trace_file}")
+
+            # 14. Build and store EvalRecord
             eval_record = self.db.build_eval_record(scenario, result, metrics, violations, verify_output)
             self.db.insert(eval_record)
 
             return eval_record
 
         finally:
-            # 14. Always destroy container
-            self.docker.destroy(container)
+            # Always destroy container (use current holder in case it was recreated)
+            self.docker.destroy(ctr_holder[0])

@@ -674,12 +674,13 @@
   ;; Source: usermod
   ;; Reused from Phase 1
   (:action add_sub_uids
-    :parameters (?user - user ?first - file ?last - file)
+    :parameters (?user - user ?first - object ?last - object)
     :precondition (and
       (user_exists ?user)
     )
     :effect (and
       (user_exists ?user)
+      (has_sub_uid_range ?user ?first ?last)
     )
   )
 

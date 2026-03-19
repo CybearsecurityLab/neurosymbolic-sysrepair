@@ -76,6 +76,7 @@ class ReflexionAgent(BaseAgent):
             forced_halt=final_state["forced_halt"],
             reflection_cycles=final_state["current_cycle"],
             reflections=final_state["reflections"],
+            trace=self.trace,
         )
 
     # ------------------------------------------------------------------
@@ -117,18 +118,33 @@ class ReflexionAgent(BaseAgent):
                     record = agent.bash(cmd, step)
                     cycle_cmds.append(record)
 
+                    # Run verification scan
+                    verify_passed, verify_msg = agent.verify()
                     tool_msg = {
                         "role": "tool",
                         "tool_call_id": tc.id,
                         "content": (
                             f"exit_code: {record.exit_code}\n"
                             f"stdout: {record.stdout[:800]}\n"
-                            f"stderr: {record.stderr[:400]}"
+                            f"stderr: {record.stderr[:400]}\n\n"
+                            f"{verify_msg}"
                         ),
                     }
                     msgs += [ai_msg, tool_msg]
 
-                    if agent._is_done(record):
+                    agent.trace.append({
+                        "node": "generator",
+                        "cycle": state["current_cycle"],
+                        "step": step,
+                        "response": msg.content or "",
+                        "command": cmd,
+                        "exit_code": record.exit_code,
+                        "stdout": record.stdout[:800],
+                        "stderr": record.stderr[:400],
+                        "verify": verify_msg,
+                    })
+
+                    if verify_passed or agent._is_done(record):
                         return {
                             "messages": msgs[1:],   # skip re-adding system msg
                             "cycle_commands": cycle_cmds,
@@ -203,6 +219,12 @@ class ReflexionAgent(BaseAgent):
                 reflection_text=reflection_text,
                 correction_strategy=correction,
             )
+            agent.trace.append({
+                "node": "reflector",
+                "cycle": state["current_cycle"],
+                "reflection": reflection_text,
+                "correction_strategy": correction,
+            })
             new_cycle = state["current_cycle"] + 1
             return {
                 "current_cycle": new_cycle,

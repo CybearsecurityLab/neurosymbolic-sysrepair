@@ -23,7 +23,9 @@ from pathlib import Path
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="SysRepair-Bench Baseline Evaluation Harness")
+    p = argparse.ArgumentParser(
+        description="SysRepair-Bench Baseline Evaluation Harness"
+    )
     p.add_argument(
         "--bench",
         type=Path,
@@ -53,7 +55,13 @@ def parse_args():
         "--models",
         nargs="+",
         default=["all"],
-        choices=["mistral-large-3", "qwen-3.5-122b", "nemotron-3-super", "gpt-oss-120b", "all"],
+        choices=[
+            "mistral-large-3",
+            "qwen-3.5-122b",
+            "nemotron-3-super",
+            "gpt-oss-120b",
+            "all",
+        ],
         help="Which models to evaluate",
     )
     p.add_argument(
@@ -85,13 +93,25 @@ def parse_args():
     )
     p.add_argument(
         "--ollama-url",
-        default="http://localhost:11434/v1",
+        default="http://10.100.203.130:11434/v1",
         help="Ollama server base URL",
     )
     p.add_argument(
         "--dry-run",
         action="store_true",
         help="Print run matrix without executing",
+    )
+    p.add_argument(
+        "--exclude-scenarios",
+        nargs="+",
+        default=None,
+        help="Scenario IDs to exclude (e.g. ccdc-09 ccdc-10)",
+    )
+    p.add_argument(
+        "--log-file",
+        type=Path,
+        default="eval/results/eval_run.log",
+        help="Path to write detailed log file (default: eval/results/eval_run.log)",
     )
     p.add_argument("--verbose", "-v", action="store_true")
     return p.parse_args()
@@ -110,14 +130,33 @@ ALL_MODELS = ["mistral-large-3", "qwen-3.5-122b", "nemotron-3-super", "gpt-oss-1
 def main():
     args = parse_args()
     level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(message)s")
+
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(level)
+    console_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+    )
+
+    # File handler — always at DEBUG level so we capture everything
+    log_file = args.log_file or (args.output.parent / "eval_run.log")
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(str(log_file), mode="a")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
+    )
+
+    logging.basicConfig(level=logging.DEBUG, handlers=[console_handler, file_handler])
     log = logging.getLogger(__name__)
+    log.info(f"Logging to file: {log_file}")
 
     baselines = resolve_list(args.baselines, ALL_BASELINES)
     models = resolve_list(args.models, ALL_MODELS)
 
     if args.report_only:
         from eval.reporter import generate_all_reports
+
         report_dir = args.output.parent / "reports"
         generate_all_reports(args.output, report_dir)
         return
@@ -136,6 +175,13 @@ def main():
         log.error(f"No scenarios found in {args.bench}")
         sys.exit(1)
 
+    # Apply exclusion filter
+    if args.exclude_scenarios:
+        excluded = set(args.exclude_scenarios)
+        before = len(scenarios)
+        scenarios = [s for s in scenarios if s.id not in excluded]
+        log.info(f"Excluded {before - len(scenarios)} scenarios: {sorted(excluded)}")
+
     log.info(f"Loaded {len(scenarios)} scenarios")
     log.info(f"Baselines: {baselines}")
     log.info(f"Models: {models}")
@@ -144,7 +190,9 @@ def main():
     if args.dry_run:
         total = len(scenarios) * len(baselines) * len(models)
         print(f"DRY RUN: {total} runs planned")
-        print(f"  Scenarios: {[s.id for s in scenarios[:5]]}{'...' if len(scenarios) > 5 else ''}")
+        print(
+            f"  Scenarios: {[s.id for s in scenarios[:5]]}{'...' if len(scenarios) > 5 else ''}"
+        )
         print(f"  Baselines: {baselines}")
         print(f"  Models: {models}")
         return
@@ -169,16 +217,19 @@ def main():
     report_dir = args.output.parent / "reports"
     if args.report_format in ("csv", "both"):
         from eval.reporter import generate_summary_csv, generate_full_csv
+
         generate_summary_csv(harness.db, report_dir / "summary.csv")
         generate_full_csv(harness.db, report_dir / "full_results.csv")
     if args.report_format in ("latex", "both"):
         from eval.reporter import generate_latex_table
+
         generate_latex_table(harness.db, report_dir / "table_baselines.tex")
 
     log.info(f"Reports saved to {report_dir}/")
 
     # Print quick summary
     from eval.reporter import generate_all_reports
+
     generate_all_reports(args.output, report_dir)
 
 

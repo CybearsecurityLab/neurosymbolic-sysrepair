@@ -1,0 +1,31 @@
+\begin{table}[htbp]
+\centering
+\caption{Baseline Evaluation Results on SysRepair-Bench}
+\label{tab:baselines}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Baseline & Model & N & PoR\% & SVR\% & EW & Cmds & HR\% & Sev & Agr \\
+\midrule
+lats & gpt\nobreakdash-oss\nobreakdash-120b & 1 & 0.0 & 100.0 & 1.000 & 4.0 & 0.0 & 0.000 & 1.00 \\
+lats & mistral\nobreakdash-large\nobreakdash-3 & 1 & 0.0 & 100.0 & 1.000 & 7.0 & 0.0 & 0.000 & 1.00 \\
+lats & nemotron\nobreakdash-3\nobreakdash-super & 1 & 0.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+lats & qwen\nobreakdash-3.5\nobreakdash-122b & 1 & 0.0 & 100.0 & 1.000 & 4.0 & 0.0 & 0.000 & 1.00 \\
+plan\_and\_solve & gpt\nobreakdash-oss\nobreakdash-120b & 1 & 100.0 & 100.0 & 1.000 & 6.0 & 0.0 & 0.000 & 1.00 \\
+plan\_and\_solve & mistral\nobreakdash-large\nobreakdash-3 & 1 & 0.0 & 100.0 & 1.000 & 23.0 & 30.4 & 0.310 & 1.00 \\
+plan\_and\_solve & nemotron\nobreakdash-3\nobreakdash-super & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+plan\_and\_solve & qwen\nobreakdash-3.5\nobreakdash-122b & 1 & 0.0 & 0.0 & 1.000 & 0.0 & 0.0 & 0.000 & 1.00 \\
+raw & gpt\nobreakdash-oss\nobreakdash-120b & 1 & 100.0 & 100.0 & 1.000 & 11.0 & 0.0 & 0.015 & 1.00 \\
+raw & mistral\nobreakdash-large\nobreakdash-3 & 2 & 0.0 & 0.0 & 1.000 & 0.0 & 0.0 & 0.000 & 1.00 \\
+raw & nemotron\nobreakdash-3\nobreakdash-super & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+raw & qwen\nobreakdash-3.5\nobreakdash-122b & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+react & gpt\nobreakdash-oss\nobreakdash-120b & 1 & 100.0 & 100.0 & 0.833 & 24.0 & 4.2 & 0.083 & 1.00 \\
+react & mistral\nobreakdash-large\nobreakdash-3 & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+react & nemotron\nobreakdash-3\nobreakdash-super & 1 & 100.0 & 100.0 & 1.000 & 6.0 & 0.0 & 0.000 & 1.00 \\
+react & qwen\nobreakdash-3.5\nobreakdash-122b & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+reflexion & gpt\nobreakdash-oss\nobreakdash-120b & 1 & 100.0 & 100.0 & 1.000 & 9.0 & 0.0 & 0.014 & 1.00 \\
+reflexion & mistral\nobreakdash-large\nobreakdash-3 & 1 & 0.0 & 0.0 & 1.000 & 0.0 & 0.0 & 0.000 & 1.00 \\
+reflexion & nemotron\nobreakdash-3\nobreakdash-super & 1 & 100.0 & 100.0 & 1.000 & 6.0 & 0.0 & 0.000 & 1.00 \\
+reflexion & qwen\nobreakdash-3.5\nobreakdash-122b & 1 & 100.0 & 100.0 & 1.000 & 5.0 & 0.0 & 0.000 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}

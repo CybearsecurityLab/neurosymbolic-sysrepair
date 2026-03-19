@@ -45,9 +45,9 @@ def generate_latex_table(db: ResultsDB, output_path: Path) -> None:
         r"\centering",
         r"\caption{Baseline Evaluation Results on SysRepair-Bench}",
         r"\label{tab:baselines}",
-        r"\begin{tabular}{llrrrrrr}",
+        r"\begin{tabular}{llrrrrrrr}",
         r"\toprule",
-        r"Baseline & Model & N & PoR\% & SVR\% & EW & Cmds & HR\% \\",
+        r"Baseline & Model & N & PoR\% & SVR\% & EW & Cmds & HR\% & Sev & Agr \\",
         r"\midrule",
     ]
     for r in rows:
@@ -57,7 +57,9 @@ def generate_latex_table(db: ResultsDB, output_path: Path) -> None:
             f"{baseline} & {model} & {int(r['n_runs'])} & "
             f"{r['por_pct']:.1f} & {r['svr_pct']:.1f} & "
             f"{r['avg_ew']:.3f} & {r['avg_cmds']:.1f} & "
-            f"{r['avg_halluc_pct']:.1f} \\\\"
+            f"{r['avg_halluc_pct']:.1f} & "
+            f"{r.get('avg_severity', 0):.3f} & "
+            f"{r.get('avg_judge_agreement', 1):.2f} \\\\"
         )
         lines.append(line)
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
@@ -74,11 +76,12 @@ def generate_all_reports(db_path: Path, output_dir: Path) -> None:
     # Print summary to console
     rows = db.get_summary()
     if rows:
-        print(f"\n{'Baseline':<20} {'Model':<20} {'N':>4} {'PoR%':>6} {'SVR%':>6} {'EW':>6} {'Cmds':>6} {'HR%':>6}")
-        print("-" * 76)
+        print(f"\n{'Baseline':<20} {'Model':<20} {'N':>4} {'PoR%':>6} {'SVR%':>6} {'EW':>6} {'Cmds':>6} {'HR%':>6} {'Sev':>5} {'Agr':>5}")
+        print("-" * 90)
         for r in rows:
             print(
                 f"{r['baseline']:<20} {r['model']:<20} {int(r['n_runs']):>4} "
                 f"{r['por_pct']:>6.1f} {r['svr_pct']:>6.1f} {r['avg_ew']:>6.3f} "
-                f"{r['avg_cmds']:>6.1f} {r['avg_halluc_pct']:>6.1f}"
+                f"{r['avg_cmds']:>6.1f} {r['avg_halluc_pct']:>6.1f} "
+                f"{r.get('avg_severity', 0):>5.3f} {r.get('avg_judge_agreement', 1):>5.2f}"
             )

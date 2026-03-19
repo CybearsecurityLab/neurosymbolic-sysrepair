@@ -59,6 +59,7 @@ class ReActAgent(BaseAgent):
             wall_time_seconds=time.time() - start_time,
             declared_done=final_state["done"],
             forced_halt=final_state["forced_halt"],
+            trace=self.trace,
         )
 
     # ------------------------------------------------------------------
@@ -81,6 +82,12 @@ class ReActAgent(BaseAgent):
             msgs = state["messages"] + [{"role": "user", "content": thought_prompt}]
             resp = agent.llm.chat(msgs, temperature=0.2)
             thought_text = resp.choices[0].message.content or ""
+            agent.trace.append({
+                "node": "thought",
+                "step": state["step_count"],
+                "prompt": thought_prompt,
+                "response": thought_text,
+            })
             return {
                 "messages": [
                     {"role": "user", "content": thought_prompt},
@@ -101,6 +108,13 @@ class ReActAgent(BaseAgent):
             cmd_text = (resp.choices[0].message.content or "").strip()
 
             if cmd_text.upper() == "DONE" or not cmd_text:
+                agent.trace.append({
+                    "node": "action",
+                    "step": state["step_count"],
+                    "prompt": action_prompt,
+                    "response": cmd_text,
+                    "action": "DONE",
+                })
                 return {
                     "messages": [
                         {"role": "user", "content": action_prompt},
@@ -121,7 +135,23 @@ class ReActAgent(BaseAgent):
                 f"stdout: {record.stdout[:1000]}\n"
                 f"stderr: {record.stderr[:500]}"
             )
-            done = agent._is_done(record)
+            # Run verification scan and append pass/fail to observation
+            verify_passed, verify_msg = agent.verify()
+            obs += f"\n\n{verify_msg}"
+            done = verify_passed or agent._is_done(record)
+
+            agent.trace.append({
+                "node": "action",
+                "step": step,
+                "prompt": action_prompt,
+                "response": cmd_text,
+                "command": cmd_text,
+                "exit_code": record.exit_code,
+                "stdout": record.stdout[:1000],
+                "stderr": record.stderr[:500],
+                "verify": verify_msg,
+                "done": done,
+            })
 
             return {
                 "messages": [

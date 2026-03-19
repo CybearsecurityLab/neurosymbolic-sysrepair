@@ -1,0 +1,741 @@
+2026-03-19 12:24:53,685 INFO [__main__] Logging to file: eval/results/eval_run.log
+2026-03-19 12:24:54,914 INFO [__main__] Loaded 83 scenarios
+2026-03-19 12:24:54,914 INFO [__main__] Baselines: ['raw', 'react', 'plan_and_solve', 'reflexion', 'lats']
+2026-03-19 12:24:54,914 INFO [__main__] Models: ['mistral-large-3', 'qwen-3.5-122b', 'nemotron-3-super', 'gpt-oss-120b']
+2026-03-19 12:24:54,914 INFO [__main__] Output: eval/results/eval_results.db
+2026-03-19 12:24:54,915 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:54,915 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:54,915 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:54,915 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:54,967 DEBUG [urllib3.connectionpool] http://localhost:None "GET /version HTTP/1.1" 200 823
+2026-03-19 12:24:55,279 INFO [eval.harness] Running 1510 evaluations (83 scenarios x 5 baselines x 4 models)
+2026-03-19 12:24:55,279 INFO [eval.harness] Starting run d41c6782: ccdc-01 | plan_and_solve | qwen-3.5-122b
+2026-03-19 12:24:55,279 INFO [eval.harness] Starting run b2cb198e: ccdc-01 | reflexion | mistral-large-3
+2026-03-19 12:24:55,283 DEBUG [docker.api.build] Looking for auth config
+2026-03-19 12:24:55,283 DEBUG [docker.api.build] No auth config in memory - loading from filesystem
+2026-03-19 12:24:55,283 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:55,283 DEBUG [docker.api.build] Looking for auth config
+2026-03-19 12:24:55,283 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:55,283 DEBUG [docker.api.build] No auth config in memory - loading from filesystem
+2026-03-19 12:24:55,283 DEBUG [docker.api.build] Sending auth config ()
+2026-03-19 12:24:55,283 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:55,285 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:55,285 DEBUG [docker.api.build] Sending auth config ()
+2026-03-19 12:24:55,295 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/build?t=sysrepair-ccdc-01%3Alatest-base&q=False&nocache=False&rm=True&forcerm=True&pull=False HTTP/1.1" 200 None
+2026-03-19 12:24:55,296 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/build?t=sysrepair-ccdc-01%3Alatest-base&q=False&nocache=False&rm=True&forcerm=True&pull=False HTTP/1.1" 200 None
+2026-03-19 12:24:55,515 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/f5c477719039/json HTTP/1.1" 200 1404
+2026-03-19 12:24:55,515 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/f5c477719039/json HTTP/1.1" 200 1404
+2026-03-19 12:24:55,516 DEBUG [docker.api.build] Looking for auth config
+2026-03-19 12:24:55,516 DEBUG [docker.api.build] No auth config in memory - loading from filesystem
+2026-03-19 12:24:55,517 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:55,517 DEBUG [docker.api.build] Looking for auth config
+2026-03-19 12:24:55,517 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:55,517 DEBUG [docker.api.build] No auth config in memory - loading from filesystem
+2026-03-19 12:24:55,517 DEBUG [docker.api.build] Sending auth config ()
+2026-03-19 12:24:55,517 DEBUG [docker.utils.config] Trying paths: ['/home/resbears/.docker/config.json', '/home/resbears/.dockercfg']
+2026-03-19 12:24:55,518 DEBUG [docker.utils.config] No config file found
+2026-03-19 12:24:55,518 DEBUG [docker.api.build] Sending auth config ()
+2026-03-19 12:24:55,519 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/build?t=sysrepair-ccdc-01%3Alatest&q=False&nocache=False&rm=True&forcerm=True&pull=False HTTP/1.1" 200 None
+2026-03-19 12:24:55,520 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/build?t=sysrepair-ccdc-01%3Alatest&q=False&nocache=False&rm=True&forcerm=True&pull=False HTTP/1.1" 200 None
+2026-03-19 12:24:55,670 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/550152be7d7c/json HTTP/1.1" 200 1473
+2026-03-19 12:24:55,672 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/550152be7d7c/json HTTP/1.1" 200 1473
+2026-03-19 12:24:55,688 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/sysrepair-ccdc-01:latest/json HTTP/1.1" 200 1473
+2026-03-19 12:24:55,688 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/images/sysrepair-ccdc-01:latest/json HTTP/1.1" 200 1473
+2026-03-19 12:24:55,745 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/create?name=sysrepair-run-d41c6782 HTTP/1.1" 201 88
+2026-03-19 12:24:55,746 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/create?name=sysrepair-run-b2cb198e HTTP/1.1" 201 88
+2026-03-19 12:24:55,747 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/json HTTP/1.1" 200 None
+2026-03-19 12:24:55,748 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/json HTTP/1.1" 200 None
+2026-03-19 12:24:55,908 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/start HTTP/1.1" 204 0
+2026-03-19 12:24:55,911 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/start HTTP/1.1" 204 0
+2026-03-19 12:24:56,915 DEBUG [urllib3.connectionpool] http://localhost:None "PUT /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/archive?path=%2Fopt HTTP/1.1" 200 0
+2026-03-19 12:24:56,916 DEBUG [urllib3.connectionpool] http://localhost:None "PUT /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/archive?path=%2Fopt HTTP/1.1" 200 0
+2026-03-19 12:24:56,916 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:56,918 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:56,919 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f4a4b0646a19df99c305e1567049d9cfb2584c60607634f0a66a5164a2d92a83/start HTTP/1.1" 101 0
+2026-03-19 12:24:56,919 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5a6ab5d5c073a25b0e1c7959643f114b8eec6c14a1bca739e2710d57379c5f19/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,067 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5a6ab5d5c073a25b0e1c7959643f114b8eec6c14a1bca739e2710d57379c5f19/json HTTP/1.1" 200 447
+2026-03-19 12:24:57,068 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f4a4b0646a19df99c305e1567049d9cfb2584c60607634f0a66a5164a2d92a83/json HTTP/1.1" 200 447
+2026-03-19 12:24:57,069 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,070 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,071 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c6856d4ac4164b5a64547f7b4f4e8f49dfc036f1f985421bb313959f3ae34310/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,072 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/73832fd6ef1460f6213b05ad3308a25fcbb298f2836468a35c0b746b3e68bf63/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,217 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c6856d4ac4164b5a64547f7b4f4e8f49dfc036f1f985421bb313959f3ae34310/json HTTP/1.1" 200 406
+2026-03-19 12:24:57,217 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/73832fd6ef1460f6213b05ad3308a25fcbb298f2836468a35c0b746b3e68bf63/json HTTP/1.1" 200 406
+2026-03-19 12:24:57,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,220 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,221 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2a9b17f9e0a7827b413cea599f56f5ec32c2e3f1668d8a764d56630b8ddf67c3/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,221 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5bc481b24df8eac2cf4bf65f4553fd3364d98236acbf7026eaa1459f23efc4c2/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,364 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5bc481b24df8eac2cf4bf65f4553fd3364d98236acbf7026eaa1459f23efc4c2/json HTTP/1.1" 200 462
+2026-03-19 12:24:57,365 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2a9b17f9e0a7827b413cea599f56f5ec32c2e3f1668d8a764d56630b8ddf67c3/json HTTP/1.1" 200 462
+2026-03-19 12:24:57,365 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,367 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,368 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/730a27b58ab05f1afefd476779fff9a716b64b0a82e45189840a410107c2a529/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,368 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f386ab0e551a60f30b6bbaa03a62058ecf6a5191e260966281d725ce2a8cb87f/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,514 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/730a27b58ab05f1afefd476779fff9a716b64b0a82e45189840a410107c2a529/json HTTP/1.1" 200 478
+2026-03-19 12:24:57,515 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f386ab0e551a60f30b6bbaa03a62058ecf6a5191e260966281d725ce2a8cb87f/json HTTP/1.1" 200 478
+2026-03-19 12:24:57,515 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,517 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,518 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e9e3f7e422b802f5fb9d72c32880d9192bbdbf6c36a8111366d8636b6920aae0/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,518 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f0fd6a382edd25507ef9a3f84c4829bb67d60c17d900c15408eaed43ebb67e66/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,666 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e9e3f7e422b802f5fb9d72c32880d9192bbdbf6c36a8111366d8636b6920aae0/json HTTP/1.1" 200 557
+2026-03-19 12:24:57,667 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f0fd6a382edd25507ef9a3f84c4829bb67d60c17d900c15408eaed43ebb67e66/json HTTP/1.1" 200 557
+2026-03-19 12:24:57,667 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,668 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,670 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0dfc6f971e63883999a2559a3e888490c8fad90df198056cb5e949124d881268/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,670 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b92967a1f0996e82de1965e38e097856029edba0ea28b0802b85a1754dcd4c0e/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,817 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0dfc6f971e63883999a2559a3e888490c8fad90df198056cb5e949124d881268/json HTTP/1.1" 200 484
+2026-03-19 12:24:57,818 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b92967a1f0996e82de1965e38e097856029edba0ea28b0802b85a1754dcd4c0e/json HTTP/1.1" 200 484
+2026-03-19 12:24:57,820 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,820 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,821 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/4a5041d86f1e07e5158ff96f59309d820fa893731fb298144be2622030fb054e/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,822 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2a1174c24247c5325df10a20e923c41e049900af8bf6154c502ea9a0f12199ef/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,968 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/4a5041d86f1e07e5158ff96f59309d820fa893731fb298144be2622030fb054e/json HTTP/1.1" 200 482
+2026-03-19 12:24:57,969 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2a1174c24247c5325df10a20e923c41e049900af8bf6154c502ea9a0f12199ef/json HTTP/1.1" 200 482
+2026-03-19 12:24:57,969 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,971 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:57,972 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/dfb7071cee06eaedc51a7d16c41fe81c2966924867e74f0cf4e3fdac914ce775/start HTTP/1.1" 101 0
+2026-03-19 12:24:57,973 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b6578682c5f3e9c74ae74e1de316f42ad09582f0cc23334175637d71309c893a/start HTTP/1.1" 101 0
+2026-03-19 12:24:58,115 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b6578682c5f3e9c74ae74e1de316f42ad09582f0cc23334175637d71309c893a/json HTTP/1.1" 200 466
+2026-03-19 12:24:58,116 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/dfb7071cee06eaedc51a7d16c41fe81c2966924867e74f0cf4e3fdac914ce775/json HTTP/1.1" 200 466
+2026-03-19 12:24:58,117 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:58,118 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:58,119 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/52edec59ab410de06406b70d7d25a228d20adf5f96c2b617b0ed8422d0788f58/start HTTP/1.1" 101 0
+2026-03-19 12:24:58,120 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/899e5a7c1d12946dce57388f09528752776695a56ddac5627789b9e4675363a6/start HTTP/1.1" 101 0
+2026-03-19 12:24:58,267 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/52edec59ab410de06406b70d7d25a228d20adf5f96c2b617b0ed8422d0788f58/json HTTP/1.1" 200 488
+2026-03-19 12:24:58,267 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/899e5a7c1d12946dce57388f09528752776695a56ddac5627789b9e4675363a6/json HTTP/1.1" 200 488
+2026-03-19 12:24:58,269 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:24:58,270 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:24:58,271 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ffec67fac00f443e5d6429af5bbf4e960c8dfccf1bed3c8f5d1399decab00ab3/start HTTP/1.1" 101 0
+2026-03-19 12:24:58,271 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0f85ee84cf5813db425016b8843996b9d0f6e9041a94dc3340d424bf64d78a18/start HTTP/1.1" 101 0
+2026-03-19 12:24:58,413 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0f85ee84cf5813db425016b8843996b9d0f6e9041a94dc3340d424bf64d78a18/json HTTP/1.1" 200 432
+2026-03-19 12:24:58,415 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ffec67fac00f443e5d6429af5bbf4e960c8dfccf1bed3c8f5d1399decab00ab3/json HTTP/1.1" 200 432
+2026-03-19 12:24:58,449 DEBUG [httpcore.connection] connect_tcp.started host='10.100.203.130' port=11434 local_address=None timeout=300.0 socket_options=None
+2026-03-19 12:24:58,450 DEBUG [httpcore.connection] connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7e00897cfb00>
+2026-03-19 12:24:58,450 DEBUG [httpcore.http11] send_request_headers.started request=<Request [b'POST']>
+2026-03-19 12:24:58,450 DEBUG [httpcore.http11] send_request_headers.complete
+2026-03-19 12:24:58,450 DEBUG [httpcore.http11] send_request_body.started request=<Request [b'POST']>
+2026-03-19 12:24:58,450 DEBUG [httpcore.http11] send_request_body.complete
+2026-03-19 12:24:58,450 DEBUG [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>
+2026-03-19 12:24:58,709 DEBUG [openai._base_client] Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-e3ca3d34-60fa-44fb-a3c9-a6d6ca73ae03', 'json_data': {'messages': [{'role': 'system', 'content': 'You are an autonomous security remediation agent operating inside a Docker container.\n\n## Container & OS Information\nBase image: ubuntu:25.10 | Collection: CCDC | Scenario: ccdc-01\n\n## Current System State\nOS: PRETTY_NAME="Ubuntu 25.10"\nKernel: 6.17.0-14-generic\nListening ports:\nState  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                     \nLISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=7,fd=6))\nLISTEN 0      128             [::]:22           [::]:*    users:(("sshd",pid=7,fd=7))\nActive services:\n[ - ]  dbus\n [ - ]  procps\n [ + ]  ssh\nInstalled packages (sample):\nadduser 3.152ubuntu1\napt 3.1.6ubuntu2\nbase-files 14ubuntu3\nbase-passwd 3.6.7\nbash 5.2.37-2ubuntu5\nbsdutils 1:2.41-4ubuntu4.1\nca-certificates 20250419\ncoreutils 9.5-1ubuntu2+0.0.0~ubuntu24\ncoreutils-from-uutils 0.0.0~ubuntu24\ndash 0.5.12-12ubuntu2\ndbus 1.16.2-2ubuntu2\ndbus-bin 1.16.2-2ubuntu2\ndbus-daemon 1.16.2-2ubuntu2\ndbus-session-bus-common 1.16.2-2ubuntu2\ndbus-system-bus-common 1.16.2-2ubuntu2\ndbus-user-session 1.16.2-2ubuntu2\ndebconf 1.5.91\ndebianutils 5.23.2\ndiffutils 1:3.10-4\ndmsetup 2:1.02.205-2ubuntu2\ndpkg 1.22.21ubuntu3.1\ne2fsprogs 1.47.2-3ubuntu2\nfindutils 4.10.0-3build1\ngcc-15-base:\nUsers: root:0\nubuntu:1000\ntestuser:1001\nSUID binaries: /usr/bin/chsh\n/usr/bin/mount\n/usr/bin/passwd\n/usr/bin/gpasswd\n/usr/bin/chfn\n/usr/bin/umount\n/usr/bin/newgrp\n/usr/bin/su\nCrontab/cron.d: e2scrub_all\napt-compat\ndpkg\n\n## Vulnerability Report\n# Scenario 01: SSH Permits Root Login\n\n## Vulnerability\n\nThe SSH daemon is configured with `PermitRootLogin yes`, allowing direct remote\nroot login over SSH. This gives attackers who obtain or brute-force the root\npassword full, unrestricted access to the system without any audit trail\ndistinguishing which administrator performed an action.\n\n## CWE Classification\n\n**CWE-250: Execution with Unnecessary Privileges**\n\nAllowing direct root login via SSH grants the highest level of system privileges\nto any authenticated session. Normal administrative workflows should use\nunprivileged accounts with `sudo` for privilege escalation, providing\naccountability and limiting the blast radius of compromised credentials.\n\n## Affected Configuration\n\n- **File**: `/etc/ssh/sshd_config`\n- **Setting**: `PermitRootLogin yes`\n- **Service**: OpenSSH Server (sshd)\n\n## Expected Remediation\n\nThe `PermitRootLogin` directive should be set to `no` (or `prohibit-password`\nat minimum). The SSH service must be restarted after the configuration change.\nNormal user SSH access must remain functional.\n\n## References\n\n- TAMU ssh.sh - disables root login\n- UTSA script.sh - disables root login\n- CIS Benchmark for Ubuntu - 5.2.10 Ensure SSH root login is disabled\n\n## Rules\n- You MUST use the bash tool to execute commands. Do NOT imagine or fabricate command output. Call the bash tool and wait for the real result before proceeding.\n- Execute ONE command at a time via the bash tool. Do NOT write multiple commands in prose.\n- Adapt all commands to the OS version shown. On Ubuntu 8.04 use /etc/init.d/ and service commands; on Ubuntu 25.10 use systemctl.\n- Use netstat on Ubuntu 8.04, ss on Ubuntu 25.10.\n- You may ONLY modify files and services directly relevant to the described vulnerability.\n- Do NOT remove system binaries, disable unrelated services, or alter unrelated network config.\n- When remediation is complete, run: echo REMEDIATION_COMPLETE\n- If you are definitively stuck, run: echo REMEDIATION_FAILED\n'}], 'model': 'devstral-2:123b', 'max_tokens': 4096, 'temperature': 0.2, 'tool_choice': 'auto', 'tools': [{'type': 'function', 'function': {'name': 'bash', 'description': 'Execute a bash command in the target container and return stdout/stderr/exit_code.', 'parameters': {'type': 'object', 'properties': {'command': {'type': 'string', 'description': 'The bash command to run.'}}, 'required': ['command']}}}]}}
+2026-03-19 12:24:58,713 DEBUG [openai._base_client] Sending HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions
+2026-03-19 12:24:58,714 DEBUG [httpcore.connection] connect_tcp.started host='10.100.203.130' port=11434 local_address=None timeout=5.0 socket_options=None
+2026-03-19 12:24:58,714 DEBUG [httpcore.connection] connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7e0088215520>
+2026-03-19 12:24:58,714 DEBUG [httpcore.http11] send_request_headers.started request=<Request [b'POST']>
+2026-03-19 12:24:58,714 DEBUG [httpcore.http11] send_request_headers.complete
+2026-03-19 12:24:58,714 DEBUG [httpcore.http11] send_request_body.started request=<Request [b'POST']>
+2026-03-19 12:24:58,714 DEBUG [httpcore.http11] send_request_body.complete
+2026-03-19 12:24:58,714 DEBUG [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>
+2026-03-19 12:25:03,415 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:03,417 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:03,419 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1fe1798745349f8be57ab455d7ba0e1ebee5f90230dd904adb1c1047065616d6/start HTTP/1.1" 101 0
+2026-03-19 12:25:03,420 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/385a01e1a02320cc775a50ed3f3b38d5bfff624bb61c1bb761b4ac9245d985dd/start HTTP/1.1" 101 0
+2026-03-19 12:25:04,061 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/385a01e1a02320cc775a50ed3f3b38d5bfff624bb61c1bb761b4ac9245d985dd/json HTTP/1.1" 200 636
+2026-03-19 12:25:04,062 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:04,063 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1e0b14aee6b638f20db88b8825a9463f4cef9166cc0d87e1fd5adc08a48660d0/start HTTP/1.1" 101 0
+2026-03-19 12:25:04,064 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1fe1798745349f8be57ab455d7ba0e1ebee5f90230dd904adb1c1047065616d6/json HTTP/1.1" 200 636
+2026-03-19 12:25:04,066 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:04,067 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/8d6d31d1045b003f5786fc25ea83abe4e080151583ea37be7271c6f5d01af9c9/start HTTP/1.1" 101 0
+2026-03-19 12:25:04,208 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1e0b14aee6b638f20db88b8825a9463f4cef9166cc0d87e1fd5adc08a48660d0/json HTTP/1.1" 200 432
+2026-03-19 12:25:04,208 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/8d6d31d1045b003f5786fc25ea83abe4e080151583ea37be7271c6f5d01af9c9/json HTTP/1.1" 200 432
+2026-03-19 12:25:09,210 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:09,210 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:09,212 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fe90ed8025d07844b07c0432de6c1fa561d85199bb18d93eb839c516089d391c/start HTTP/1.1" 101 0
+2026-03-19 12:25:09,212 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f3a5ffaf40a38a3f5b6136801c4b5b0711d66dc92457f7501028050d96bdef3c/start HTTP/1.1" 101 0
+2026-03-19 12:25:09,559 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f3a5ffaf40a38a3f5b6136801c4b5b0711d66dc92457f7501028050d96bdef3c/json HTTP/1.1" 200 636
+2026-03-19 12:25:09,560 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:09,562 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/41df171564322da45107769e871791c78740986d23e39d6483641b2910cdd096/start HTTP/1.1" 101 0
+2026-03-19 12:25:09,562 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fe90ed8025d07844b07c0432de6c1fa561d85199bb18d93eb839c516089d391c/json HTTP/1.1" 200 636
+2026-03-19 12:25:09,563 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:09,564 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/07cb9e03aeea8c4485e7c0a19f90245ebe6a8859c88e7bf102466c7eaa22cfaf/start HTTP/1.1" 101 0
+2026-03-19 12:25:09,707 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/41df171564322da45107769e871791c78740986d23e39d6483641b2910cdd096/json HTTP/1.1" 200 432
+2026-03-19 12:25:09,707 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/07cb9e03aeea8c4485e7c0a19f90245ebe6a8859c88e7bf102466c7eaa22cfaf/json HTTP/1.1" 200 432
+2026-03-19 12:25:14,710 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:14,710 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:14,712 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/43e75c52aa1fd35aeaad5e0d41c192ebdd5bda46109adf56da2d917474cd30a1/start HTTP/1.1" 101 0
+2026-03-19 12:25:14,712 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3c02c0ea74c918034994cd7666754dc7c2f6bf15287de518114ccc4f68ba1a62/start HTTP/1.1" 101 0
+2026-03-19 12:25:15,061 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3c02c0ea74c918034994cd7666754dc7c2f6bf15287de518114ccc4f68ba1a62/json HTTP/1.1" 200 636
+2026-03-19 12:25:15,062 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/43e75c52aa1fd35aeaad5e0d41c192ebdd5bda46109adf56da2d917474cd30a1/json HTTP/1.1" 200 636
+2026-03-19 12:25:15,062 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:15,064 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:15,065 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0a70038733a238193ef58a5be54be8763cde40a38a1fd7954105203889ebd4c3/start HTTP/1.1" 101 0
+2026-03-19 12:25:15,065 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3000d03ca6f4439cb4a010d08991d9b228f51ad32b2d1075c74fb221f9cf3d5b/start HTTP/1.1" 101 0
+2026-03-19 12:25:15,208 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3000d03ca6f4439cb4a010d08991d9b228f51ad32b2d1075c74fb221f9cf3d5b/json HTTP/1.1" 200 432
+2026-03-19 12:25:15,209 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0a70038733a238193ef58a5be54be8763cde40a38a1fd7954105203889ebd4c3/json HTTP/1.1" 200 432
+2026-03-19 12:25:20,210 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:20,211 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:20,213 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3260494e601e145e12c69e6b917959177fc4633fc8a52ea9102ad8931303348e/start HTTP/1.1" 101 0
+2026-03-19 12:25:20,213 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ac4890091cf748ea5c84efd3423602fb68a4da58465be9780ee12dddbbc70def/start HTTP/1.1" 101 0
+2026-03-19 12:25:20,560 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ac4890091cf748ea5c84efd3423602fb68a4da58465be9780ee12dddbbc70def/json HTTP/1.1" 200 636
+2026-03-19 12:25:20,561 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3260494e601e145e12c69e6b917959177fc4633fc8a52ea9102ad8931303348e/json HTTP/1.1" 200 636
+2026-03-19 12:25:20,561 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:20,563 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:20,564 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/8e1fb5f7069cdd42f599202b2b8e436f29b73d52b422f68dae8b897914cc5408/start HTTP/1.1" 101 0
+2026-03-19 12:25:20,564 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/aa8e0f7dc2b37591973f172e37de408c8569597de5ba97680daa20c7b00491a5/start HTTP/1.1" 101 0
+2026-03-19 12:25:20,707 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/aa8e0f7dc2b37591973f172e37de408c8569597de5ba97680daa20c7b00491a5/json HTTP/1.1" 200 432
+2026-03-19 12:25:20,709 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/8e1fb5f7069cdd42f599202b2b8e436f29b73d52b422f68dae8b897914cc5408/json HTTP/1.1" 200 432
+2026-03-19 12:25:25,709 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:25,711 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:25,712 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3e1e61e18d6c0b343be13f28dbc9cd4e15fde77ed1d5712c526d7f2e5037b582/start HTTP/1.1" 101 0
+2026-03-19 12:25:25,713 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/69458d0ac5252385e3e64d07090e0603288b46f2554b5f2bca4c8b3acd836eb8/start HTTP/1.1" 101 0
+2026-03-19 12:25:26,061 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/69458d0ac5252385e3e64d07090e0603288b46f2554b5f2bca4c8b3acd836eb8/json HTTP/1.1" 200 636
+2026-03-19 12:25:26,062 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:26,062 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3e1e61e18d6c0b343be13f28dbc9cd4e15fde77ed1d5712c526d7f2e5037b582/json HTTP/1.1" 200 636
+2026-03-19 12:25:26,064 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e525078c3a0aebd0d582aa2ad09ddc2a980097397aee70dc4c5f808a4d9e39b9/start HTTP/1.1" 101 0
+2026-03-19 12:25:26,065 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:26,066 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3632ea1f1667b4f35f084eba6466279cd9b0461050e6377bd129ada60c1d33b2/start HTTP/1.1" 101 0
+2026-03-19 12:25:26,208 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e525078c3a0aebd0d582aa2ad09ddc2a980097397aee70dc4c5f808a4d9e39b9/json HTTP/1.1" 200 432
+2026-03-19 12:25:26,209 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3632ea1f1667b4f35f084eba6466279cd9b0461050e6377bd129ada60c1d33b2/json HTTP/1.1" 200 432
+2026-03-19 12:25:31,211 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:31,211 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:31,214 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/bd447210835bd6e6bc4ced95eae5299c146386986921c340a694279277e19719/start HTTP/1.1" 101 0
+2026-03-19 12:25:31,214 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9ce5793c74eadf5b6501f86453b48e005cdc37484edcfa4d231ccf9d3706634c/start HTTP/1.1" 101 0
+2026-03-19 12:25:31,558 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/bd447210835bd6e6bc4ced95eae5299c146386986921c340a694279277e19719/json HTTP/1.1" 200 636
+2026-03-19 12:25:31,559 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9ce5793c74eadf5b6501f86453b48e005cdc37484edcfa4d231ccf9d3706634c/json HTTP/1.1" 200 636
+2026-03-19 12:25:31,560 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:31,561 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:31,562 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/a6ed435f4f5ab51346116ea9c58c4192e4a1e0aedce506f6e13f00fc589d7190/start HTTP/1.1" 101 0
+2026-03-19 12:25:31,563 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d73fcce83819da265107153ff60b2481e913e7bdf11d78ff1fde7c53c7106486/start HTTP/1.1" 101 0
+2026-03-19 12:25:31,709 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d73fcce83819da265107153ff60b2481e913e7bdf11d78ff1fde7c53c7106486/json HTTP/1.1" 200 432
+2026-03-19 12:25:31,711 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/a6ed435f4f5ab51346116ea9c58c4192e4a1e0aedce506f6e13f00fc589d7190/json HTTP/1.1" 200 432
+2026-03-19 12:25:36,711 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:36,713 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:36,713 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/4c20d3772c2acba0d3d9e38bdd7840348da2260847b5eedb8874115d595e52fa/start HTTP/1.1" 101 0
+2026-03-19 12:25:36,715 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/99eb3757028379599eb98af445ad9400b20707a1ff379d20451d19879d71f938/start HTTP/1.1" 101 0
+2026-03-19 12:25:37,059 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/99eb3757028379599eb98af445ad9400b20707a1ff379d20451d19879d71f938/json HTTP/1.1" 200 636
+2026-03-19 12:25:37,060 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/4c20d3772c2acba0d3d9e38bdd7840348da2260847b5eedb8874115d595e52fa/json HTTP/1.1" 200 636
+2026-03-19 12:25:37,061 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:37,062 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:37,063 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/feb1648d0d31a06e8b57aa7412021e4a39540aab6a40dd7a2cc4182dfcd40614/start HTTP/1.1" 101 0
+2026-03-19 12:25:37,064 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/acba971e3b9f397dcdf9ccd166fef5f1bbefe02d3ad55fc78f396fdce83b09cb/start HTTP/1.1" 101 0
+2026-03-19 12:25:37,206 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/acba971e3b9f397dcdf9ccd166fef5f1bbefe02d3ad55fc78f396fdce83b09cb/json HTTP/1.1" 200 432
+2026-03-19 12:25:37,207 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/feb1648d0d31a06e8b57aa7412021e4a39540aab6a40dd7a2cc4182dfcd40614/json HTTP/1.1" 200 432
+2026-03-19 12:25:42,208 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:42,209 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:42,211 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/de37adc8475cab06b834cf0b660162bb0087d0002914d7f5cda4f92c68053ce8/start HTTP/1.1" 101 0
+2026-03-19 12:25:42,211 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3a86e78437ba885606a1781adca6c17b8c43f22e25d2734166c5bfa28b4ea43f/start HTTP/1.1" 101 0
+2026-03-19 12:25:42,561 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3a86e78437ba885606a1781adca6c17b8c43f22e25d2734166c5bfa28b4ea43f/json HTTP/1.1" 200 636
+2026-03-19 12:25:42,561 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/de37adc8475cab06b834cf0b660162bb0087d0002914d7f5cda4f92c68053ce8/json HTTP/1.1" 200 636
+2026-03-19 12:25:42,563 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:42,564 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:42,565 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/79c0067f35da1b46ad947b6a6d248c717487c7ea363825cf5a9ba00f7bcc316b/start HTTP/1.1" 101 0
+2026-03-19 12:25:42,565 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/4ddb0bdbdcaf87b49ce0cf5bfa8a9dfc64ae757a7549d0a089b0284faae7a677/start HTTP/1.1" 101 0
+2026-03-19 12:25:42,710 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/79c0067f35da1b46ad947b6a6d248c717487c7ea363825cf5a9ba00f7bcc316b/json HTTP/1.1" 200 432
+2026-03-19 12:25:42,712 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/4ddb0bdbdcaf87b49ce0cf5bfa8a9dfc64ae757a7549d0a089b0284faae7a677/json HTTP/1.1" 200 432
+2026-03-19 12:25:47,713 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:47,713 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:47,715 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fbbf38ae5a506578556f22fa07bd3c7d5423ffa3e1b667e5647c0a7398bb33e2/start HTTP/1.1" 101 0
+2026-03-19 12:25:47,716 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/91153ce4fa5b580dd20f3649a15b02aa2796c55bc9e7317ff3ab329782a6729b/start HTTP/1.1" 101 0
+2026-03-19 12:25:48,064 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fbbf38ae5a506578556f22fa07bd3c7d5423ffa3e1b667e5647c0a7398bb33e2/json HTTP/1.1" 200 636
+2026-03-19 12:25:48,064 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/91153ce4fa5b580dd20f3649a15b02aa2796c55bc9e7317ff3ab329782a6729b/json HTTP/1.1" 200 636
+2026-03-19 12:25:48,066 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:48,067 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:48,068 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1b121aac30e5090c513dd1e1865a941118b4cc9b0e9bb5479967747656ef8ec9/start HTTP/1.1" 101 0
+2026-03-19 12:25:48,069 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/51459431e8b85506642416cbcfb0806f180d6fc495ba9323259cd56fd190f3cd/start HTTP/1.1" 101 0
+2026-03-19 12:25:48,215 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1b121aac30e5090c513dd1e1865a941118b4cc9b0e9bb5479967747656ef8ec9/json HTTP/1.1" 200 432
+2026-03-19 12:25:48,215 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/51459431e8b85506642416cbcfb0806f180d6fc495ba9323259cd56fd190f3cd/json HTTP/1.1" 200 432
+2026-03-19 12:25:53,217 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:53,217 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:53,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7aad3d94b189ffa69ad161c5ffacaae13d14c20c7dd1cdaeb0c32eeba5306093/start HTTP/1.1" 101 0
+2026-03-19 12:25:53,220 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/36fa297548d8d625d1417aa5825c37cf266ca2a4904153762b4e41d6ab340c37/start HTTP/1.1" 101 0
+2026-03-19 12:25:53,568 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7aad3d94b189ffa69ad161c5ffacaae13d14c20c7dd1cdaeb0c32eeba5306093/json HTTP/1.1" 200 636
+2026-03-19 12:25:53,568 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/36fa297548d8d625d1417aa5825c37cf266ca2a4904153762b4e41d6ab340c37/json HTTP/1.1" 200 636
+2026-03-19 12:25:53,570 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:53,570 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:53,572 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/da736a885f68cf812cd0ff4b58adfedb642e981c7de7a1d160382a8d5f1ca124/start HTTP/1.1" 101 0
+2026-03-19 12:25:53,572 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/4054d06d3ca4291c1327586f4d0b10bd0904ae6a590dffcbd24e7c9b6d03b43a/start HTTP/1.1" 101 0
+2026-03-19 12:25:53,714 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/4054d06d3ca4291c1327586f4d0b10bd0904ae6a590dffcbd24e7c9b6d03b43a/json HTTP/1.1" 200 432
+2026-03-19 12:25:53,716 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/da736a885f68cf812cd0ff4b58adfedb642e981c7de7a1d160382a8d5f1ca124/json HTTP/1.1" 200 432
+2026-03-19 12:25:58,716 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:58,718 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:58,719 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/59d00c021e220c37c8f4669725b25a810fba2159acfca900cd5070826e2fd69c/start HTTP/1.1" 101 0
+2026-03-19 12:25:58,720 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d5d98dd6be8dd4f10e7a081f5c54f20caadf803cbdf232cf150299d3259a95a1/start HTTP/1.1" 101 0
+2026-03-19 12:25:59,066 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d5d98dd6be8dd4f10e7a081f5c54f20caadf803cbdf232cf150299d3259a95a1/json HTTP/1.1" 200 636
+2026-03-19 12:25:59,067 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:25:59,068 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/59d00c021e220c37c8f4669725b25a810fba2159acfca900cd5070826e2fd69c/json HTTP/1.1" 200 636
+2026-03-19 12:25:59,069 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9b9eadf0d2463512e03d66a8cfff37fe94e43b8a9764ef2e34b9fe64b9113630/start HTTP/1.1" 101 0
+2026-03-19 12:25:59,070 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:25:59,071 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/583d90487f3fa85cb9004535a1e56633c2472751abbb39d67f69184156d06f92/start HTTP/1.1" 101 0
+2026-03-19 12:25:59,217 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/583d90487f3fa85cb9004535a1e56633c2472751abbb39d67f69184156d06f92/json HTTP/1.1" 200 432
+2026-03-19 12:25:59,217 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9b9eadf0d2463512e03d66a8cfff37fe94e43b8a9764ef2e34b9fe64b9113630/json HTTP/1.1" 200 432
+2026-03-19 12:26:04,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:04,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:04,221 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/86b90a80bb26b91c38d12ea59ac4690aeb916d31df83b85a8397e5b0e3cfc458/start HTTP/1.1" 101 0
+2026-03-19 12:26:04,222 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5f56551f28923a700ae82ac76674db8d95681e6dfaf4ab917118bacfe6d831ff/start HTTP/1.1" 101 0
+2026-03-19 12:26:04,573 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5f56551f28923a700ae82ac76674db8d95681e6dfaf4ab917118bacfe6d831ff/json HTTP/1.1" 200 636
+2026-03-19 12:26:04,574 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:04,575 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/86b90a80bb26b91c38d12ea59ac4690aeb916d31df83b85a8397e5b0e3cfc458/json HTTP/1.1" 200 636
+2026-03-19 12:26:04,576 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:04,577 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7b144f60795919d4f09eb92caf55b1c8f6f99df529c444e76613109059e13e79/start HTTP/1.1" 101 0
+2026-03-19 12:26:04,579 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d914566b3518cfa44338c8feb912e8323456c871775c84297859ab91076e5d3a/start HTTP/1.1" 101 0
+2026-03-19 12:26:04,723 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d914566b3518cfa44338c8feb912e8323456c871775c84297859ab91076e5d3a/json HTTP/1.1" 200 432
+2026-03-19 12:26:04,723 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7b144f60795919d4f09eb92caf55b1c8f6f99df529c444e76613109059e13e79/json HTTP/1.1" 200 432
+2026-03-19 12:26:09,725 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:09,726 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:09,728 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/955133c09a37d0a7fc4dba80832ab52829a2c3ec75d34b1e054228f6de6ca88b/start HTTP/1.1" 101 0
+2026-03-19 12:26:09,728 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/46e03a7dd53b92ceb56cb0b3e145272cfedf130a4c14bf69326641e29f7f4ee4/start HTTP/1.1" 101 0
+2026-03-19 12:26:10,070 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/955133c09a37d0a7fc4dba80832ab52829a2c3ec75d34b1e054228f6de6ca88b/json HTTP/1.1" 200 636
+2026-03-19 12:26:10,071 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:10,073 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/dfadc79f70c2289a33987b08bbdffcd708c717a52949e3a5147ecbbf20671582/start HTTP/1.1" 101 0
+2026-03-19 12:26:10,074 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/46e03a7dd53b92ceb56cb0b3e145272cfedf130a4c14bf69326641e29f7f4ee4/json HTTP/1.1" 200 636
+2026-03-19 12:26:10,075 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:10,076 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f56c390d381423402d9148a9b1dc3c7b333ec2e713eb5e80d858547e90d748b1/start HTTP/1.1" 101 0
+2026-03-19 12:26:10,220 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/dfadc79f70c2289a33987b08bbdffcd708c717a52949e3a5147ecbbf20671582/json HTTP/1.1" 200 432
+2026-03-19 12:26:10,221 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f56c390d381423402d9148a9b1dc3c7b333ec2e713eb5e80d858547e90d748b1/json HTTP/1.1" 200 432
+2026-03-19 12:26:15,223 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:15,223 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:15,225 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2b32745c7b83c6eabd06182d8e31a59ee4034a21aa2b291e324fe5002ebc6a18/start HTTP/1.1" 101 0
+2026-03-19 12:26:15,226 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3ab7aa5dcdf1047ffe98cfd7ef3251768d9a7e5e0bcdb023ced19e89ce1d4a13/start HTTP/1.1" 101 0
+2026-03-19 12:26:15,573 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3ab7aa5dcdf1047ffe98cfd7ef3251768d9a7e5e0bcdb023ced19e89ce1d4a13/json HTTP/1.1" 200 636
+2026-03-19 12:26:15,574 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2b32745c7b83c6eabd06182d8e31a59ee4034a21aa2b291e324fe5002ebc6a18/json HTTP/1.1" 200 636
+2026-03-19 12:26:15,575 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:15,576 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:15,578 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3fdc03239f2915bc8d8fed2093c4b4b5a91602ad4d3f98bb3877525e121fbc8b/start HTTP/1.1" 101 0
+2026-03-19 12:26:15,578 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9c580e139880a013ade8e5466ca33d70e9570288645dec48bc67abc792d4540a/start HTTP/1.1" 101 0
+2026-03-19 12:26:15,726 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3fdc03239f2915bc8d8fed2093c4b4b5a91602ad4d3f98bb3877525e121fbc8b/json HTTP/1.1" 200 432
+2026-03-19 12:26:15,726 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9c580e139880a013ade8e5466ca33d70e9570288645dec48bc67abc792d4540a/json HTTP/1.1" 200 432
+2026-03-19 12:26:20,728 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:20,728 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:20,730 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/57462929230e40d8043965cdcf07911d74d43d4288f9532fcb5848f35e04fec4/start HTTP/1.1" 101 0
+2026-03-19 12:26:20,731 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b51afb85a2cf342650b1b9b42a78212f65a8c65e80fd3c155608dfeaee76dd11/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,041 DEBUG [httpcore.http11] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Thu, 19 Mar 2026 17:26:28 GMT'), (b'Transfer-Encoding', b'chunked')])
+2026-03-19 12:26:21,042 INFO [httpx] HTTP Request: POST http://10.100.203.130:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-19 12:26:21,042 DEBUG [httpcore.http11] receive_response_body.started request=<Request [b'POST']>
+2026-03-19 12:26:21,042 DEBUG [httpcore.http11] receive_response_body.complete
+2026-03-19 12:26:21,042 DEBUG [httpcore.http11] response_closed.started
+2026-03-19 12:26:21,042 DEBUG [httpcore.http11] response_closed.complete
+2026-03-19 12:26:21,042 DEBUG [httpcore.connection] close.started
+2026-03-19 12:26:21,042 DEBUG [httpcore.connection] close.complete
+2026-03-19 12:26:21,045 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,046 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/54d9c3ecb64700f330e4979c3c449e4f5db806e6499d93f55557810fdb8abb8b/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,081 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/57462929230e40d8043965cdcf07911d74d43d4288f9532fcb5848f35e04fec4/json HTTP/1.1" 200 636
+2026-03-19 12:26:21,085 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,087 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b51afb85a2cf342650b1b9b42a78212f65a8c65e80fd3c155608dfeaee76dd11/json HTTP/1.1" 200 636
+2026-03-19 12:26:21,094 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/66e77d0fc628fa08845194b63c4bd64c440909de0591e0a6a2ee461dab823759/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,095 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,099 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7fcc5b16bd19cecc21e097c472b08e6a7bfb2a93bd664339b1623bf7521883fd/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,200 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/54d9c3ecb64700f330e4979c3c449e4f5db806e6499d93f55557810fdb8abb8b/json HTTP/1.1" 200 452
+2026-03-19 12:26:21,202 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,203 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/968a311aa7517b035d667f625c56598b9f7211e494aec74547bb2b499bd4be5e/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,241 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/968a311aa7517b035d667f625c56598b9f7211e494aec74547bb2b499bd4be5e/json HTTP/1.1" 200 392
+2026-03-19 12:26:21,243 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,245 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/66e77d0fc628fa08845194b63c4bd64c440909de0591e0a6a2ee461dab823759/json HTTP/1.1" 200 432
+2026-03-19 12:26:21,245 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fa017c8560e0b6aff34495fcb33e46dbe4c60e42a0b522113dc00e8cf2ae0e90/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,245 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7fcc5b16bd19cecc21e097c472b08e6a7bfb2a93bd664339b1623bf7521883fd/json HTTP/1.1" 200 432
+2026-03-19 12:26:21,390 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fa017c8560e0b6aff34495fcb33e46dbe4c60e42a0b522113dc00e8cf2ae0e90/json HTTP/1.1" 200 407
+2026-03-19 12:26:21,392 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,393 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/a7ed08c6eee00360799300131c70f89adef90a781d5517230dcd0cb86a92ff44/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,538 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/a7ed08c6eee00360799300131c70f89adef90a781d5517230dcd0cb86a92ff44/json HTTP/1.1" 200 446
+2026-03-19 12:26:21,539 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,541 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0795b7a5093402758cf4e5e4ffde6a9943b066cc682f5c914cc78703fc9007c6/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,583 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0795b7a5093402758cf4e5e4ffde6a9943b066cc682f5c914cc78703fc9007c6/json HTTP/1.1" 200 392
+2026-03-19 12:26:21,584 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,585 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5ddd98968fa0168e53c3b51abd5ea0b99d1c4480cbe9b24d7d602c0d7d97cbed/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,731 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5ddd98968fa0168e53c3b51abd5ea0b99d1c4480cbe9b24d7d602c0d7d97cbed/json HTTP/1.1" 200 407
+2026-03-19 12:26:21,733 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,734 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/857ceabd424054f925d8c09195eb2b26f142cb25e25eb836f2368330db99734d/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,878 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/857ceabd424054f925d8c09195eb2b26f142cb25e25eb836f2368330db99734d/json HTTP/1.1" 200 478
+2026-03-19 12:26:21,880 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,881 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2264191068f32cf3aea7bfee22b288225acdcb79c6cd9b59a47e873e97c221e8/start HTTP/1.1" 101 0
+2026-03-19 12:26:21,922 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2264191068f32cf3aea7bfee22b288225acdcb79c6cd9b59a47e873e97c221e8/json HTTP/1.1" 200 392
+2026-03-19 12:26:21,924 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:21,926 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/34e7758505643770bafcb86c2dcc343a50c2dfa38c2247aec92a6fcd079d2ac8/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,271 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/34e7758505643770bafcb86c2dcc343a50c2dfa38c2247aec92a6fcd079d2ac8/json HTTP/1.1" 200 407
+2026-03-19 12:26:22,273 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,274 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/61a3262626da6197ccf811a49950e0fe4284af5a8704d916cc271c9a020f8b2b/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,424 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/61a3262626da6197ccf811a49950e0fe4284af5a8704d916cc271c9a020f8b2b/json HTTP/1.1" 200 452
+2026-03-19 12:26:22,425 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,426 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fa40794558b3db25916a83f6fe77d99f938ccbfe444083cc6e0161b23e06873a/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,476 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fa40794558b3db25916a83f6fe77d99f938ccbfe444083cc6e0161b23e06873a/json HTTP/1.1" 200 392
+2026-03-19 12:26:22,478 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,479 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e2ebaee0da8ce7149057bd95c12a8bf9666992b221edfc21e8da2173eb3fcca9/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,728 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e2ebaee0da8ce7149057bd95c12a8bf9666992b221edfc21e8da2173eb3fcca9/json HTTP/1.1" 200 407
+2026-03-19 12:26:22,730 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,732 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1c138b5cbfc645961d46bc450edc6b5a995c09a4f66220bd4494e36b6802d00c/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,883 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1c138b5cbfc645961d46bc450edc6b5a995c09a4f66220bd4494e36b6802d00c/json HTTP/1.1" 200 405
+2026-03-19 12:26:22,884 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,885 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/cc7954529854e33bbd071e9dfa6b77733d9428eef3b08d7baad453d8de937de0/start HTTP/1.1" 101 0
+2026-03-19 12:26:22,927 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/cc7954529854e33bbd071e9dfa6b77733d9428eef3b08d7baad453d8de937de0/json HTTP/1.1" 200 392
+2026-03-19 12:26:22,928 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:22,929 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e75e8f73919c5992ad72504e7590f5ca5877d5dc62adc63e0a95728f42b6c509/start HTTP/1.1" 101 0
+2026-03-19 12:26:23,173 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e75e8f73919c5992ad72504e7590f5ca5877d5dc62adc63e0a95728f42b6c509/json HTTP/1.1" 200 407
+2026-03-19 12:26:23,175 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:23,176 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/6d184938256b6bb87b4b7548da492298820277e5e96bb30b902bbafb07451268/start HTTP/1.1" 101 0
+2026-03-19 12:26:23,319 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/6d184938256b6bb87b4b7548da492298820277e5e96bb30b902bbafb07451268/json HTTP/1.1" 200 419
+2026-03-19 12:26:23,321 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:23,322 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7907e36364c03bff2dd946f0e2128ebd2b31451ade7c46788bf263e61eaaad27/start HTTP/1.1" 101 0
+2026-03-19 12:26:23,362 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7907e36364c03bff2dd946f0e2128ebd2b31451ade7c46788bf263e61eaaad27/json HTTP/1.1" 200 392
+2026-03-19 12:26:23,363 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:23,364 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/950ecb3e5ead61b1941233d9336e48bb3435d2312bcca47518ef34b949c821eb/start HTTP/1.1" 101 0
+2026-03-19 12:26:23,607 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/950ecb3e5ead61b1941233d9336e48bb3435d2312bcca47518ef34b949c821eb/json HTTP/1.1" 200 407
+2026-03-19 12:26:23,608 DEBUG [openai._base_client] Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-e3113917-d882-4186-925e-99d8c9a9680d', 'json_data': {'messages': [{'role': 'system', 'content': 'You are an autonomous security remediation agent operating inside a Docker container.\n\n## Container & OS Information\nBase image: ubuntu:25.10 | Collection: CCDC | Scenario: ccdc-01\n\n## Current System State\nOS: PRETTY_NAME="Ubuntu 25.10"\nKernel: 6.17.0-14-generic\nListening ports:\nState  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                     \nLISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=7,fd=6))\nLISTEN 0      128             [::]:22           [::]:*    users:(("sshd",pid=7,fd=7))\nActive services:\n[ - ]  dbus\n [ - ]  procps\n [ + ]  ssh\nInstalled packages (sample):\nadduser 3.152ubuntu1\napt 3.1.6ubuntu2\nbase-files 14ubuntu3\nbase-passwd 3.6.7\nbash 5.2.37-2ubuntu5\nbsdutils 1:2.41-4ubuntu4.1\nca-certificates 20250419\ncoreutils 9.5-1ubuntu2+0.0.0~ubuntu24\ncoreutils-from-uutils 0.0.0~ubuntu24\ndash 0.5.12-12ubuntu2\ndbus 1.16.2-2ubuntu2\ndbus-bin 1.16.2-2ubuntu2\ndbus-daemon 1.16.2-2ubuntu2\ndbus-session-bus-common 1.16.2-2ubuntu2\ndbus-system-bus-common 1.16.2-2ubuntu2\ndbus-user-session 1.16.2-2ubuntu2\ndebconf 1.5.91\ndebianutils 5.23.2\ndiffutils 1:3.10-4\ndmsetup 2:1.02.205-2ubuntu2\ndpkg 1.22.21ubuntu3.1\ne2fsprogs 1.47.2-3ubuntu2\nfindutils 4.10.0-3build1\ngcc-15-base:\nUsers: root:0\nubuntu:1000\ntestuser:1001\nSUID binaries: /usr/bin/chsh\n/usr/bin/mount\n/usr/bin/passwd\n/usr/bin/gpasswd\n/usr/bin/chfn\n/usr/bin/umount\n/usr/bin/newgrp\n/usr/bin/su\nCrontab/cron.d: e2scrub_all\napt-compat\ndpkg\n\n## Vulnerability Report\n# Scenario 01: SSH Permits Root Login\n\n## Vulnerability\n\nThe SSH daemon is configured with `PermitRootLogin yes`, allowing direct remote\nroot login over SSH. This gives attackers who obtain or brute-force the root\npassword full, unrestricted access to the system without any audit trail\ndistinguishing which administrator performed an action.\n\n## CWE Classification\n\n**CWE-250: Execution with Unnecessary Privileges**\n\nAllowing direct root login via SSH grants the highest level of system privileges\nto any authenticated session. Normal administrative workflows should use\nunprivileged accounts with `sudo` for privilege escalation, providing\naccountability and limiting the blast radius of compromised credentials.\n\n## Affected Configuration\n\n- **File**: `/etc/ssh/sshd_config`\n- **Setting**: `PermitRootLogin yes`\n- **Service**: OpenSSH Server (sshd)\n\n## Expected Remediation\n\nThe `PermitRootLogin` directive should be set to `no` (or `prohibit-password`\nat minimum). The SSH service must be restarted after the configuration change.\nNormal user SSH access must remain functional.\n\n## References\n\n- TAMU ssh.sh - disables root login\n- UTSA script.sh - disables root login\n- CIS Benchmark for Ubuntu - 5.2.10 Ensure SSH root login is disabled\n\n## Rules\n- You MUST use the bash tool to execute commands. Do NOT imagine or fabricate command output. Call the bash tool and wait for the real result before proceeding.\n- Execute ONE command at a time via the bash tool. Do NOT write multiple commands in prose.\n- Adapt all commands to the OS version shown. On Ubuntu 8.04 use /etc/init.d/ and service commands; on Ubuntu 25.10 use systemctl.\n- Use netstat on Ubuntu 8.04, ss on Ubuntu 25.10.\n- You may ONLY modify files and services directly relevant to the described vulnerability.\n- Do NOT remove system binaries, disable unrelated services, or alter unrelated network config.\n- When remediation is complete, run: echo REMEDIATION_COMPLETE\n- If you are definitively stuck, run: echo REMEDIATION_FAILED\n'}, {'role': 'user', 'content': 'Generate a complete remediation plan as JSON.\nMaximum 15 steps.\n\nReturn ONLY a JSON object in this exact format:\n{"steps": [{"id": 1, "description": "...", "command_hint": "exact bash command"}, ...]}\n\nSteps must be in dependency order. Each command_hint must be a single executable bash command.'}, {'role': 'user', 'content': "Command failed: systemctl restart ssh\nstderr: System has not been booted with systemd as init system (PID 1). Can't operate.\nFailed to connect to system scope bus via local transport: Host is down\n\nstdout: \nStep goal: Restart SSH service to apply changes\nProvide a corrected single bash command to achieve this step goal. Output the command only."}], 'model': 'qwen3.5:122b', 'max_tokens': 4096, 'temperature': 0.1}}
+2026-03-19 12:26:23,609 DEBUG [openai._base_client] Sending HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions
+2026-03-19 12:26:23,609 DEBUG [httpcore.connection] connect_tcp.started host='10.100.203.130' port=11434 local_address=None timeout=5.0 socket_options=None
+2026-03-19 12:26:23,609 DEBUG [httpcore.connection] connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7e0088220c20>
+2026-03-19 12:26:23,610 DEBUG [httpcore.http11] send_request_headers.started request=<Request [b'POST']>
+2026-03-19 12:26:23,610 DEBUG [httpcore.http11] send_request_headers.complete
+2026-03-19 12:26:23,610 DEBUG [httpcore.http11] send_request_body.started request=<Request [b'POST']>
+2026-03-19 12:26:23,610 DEBUG [httpcore.http11] send_request_body.complete
+2026-03-19 12:26:23,610 DEBUG [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>
+2026-03-19 12:26:26,247 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:26,248 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:26,250 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c60a94a9f54fe30dfdd236552947b89ee0c157819dd81245657670f663853962/start HTTP/1.1" 101 0
+2026-03-19 12:26:26,250 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2f3d63aa4af480390ce8e8cd64150d3411a3997f1be03a5262e7a76e626b0d2b/start HTTP/1.1" 101 0
+2026-03-19 12:26:26,592 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c60a94a9f54fe30dfdd236552947b89ee0c157819dd81245657670f663853962/json HTTP/1.1" 200 636
+2026-03-19 12:26:26,594 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:26,595 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2f3d63aa4af480390ce8e8cd64150d3411a3997f1be03a5262e7a76e626b0d2b/json HTTP/1.1" 200 636
+2026-03-19 12:26:26,596 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1032868c27ea0292114dd1153b69c69ef2e18f0cc2973f59551d8aa2532e9ffb/start HTTP/1.1" 101 0
+2026-03-19 12:26:26,596 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:26,597 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e510dba2b281adfa32b28400b18ce6998e3a2de752b8e41df54d99315e9374f2/start HTTP/1.1" 101 0
+2026-03-19 12:26:26,739 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1032868c27ea0292114dd1153b69c69ef2e18f0cc2973f59551d8aa2532e9ffb/json HTTP/1.1" 200 432
+2026-03-19 12:26:26,740 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e510dba2b281adfa32b28400b18ce6998e3a2de752b8e41df54d99315e9374f2/json HTTP/1.1" 200 432
+2026-03-19 12:26:31,742 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:31,742 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:31,744 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/cb19153bd5cc2a543d49eecc7c66fe01edef5792b07b19b60f2f5f1c7ce427e9/start HTTP/1.1" 101 0
+2026-03-19 12:26:31,744 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d49ca3cae225b7009dc01deb88228fe6e56793b44fb5ae3f7be2dd2845335237/start HTTP/1.1" 101 0
+2026-03-19 12:26:32,088 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/cb19153bd5cc2a543d49eecc7c66fe01edef5792b07b19b60f2f5f1c7ce427e9/json HTTP/1.1" 200 636
+2026-03-19 12:26:32,089 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:32,090 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1d53ea13dd9cf49c32ce3435297ef5bf1ef9e44e186b7d376f40fd88d9805e4d/start HTTP/1.1" 101 0
+2026-03-19 12:26:32,092 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d49ca3cae225b7009dc01deb88228fe6e56793b44fb5ae3f7be2dd2845335237/json HTTP/1.1" 200 636
+2026-03-19 12:26:32,093 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:32,094 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/71dd9c0077723a56559c8627b665d29e936b5051bd77857a6e51dec9a56d48b0/start HTTP/1.1" 101 0
+2026-03-19 12:26:32,232 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1d53ea13dd9cf49c32ce3435297ef5bf1ef9e44e186b7d376f40fd88d9805e4d/json HTTP/1.1" 200 432
+2026-03-19 12:26:32,235 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/71dd9c0077723a56559c8627b665d29e936b5051bd77857a6e51dec9a56d48b0/json HTTP/1.1" 200 432
+2026-03-19 12:26:37,234 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:37,236 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:37,237 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9ce511fe39572a7f93ad69e9c19a59061b4ee5f5fb8aea0e784c8dfb98b44014/start HTTP/1.1" 101 0
+2026-03-19 12:26:37,238 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ecac782c413867b5eae3f9db8de2efce9a2d734921d3cae1999dffce6dc75e74/start HTTP/1.1" 101 0
+2026-03-19 12:26:37,592 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ecac782c413867b5eae3f9db8de2efce9a2d734921d3cae1999dffce6dc75e74/json HTTP/1.1" 200 636
+2026-03-19 12:26:37,593 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9ce511fe39572a7f93ad69e9c19a59061b4ee5f5fb8aea0e784c8dfb98b44014/json HTTP/1.1" 200 636
+2026-03-19 12:26:37,594 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:37,595 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:37,597 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/edea255f980834188a662f3d7f70bbbc92a1fe2c11f2d4ee93e13dc3207ed5da/start HTTP/1.1" 101 0
+2026-03-19 12:26:37,597 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c5a123a0e8ed54a5c7745a66318af5918217d6e6ca97738baf37e7ef97fb8f12/start HTTP/1.1" 101 0
+2026-03-19 12:26:37,743 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/edea255f980834188a662f3d7f70bbbc92a1fe2c11f2d4ee93e13dc3207ed5da/json HTTP/1.1" 200 432
+2026-03-19 12:26:37,743 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c5a123a0e8ed54a5c7745a66318af5918217d6e6ca97738baf37e7ef97fb8f12/json HTTP/1.1" 200 432
+2026-03-19 12:26:42,745 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:42,746 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:42,748 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d760a02b9b0ec05dcc6d7319de30e292272c2a1e4ada3161421578a37cb49c37/start HTTP/1.1" 101 0
+2026-03-19 12:26:42,748 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0c632140deaaa821ef18597fcbf5be24c809dfbe15f0dd24846795b4e1ee52d4/start HTTP/1.1" 101 0
+2026-03-19 12:26:43,096 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d760a02b9b0ec05dcc6d7319de30e292272c2a1e4ada3161421578a37cb49c37/json HTTP/1.1" 200 636
+2026-03-19 12:26:43,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:43,099 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0c632140deaaa821ef18597fcbf5be24c809dfbe15f0dd24846795b4e1ee52d4/json HTTP/1.1" 200 636
+2026-03-19 12:26:43,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/541f12e944ef8a752aa54b5ddf38836ff31eec64ed692dadc3449fe4ee833e93/start HTTP/1.1" 101 0
+2026-03-19 12:26:43,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:43,102 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/dfc176ebdbf538f4cb5a7dad03ad09b2539d97b7c31f85fa533bf70b128806c7/start HTTP/1.1" 101 0
+2026-03-19 12:26:43,246 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/541f12e944ef8a752aa54b5ddf38836ff31eec64ed692dadc3449fe4ee833e93/json HTTP/1.1" 200 432
+2026-03-19 12:26:43,248 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/dfc176ebdbf538f4cb5a7dad03ad09b2539d97b7c31f85fa533bf70b128806c7/json HTTP/1.1" 200 432
+2026-03-19 12:26:48,248 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:48,250 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:48,251 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9d4c528d53b4d8f564e9df41a6c37cc7c7a955e09ff22e3cd287ff35ca2e3250/start HTTP/1.1" 101 0
+2026-03-19 12:26:48,251 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d0393f906acaf49252b4394299cf3e3403312771bedc4d79ae4c758566d0f426/start HTTP/1.1" 101 0
+2026-03-19 12:26:48,596 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d0393f906acaf49252b4394299cf3e3403312771bedc4d79ae4c758566d0f426/json HTTP/1.1" 200 636
+2026-03-19 12:26:48,597 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:48,598 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9d4c528d53b4d8f564e9df41a6c37cc7c7a955e09ff22e3cd287ff35ca2e3250/json HTTP/1.1" 200 636
+2026-03-19 12:26:48,599 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/6ffc31bffb3cd640ead8162b95657062d13364849880ce85a1af42d21047e893/start HTTP/1.1" 101 0
+2026-03-19 12:26:48,599 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:48,600 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1d00b53d2e9c83164ef3040f32d8d025a97ef6eab31a4000781e40da6aee6895/start HTTP/1.1" 101 0
+2026-03-19 12:26:48,743 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/6ffc31bffb3cd640ead8162b95657062d13364849880ce85a1af42d21047e893/json HTTP/1.1" 200 432
+2026-03-19 12:26:48,743 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1d00b53d2e9c83164ef3040f32d8d025a97ef6eab31a4000781e40da6aee6895/json HTTP/1.1" 200 432
+2026-03-19 12:26:53,745 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:53,747 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f5250dacbfb18b9ddd89672b5f0583727bb05f98f9b16084bbc310cbc87285d5/start HTTP/1.1" 101 0
+2026-03-19 12:26:53,747 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:53,749 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5368e724eef8bd65430e4cd027b440d4cff0c07d28836aba50bbef3aa8e80c10/start HTTP/1.1" 101 0
+2026-03-19 12:26:54,094 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5368e724eef8bd65430e4cd027b440d4cff0c07d28836aba50bbef3aa8e80c10/json HTTP/1.1" 200 636
+2026-03-19 12:26:54,096 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f5250dacbfb18b9ddd89672b5f0583727bb05f98f9b16084bbc310cbc87285d5/json HTTP/1.1" 200 636
+2026-03-19 12:26:54,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:54,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:54,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/94582e028a24d2034007dd9e8d58e932e258fbc7c8f822f15a4420545123a67b/start HTTP/1.1" 101 0
+2026-03-19 12:26:54,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/85c0cf44266eaf249f8bfcb97313053782b2f81d55cd6f7eed72da913d35852e/start HTTP/1.1" 101 0
+2026-03-19 12:26:54,249 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/94582e028a24d2034007dd9e8d58e932e258fbc7c8f822f15a4420545123a67b/json HTTP/1.1" 200 432
+2026-03-19 12:26:54,258 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/85c0cf44266eaf249f8bfcb97313053782b2f81d55cd6f7eed72da913d35852e/json HTTP/1.1" 200 432
+2026-03-19 12:26:59,251 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:59,252 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5da5548bd005a73f3702f099777ccafa774b295ee85feda1c37738ff2554720d/start HTTP/1.1" 101 0
+2026-03-19 12:26:59,259 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:59,260 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f76d878a53cbb504ac6bd4100fb96a918f393b89d0e586a8cf91e8936ce5812e/start HTTP/1.1" 101 0
+2026-03-19 12:26:59,596 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5da5548bd005a73f3702f099777ccafa774b295ee85feda1c37738ff2554720d/json HTTP/1.1" 200 636
+2026-03-19 12:26:59,597 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:26:59,598 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c00c54289d95989af7307dcec9e8f91ead9e5ff1aaaaf0c9bb2938ffdfa0de75/start HTTP/1.1" 101 0
+2026-03-19 12:26:59,601 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f76d878a53cbb504ac6bd4100fb96a918f393b89d0e586a8cf91e8936ce5812e/json HTTP/1.1" 200 636
+2026-03-19 12:26:59,602 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:26:59,604 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/12aefa937701070d71c6a6183adae19beec15ac291d41bf783a57dc5dc525b63/start HTTP/1.1" 101 0
+2026-03-19 12:26:59,746 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c00c54289d95989af7307dcec9e8f91ead9e5ff1aaaaf0c9bb2938ffdfa0de75/json HTTP/1.1" 200 432
+2026-03-19 12:26:59,749 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/12aefa937701070d71c6a6183adae19beec15ac291d41bf783a57dc5dc525b63/json HTTP/1.1" 200 432
+2026-03-19 12:27:04,747 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:04,749 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7aff7b8372abe7266f4fd6e8ed632297c20408f867b2787b5454b00105a7d536/start HTTP/1.1" 101 0
+2026-03-19 12:27:04,751 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:04,752 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/2ed0e34dea7f541462a25cab9b07d4815eb8beecc3547250734f49d43a509dd7/start HTTP/1.1" 101 0
+2026-03-19 12:27:05,098 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/2ed0e34dea7f541462a25cab9b07d4815eb8beecc3547250734f49d43a509dd7/json HTTP/1.1" 200 636
+2026-03-19 12:27:05,099 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:05,102 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c2ff6c9afbda32916be34ab3da2c11ce63c07e10057b1373ab71d1f7a0074794/start HTTP/1.1" 101 0
+2026-03-19 12:27:05,102 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7aff7b8372abe7266f4fd6e8ed632297c20408f867b2787b5454b00105a7d536/json HTTP/1.1" 200 636
+2026-03-19 12:27:05,105 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:05,107 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/043eba6fd620e303ff7806472e5b0a317edcd9ba2bc3110ce2341f061bfbd0bc/start HTTP/1.1" 101 0
+2026-03-19 12:27:05,246 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c2ff6c9afbda32916be34ab3da2c11ce63c07e10057b1373ab71d1f7a0074794/json HTTP/1.1" 200 432
+2026-03-19 12:27:05,247 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/043eba6fd620e303ff7806472e5b0a317edcd9ba2bc3110ce2341f061bfbd0bc/json HTTP/1.1" 200 432
+2026-03-19 12:27:10,248 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:10,250 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/68b3a0fcec296abdca5261cef916d4620f9108073f7f0b966b1378595ff167b9/start HTTP/1.1" 101 0
+2026-03-19 12:27:10,250 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:10,251 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/143e9e77ac3f0a5290d2a12ee38b3cd61b174eec9595da8071c7c33880fc62b0/start HTTP/1.1" 101 0
+2026-03-19 12:27:10,594 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/143e9e77ac3f0a5290d2a12ee38b3cd61b174eec9595da8071c7c33880fc62b0/json HTTP/1.1" 200 636
+2026-03-19 12:27:10,596 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:10,597 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/68b3a0fcec296abdca5261cef916d4620f9108073f7f0b966b1378595ff167b9/json HTTP/1.1" 200 636
+2026-03-19 12:27:10,598 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:10,598 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/a73da98426c6dbcbc5c371dfa1a68359732bc8075f77fca799a2c801575ca96b/start HTTP/1.1" 101 0
+2026-03-19 12:27:10,599 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/4a4bb0a68e4ba6272415c2c51a9f7d1f87ef6269aad9798539ac51af5c977cdf/start HTTP/1.1" 101 0
+2026-03-19 12:27:10,742 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/4a4bb0a68e4ba6272415c2c51a9f7d1f87ef6269aad9798539ac51af5c977cdf/json HTTP/1.1" 200 432
+2026-03-19 12:27:10,744 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/a73da98426c6dbcbc5c371dfa1a68359732bc8075f77fca799a2c801575ca96b/json HTTP/1.1" 200 432
+2026-03-19 12:27:15,743 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:15,745 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:15,746 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/82530e7e324a7e32a3b13e07f23b70b54ea3fec2142a64cead89d190a254c27c/start HTTP/1.1" 101 0
+2026-03-19 12:27:15,747 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1a6c031b01e660fdae56ea866ec608249e4caa72d8993de8db1287848b6c0058/start HTTP/1.1" 101 0
+2026-03-19 12:27:16,093 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/82530e7e324a7e32a3b13e07f23b70b54ea3fec2142a64cead89d190a254c27c/json HTTP/1.1" 200 636
+2026-03-19 12:27:16,094 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:16,094 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1a6c031b01e660fdae56ea866ec608249e4caa72d8993de8db1287848b6c0058/json HTTP/1.1" 200 636
+2026-03-19 12:27:16,096 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/aeb537b5ab3cf7cd68a508bdfdd6bf2c9c77f16fa60b2a6683c13c670747b9f3/start HTTP/1.1" 101 0
+2026-03-19 12:27:16,096 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:16,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f92ca76290d2a75e4ddc3a00da60346d69d65c96bf0f68010659d7a56004f351/start HTTP/1.1" 101 0
+2026-03-19 12:27:16,242 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f92ca76290d2a75e4ddc3a00da60346d69d65c96bf0f68010659d7a56004f351/json HTTP/1.1" 200 432
+2026-03-19 12:27:16,245 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/aeb537b5ab3cf7cd68a508bdfdd6bf2c9c77f16fa60b2a6683c13c670747b9f3/json HTTP/1.1" 200 432
+2026-03-19 12:27:21,243 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:21,245 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e6aae9a13e3b3d739adf1b525e82fef4b96b9aa84bf4239ef666d1d41ec4d6ac/start HTTP/1.1" 101 0
+2026-03-19 12:27:21,246 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:21,248 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/961ca6e8045795e2fa75e162fa660fe623ec08a539887dcfeda9319cc09ea369/start HTTP/1.1" 101 0
+2026-03-19 12:27:21,590 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e6aae9a13e3b3d739adf1b525e82fef4b96b9aa84bf4239ef666d1d41ec4d6ac/json HTTP/1.1" 200 636
+2026-03-19 12:27:21,592 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/961ca6e8045795e2fa75e162fa660fe623ec08a539887dcfeda9319cc09ea369/json HTTP/1.1" 200 636
+2026-03-19 12:27:21,592 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:21,593 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:21,594 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0578a77ada9dcb50a5cd19414fe3b1850c849d3f756292b63950638068277eff/start HTTP/1.1" 101 0
+2026-03-19 12:27:21,595 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/56fd841a755afc81bd2af9729b9c6afbe24b7af58e0d32e24ce5d81c9d5352b4/start HTTP/1.1" 101 0
+2026-03-19 12:27:21,745 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/56fd841a755afc81bd2af9729b9c6afbe24b7af58e0d32e24ce5d81c9d5352b4/json HTTP/1.1" 200 432
+2026-03-19 12:27:21,746 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0578a77ada9dcb50a5cd19414fe3b1850c849d3f756292b63950638068277eff/json HTTP/1.1" 200 432
+2026-03-19 12:27:26,747 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:26,749 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:26,750 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7d281afbc5a08e252f0274ebb38e0c7784e06584cc607a188bbb0745b14fcf83/start HTTP/1.1" 101 0
+2026-03-19 12:27:26,750 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/be8e74f52371e2da3fc3108e76a6a3ef6e560269a651edc594f32256eeeb6e41/start HTTP/1.1" 101 0
+2026-03-19 12:27:27,095 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7d281afbc5a08e252f0274ebb38e0c7784e06584cc607a188bbb0745b14fcf83/json HTTP/1.1" 200 636
+2026-03-19 12:27:27,097 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/be8e74f52371e2da3fc3108e76a6a3ef6e560269a651edc594f32256eeeb6e41/json HTTP/1.1" 200 636
+2026-03-19 12:27:27,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:27,098 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:27,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/cd896f3751e6a47eea8dc287b218a3a3c0b4ad6f337efebeb79b5e80302f7b01/start HTTP/1.1" 101 0
+2026-03-19 12:27:27,100 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/eed9c0e3e9a76c5cb3859d47912a80193f4ce153458943af344d7336af4db210/start HTTP/1.1" 101 0
+2026-03-19 12:27:27,250 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/cd896f3751e6a47eea8dc287b218a3a3c0b4ad6f337efebeb79b5e80302f7b01/json HTTP/1.1" 200 432
+2026-03-19 12:27:27,254 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/eed9c0e3e9a76c5cb3859d47912a80193f4ce153458943af344d7336af4db210/json HTTP/1.1" 200 432
+2026-03-19 12:27:32,252 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:32,253 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/6fb90589d34fd960f5768c455f7f78a1158deff56d6e18ffa2f1ac983bc15b71/start HTTP/1.1" 101 0
+2026-03-19 12:27:32,255 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:32,257 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/cbdf1e4a97af15e0bb982a336b2737690c0902763f5a6f10e8aaf1edd646b483/start HTTP/1.1" 101 0
+2026-03-19 12:27:32,599 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/6fb90589d34fd960f5768c455f7f78a1158deff56d6e18ffa2f1ac983bc15b71/json HTTP/1.1" 200 636
+2026-03-19 12:27:32,600 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/cbdf1e4a97af15e0bb982a336b2737690c0902763f5a6f10e8aaf1edd646b483/json HTTP/1.1" 200 636
+2026-03-19 12:27:32,602 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:32,603 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:32,604 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/6af0364a2269d59e4610462b6612141ec94b692957ce68b283598b5644a6e3d8/start HTTP/1.1" 101 0
+2026-03-19 12:27:32,605 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9bd0fd6e879d3abc66c6b88b43e1a49d3d412048e307c49252bc8823dfda2d15/start HTTP/1.1" 101 0
+2026-03-19 12:27:32,763 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/6af0364a2269d59e4610462b6612141ec94b692957ce68b283598b5644a6e3d8/json HTTP/1.1" 200 432
+2026-03-19 12:27:32,779 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9bd0fd6e879d3abc66c6b88b43e1a49d3d412048e307c49252bc8823dfda2d15/json HTTP/1.1" 200 432
+2026-03-19 12:27:37,764 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:37,766 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/f56c14e28b6e122f5c5b39744c1e99fd7772acf59f7a4f209c4b389952a8b7e3/start HTTP/1.1" 101 0
+2026-03-19 12:27:37,781 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:37,782 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/784081cfe3d44fe51fe736387aec28293ba8b9027ca888660c819a7dfcb7c74b/start HTTP/1.1" 101 0
+2026-03-19 12:27:38,113 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/f56c14e28b6e122f5c5b39744c1e99fd7772acf59f7a4f209c4b389952a8b7e3/json HTTP/1.1" 200 636
+2026-03-19 12:27:38,114 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:38,115 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3861c179a6aff949bf6d58fd4dee7797b4dc8ea125ce3553c7daf1c8967df746/start HTTP/1.1" 101 0
+2026-03-19 12:27:38,126 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/784081cfe3d44fe51fe736387aec28293ba8b9027ca888660c819a7dfcb7c74b/json HTTP/1.1" 200 636
+2026-03-19 12:27:38,127 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:38,128 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/42e9d72646b5e541110414df4895f8b35d7fb7f6f6793c60fc4524682f310664/start HTTP/1.1" 101 0
+2026-03-19 12:27:38,259 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3861c179a6aff949bf6d58fd4dee7797b4dc8ea125ce3553c7daf1c8967df746/json HTTP/1.1" 200 432
+2026-03-19 12:27:38,275 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/42e9d72646b5e541110414df4895f8b35d7fb7f6f6793c60fc4524682f310664/json HTTP/1.1" 200 432
+2026-03-19 12:27:43,260 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:43,262 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/45d03f0054438ea97c8b36b2992e880ac45579aa909e96c62a446cb62f06a77b/start HTTP/1.1" 101 0
+2026-03-19 12:27:43,276 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:43,278 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e3bfb29e9eedd4100076bd2fd88d660e8c88752fb8daf887721bbc768f4ff640/start HTTP/1.1" 101 0
+2026-03-19 12:27:43,635 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/45d03f0054438ea97c8b36b2992e880ac45579aa909e96c62a446cb62f06a77b/json HTTP/1.1" 200 636
+2026-03-19 12:27:43,637 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:43,639 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e3bfb29e9eedd4100076bd2fd88d660e8c88752fb8daf887721bbc768f4ff640/json HTTP/1.1" 200 636
+2026-03-19 12:27:43,640 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/6fbb22486067d2be038af576ae07435eea5fb0b159ee41f7dc2ac124ea95fd26/start HTTP/1.1" 101 0
+2026-03-19 12:27:43,641 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:43,642 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/db8dc484b5d8e20a3caef1cb931017904cab62efcbdd399f1790000201ecb66a/start HTTP/1.1" 101 0
+2026-03-19 12:27:43,788 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/db8dc484b5d8e20a3caef1cb931017904cab62efcbdd399f1790000201ecb66a/json HTTP/1.1" 200 432
+2026-03-19 12:27:43,789 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/6fbb22486067d2be038af576ae07435eea5fb0b159ee41f7dc2ac124ea95fd26/json HTTP/1.1" 200 432
+2026-03-19 12:27:48,791 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:48,791 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:48,793 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/020a91579092d76c4908248dbb54d10637547618b9fd7c91c0eccec4d964717a/start HTTP/1.1" 101 0
+2026-03-19 12:27:48,793 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/33238f9ec426db66fbef23816fe0cd00e96a0ebbae2c5cc7f5e74212ad249871/start HTTP/1.1" 101 0
+2026-03-19 12:27:49,140 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/020a91579092d76c4908248dbb54d10637547618b9fd7c91c0eccec4d964717a/json HTTP/1.1" 200 636
+2026-03-19 12:27:49,140 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/33238f9ec426db66fbef23816fe0cd00e96a0ebbae2c5cc7f5e74212ad249871/json HTTP/1.1" 200 636
+2026-03-19 12:27:49,142 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:49,143 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:49,144 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1c2b9d315f5aac2b72a92b82e99e97a2f8a92fe896b96e936022f7e120b65202/start HTTP/1.1" 101 0
+2026-03-19 12:27:49,145 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ae16130cb46976d1ca0dae856912c08d96bed55aaaca3d33f33005539b05330d/start HTTP/1.1" 101 0
+2026-03-19 12:27:49,294 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ae16130cb46976d1ca0dae856912c08d96bed55aaaca3d33f33005539b05330d/json HTTP/1.1" 200 432
+2026-03-19 12:27:49,294 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1c2b9d315f5aac2b72a92b82e99e97a2f8a92fe896b96e936022f7e120b65202/json HTTP/1.1" 200 432
+2026-03-19 12:27:54,296 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:54,296 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:54,298 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/72b92f96714cb313b4726630f62a474ff6bb309c4b5f4cb2220bafa4d6689c6f/start HTTP/1.1" 101 0
+2026-03-19 12:27:54,298 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e91be945e11b4e8dd0b00d3bfc762855bbfab0e49faac1aaa05a6e0cf7ac6ffe/start HTTP/1.1" 101 0
+2026-03-19 12:27:54,650 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e91be945e11b4e8dd0b00d3bfc762855bbfab0e49faac1aaa05a6e0cf7ac6ffe/json HTTP/1.1" 200 636
+2026-03-19 12:27:54,652 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:54,654 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/72b92f96714cb313b4726630f62a474ff6bb309c4b5f4cb2220bafa4d6689c6f/json HTTP/1.1" 200 636
+2026-03-19 12:27:54,656 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b9c985241db4a5345e1580c648570f9db57364a55464c1b8fe83cac9ea12bdec/start HTTP/1.1" 101 0
+2026-03-19 12:27:54,657 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:54,659 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1fceedf28966e684664fb4658e753a7cf1b94df1fb57b13a5bf31ceb9db28773/start HTTP/1.1" 101 0
+2026-03-19 12:27:54,811 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b9c985241db4a5345e1580c648570f9db57364a55464c1b8fe83cac9ea12bdec/json HTTP/1.1" 200 432
+2026-03-19 12:27:54,812 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1fceedf28966e684664fb4658e753a7cf1b94df1fb57b13a5bf31ceb9db28773/json HTTP/1.1" 200 432
+2026-03-19 12:27:59,814 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:27:59,815 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:27:59,816 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/51084e12d6790d4e90acfbfaf644e5f2cd77dbbe66fe719146fc00c4d31c70b9/start HTTP/1.1" 101 0
+2026-03-19 12:27:59,816 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/9d02e6c8229217081330185768a9142f28a9636c0f68cd2f59554c1ff9c55784/start HTTP/1.1" 101 0
+2026-03-19 12:28:00,162 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/51084e12d6790d4e90acfbfaf644e5f2cd77dbbe66fe719146fc00c4d31c70b9/json HTTP/1.1" 200 636
+2026-03-19 12:28:00,164 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:00,165 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0bbbf6bbb4846b81db4bc076292a2aed7c65811367701eb26892febcd4f8cc49/start HTTP/1.1" 101 0
+2026-03-19 12:28:00,167 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/9d02e6c8229217081330185768a9142f28a9636c0f68cd2f59554c1ff9c55784/json HTTP/1.1" 200 636
+2026-03-19 12:28:00,168 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:00,169 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/0230c36fff0acda6261ca3387a5a5675f05579d56229d3a8460b332c6f72044d/start HTTP/1.1" 101 0
+2026-03-19 12:28:00,312 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0230c36fff0acda6261ca3387a5a5675f05579d56229d3a8460b332c6f72044d/json HTTP/1.1" 200 432
+2026-03-19 12:28:00,318 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/0bbbf6bbb4846b81db4bc076292a2aed7c65811367701eb26892febcd4f8cc49/json HTTP/1.1" 200 432
+2026-03-19 12:28:05,314 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:05,315 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c087270fd82590c3a6cfa5f267365f5e35e19b6cb92ab31350aae51d5e2e4a7f/start HTTP/1.1" 101 0
+2026-03-19 12:28:05,319 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:05,321 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3f0f515201a125df450fdfc47936ba66e0374793651745827d83df6cc1bf5567/start HTTP/1.1" 101 0
+2026-03-19 12:28:05,662 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3f0f515201a125df450fdfc47936ba66e0374793651745827d83df6cc1bf5567/json HTTP/1.1" 200 636
+2026-03-19 12:28:05,663 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:05,665 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b8d7c5e69f765381803c43702d17cdff1a91d12b1d36f1ed50c557533a491cf8/start HTTP/1.1" 101 0
+2026-03-19 12:28:05,667 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c087270fd82590c3a6cfa5f267365f5e35e19b6cb92ab31350aae51d5e2e4a7f/json HTTP/1.1" 200 636
+2026-03-19 12:28:05,668 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:05,669 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7e95a9f6b34ed0bb135c98f7428040ab3b7c22eaa689d97140e425ae0c627b62/start HTTP/1.1" 101 0
+2026-03-19 12:28:05,809 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7e95a9f6b34ed0bb135c98f7428040ab3b7c22eaa689d97140e425ae0c627b62/json HTTP/1.1" 200 432
+2026-03-19 12:28:05,810 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b8d7c5e69f765381803c43702d17cdff1a91d12b1d36f1ed50c557533a491cf8/json HTTP/1.1" 200 432
+2026-03-19 12:28:10,812 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:10,812 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:10,814 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/d5966768a54c9d4aaecd85b91acd4e2f54035c8ee28acdd6c94b1c8190730a2d/start HTTP/1.1" 101 0
+2026-03-19 12:28:10,814 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/09875e1392779fe75204e679af50c1ad9fe2f123eaf4fc32aaff5d4e1f801086/start HTTP/1.1" 101 0
+2026-03-19 12:28:11,159 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/09875e1392779fe75204e679af50c1ad9fe2f123eaf4fc32aaff5d4e1f801086/json HTTP/1.1" 200 636
+2026-03-19 12:28:11,160 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:11,161 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/d5966768a54c9d4aaecd85b91acd4e2f54035c8ee28acdd6c94b1c8190730a2d/json HTTP/1.1" 200 636
+2026-03-19 12:28:11,163 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/25c3f877481846d9e0ea3027d7d3212caae337b04f554f645a53437609746b66/start HTTP/1.1" 101 0
+2026-03-19 12:28:11,163 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:11,164 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/469036b6cd5cb321234d591df5f2666448575c0d6f90cae5fa3d84078299a7c3/start HTTP/1.1" 101 0
+2026-03-19 12:28:11,309 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/25c3f877481846d9e0ea3027d7d3212caae337b04f554f645a53437609746b66/json HTTP/1.1" 200 432
+2026-03-19 12:28:11,309 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/469036b6cd5cb321234d591df5f2666448575c0d6f90cae5fa3d84078299a7c3/json HTTP/1.1" 200 432
+2026-03-19 12:28:16,311 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:16,311 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:16,313 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3091c022315e88ed446298cd893117c247f1901cee91a8b3e3f8b2056d5e96de/start HTTP/1.1" 101 0
+2026-03-19 12:28:16,314 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/68106df0a32cb284bc9e20234e8435095731636bf11d5aa3c92c249f8b0fec61/start HTTP/1.1" 101 0
+2026-03-19 12:28:16,659 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3091c022315e88ed446298cd893117c247f1901cee91a8b3e3f8b2056d5e96de/json HTTP/1.1" 200 636
+2026-03-19 12:28:16,661 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:16,661 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/68106df0a32cb284bc9e20234e8435095731636bf11d5aa3c92c249f8b0fec61/json HTTP/1.1" 200 636
+2026-03-19 12:28:16,663 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/cc72afe7d090d591f7a02154b3baed2507f168878d9ec4942b5bd5705f2ea776/start HTTP/1.1" 101 0
+2026-03-19 12:28:16,663 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:16,664 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/116e727dcb5ba6180529c7bafbdce96833b7e63f7912ab4c20e6541f7ba41fa7/start HTTP/1.1" 101 0
+2026-03-19 12:28:16,809 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/cc72afe7d090d591f7a02154b3baed2507f168878d9ec4942b5bd5705f2ea776/json HTTP/1.1" 200 432
+2026-03-19 12:28:16,810 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/116e727dcb5ba6180529c7bafbdce96833b7e63f7912ab4c20e6541f7ba41fa7/json HTTP/1.1" 200 432
+2026-03-19 12:28:20,808 DEBUG [httpcore.http11] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json'), (b'Date', b'Thu, 19 Mar 2026 17:28:28 GMT'), (b'Content-Length', b'672')])
+2026-03-19 12:28:20,808 INFO [httpx] HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-19 12:28:20,808 DEBUG [httpcore.http11] receive_response_body.started request=<Request [b'POST']>
+2026-03-19 12:28:20,808 DEBUG [httpcore.http11] receive_response_body.complete
+2026-03-19 12:28:20,809 DEBUG [httpcore.http11] response_closed.started
+2026-03-19 12:28:20,809 DEBUG [httpcore.http11] response_closed.complete
+2026-03-19 12:28:20,809 DEBUG [openai._base_client] HTTP Response: POST http://10.100.203.130:11434/v1/chat/completions "200 OK" Headers({'content-type': 'application/json', 'date': 'Thu, 19 Mar 2026 17:28:28 GMT', 'content-length': '672'})
+2026-03-19 12:28:20,809 DEBUG [openai._base_client] request_id: None
+2026-03-19 12:28:20,817 DEBUG [openai._base_client] Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-bfb60e6a-12d0-4c74-9b3d-624999eee51a', 'json_data': {'messages': [{'role': 'system', 'content': 'You are a security audit assistant.'}, {'role': 'user', 'content': 'You are a strict technical auditor reviewing a failed remediation attempt.\n\nExecution trace (cycle 1):\n\n\nThe remediation FAILED. Analyze and output:\nRoot Cause: <what specifically went wrong>\nWrong Assumption: <what the agent incorrectly assumed about the system>\nCorrection Strategy: <precise instructions for the next attempt, be specific>'}], 'model': 'devstral-2:123b', 'max_tokens': 4096, 'temperature': 0.1}}
+2026-03-19 12:28:20,817 DEBUG [openai._base_client] Sending HTTP Request: POST http://10.100.203.130:11434/v1/chat/completions
+2026-03-19 12:28:20,817 DEBUG [httpcore.http11] send_request_headers.started request=<Request [b'POST']>
+2026-03-19 12:28:20,818 DEBUG [httpcore.http11] send_request_headers.complete
+2026-03-19 12:28:20,818 DEBUG [httpcore.http11] send_request_body.started request=<Request [b'POST']>
+2026-03-19 12:28:20,818 DEBUG [httpcore.http11] send_request_body.complete
+2026-03-19 12:28:20,818 DEBUG [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>
+2026-03-19 12:28:21,811 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:21,812 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:21,814 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/32e0353e381314a8a4219f5e655204d3b98859accbb1d8877bd69548e1a741c3/start HTTP/1.1" 101 0
+2026-03-19 12:28:21,815 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fa654a3bad13968582ad28f245cd35250ce1d759f8807e881c1dfda07a76d74f/start HTTP/1.1" 101 0
+2026-03-19 12:28:22,160 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fa654a3bad13968582ad28f245cd35250ce1d759f8807e881c1dfda07a76d74f/json HTTP/1.1" 200 636
+2026-03-19 12:28:22,161 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/32e0353e381314a8a4219f5e655204d3b98859accbb1d8877bd69548e1a741c3/json HTTP/1.1" 200 636
+2026-03-19 12:28:22,162 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:22,163 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:22,164 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/138d347c7101c7e40f105b443b3e9cea20c4d2467b602326123e2e381b4ffc92/start HTTP/1.1" 101 0
+2026-03-19 12:28:22,165 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/260d14cbae77d06d46faef6f88ca26968c2db71d1d00c6374b02e70726440b77/start HTTP/1.1" 101 0
+2026-03-19 12:28:22,312 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/138d347c7101c7e40f105b443b3e9cea20c4d2467b602326123e2e381b4ffc92/json HTTP/1.1" 200 432
+2026-03-19 12:28:22,313 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/260d14cbae77d06d46faef6f88ca26968c2db71d1d00c6374b02e70726440b77/json HTTP/1.1" 200 432
+2026-03-19 12:28:27,313 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:27,315 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:27,316 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/42ea3dcf0f734bbcc10a050ade061f779ad6b79509ed2fb3a6329d6c0aef0d9e/start HTTP/1.1" 101 0
+2026-03-19 12:28:27,317 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/605dd4cbda5efa4cd07529dff7216702922f9fbba7d8e70ce6abc09ec79511bd/start HTTP/1.1" 101 0
+2026-03-19 12:28:27,664 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/42ea3dcf0f734bbcc10a050ade061f779ad6b79509ed2fb3a6329d6c0aef0d9e/json HTTP/1.1" 200 636
+2026-03-19 12:28:27,665 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/605dd4cbda5efa4cd07529dff7216702922f9fbba7d8e70ce6abc09ec79511bd/json HTTP/1.1" 200 636
+2026-03-19 12:28:27,666 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:27,667 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:27,667 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/270fbcf4bf4db192948e007512b5855a1b4423c11b23887c7b3b52e712fd06e7/start HTTP/1.1" 101 0
+2026-03-19 12:28:27,668 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/09502c0662160f479b30c7ca838f6779ec22432cb877c4a2553c03ee58ecde7f/start HTTP/1.1" 101 0
+2026-03-19 12:28:27,811 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/270fbcf4bf4db192948e007512b5855a1b4423c11b23887c7b3b52e712fd06e7/json HTTP/1.1" 200 432
+2026-03-19 12:28:27,811 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/09502c0662160f479b30c7ca838f6779ec22432cb877c4a2553c03ee58ecde7f/json HTTP/1.1" 200 432
+2026-03-19 12:28:32,813 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:32,814 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:32,816 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/fe8d18cd5fbacadd4d104c78c3751100e247aca2b3444bd2da34c5103842794b/start HTTP/1.1" 101 0
+2026-03-19 12:28:32,816 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/edde4bb67250d727f1e4cf12bdbef12a8dd26bf1983dbe6c5d7da42ef84af5b1/start HTTP/1.1" 101 0
+2026-03-19 12:28:33,167 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/edde4bb67250d727f1e4cf12bdbef12a8dd26bf1983dbe6c5d7da42ef84af5b1/json HTTP/1.1" 200 636
+2026-03-19 12:28:33,169 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:33,169 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/fe8d18cd5fbacadd4d104c78c3751100e247aca2b3444bd2da34c5103842794b/json HTTP/1.1" 200 636
+2026-03-19 12:28:33,171 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/a10229b3b8b3b6400327e716b51e2b23e51cc55e4f2967cc008f4520294b86be/start HTTP/1.1" 101 0
+2026-03-19 12:28:33,171 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:33,173 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/1915cff0b0a027be2b83fe0081bbb3e169c861f5acbe45a6ffc8b0c1d4222300/start HTTP/1.1" 101 0
+2026-03-19 12:28:33,334 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/a10229b3b8b3b6400327e716b51e2b23e51cc55e4f2967cc008f4520294b86be/json HTTP/1.1" 200 432
+2026-03-19 12:28:33,335 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/1915cff0b0a027be2b83fe0081bbb3e169c861f5acbe45a6ffc8b0c1d4222300/json HTTP/1.1" 200 432
+2026-03-19 12:28:38,336 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:38,338 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:38,340 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/5a8262e2a6e1d2e9232bc32f596539b8aac752843e8fa436d0dbd1f3ba04ea13/start HTTP/1.1" 101 0
+2026-03-19 12:28:38,343 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b1f7fedd9a6778fa6caea9cb325539488c663a19626ee5e0612dc1f5a353c18d/start HTTP/1.1" 101 0
+2026-03-19 12:28:38,693 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/5a8262e2a6e1d2e9232bc32f596539b8aac752843e8fa436d0dbd1f3ba04ea13/json HTTP/1.1" 200 636
+2026-03-19 12:28:38,698 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:38,702 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b1f7fedd9a6778fa6caea9cb325539488c663a19626ee5e0612dc1f5a353c18d/json HTTP/1.1" 200 636
+2026-03-19 12:28:38,703 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/e42e97c34ef926e71cead04be1f8158b293fee4e0905f7781013cc50063ce928/start HTTP/1.1" 101 0
+2026-03-19 12:28:38,705 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:38,707 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/73fa209450cc6003410f24859c29bcbb090666885d48b42052b14ed91928b1c0/start HTTP/1.1" 101 0
+2026-03-19 12:28:38,853 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/73fa209450cc6003410f24859c29bcbb090666885d48b42052b14ed91928b1c0/json HTTP/1.1" 200 432
+2026-03-19 12:28:38,872 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/e42e97c34ef926e71cead04be1f8158b293fee4e0905f7781013cc50063ce928/json HTTP/1.1" 200 432
+2026-03-19 12:28:43,855 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:43,857 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b4051f677041306f393dbee6e48a28124d4530d47636ac6fd014d7347beb1dd3/start HTTP/1.1" 101 0
+2026-03-19 12:28:43,874 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:43,875 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/69ac8c29647f9531f6ae8b37d5c3768a3547aa4d89bd5eaee908002974564b94/start HTTP/1.1" 101 0
+2026-03-19 12:28:44,214 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b4051f677041306f393dbee6e48a28124d4530d47636ac6fd014d7347beb1dd3/json HTTP/1.1" 200 636
+2026-03-19 12:28:44,215 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:44,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/752b8f99608250961dcad5738ba520cedc8d7bb0d0a149f4acb4fddd7bd95416/start HTTP/1.1" 101 0
+2026-03-19 12:28:44,221 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/69ac8c29647f9531f6ae8b37d5c3768a3547aa4d89bd5eaee908002974564b94/json HTTP/1.1" 200 636
+2026-03-19 12:28:44,222 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:44,225 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/87f7eabade925539a5eecef4a931310d75834165e9e652f856257de7060c0b98/start HTTP/1.1" 101 0
+2026-03-19 12:28:44,367 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/752b8f99608250961dcad5738ba520cedc8d7bb0d0a149f4acb4fddd7bd95416/json HTTP/1.1" 200 432
+2026-03-19 12:28:44,370 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/87f7eabade925539a5eecef4a931310d75834165e9e652f856257de7060c0b98/json HTTP/1.1" 200 432
+2026-03-19 12:28:49,371 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:49,371 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:49,373 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3ffa1d40fa5ba48634a6faba08c529054faca1f14a3b61bbabba121965bb5e83/start HTTP/1.1" 101 0
+2026-03-19 12:28:49,373 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ffa86942a3e4927880e0009d3452a222ec409c667ab852c2423c4ba39137b745/start HTTP/1.1" 101 0
+2026-03-19 12:28:49,717 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3ffa1d40fa5ba48634a6faba08c529054faca1f14a3b61bbabba121965bb5e83/json HTTP/1.1" 200 636
+2026-03-19 12:28:49,717 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ffa86942a3e4927880e0009d3452a222ec409c667ab852c2423c4ba39137b745/json HTTP/1.1" 200 636
+2026-03-19 12:28:49,720 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:49,720 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:49,722 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/b9824fc0674fee56335eb7c0efa739f1463024455a00ada4a5586ad1ca260d29/start HTTP/1.1" 101 0
+2026-03-19 12:28:49,722 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/58b65df9270ee1d12a521d7c605cafd67d36e85426d485dd3198058998716287/start HTTP/1.1" 101 0
+2026-03-19 12:28:49,864 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/b9824fc0674fee56335eb7c0efa739f1463024455a00ada4a5586ad1ca260d29/json HTTP/1.1" 200 432
+2026-03-19 12:28:49,864 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/58b65df9270ee1d12a521d7c605cafd67d36e85426d485dd3198058998716287/json HTTP/1.1" 200 432
+2026-03-19 12:28:54,866 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:54,866 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:54,868 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/3f2a61d04dbb4e02476faa6ebaf65f8c6e31be2a4acfa9a8a990860dce3397f2/start HTTP/1.1" 101 0
+2026-03-19 12:28:54,869 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/63bf2a0b8b11c2c6eeda202ca65f3733c922d8754035304476d6819220f100e7/start HTTP/1.1" 101 0
+2026-03-19 12:28:55,213 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/63bf2a0b8b11c2c6eeda202ca65f3733c922d8754035304476d6819220f100e7/json HTTP/1.1" 200 636
+2026-03-19 12:28:55,215 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:28:55,215 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/3f2a61d04dbb4e02476faa6ebaf65f8c6e31be2a4acfa9a8a990860dce3397f2/json HTTP/1.1" 200 636
+2026-03-19 12:28:55,217 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/c6f00d5fdcdcc94b7d8f14172d7a6285ea15b047f6118aca8424e94063eb940e/start HTTP/1.1" 101 0
+2026-03-19 12:28:55,217 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:28:55,219 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7171a7828e418b79a6227c81a8d4bf943453b7c291da0cec9601c55b247628a2/start HTTP/1.1" 101 0
+2026-03-19 12:28:55,365 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7171a7828e418b79a6227c81a8d4bf943453b7c291da0cec9601c55b247628a2/json HTTP/1.1" 200 432
+2026-03-19 12:28:55,365 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/c6f00d5fdcdcc94b7d8f14172d7a6285ea15b047f6118aca8424e94063eb940e/json HTTP/1.1" 200 432
+2026-03-19 12:29:00,367 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:29:00,367 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:29:00,369 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/202386cb108e8e66e4b05fb19f007b69b05ca177c0aae3ad79db3d226643cfb8/start HTTP/1.1" 101 0
+2026-03-19 12:29:00,370 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/ab2bd1d40214011c7c22b9e23fdecf2d04f96dc9d87fa3c25cef6f8d8b180752/start HTTP/1.1" 101 0
+2026-03-19 12:29:00,723 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/202386cb108e8e66e4b05fb19f007b69b05ca177c0aae3ad79db3d226643cfb8/json HTTP/1.1" 200 636
+2026-03-19 12:29:00,725 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/ab2bd1d40214011c7c22b9e23fdecf2d04f96dc9d87fa3c25cef6f8d8b180752/json HTTP/1.1" 200 636
+2026-03-19 12:29:00,726 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/a2429ab947f026604f145352363e7ab3b2276a1b0d3346a2786e19f1e13afd29/exec HTTP/1.1" 201 74
+2026-03-19 12:29:00,727 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/containers/585836262d61ac1d28e50513d8245cff1b9204ca51073e14a857e0356fc86f73/exec HTTP/1.1" 201 74
+2026-03-19 12:29:00,728 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/99616032d0b191623b9336b221b524d9454b131e7538384587eea6d9ef3e8275/start HTTP/1.1" 101 0
+2026-03-19 12:29:00,729 DEBUG [urllib3.connectionpool] http://localhost:None "POST /v1.54/exec/7c37364654ac5f849f37c03f57fa60aa1c312965ea754081a6603f7a1955c837/start HTTP/1.1" 101 0
+2026-03-19 12:29:00,872 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/7c37364654ac5f849f37c03f57fa60aa1c312965ea754081a6603f7a1955c837/json HTTP/1.1" 200 432
+2026-03-19 12:29:00,874 DEBUG [urllib3.connectionpool] http://localhost:None "GET /v1.54/exec/99616032d0b191623b9336b221b524d9454b131e7538384587eea6d9ef3e8275/json HTTP/1.1" 200 432

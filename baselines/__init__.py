@@ -45,7 +45,8 @@ def baseline_factory(
     baseline_name: str,
     model: str,
     exec_fn: Callable,
-    base_url: str = "http://localhost:11434/v1",
+    base_url: str = "http://10.100.203.130:11434/v1",
+    verify_fn: Callable | None = None,
 ) -> BaseAgent:
     """Instantiate a baseline agent by name.
 
@@ -83,7 +84,7 @@ def baseline_factory(
             f"Available: {sorted(MODEL_REGISTRY)}"
         )
     cls = _BASELINE_REGISTRY[baseline_name]
-    return cls(model=model, exec_fn=exec_fn, base_url=base_url)
+    return cls(model=model, exec_fn=exec_fn, base_url=base_url, verify_fn=verify_fn)
 
 
 __all__ = [

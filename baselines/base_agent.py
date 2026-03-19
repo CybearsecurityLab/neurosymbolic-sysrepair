@@ -32,11 +32,14 @@ class BaseAgent(ABC):
         model: str,
         exec_fn: Callable[[str], CommandRecord],
         base_url: str = "http://localhost:11434/v1",
+        verify_fn: Callable[[], tuple[bool, str]] | None = None,
     ) -> None:
         self.model = model
         self.llm = LLMClient(model, base_url)
         self._exec_fn = exec_fn
+        self._verify_fn = verify_fn
         self.commands: list[CommandRecord] = []
+        self.trace: list[dict] = []
 
     @abstractmethod
     def run(self, system_prompt: str) -> AgentResult:
@@ -79,6 +82,19 @@ class BaseAgent(ABC):
         ]
         text = r.stderr + r.stdout
         return any(re.search(p, text, re.IGNORECASE) for p in patterns)
+
+    def verify(self) -> tuple[bool, str]:
+        """Run the verification oracle and return (passed, sanitised_message).
+
+        Only the pass/fail outcome is exposed to the agent — the detailed
+        verify.sh output is suppressed to avoid leaking the answer.
+        """
+        if self._verify_fn is None:
+            return False, "Verification scan not available."
+        passed, _raw_output = self._verify_fn()
+        if passed:
+            return True, "Verification scan result: PASSED — the vulnerability has been remediated."
+        return False, "Verification scan result: FAILED — the vulnerability is still present."
 
     def _is_done(self, record: CommandRecord) -> bool:
         """Return True when the agent has signalled completion via REMEDIATION_COMPLETE."""

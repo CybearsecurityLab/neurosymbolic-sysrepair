@@ -1,0 +1,4 @@
+{
+  "add_sub_uids": "usermod -v {first}-{last} {user}",
+  "run_userdel_cmd": "userdel {user}"
+}

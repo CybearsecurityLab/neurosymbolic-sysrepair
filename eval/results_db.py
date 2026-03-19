@@ -34,6 +34,8 @@ class EvalRecord:
     false_assumption_count: int
     hallucination_rate: float
     hallucination_count: int
+    hallucination_severity_avg: float
+    judge_agreement_avg: float
     command_count: int
     plan_length: Optional[int]
     steps_wasted: Optional[int]
@@ -44,6 +46,7 @@ class EvalRecord:
     commands_json: str
     violations_json: str
     verify_output: str
+    trace_json: str
 
 
 CREATE_TABLE_SQL = """
@@ -68,6 +71,8 @@ CREATE TABLE IF NOT EXISTS eval_runs (
     false_assumption_count INTEGER,
     hallucination_rate  REAL,
     hallucination_count INTEGER,
+    hallucination_severity_avg REAL,
+    judge_agreement_avg REAL,
     command_count       INTEGER,
     plan_length         INTEGER,
     steps_wasted        INTEGER,
@@ -76,7 +81,8 @@ CREATE TABLE IF NOT EXISTS eval_runs (
     lats_rollout_count  INTEGER,
     commands_json       TEXT,
     violations_json     TEXT,
-    verify_output       TEXT
+    verify_output       TEXT,
+    trace_json          TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_scenario   ON eval_runs(scenario_id);
 CREATE INDEX IF NOT EXISTS idx_baseline   ON eval_runs(baseline);
@@ -136,7 +142,9 @@ class ResultsDB:
                        AVG(ew_score) as avg_ew,
                        AVG(command_count) as avg_cmds,
                        AVG(wall_time_seconds) as avg_time,
-                       AVG(hallucination_rate) * 100 as avg_halluc_pct
+                       AVG(hallucination_rate) * 100 as avg_halluc_pct,
+                       AVG(COALESCE(hallucination_severity_avg, 0)) as avg_severity,
+                       AVG(COALESCE(judge_agreement_avg, 1)) as avg_judge_agreement
                 FROM eval_runs
                 GROUP BY baseline, model
                 ORDER BY baseline, model
@@ -155,7 +163,8 @@ class ResultsDB:
         commands_json = json.dumps([
             {"step": c.step, "command": c.command, "exit_code": c.exit_code,
              "stdout": c.stdout[:500], "stderr": c.stderr[:300],
-             "is_hallucination": c.is_hallucination, "is_false_assumption": c.is_false_assumption,
+             "is_hallucination": c.is_hallucination, "hallucination_severity": c.hallucination_severity,
+             "is_false_assumption": c.is_false_assumption,
              "duration_ms": c.duration_ms}
             for c in result.commands
         ])
@@ -184,6 +193,8 @@ class ResultsDB:
             false_assumption_count=metrics.false_assumption_count,
             hallucination_rate=metrics.hallucination_rate,
             hallucination_count=metrics.hallucination_count,
+            hallucination_severity_avg=metrics.hallucination_severity_avg,
+            judge_agreement_avg=metrics.judge_agreement_avg,
             command_count=metrics.plan_optimality.command_count,
             plan_length=metrics.plan_optimality.plan_length,
             steps_wasted=metrics.plan_optimality.steps_wasted,
@@ -193,4 +204,5 @@ class ResultsDB:
             commands_json=commands_json,
             violations_json=violations_json,
             verify_output=verify_output,
+            trace_json=json.dumps(result.trace, default=str),
         )

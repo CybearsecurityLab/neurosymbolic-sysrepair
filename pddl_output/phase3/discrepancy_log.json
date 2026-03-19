@@ -1,178 +1,266 @@
 [
   {
-    "action": "skip_log_init",
+    "action": "run_as_user",
+    "type": "concretization",
+    "expected": "Valid bash command for (run_as_user www-data)",
+    "actual": "No template found",
+    "context": "Action parameters: {'?user': 'www-data'}",
+    "severity": "high"
+  },
+  {
+    "action": "add_sub_uids",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 9: useradd: user 'news' already exists\n",
-    "context": "Command: useradd -l news",
+    "actual": "Exit code 3: usermod: invalid subordinate uid range 'kcompactd0-libffi8'\n",
+    "context": "Command: usermod -v kcompactd0-libffi8 proxy",
     "severity": "high"
   },
   {
-    "action": "specify_match_extension",
+    "action": "run_userdel_cmd",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 2: iptables v1.8.11 (nf_tables): Couldn't load match `/etc/nsswitch.conf':No such file or directory\n\nTry `iptables -h' or 'iptables --help' for more information.\n",
-    "context": "Command: iptables -m /etc/nsswitch.conf",
+    "actual": "Exit code 1: Command blocked: could corrupt container filesystem",
+    "context": "Command: userdel sync",
     "severity": "high"
   },
   {
-    "action": "follow_symlink_copy",
-    "type": "concretization",
-    "expected": "Valid bash command for (follow_symlink_copy configuration_file__etc_usb_modeswitch_conf service_udisks2_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?src': 'configuration_file__etc_usb_modeswitch_conf', '?dest': 'service_udisks2_service'}",
-    "severity": "high"
-  },
-  {
-    "action": "read_filter_from_file",
-    "type": "concretization",
-    "expected": "Valid bash command for (read_filter_from_file configuration_file__etc_hdparm_conf)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?f': 'configuration_file__etc_hdparm_conf'}",
-    "severity": "high"
-  },
-  {
-    "action": "change_ownership",
-    "type": "concretization",
-    "expected": "Valid bash command for (change_ownership configuration_file__etc_xattr_conf init-system-helpers disk)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?f': 'configuration_file__etc_xattr_conf', '?owner': 'init-system-helpers', '?group': 'disk'}",
-    "severity": "high"
-  },
-  {
-    "action": "return_from_chain",
+    "action": "set_default_shell",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 1: iptables: No chain/target/match by that name.\n",
-    "context": "Command: iptables -t filter -A CHAIN -j RETURN",
+    "actual": "Exit code 2: useradd: Warning: missing or non-executable shell '/etc/sudo/logsrvd.conf'\nUsage: useradd [options] LOGIN\n       useradd -D\n       useradd -D [options]\n\nOptions:\n      --badname                 do not",
+    "context": "Command: useradd -s /etc/sudo/logsrvd.conf",
     "severity": "high"
   },
   {
-    "action": "force_copy",
-    "type": "concretization",
-    "expected": "Valid bash command for (force_copy service_systemd-resolved_service configuration_file__etc_debconf_conf)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?src': 'service_systemd-resolved_service', '?dest': 'configuration_file__etc_debconf_conf'}",
-    "severity": "high"
-  },
-  {
-    "action": "create_home_directory",
+    "action": "remove_session_cache",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 9: useradd: user 'news' already exists\n",
-    "context": "Command: useradd -m news",
+    "actual": "Exit code 1: usage: sudo -h | -K | -k | -V\nusage: sudo -v [-ABkNnS] [-g group] [-h host] [-p prompt] [-u user]\nusage: sudo -l [-ABkNnS] [-g group] [-h host] [-p prompt] [-U user]\n            [-u user] [command [ar",
+    "context": "Command: sudo -K -u root",
     "severity": "high"
   },
   {
-    "action": "configure_netns",
+    "action": "output_oneline",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 255: Invalid netns name \"/etc/nsswitch.conf\"\n",
-    "context": "Command: ip netns add /etc/nsswitch.conf",
+    "actual": "Exit code 255: Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }\n       ip [ -force ] -batch filename\nwhere  OBJECT := { address | addrlabel | fou | help | ila | ioam | l2tp | link |\n                   macsec | maddre",
+    "context": "Command: ip -o",
     "severity": "high"
   },
   {
-    "action": "compile_source",
-    "type": "concretization",
-    "expected": "Valid bash command for (compile_source libpam-runtime)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?pkg': 'libpam-runtime'}",
-    "severity": "high"
-  },
-  {
-    "action": "update_file_times_with_stamp",
-    "type": "concretization",
-    "expected": "Valid bash command for (update_file_times_with_stamp configuration_file__etc_rsyslog_conf service_systemd-tpm2-setup-early_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?f': 'configuration_file__etc_rsyslog_conf', '?stamp': 'service_systemd-tpm2-setup-early_service'}",
-    "severity": "high"
-  },
-  {
-    "action": "configure_firewall_rules",
-    "type": "concretization",
-    "expected": "Valid bash command for (configure_firewall_rules service_udisks2_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?table': 'service_udisks2_service'}",
-    "severity": "high"
-  },
-  {
-    "action": "configure_mptcp",
-    "type": "concretization",
-    "expected": "Valid bash command for (configure_mptcp configuration_file__etc_hdparm_conf)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?path': 'configuration_file__etc_hdparm_conf'}",
-    "severity": "high"
-  },
-  {
-    "action": "edit_files",
+    "action": "set_selinux_context",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 1: sudo: unable to resolve host db4cbe0773a2: Temporary failure in name resolution\nsudo: /usr/bin/editor: command not found\n",
-    "context": "Command: sudo -e /etc/hdparm.conf",
+    "actual": "Exit code 1: cp: missing destination file operand after '/etc/vdpau/wrapper.cfg'\nTry 'cp --help' for more information.\n",
+    "context": "Command: cp -Z /etc/vdpau/wrapper.cfg",
     "severity": "high"
   },
   {
-    "action": "preserve_copy",
-    "type": "concretization",
-    "expected": "Valid bash command for (preserve_copy configuration_file__etc_rsyslog_conf service_dracut-cmdline_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?src': 'configuration_file__etc_rsyslog_conf', '?dest': 'service_dracut-cmdline_service'}",
-    "severity": "high"
-  },
-  {
-    "action": "run_login_shell",
+    "action": "remove_print_jobs",
     "type": "execution",
     "expected": "Exit code 0",
-    "actual": "Exit code 1: sudo: unable to resolve host db4cbe0773a2: Temporary failure in name resolution\nsudo: unable to change directory to /nonexistent: No such file or directory\n",
-    "context": "Command: sudo -i -u _apt",
+    "actual": "Exit code 127: bash: line 1: lprm: command not found\n",
+    "context": "Command: lprm sync",
     "severity": "high"
   },
   {
-    "action": "change_file_mode",
-    "type": "concretization",
-    "expected": "Valid bash command for (change_file_mode configuration_file__etc_libao_conf service_systemd-hibernate-resume_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?f': 'configuration_file__etc_libao_conf', '?mode': 'service_systemd-hibernate-resume_service'}",
+    "action": "open_port",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 2: iptables v1.8.11 (nf_tables): invalid port/service `libext2fs2t64' specified\nTry `iptables -h' or 'iptables --help' for more information.\n",
+    "context": "Command: iptables -A INPUT -p tcp --dport libext2fs2t64 -j ACCEPT",
+    "severity": "high"
+  },
+  {
+    "action": "modify_user_account",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 2: usermod: no options\nUsage: usermod [options] LOGIN\n\nOptions:\n  -a, --append                  append the user to the supplemental GROUPS\n                                mentioned by the -G option witho",
+    "context": "Command: usermod sync",
+    "severity": "high"
+  },
+  {
+    "action": "remove_print_jobs",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 127: bash: line 1: lprm: command not found\n",
+    "context": "Command: lprm www-data",
+    "severity": "high"
+  },
+  {
+    "action": "create_user_with_home",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 3: useradd: invalid home directory 'unattended-upgrades'\n",
+    "context": "Command: useradd -d unattended-upgrades _ssh",
+    "severity": "high"
+  },
+  {
+    "action": "match_fragments",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 2: iptables v1.8.11 (nf_tables): no command specified\nTry `iptables -h' or 'iptables --help' for more information.\n",
+    "context": "Command: iptables -f",
+    "severity": "high"
+  },
+  {
+    "action": "edit_file_as_user",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: sudo: unable to resolve host 0d367d641b7d: Temporary failure in name resolution\nsudo: /usr/bin/editor: command not found\n",
+    "context": "Command: sudo -e -u www-data /etc/vdpau/wrapper.cfg",
     "severity": "high"
   },
   {
     "action": "snap_export_key",
     "type": "concretization",
-    "expected": "Valid bash command for (snap_export_key configuration_file__etc_nsswitch_conf)",
+    "expected": "Valid bash command for (snap_export_key configuration_file__etc_vdpau_wrapper_cfg)",
     "actual": "No template found",
-    "context": "Action parameters: {'?f': 'configuration_file__etc_nsswitch_conf'}",
+    "context": "Action parameters: {'?f': 'configuration_file__etc_vdpau_wrapper_cfg'}",
     "severity": "high"
   },
   {
-    "action": "enable_simple_backups",
-    "type": "concretization",
-    "expected": "Valid bash command for (enable_simple_backups service_udisks2_service)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?obj': 'service_udisks2_service'}",
+    "action": "set_home_directory",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 3: usermod: homedir must be an absolute path\n",
+    "context": "Command: usermod -d render games",
     "severity": "high"
   },
   {
-    "action": "block_traffic",
-    "type": "concretization",
-    "expected": "Valid bash command for (block_traffic package_power-profiles-daemon)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?rule': 'package_power-profiles-daemon'}",
+    "action": "configure_mroute",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 255: Command \"add\" is unknown, try \"ip mroute help\".\n",
+    "context": "Command: ip mroute add /etc/fuse.conf",
     "severity": "high"
   },
   {
-    "action": "dereference_copy",
-    "type": "concretization",
-    "expected": "Valid bash command for (dereference_copy configuration_file__etc_nsswitch_conf process_snapd-desktop-i_1)",
-    "actual": "No template found",
-    "context": "Action parameters: {'?src': 'configuration_file__etc_nsswitch_conf', '?dest': 'process_snapd-desktop-i_1'}",
+    "action": "add_sub_gids",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 3: usermod: invalid subordinate gid range '/etc/rsyslog.conf-fwupd'\n",
+    "context": "Command: usermod -w /etc/rsyslog.conf-fwupd irc",
     "severity": "high"
   },
   {
-    "action": "set_security_context",
+    "action": "status_service",
     "type": "concretization",
-    "expected": "Valid bash command for (set_security_context configuration_file__etc_hdparm_conf configuration_file__etc_ucf_conf)",
+    "expected": "Valid bash command for (status_service service_systemd-quotacheck_service users)",
     "actual": "No template found",
-    "context": "Action parameters: {'?dst': 'configuration_file__etc_hdparm_conf', '?ctx': 'configuration_file__etc_ucf_conf'}",
+    "context": "Action parameters: {'?s': 'service_systemd-quotacheck_service', '?u': 'users'}",
+    "severity": "high"
+  },
+  {
+    "action": "use_config_file",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 100: W: Unable to read /etc/fuse.conf - open (2: No such file or directory)\n",
+    "context": "Command: apt-get -c /etc/fuse.conf",
+    "severity": "high"
+  },
+  {
+    "action": "change_home_directory",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: su: warning: cannot change directory to /var/www: No such file or directory\n",
+    "context": "Command: su - www-data",
+    "severity": "high"
+  },
+  {
+    "action": "dereference_symbolic_link",
+    "type": "concretization",
+    "expected": "Valid bash command for (dereference_symbolic_link configuration_file__etc_fuse_conf)",
+    "actual": "No template found",
+    "context": "Action parameters: {'?link': 'configuration_file__etc_fuse_conf'}",
+    "severity": "high"
+  },
+  {
+    "action": "recursive_copy",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: cp: cannot stat '/etc/libao.conf': No such file or directory\n",
+    "context": "Command: cp -r /etc/libao.conf unattended-upgrades",
+    "severity": "high"
+  },
+  {
+    "action": "download_package",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 100: E: Can't find a source to download version '1.21.3-5ubuntu2' of 'libk5crypto3:amd64'\n",
+    "context": "Command: apt-get download libk5crypto3",
+    "severity": "high"
+  },
+  {
+    "action": "remove_sub_gids",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 3: usermod: invalid subordinate gid range 'pipewire_1-open-vm-tools.service'\n",
+    "context": "Command: usermod -W pipewire_1-open-vm-tools.service bin",
+    "severity": "high"
+  },
+  {
+    "action": "reference_file_times",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: touch: failed to get attributes of '/etc/pnm2ppa.conf': No such file or directory\n",
+    "context": "Command: touch -r /etc/pnm2ppa.conf /etc/pnm2ppa.conf",
+    "severity": "high"
+  },
+  {
+    "action": "no_user_group",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 9: useradd: user 'www-data' already exists\n",
+    "context": "Command: useradd -N www-data",
+    "severity": "high"
+  },
+  {
+    "action": "backup_file",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: cp: cannot stat 'code_8': No such file or directory\n",
+    "context": "Command: cp --backup code_8 /etc/vconsole.conf",
+    "severity": "high"
+  },
+  {
+    "action": "invert_address_sense",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 2: iptables v1.8.11 (nf_tables): Couldn't load match `address':No such file or directory\n\nTry `iptables -h' or 'iptables --help' for more information.\n",
+    "context": "Command: iptables -m address --invert /etc/fuse.conf",
+    "severity": "high"
+  },
+  {
+    "action": "non_unique_user",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 2: useradd: -o flag is only allowed with the -u flag\nUsage: useradd [options] LOGIN\n       useradd -D\n       useradd -D [options]\n\nOptions:\n      --badname                 do not check for bad names (DEP",
+    "context": "Command: useradd -o libk5crypto3",
+    "severity": "high"
+  },
+  {
+    "action": "update_modification_time",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: touch: cannot touch '/etc/sudo/logsrvd.conf': No such file or directory\n",
+    "context": "Command: touch -m /etc/sudo/logsrvd.conf",
+    "severity": "high"
+  },
+  {
+    "action": "stop_service",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: System has not been booted with systemd as init system (PID 1). Can't operate.\nFailed to connect to system scope bus via local transport: Host is down\n",
+    "context": "Command: systemctl stop networkd-dispatcher.service",
+    "severity": "high"
+  },
+  {
+    "action": "quiet_mode",
+    "type": "execution",
+    "expected": "Exit code 0",
+    "actual": "Exit code 1: ",
+    "context": "Command: apt-get -q",
     "severity": "high"
   }
 ]

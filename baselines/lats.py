@@ -85,8 +85,9 @@ class LATSAgent(BaseAgent):
         model: str,
         exec_fn,
         base_url: str = "http://localhost:11434/v1",
+        verify_fn=None,
     ) -> None:
-        super().__init__(model, exec_fn, base_url)
+        super().__init__(model, exec_fn, base_url, verify_fn=verify_fn)
         self._system_prompt: str = ""
 
     def run(self, system_prompt: str) -> AgentResult:
@@ -132,6 +133,7 @@ class LATSAgent(BaseAgent):
             forced_halt=final_state["forced_halt"],
             tree_nodes_visited=nodes_visited,
             lats_rollout_count=final_state["rollout_count"],
+            trace=self.trace,
         )
 
     # ------------------------------------------------------------------
@@ -276,6 +278,13 @@ class LATSAgent(BaseAgent):
                 **node,
                 "children": node["children"] + child_ids,
             }
+            agent.trace.append({
+                "node": "expand",
+                "rollout": state["rollout_count"],
+                "parent_command": node["command"],
+                "depth": node["depth"],
+                "candidates": candidates,
+            })
             return {"nodes": new_nodes}
 
         def simulate_node(state: LATSState) -> dict:
@@ -299,6 +308,9 @@ class LATSAgent(BaseAgent):
             node = state["nodes"][leaf_id]
             record = agent.bash(node["command"], len(agent.commands) + 1)
 
+            # Run verification scan
+            verify_passed, _verify_msg = agent.verify()
+
             # Ask LLM to score the result
             score_prompt = (
                 f"Command executed: {node['command']}\n"
@@ -321,12 +333,25 @@ class LATSAgent(BaseAgent):
                     temperature=0.1,
                 )
                 score = max(0.0, min(1.0, score_result.score))
-                is_terminal = score_result.is_terminal or agent._is_done(record)
+                is_terminal = verify_passed or score_result.is_terminal or agent._is_done(record)
                 is_fatal = score_result.is_fatal
             except Exception:
                 score = 0.5 if record.exit_code == 0 else 0.1
-                is_terminal = agent._is_done(record)
+                is_terminal = verify_passed or agent._is_done(record)
                 is_fatal = False
+
+            agent.trace.append({
+                "node": "simulate",
+                "rollout": state["rollout_count"],
+                "command": node["command"],
+                "exit_code": record.exit_code,
+                "stdout": record.stdout[:500],
+                "stderr": record.stderr[:300],
+                "score": score,
+                "is_terminal": is_terminal,
+                "is_fatal": is_fatal,
+                "verify_passed": verify_passed,
+            })
 
             new_nodes = dict(state["nodes"])
             new_nodes[leaf_id] = {

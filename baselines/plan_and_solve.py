@@ -103,6 +103,7 @@ class PlanAndSolveAgent(BaseAgent):
             plan=plan_steps,
             plan_length=len(plan_steps),
             steps_wasted=steps_wasted,
+            trace=self.trace,
         )
 
     # ------------------------------------------------------------------
@@ -149,6 +150,13 @@ class PlanAndSolveAgent(BaseAgent):
             except Exception:
                 plan_dicts = []
 
+            agent.trace.append({
+                "node": "planner",
+                "retry": state["planner_retry_count"],
+                "prompt": plan_prompt,
+                "plan": plan_dicts,
+            })
+
             return {
                 "messages": [{"role": "user", "content": plan_prompt}],
                 "plan": plan_dicts,
@@ -172,7 +180,9 @@ class PlanAndSolveAgent(BaseAgent):
                 record = agent.bash(cmd, global_step)
                 step_cmds.append(record)
 
-                if record.exit_code == 0 or agent._is_done(record):
+                # Run verification scan after each command
+                verify_passed, _verify_msg = agent.verify()
+                if verify_passed or record.exit_code == 0 or agent._is_done(record):
                     success = True
                     break
 
@@ -198,6 +208,18 @@ class PlanAndSolveAgent(BaseAgent):
                 "retry_count": retry_count,
                 "commands": len(step_cmds),
             }
+            agent.trace.append({
+                "node": "executor",
+                "plan_step": step,
+                "commands": [
+                    {"command": c.command, "exit_code": c.exit_code,
+                     "stdout": c.stdout[:500], "stderr": c.stderr[:300]}
+                    for c in step_cmds
+                ],
+                "success": success,
+                "retry_count": retry_count,
+                "verify_passed": verify_passed,
+            })
             new_count = state["executor_step_count"] + len(step_cmds)
             stuck = not success and retry_count >= agent.MAX_STEP_RETRIES - 1
 
@@ -206,6 +228,7 @@ class PlanAndSolveAgent(BaseAgent):
                 "current_step_idx": idx + 1,
                 "executor_step_count": new_count,
                 "stuck": stuck,
+                "done": verify_passed,
                 "forced_halt": new_count >= agent.MAX_EXECUTOR_STEPS,
             }
 

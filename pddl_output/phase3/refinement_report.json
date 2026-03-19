@@ -1,28 +1,28 @@
 {
-  "session_id": "20260312_211831",
-  "started_at": "2026-03-12T21:18:31.410855",
+  "session_id": "20260315_130815",
+  "started_at": "2026-03-15T13:08:15.443361",
   "completed": true,
   "success": false,
   "configuration": {
     "target_score": 0.9,
     "max_iterations": 1,
-    "walks_per_iteration": 3,
+    "walks_per_iteration": 5,
     "walk_depth": 8,
     "docker_image": "pddl-sandbox:latest"
   },
   "results": {
-    "final_score": 0.08333333333333333,
+    "final_score": 0.175,
     "target_achieved": false,
     "iterations_completed": 1,
-    "total_time_seconds": 766.1664326190948
+    "total_time_seconds": 1516.487577676773
   },
   "score_history": [
     {
       "iteration": 1,
-      "score": 0.08333333333333333,
-      "discrepancies": 22,
-      "eval_time": 75.87770652770996,
-      "refine_time": 689.4191925525665
+      "score": 0.175,
+      "discrepancies": 33,
+      "eval_time": 204.63064432144165,
+      "refine_time": 1311.1386754512787
     }
   ],
   "domain_stats": {

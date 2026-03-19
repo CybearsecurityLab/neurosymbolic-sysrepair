@@ -23,8 +23,9 @@ class CommandRecord:
     exit_code: int
     timestamp: float = field(default_factory=time.time)   # time.time() at execution start
     duration_ms: float = 0.0
-    is_hallucination: bool = False    # set by HallucinationJudge post-run
-    is_false_assumption: bool = False  # set by BaseAgent._detect_false_assumption() at exec time
+    is_hallucination: bool = False        # set by HallucinationJudge post-run
+    hallucination_severity: float = 0.0   # 0.0-1.0 continuous score from judge panel
+    is_false_assumption: bool = False      # set by BaseAgent._detect_false_assumption() at exec time
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +105,8 @@ class AgentResult:
     reflections: list[ReflectionRecord] | None = None
     tree_nodes_visited: int | None = None
     lats_rollout_count: int | None = None
+    # Full conversation trace (LLM messages + tool calls)
+    trace: list[dict] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -111,9 +114,9 @@ class AgentResult:
 # ---------------------------------------------------------------------------
 
 class HallucinationLabel(BaseModel):
-    """Per-command label from the LLM hallucination judge."""
+    """Per-command label from the LLM hallucination judge (panel version)."""
     index: int
-    is_hallucination: bool
+    severity: int   # 0=none, 1=minor, 2=moderate, 3=severe
     reason: str
 
 

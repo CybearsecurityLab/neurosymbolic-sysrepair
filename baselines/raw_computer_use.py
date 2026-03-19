@@ -61,6 +61,7 @@ class RawComputerUseAgent(BaseAgent):
             wall_time_seconds=time.time() - start_time,
             declared_done=final_state["done"],
             forced_halt=final_state["forced_halt"],
+            trace=self.trace,
         )
 
     # ------------------------------------------------------------------
@@ -88,6 +89,15 @@ class RawComputerUseAgent(BaseAgent):
                     }
                     for tc in msg.tool_calls
                 ]
+            agent.trace.append({
+                "node": "agent",
+                "step": state["step_count"],
+                "response": msg.content or "",
+                "tool_calls": [
+                    {"name": tc.function.name, "arguments": tc.function.arguments}
+                    for tc in (msg.tool_calls or [])
+                ],
+            })
             return {"messages": [ai_msg]}
 
         def tool_node(state: RawCUState) -> dict:
@@ -101,16 +111,29 @@ class RawComputerUseAgent(BaseAgent):
             step = state["step_count"] + 1
             record = agent.bash(cmd, step)
 
-            done = agent._is_done(record)
+            # Run verification scan
+            verify_passed, verify_msg = agent.verify()
+            done = verify_passed or agent._is_done(record)
             tool_msg = {
                 "role": "tool",
                 "tool_call_id": tc["id"],
                 "content": (
                     f"exit_code: {record.exit_code}\n"
                     f"stdout: {record.stdout}\n"
-                    f"stderr: {record.stderr}"
+                    f"stderr: {record.stderr}\n\n"
+                    f"{verify_msg}"
                 ),
             }
+            agent.trace.append({
+                "node": "tool",
+                "step": step,
+                "command": cmd,
+                "exit_code": record.exit_code,
+                "stdout": record.stdout[:1000],
+                "stderr": record.stderr[:500],
+                "verify": verify_msg,
+                "done": done,
+            })
             return {
                 "messages": [tool_msg],
                 "step_count": step,
