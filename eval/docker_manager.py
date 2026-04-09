@@ -1,6 +1,7 @@
 import docker
 import io
 import logging
+import shlex
 import tarfile
 import time
 from pathlib import Path
@@ -19,6 +20,7 @@ class DockerManager:
         self._container_crashes: dict[str, int] = {}  # container_id -> crash count
         # Track image tag + verify script per container for recreation
         self._container_meta: dict[str, dict] = {}  # container_id -> {image_tag, run_id, verify_sh_path}
+        self._image_has_timeout: dict[str, bool] = {}  # image_tag -> bool
 
     # Packages needed by verify.sh scripts (sshpass for SSH tests, iproute2 for ss, etc.)
     _VERIFY_DEPS = "sshpass openssh-client iproute2 procps"
@@ -80,11 +82,15 @@ class DockerManager:
         stays alive.
         """
         original_cmd = self._get_image_cmd(image_tag)
+        # Use a bash loop as PID 1 that reaps zombie children.
+        # "exec tail -f /dev/null" never calls wait(), so killed child
+        # processes become zombies that pgrep still matches.
+        keepalive = 'trap "wait" SIGCHLD; while true; do wait -n 2>/dev/null || sleep 1; done'
         if original_cmd:
-            cmd_str = " ".join(original_cmd)
-            wrapper = f"{cmd_str} & exec tail -f /dev/null"
+            cmd_str = " ".join(shlex.quote(c) for c in original_cmd)
+            wrapper = f"{cmd_str} & {keepalive}"
         else:
-            wrapper = "exec tail -f /dev/null"
+            wrapper = keepalive
 
         container = self.client.containers.run(
             image_tag,
@@ -100,6 +106,9 @@ class DockerManager:
         )
         # Wait briefly for container to start
         time.sleep(1)
+        # Probe for timeout binary (cached per image tag)
+        if image_tag not in self._image_has_timeout:
+            self._check_timeout_available(container, image_tag)
         # Track metadata for potential recreation
         self._container_meta[container.id] = {
             "image_tag": image_tag,
@@ -134,6 +143,46 @@ class DockerManager:
         dest_dir = "/".join(container_path.split("/")[:-1]) or "/"
         container.put_archive(dest_dir, buf)
 
+    def _check_timeout_available(self, container, image_tag: str) -> bool:
+        """Probe whether the 'timeout' binary exists in this container."""
+        if image_tag in self._image_has_timeout:
+            return self._image_has_timeout[image_tag]
+        try:
+            exit_code, _ = container.exec_run(
+                cmd=["bash", "-c", "command -v timeout"],
+                stdout=False, stderr=False,
+            )
+            available = exit_code == 0
+        except Exception:
+            available = False
+        self._image_has_timeout[image_tag] = available
+        if not available:
+            logger.info(f"Image {image_tag} lacks 'timeout' binary; using bash fallback")
+        return available
+
+    def _wrap_with_timeout(self, cmd: str, timeout_secs: int, container_id: str) -> str:
+        """Wrap a command string with a timeout mechanism.
+
+        Uses coreutils ``timeout`` when available, otherwise falls back to a
+        pure-bash background-process watchdog that works on older distros
+        (e.g. Ubuntu 8.04 Hardy which ships coreutils 6.10).
+        """
+        meta = self._container_meta.get(container_id, {})
+        image_tag = meta.get("image_tag", "")
+        has_timeout = self._image_has_timeout.get(image_tag, True)
+
+        quoted = self._shell_quote(cmd)
+        if has_timeout:
+            return f"timeout {timeout_secs} bash -c {quoted}"
+
+        # Bash-native timeout: run command in background, watchdog kills after N seconds
+        return (
+            f"bash -c {quoted} & pid=$!; "
+            f"( sleep {timeout_secs}; kill $pid 2>/dev/null ) & watcher=$!; "
+            f"wait $pid 2>/dev/null; exit_code=$?; "
+            f"kill $watcher 2>/dev/null; exit $exit_code"
+        )
+
     def exec(
         self,
         container,
@@ -145,7 +194,7 @@ class DockerManager:
         t0 = time.time()
         try:
             # Wrap with timeout since exec_run doesn't support timeout kwarg
-            wrapped_cmd = f"timeout {timeout} bash -c {self._shell_quote(cmd)}"
+            wrapped_cmd = self._wrap_with_timeout(cmd, timeout, container.id)
             exit_code, output = container.exec_run(
                 cmd=["bash", "-c", wrapped_cmd],
                 stdout=True,
@@ -209,8 +258,9 @@ class DockerManager:
         """Run /opt/verify.sh oracle. Returns (passed, output)."""
         try:
             container.exec_run(["chmod", "+x", "/opt/verify.sh"])
+            verify_cmd = self._wrap_with_timeout("bash /opt/verify.sh", 60, container.id)
             exit_code, output = container.exec_run(
-                cmd=["bash", "-c", "timeout 60 bash /opt/verify.sh"],
+                cmd=["bash", "-c", verify_cmd],
                 stdout=True, stderr=True, demux=True,
             )
             stdout_b, stderr_b = output if output else (b"", b"")
