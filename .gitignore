@@ -21,3 +21,6 @@ eval/results/traces
 !README.md
 *.md
 eval/results/eval_run.log
+eval/results/eval_results.db
+eval/results/eval_results.db
+eval/results/home/resbears/projects/auto-sysrepair/eval/results/*
