@@ -16,6 +16,32 @@ from common.models import (
 from common.pddl_rules import PDDL_SYNTAX_GUIDE
 
 
+def _infer_type_for_variable(var_name: str) -> PDDLType:
+    """Infer the PDDL type of a variable from its name, matching sanitizer logic."""
+    _TYPE_HINTS = {
+        "p": PDDLType.PACKAGE, "pkg": PDDLType.PACKAGE, "package": PDDLType.PACKAGE,
+        "s": PDDLType.SERVICE, "svc": PDDLType.SERVICE, "service": PDDLType.SERVICE,
+        "u": PDDLType.USER, "user": PDDLType.USER,
+        "g": PDDLType.GROUP, "group": PDDLType.GROUP,
+        "f": PDDLType.FILE, "file": PDDLType.FILE, "src": PDDLType.FILE, "dst": PDDLType.FILE,
+        "d": PDDLType.DIRECTORY, "dir": PDDLType.DIRECTORY,
+        "port": PDDLType.PORT,
+        "rule": PDDLType.FIREWALL_RULE,
+        "proc": PDDLType.PROCESS, "process": PDDLType.PROCESS, "cmd": PDDLType.PROCESS,
+        "cfg": PDDLType.CONFIG_FILE, "config": PDDLType.CONFIG_FILE,
+        "iface": PDDLType.INTERFACE, "interface": PDDLType.INTERFACE,
+        "repo": PDDLType.REPOSITORY, "repository": PDDLType.REPOSITORY,
+    }
+    # Try exact match first, then check if var_name contains a known hint
+    lower = var_name.lower().rstrip("0123456789")
+    if lower in _TYPE_HINTS:
+        return _TYPE_HINTS[lower]
+    for hint, pddl_type in _TYPE_HINTS.items():
+        if hint in lower:
+            return pddl_type
+    return PDDLType.OBJECT
+
+
 class ManPageParser:
     """
     Hybrid action extractor combining regex patterns and LLM extraction.
@@ -116,41 +142,22 @@ Skip read-only or query commands.
         self.examples = self._build_examples()  # Build LangExtract objects
         self.known_predicates = known_predicates or get_base_predicates()
 
-    # 2. REPLACE _check_llm_availability method
     def _check_llm_availability(self) -> bool:
-        """Check if LLM is available and the model exists."""
+        """Check if LLM server is available via OpenAI-compatible API."""
         if not self.llm_config.enabled:
             return False
 
         try:
             import langextract
             import urllib.request
-            import json
 
-            # Check if Ollama server is running
-            req = urllib.request.Request(
-                f"{self.llm_config.model_url}/api/tags", method="GET"
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status != 200:
-                    log("  LLM: Ollama server not responding")
-                    return False
+            # Check if vLLM server is reachable via /health endpoint
+            base_url = self.llm_config.model_url.replace("/v1", "")
+            urllib.request.urlopen(f"{base_url}/health", timeout=5)
 
-                # Parse available models
-                data = json.loads(resp.read().decode())
-                available_models = [m.get("name", "") for m in data.get("models", [])]
-
-                # Check if our model exists
-                model_name = self.llm_config.model_id
-                model_exists = any(model_name in m for m in available_models)
-
-                if not model_exists:
-                    log(f"  LLM: Model '{model_name}' not found")
-                    log(f"  Available models: {', '.join(available_models)}")
-                    return False
-
-                log(f"  LLM: Using model '{model_name}'")
-                return True
+            model_name = self.llm_config.model_id
+            log(f"  LLM: Using model '{model_name}' at {self.llm_config.model_url}")
+            return True
 
         except ImportError:
             log("  LLM: langextract not installed (pip install langextract)")
@@ -225,13 +232,13 @@ Skip read-only or query commands.
 
     # 4. REPLACE _extract_with_llm method
     def _extract_with_llm(self, utility: str, text: str) -> list[ActionSchema]:
-        """Extract actions using langextract with Ollama (Fixed for proper API usage)."""
+        """Extract actions using langextract with OpenAI-compatible API (vLLM)."""
         if not self._llm_available:
             return []
 
         try:
             import langextract as lx
-            from langextract.providers import ollama
+            from langextract.providers.openai import OpenAILanguageModel
 
             max_chars = LLM_MAX_CONTEXT_CHARS
             if len(text) > max_chars:
@@ -245,11 +252,11 @@ Skip read-only or query commands.
 
             # 2. BUILD PROMPT - Simpler, more explicit guidance
             prompt = f"""
-            You are an expert PDDL 3.1 domain modeler. Extract system administration actions from the text below.
+You are an expert PDDL 3.1 domain modeler. Extract system administration actions from the text below.
 
-            {PDDL_SYNTAX_GUIDE}
-            
-            VOCABULARY PREFERENCE:
+{PDDL_SYNTAX_GUIDE}
+
+VOCABULARY PREFERENCE:
 The following predicates already exist in the system. USE THEM if applicable:
 {self._format_predicates(self.known_predicates)}
 
@@ -258,41 +265,38 @@ INSTRUCTION:
 2. If an action requires a NEW concept (e.g., "masking" a service), INVENT a new predicate following the Naming Conventions rules above.
 3. Extract actions with their preconditions and effects.
 
-    1. extraction_class: "action"
-    2. extraction_text: exact phrase from the text describing the action
-    3. attributes: MUST be a dictionary/object (NOT a list) with these keys:
-       - action_name: snake_case (e.g., "install_package", "start_service")
-       - parameters: "name:type" (types: package, service, user, group, file, directory, port, interface, firewall_rule, process)
-       - preconditions: PDDL format with parentheses and commas: "(pred1 ?x), (pred2 ?y)"
-       - effects: PDDL format with parentheses and commas: "(pred3 ?x)"
-       - command_template: shell command with {{var}} placeholders
-       - requires_root: "true" or "false"
+OUTPUT FORMAT (strict):
+Each extraction must be a JSON object with exactly these keys:
+  "action": A SHORT PLAIN-TEXT STRING copied verbatim from the source text that describes the action (e.g., "install packages", "start service"). This MUST be a simple string, NEVER a dict, list, or object.
+  "action_attributes": A dict/object with these string-valued keys:
+     - "action_name": snake_case string (e.g., "install_package", "start_service")
+     - "parameters": comma-separated "name:type" string (types: package, service, user, group, file, directory, port, interface, firewall_rule, process)
+     - "preconditions": PDDL predicates as a single string: "(pred1 ?x), (pred2 ?y)"
+     - "effects": PDDL predicates as a single string: "(pred3 ?x)"
+     - "command_template": shell command with {{var}} placeholders
+     - "requires_root": "true" or "false"
 
-    IMPORTANT: The 'attributes' field must be an object/dict with key-value pairs, NOT an array/list.
-    Extract only actions that modify system state."""
+CRITICAL RULES:
+- The "action" value MUST be a plain string (a short phrase from the text), NOT a dict or list.
+- The "action_attributes" value MUST be a dict with string key-value pairs, NOT a list.
+- Extract only actions that modify system state (skip read-only/query commands)."""
 
-            # 3. CONFIGURE RESOLVER - ONLY format_handler
-            resolver_params = {"format_handler": ollama.OLLAMA_FORMAT_HANDLER}
-
-            # 4. CREATE MODEL INSTANCE WITH TIMEOUT
-            # Direct instantiation ensures timeout is properly set
-            model_instance = ollama.OllamaLanguageModel(
+            # 3. CREATE MODEL INSTANCE via OpenAI-compatible API (vLLM)
+            model_instance = OpenAILanguageModel(
                 model_id=self.llm_config.model_id,
-                model_url=self.llm_config.model_url,
-                timeout=self.llm_config.timeout,
+                base_url=self.llm_config.model_url,
+                api_key=self.llm_config.api_key,
                 temperature=self.llm_config.temperature,
             )
 
-            # 5. EXECUTE EXTRACTION
-            # When passing model instance, only include compatible parameters
+            # 4. EXECUTE EXTRACTION
             result = lx.extract(
                 text_or_documents=text,
                 prompt_description=prompt,
                 examples=self.examples,
-                model=model_instance,  # Pass model instance directly
-                resolver_params=resolver_params,
+                model=model_instance,
                 show_progress=True,
-                use_schema_constraints=False,  # Explicitly disable since model is pre-configured
+                use_schema_constraints=False,
             )
 
             # 5. DEBUG: Check what we got back
@@ -321,11 +325,9 @@ INSTRUCTION:
                 action.preconditions = [clean_str(p) for p in action.preconditions]
                 action.effects = [clean_str(e) for e in action.effects]
 
-                # Validation: Check for Unbound Variables
-                # Gather variables defined in parameters (e.g., "?pkg")
+                # Auto-fix Unbound Variables: add missing params instead of dropping
                 defined_vars = set()
                 for param in action.parameters:
-                    # action.parameters is a list of ActionParameter objects
                     defined_vars.add(f"?{param.name}")
 
                 # Also allow ?actor which is implicitly added later for root actions
@@ -334,17 +336,16 @@ INSTRUCTION:
 
                 is_valid = True
                 for condition in action.preconditions + action.effects:
-                    # Find all used variables (words starting with ?)
                     used_vars = re.findall(r"\?[a-zA-Z0-9_-]+", condition)
                     for var in used_vars:
                         if var not in defined_vars:
+                            var_name = var.lstrip("?")
+                            inferred_type = _infer_type_for_variable(var_name)
+                            action.parameters.append(ActionParameter(var_name, inferred_type))
+                            defined_vars.add(var)
                             log(
-                                f"    [WARN] Dropping action '{action.name}': Unbound variable {var}"
+                                f"    [INFO] Auto-fixed action '{action.name}': added parameter ?{var_name} - {inferred_type.value}"
                             )
-                            is_valid = False
-                            break
-                    if not is_valid:
-                        break
 
                 # Filter out empty effects
                 if not action.effects:
@@ -417,6 +418,14 @@ INSTRUCTION:
                     str(attrs.get("requires_root", "false")).lower() == "true"
                 )
                 command = attrs.get("command_template", f"{utility} {{args}}")
+
+                # Normalize template placeholders to KEY_MAPPINGS-compatible names
+                for p in params:
+                    old_name = p.name
+                    # The placeholder in the template should match the param name
+                    # Ensure it's in the template; if not, check if the type name is used instead
+                    if f'{{{old_name}}}' not in command and f'{{{p.pddl_type.value}}}' in command:
+                        command = command.replace(f'{{{p.pddl_type.value}}}', f'{{{old_name}}}')
 
                 actions.append(
                     ActionSchema(
@@ -702,22 +711,22 @@ INSTRUCTION:
             if is_trivial:
                 continue
 
-            # --- FILTER 4: Unbound Variables ---
+            # --- FILTER 4: Auto-fix Unbound Variables ---
             defined_vars = {f"?{p.name}" for p in action.parameters}
             if action.requires_root:
                 defined_vars.add("?actor")
 
-            has_unbound = False
             for condition in action.preconditions + action.effects:
                 used_vars = set(re.findall(r"\?[a-zA-Z0-9_-]+", condition))
                 unbound = used_vars - defined_vars
-                if unbound:
-                    log(f"    [WARN] Dropping '{action.name}': unbound vars {unbound}")
-                    has_unbound = True
-                    break
-
-            if has_unbound:
-                continue
+                for var in unbound:
+                    var_name = var.lstrip("?")
+                    inferred_type = _infer_type_for_variable(var_name)
+                    action.parameters.append(ActionParameter(var_name, inferred_type))
+                    defined_vars.add(var)
+                    log(
+                        f"    [INFO] Auto-fixed '{action.name}': added parameter ?{var_name} - {inferred_type.value}"
+                    )
 
             # --- FILTER 5: Raw Paths in Conditions (NEW) ---
             has_raw_path = False
@@ -1348,8 +1357,9 @@ INSTRUCTION:
 
 # Factory function to create the hybrid parser with configuration
 def create_hybrid_parser(
-    model_id: str = "qwen2.5:32b",
-    model_url: str = "http://localhost:11434",
+    model_id: str = "gemma-4-31b",
+    model_url: str = "http://localhost:8001/v1",
+    api_key: str = "vllm",
     enable_llm: bool = True,
     temperature: float = 0.0,
     known_predicates: list[str] = None,
@@ -1365,6 +1375,7 @@ def create_hybrid_parser(
     config = LLMExtractionConfig(
         model_id=model_id,
         model_url=model_url,
+        api_key=api_key,
         enabled=enable_llm,
         temperature=temperature,
         max_workers=max_workers,

@@ -7,9 +7,6 @@ Usage:
     # Run with default settings
     python -m phase3.main
 
-    # Use mock components for testing
-    python -m phase3.main --mock
-
     # Custom domain path
     python -m phase3.main --domain ./my_domain.pddl --problem ./my_problem.pddl
 
@@ -23,6 +20,7 @@ import logging
 import sys
 from pathlib import Path
 
+from common.config_loader import llm_settings
 from .config import Phase3Config
 from .orchestrator import Phase3Orchestrator
 
@@ -60,9 +58,6 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with mock components (no Docker/LLM required)
-  python -m phase3 --mock
-
   # Run with custom domain
   python -m phase3 --domain ./pddl_output/sysadmin.pddl
 
@@ -124,23 +119,30 @@ Examples:
         help="Docker image for sandbox (default: pddl-sandbox:latest)",
     )
 
-    # LLM configuration
+    # LLM configuration (defaults from config.yaml)
+    cfg = llm_settings("phase3")
+
     parser.add_argument(
         "--llm-url",
-        default="http://10.100.203.130:11434/v1",
-        help="LLM API base URL (default: http://10.100.203.130:11434/v1)",
+        default=cfg.base_url,
+        help=f"LLM API base URL (default: {cfg.base_url})",
     )
     parser.add_argument(
         "--llm-model",
-        default="qwen3.5:122b",
-        help="LLM model name",
+        default=cfg.model,
+        help=f"LLM model name (default: {cfg.model})",
+    )
+    parser.add_argument(
+        "--llm-api-key",
+        default=cfg.api_key or "vllm",
+        help="API key for LLM service (default: from config.yaml)",
     )
 
     # Concretizer configuration
     parser.add_argument(
         "--concretizer-model",
-        default="qwen3.5:35b",
-        help="LLM model for action concretization (default: qwen3.5:35b)",
+        default=cfg.model,
+        help=f"LLM model for action concretization (default: {cfg.model})",
     )
     parser.add_argument(
         "--phase1-metadata",
@@ -159,28 +161,6 @@ Examples:
         type=int,
         default=None,
         help="Planner timeout in seconds (default: 300)",
-    )
-
-    # Mock/testing
-    parser.add_argument(
-        "--mock",
-        action="store_true",
-        help="Use mock components (no Docker/LLM required)",
-    )
-    parser.add_argument(
-        "--mock-docker",
-        action="store_true",
-        help="Use mock Docker executor only",
-    )
-    parser.add_argument(
-        "--mock-llm",
-        action="store_true",
-        help="Use mock LLM only",
-    )
-    parser.add_argument(
-        "--mock-planner",
-        action="store_true",
-        help="Use mock planner only",
     )
 
     # Output options
@@ -239,6 +219,7 @@ Examples:
     # LLM
     config.llm.base_url = args.llm_url
     config.llm.model_name = args.llm_model
+    config.llm.api_key = args.llm_api_key
     config.llm.concretizer_model = args.concretizer_model
 
     # Concretizer
@@ -248,16 +229,6 @@ Examples:
     # Planner
     if args.plan_timeout is not None:
         config.planner.plan_timeout = args.plan_timeout
-
-    # Mock settings
-    if args.mock:
-        config.use_mock_docker = True
-        config.use_mock_planner = True
-        config.use_mock_llm = True
-    else:
-        config.use_mock_docker = args.mock_docker
-        config.use_mock_planner = args.mock_planner
-        config.use_mock_llm = args.mock_llm
 
     # Validate inputs
     if not Path(config.input_domain_path).exists():

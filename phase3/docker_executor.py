@@ -35,36 +35,25 @@ class DockerExecutor:
     3. Observe discrepancies between predicted and actual effects
     """
 
-    def __init__(self, config: Optional[DockerConfig] = None, use_mock: bool = False):
+    def __init__(self, config: Optional[DockerConfig] = None):
         self.config = config or DockerConfig()
-        self.use_mock = use_mock
 
         self.client = None
         self.container = None
         self.state: Optional[ContainerState] = None
 
-        if not use_mock:
-            try:
-                import docker
-                self.client = docker.from_env()
-            except ImportError:
-                logger.error("docker package not installed. Install with: pip install docker")
-                raise
-            except Exception as e:
-                logger.error(f"Failed to connect to Docker: {e}")
-                raise
+        try:
+            import docker
+            self.client = docker.from_env()
+        except ImportError:
+            logger.error("docker package not installed. Install with: pip install docker")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to connect to Docker: {e}")
+            raise
 
     def start_container(self) -> bool:
         """Start the sandbox container."""
-        if self.use_mock:
-            logger.info("[MOCK] Starting mock container")
-            self.state = ContainerState(
-                container_id="mock-container",
-                running=True,
-                created_at=time.time()
-            )
-            return True
-
         try:
             # Remove existing container if present
             self._cleanup_existing()
@@ -121,6 +110,9 @@ class DockerExecutor:
 
     def _initialize_container(self):
         """Initialize container environment for PDDL action execution."""
+        # Wait for container to be ready for commands
+        self._wait_for_container_ready()
+
         init_commands = [
             # Ensure test user exists (pre-created in Dockerfile, re-ensure after reset)
             "useradd -m testuser 2>/dev/null || true",
@@ -133,6 +125,28 @@ class DockerExecutor:
                 self.container.exec_run(cmd, user="root")
             except Exception as e:
                 logger.warning(f"Init command failed: {cmd} - {e}")
+
+    def _wait_for_container_ready(self, timeout: int = 15):
+        """Wait for the container to be running and accepting commands."""
+        deadline = time.time() + timeout
+
+        # Wait for the container to be in "running" state
+        while time.time() < deadline:
+            try:
+                self.container.reload()
+                if self.container.status == "running":
+                    # Verify we can exec into it
+                    result = self.container.exec_run(
+                        ["echo", "ready"], user="root"
+                    )
+                    if result.exit_code == 0:
+                        logger.info("Container is ready")
+                        return
+            except Exception:
+                pass
+            time.sleep(0.5)
+
+        logger.warning(f"Container did not become ready within {timeout}s, proceeding anyway")
 
     # Commands that can destroy critical system files (/etc/passwd, /etc/shadow)
     _DANGEROUS_PATTERNS = [
@@ -168,9 +182,6 @@ class DockerExecutor:
         """
         timeout = timeout or self.config.exec_timeout
 
-        if self.use_mock:
-            return self._mock_execute(command)
-
         if not self.container:
             raise RuntimeError("Container not started")
 
@@ -182,7 +193,7 @@ class DockerExecutor:
         try:
             start_time = time.time()
             result = self.container.exec_run(
-                ["bash", "-c", command],
+                ["bash", "-c", f"timeout {timeout} bash -c {repr(command)}"],
                 user=user,
                 demux=True,  # Separate stdout/stderr
             )
@@ -206,25 +217,6 @@ class DockerExecutor:
             logger.error(f"Command execution failed: {e}")
             return -1, "", str(e)
 
-    def _mock_execute(self, command: str) -> tuple[int, str, str]:
-        """Mock command execution for testing."""
-        # Simulate common commands
-        if "apt-get update" in command:
-            return 0, "Hit:1 http://archive.ubuntu.com/ubuntu questing InRelease\n", ""
-        elif "apt-get install" in command:
-            pkg = command.split()[-1]
-            return 0, f"Setting up {pkg}...\n", ""
-        elif "systemctl start" in command or "systemctl stop" in command:
-            return 0, "", ""
-        elif "useradd" in command:
-            return 0, "", ""
-        elif "test -e" in command or "test -d" in command:
-            return 0, "", ""  # Assume exists
-        elif "dpkg -s" in command:
-            return 0, "Status: install ok installed\n", ""
-        else:
-            return 0, "", ""
-
     def execute_action(
         self,
         action: GroundedAction,
@@ -241,7 +233,7 @@ class DockerExecutor:
         # Determine outcome
         if exit_code == 0:
             outcome = ActionOutcome.SUCCESS
-        elif exit_code == -1:
+        elif exit_code in (-1, 124):
             outcome = ActionOutcome.TIMEOUT
         else:
             outcome = ActionOutcome.EXECUTION_FAILED
@@ -283,9 +275,6 @@ class DockerExecutor:
         """
         Extract current environment state for PDDL grounding.
         """
-        if self.use_mock:
-            return self._mock_environment_state()
-
         state = EnvironmentState(
             packages=[],
             services=[],
@@ -348,31 +337,6 @@ class DockerExecutor:
                     })
 
         return state
-
-    def _mock_environment_state(self) -> EnvironmentState:
-        """Return mock environment state for testing."""
-        return EnvironmentState(
-            packages=[
-                {"name": "apt", "version": "2.7.0", "installed": True},
-                {"name": "systemd", "version": "257", "installed": True},
-                {"name": "coreutils", "version": "9.4", "installed": True},
-            ],
-            services=[
-                {"name": "ssh", "active": True, "enabled": True},
-                {"name": "cron", "active": True, "enabled": True},
-                {"name": "nginx", "active": False, "enabled": False},
-            ],
-            users=[
-                {"name": "root", "uid": "0", "groups": ["root"]},
-                {"name": "testuser", "uid": "1000", "groups": ["testuser"]},
-            ],
-            groups=[
-                {"name": "root", "gid": "0", "members": ["root"]},
-                {"name": "testuser", "gid": "1000", "members": ["testuser"]},
-                {"name": "sudo", "gid": "27", "members": []},
-            ],
-            files=[],
-        )
 
     def _is_container_corrupted(self) -> bool:
         """Check if the container filesystem is corrupted (e.g. /etc/passwd destroyed)."""
@@ -438,40 +402,19 @@ class DockerExecutor:
             return False
 
     def reset_container(self):
-        """Reset container to clean state. Recreates if filesystem is corrupted."""
-        if self.use_mock:
-            logger.info("[MOCK] Resetting mock container")
-            return
+        """Reset container to clean state.
 
+        Always recreates the container from scratch because systemd (PID 1)
+        accumulates state (started/stopped services, created users, modified
+        files) that persists across restarts. A full recreate ensures a
+        pristine environment for each exploration walk batch.
+        """
         if self.container:
-            try:
-                # Check if the container filesystem is corrupted
-                if self._is_container_corrupted():
-                    logger.warning("Container filesystem corrupted, performing full recreate")
-                    self._recreate_container()
-                    return
-
-                self.container.restart()
-                self._initialize_container()
-
-                # Verify the restart succeeded (sometimes restart inherits corruption)
-                if self._is_container_corrupted():
-                    logger.warning("Container still corrupted after restart, performing full recreate")
-                    self._recreate_container()
-                    return
-
-                logger.info("Container reset to clean state")
-            except Exception as e:
-                logger.error(f"Failed to reset container: {e}, attempting full recreate")
-                self._recreate_container()
+            logger.info("Recreating systemd container for clean state")
+            self._recreate_container()
 
     def stop_container(self):
         """Stop and remove the container."""
-        if self.use_mock:
-            logger.info("[MOCK] Stopping mock container")
-            self.state = None
-            return
-
         if self.container:
             try:
                 self.container.stop(timeout=5)

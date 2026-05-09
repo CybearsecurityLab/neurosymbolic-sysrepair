@@ -550,13 +550,32 @@ class PDDLSanitizer:
         return pddl
     
     def _fix_empty_and_blocks(self, pddl: str) -> str:
-        """Fix empty (and) blocks."""
+        """Fix empty (and) blocks and missing precondition/effect bodies."""
+        # Fix :precondition with no body (directly followed by :effect)
+        # This handles: ":precondition\n  :effect" -> ":precondition ()\n    :effect"
+        pddl = re.sub(
+            r':precondition\s*(?=:effect)',
+            ':precondition ()\n    ',
+            pddl
+        )
+
+        # Fix :effect with no body (directly followed by closing paren or end)
+        pddl = re.sub(
+            r':effect\s*\)',
+            ':effect ()\n  )',
+            pddl
+        )
+
         pddl = re.sub(r":effect\s*\(and\s*\)", ":effect (and)", pddl)
         pddl = re.sub(r":precondition\s*\(and\s*\)", ":precondition (and)", pddl)
-        # Remove empty () pairs but preserve :parameters () which is valid PDDL
+        # Remove empty () pairs but preserve :parameters (), :precondition (), :effect ()
         pddl = re.sub(r":parameters\s*\(\s*\)", ":parameters (_EMPTY_PARAMS_)", pddl)
+        pddl = re.sub(r":precondition\s*\(\s*\)", ":precondition (_EMPTY_PRECOND_)", pddl)
+        pddl = re.sub(r":effect\s*\(\s*\)", ":effect (_EMPTY_EFFECT_)", pddl)
         pddl = re.sub(r"\(\s*\)", "", pddl)
         pddl = pddl.replace(":parameters (_EMPTY_PARAMS_)", ":parameters ()")
+        pddl = pddl.replace(":precondition (_EMPTY_PRECOND_)", ":precondition ()")
+        pddl = pddl.replace(":effect (_EMPTY_EFFECT_)", ":effect ()")
         pddl = re.sub(r"\(\s*\(and", "(and", pddl)
         return pddl
     

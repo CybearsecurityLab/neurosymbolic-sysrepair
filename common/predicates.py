@@ -384,10 +384,14 @@ def get_predicate_arity(name: str) -> Optional[int]:
 
 PREDICATE_ALIASES: dict[str, list[str]] = {
     "file_exists": ["file_present", "has_file", "exists"],
-    "service_running": ["service_active", "svc_running", "is_running"],
-    "package_installed": ["pkg_installed", "has_package", "installed"],
+    "directory_exists": ["dir_exists", "folder_exists"],
+    "service_running": ["service_active", "svc_running", "is_running", "unit_active"],
+    "service_enabled": ["is_enabled", "unit_enabled"],
+    "package_installed": ["pkg_installed", "has_package", "installed", "is_installed"],
     "user_exists": ["user_present", "has_user"],
+    "user_locked": ["is_locked", "acct_locked"],
     "group_exists": ["group_present", "has_group"],
+    "member_of": ["is_member", "in_group"],
     "port_open": ["port_listening", "is_open"],
     "interface_up": ["interface_active", "is_up"],
 }

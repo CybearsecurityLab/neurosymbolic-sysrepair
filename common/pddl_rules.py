@@ -82,6 +82,145 @@ STRICT PDDL 3.1 SYNTAX RULES:
      WRONG: ["(file_exists ?f) or (directory_exists ?f)"]
      RIGHT: ["(file_exists ?f)", "(directory_exists ?f)"]  <- Separate list items
    - effects: List of INDIVIDUAL predicates
-     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]  
+     WRONG: ["(not (file_exists ?f)) and (not (directory_exists ?f))"]
      RIGHT: ["(not (file_exists ?f))", "(not (directory_exists ?f))"]
+
+10. BNF GRAMMAR FOR ACTION BLOCKS (must follow EXACTLY):
+
+   <action-def> ::=
+       (:action <name>
+           :parameters (<typed-list-variable>)
+           [:precondition <pre-GD>]
+           [:effect <effect>]
+       )
+
+   <typed-list-variable> ::=
+       <variable> - <type>
+       | <variable> <variable> ... - <type>
+       | (empty)
+
+   <variable> ::= ?<name>
+
+   <pre-GD> ::=
+       ()                                        ;; empty precondition (always true)
+       | <atomic-formula>                         ;; single predicate
+       | (and <pre-GD>*)                          ;; conjunction
+       | (not <atomic-formula>)                   ;; negation (STRIPS)
+
+   <effect> ::=
+       ()                                        ;; no effect (rare but valid)
+       | <atomic-formula>                         ;; add a fact
+       | (not <atomic-formula>)                   ;; delete a fact
+       | (and <c-effect>*)                        ;; conjunction of effects
+       | (when <pre-GD> <c-effect>)               ;; conditional effect
+
+   <atomic-formula> ::= (<predicate-name> <variable>+)
+
+   KEY RULES from BNF:
+   - :parameters MUST be followed by ( ... ) even if empty: :parameters ()
+   - :precondition MUST be followed by ( ... ) -- NEVER :precondition :effect
+   - :effect MUST be followed by ( ... ) -- NEVER :effect )
+   - Every ( must have a matching )
+   - Action body keywords appear in fixed order: :parameters, :precondition, :effect
+
+11. COMMON MISTAKES TO AVOID (frequently made by LLMs):
+
+   a) Variables in effects/preconditions NOT declared in :parameters:
+      WRONG:
+        (:action install_pkg
+          :parameters (?pkg - package)
+          :precondition (repo_available ?repo)     ;; ?repo not in :parameters!
+          :effect (package_installed ?pkg))
+      RIGHT:
+        (:action install_pkg
+          :parameters (?pkg - package ?repo - repository)
+          :precondition (repo_available ?repo)
+          :effect (package_installed ?pkg))
+
+   b) Empty or missing precondition body (causes parse errors):
+      WRONG: :precondition :effect (something ?x)  ;; missing precondition body!
+      WRONG: :precondition                          ;; dangling keyword
+      RIGHT: :precondition () :effect (something ?x)
+      RIGHT: :precondition (and) :effect (something ?x)
+
+   c) Using reserved words as predicate names:
+      WRONG: (exists ?f)         ;; "exists" is a reserved quantifier
+      WRONG: (not ?service)      ;; "not" is a logical operator, not a predicate
+      WRONG: (and ?x ?y)         ;; "and" is a logical operator
+      RIGHT: (file_exists ?f)
+      RIGHT: (service_stopped ?service)
+      RIGHT: (items_linked ?x ?y)
+
+   d) Predicate arity mismatch (using different arg counts than declared):
+      If declared: (:predicates (file_owned_by ?f - file ?u - user))
+      WRONG: (file_owned_by ?f)           ;; only 1 arg, declared with 2
+      WRONG: (file_owned_by ?f ?u ?g)     ;; 3 args, declared with 2
+      RIGHT: (file_owned_by ?f ?u)        ;; matches declaration
+
+   e) Disjunction (or) in effects -- INVALID in PDDL:
+      WRONG: :effect (or (state_a ?x) (state_b ?x))
+      RIGHT: :effect (state_a ?x)    ;; pick the intended effect
+
+   f) Bare predicates without wrapping conjunction:
+      WRONG: :precondition (pred1 ?x) (pred2 ?y)   ;; two unwrapped predicates
+      RIGHT: :precondition (and (pred1 ?x) (pred2 ?y))
+
+   g) Non-variable arguments in predicates:
+      WRONG: (service_running sshd)           ;; "sshd" is a constant, not ?var
+      WRONG: (file_has_mode ?f 0644)          ;; "0644" is not a variable
+      RIGHT: (service_running ?svc)
+      RIGHT: (file_has_mode ?f ?mode)
+
+   h) Nested actions or duplicate keywords:
+      WRONG: (:action foo :parameters () :precondition () :precondition () :effect ())
+      WRONG: (:action foo :parameters () :effect () (:action bar ...))
+      RIGHT: One :parameters, one :precondition, one :effect per action
+
+12. CORRECT vs INCORRECT FULL ACTION EXAMPLES:
+
+   CORRECT example:
+     (:action restart_service
+       :parameters (?svc - service)
+       :precondition (and
+         (service_installed ?svc)
+         (not (service_running ?svc)))
+       :effect (and
+         (service_running ?svc)
+         (service_healthy ?svc)))
+
+   INCORRECT example 1 -- missing :precondition body:
+     (:action restart_service
+       :parameters (?svc - service)
+       :precondition                        ;; ERROR: no body after :precondition
+       :effect (service_running ?svc))
+
+   INCORRECT example 2 -- undeclared variable and infix operator:
+     (:action change_owner
+       :parameters (?f - file)
+       :precondition (file_exists ?f)
+       :effect (file_owned_by ?f ?u))       ;; ERROR: ?u not in :parameters
+
+   INCORRECT example 3 -- reserved word as predicate, bare constants:
+     (:action delete_user
+       :parameters (?u - user)
+       :precondition (exists ?u)            ;; ERROR: "exists" is reserved
+       :effect (not (exists ?u)))           ;; ERROR: same problem
+
+   CORRECTED version of example 3:
+     (:action delete_user
+       :parameters (?u - user)
+       :precondition (user_exists ?u)
+       :effect (not (user_exists ?u)))
+
+   INCORRECT example 4 -- multiple bare predicates, no conjunction:
+     (:action secure_file
+       :parameters (?f - file ?u - user)
+       :precondition (file_exists ?f) (user_exists ?u)    ;; ERROR: not wrapped in (and ...)
+       :effect (not (file_world_readable ?f)) (file_owned_by ?f ?u))  ;; ERROR: same
+
+   CORRECTED version of example 4:
+     (:action secure_file
+       :parameters (?f - file ?u - user)
+       :precondition (and (file_exists ?f) (user_exists ?u))
+       :effect (and (not (file_world_readable ?f)) (file_owned_by ?f ?u)))
 """

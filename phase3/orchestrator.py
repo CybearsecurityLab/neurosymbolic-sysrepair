@@ -375,7 +375,6 @@ def run_phase3(
     output_dir: str = "./pddl_output/phase3",
     target_score: float = 0.9,
     max_iterations: int = 10,
-    use_mock: bool = False,
 ) -> dict:
     """
     Convenience function to run Phase 3 refinement.
@@ -386,7 +385,6 @@ def run_phase3(
         output_dir: Directory for outputs
         target_score: Target EW score
         max_iterations: Maximum refinement iterations
-        use_mock: Use mock components for testing
 
     Returns:
         Results dictionary
@@ -397,9 +395,6 @@ def run_phase3(
     config.output_dir = output_dir
     config.ew_target_score = target_score
     config.max_refinement_iterations = max_iterations
-    config.use_mock_docker = use_mock
-    config.use_mock_planner = use_mock
-    config.use_mock_llm = use_mock
 
     orchestrator = Phase3Orchestrator(config=config)
     return orchestrator.run()

@@ -1,0 +1,59 @@
+# config.yaml -- Single source of truth for auto-sysrepair
+# Override any value via CLI args (highest priority) or env vars.
+
+pipeline:
+  output_dir: ./pddl_output
+
+llm:
+  model: gemma-4-31b
+  base_url: http://localhost:8001/v1
+  api_key: vllm
+  max_tokens: 4096
+  temperature: 0.3
+
+  phase1: null # inherits from default
+  phase2: null # inherits from default
+
+  phase3:
+    refinement:
+      temperature: 0.3
+    concretizer:
+      temperature: 0.6
+
+docker:
+  sandbox_image: pddl-sandbox:latest
+  dockerfile: Dockerfile.pddl-sandbox
+  auto_build: true
+  resource_limits:
+    memory: 4g
+    cpus: 2
+  timeout_seconds: 300
+
+planner:
+  fast_downward_path: /home/resbears/fast_downward/fast-downward.py
+  search_config: "eager_greedy([ff()])"
+  time_limit: 60
+  random_walk:
+    num_walks: 100
+    walk_depth: 15
+    auto_scale: true
+
+refinement:
+  ew_target: 0.9
+  max_iterations: 10
+  score_drop_threshold: 0.25
+
+eval:
+  bench_path: /home/resbears/projects/sysrepair-bench
+  model: gemma-4-31b
+  vllm_url: http://localhost:8001/v1
+
+neurosymbolic:
+  domain_path: ./pddl_output/phase3/sysadmin_refined.pddl
+  unrefined_domain_path: ./pddl_output/phase2/sysadmin.pddl
+  phase1_metadata_path: ./pddl_output/phase1/phase1_statep2.json
+  max_plan_steps: 20
+  plan_timeout: 120
+  max_exec_retries: 2
+  enable_llm_fallback: true
+  max_fallback_steps: 15

@@ -32,2455 +32,2088 @@
 
   ;; Predicates
   (:predicates
-    (CREATE_MAIL_SPOOL)
-    (abort_on_remove ?pkg - object)
-    (account_expiration_set ?u - user)
-    (acl_exists ?f - filesystem_object)
-    (acl_modified ?f - filesystem_object)
-    (acl_restored ?f - filesystem_object)
-    (acl_tested ?f - filesystem_object)
-    (address_sense_inverted ?address - object)
-    (addrlabel_configured ?label - object)
-    (aging_info_available ?u - user)
-    (all_chains_empty)
-    (all_links_traversed ?link - object)
-    (allow_insecure_repositories)
-    (allow_releaseinfo_change)
-    (app_default_policy_set ?policy - object)
-    (app_profile_has_ports ?ap - object ?p - port)
-    (application_profile_exists ?ap - object)
-    (apt_config_set ?f - object)
-    (apt_default_release_set ?release - object)
-    (apt_get_diff_only ?pkg - object)
-    (apt_lists_updated)
-    (apt_partial_state_directory_configured ?dir - object)
-    (apt_state_directory_configured ?dir - object)
-    (apt_trivial_only_enabled)
-    (at_job_exists ?user - object)
-    (automount_exists ?a - object)
-    (automount_mounted ?a - object)
-    (backup_disabled)
-    (backup_file_exists ?f - file)
-    (backup_method_existing)
-    (backup_method_numbered)
-    (backup_method_simple)
-    (backup_suffix_set ?suffix - object)
-    (bpf_map_data ?s - object ?map_id - object)
-    (build_dependencies_installed ?src - object)
-    (build_profiles_active ?profiles - object)
-    (cache_clean)
-    (cache_cleared)
-    (cache_exists)
-    (can_escalate ?u - user)
-    (can_modify_acl ?u - user)
-    (can_switch_to ?u - user)
-    (chain_deleted ?o - object)
-    (chain_empty ?chain - object)
+    (acl_all_extended_removed ?f - file)
+    (acl_default_removed ?d - directory)
+    (acl_entry_exists ?f - file ?u - user)
+    (acl_entry_exists_group ?f - file ?g - group)
+    (acl_has_default_entry ?d - directory ?u - user)
+    (acl_has_default_entry_group ?d - directory ?g - group)
+    (acl_has_default_mask ?d - directory)
+    (acl_has_entry ?f - file ?u - user)
+    (acl_has_entry_group ?f - file ?g - group)
+    (acl_has_mask ?f - file)
+    (acl_read ?f - filesystem_object)
+    (acl_recursive_read ?f - filesystem_object)
+    (adjacent_mode_enabled ?p - process)
+    (alias_set ?p - package ?a - object)
+    (api_query_executed ?p - package)
+    (app_has_access ?p - package ?f - file)
+    (app_has_permission ?p - package)
+    (app_profile_exists ?s - service)
+    (app_profile_updated ?s - service)
+    (apt_cache_cleaned ?r - repository)
+    (architecture_supported ?a - object)
+    (assertion_added ?p - package)
+    (bold_mode_enabled ?p - process)
+    (boot_logs_read)
+    (build_dependencies_satisfied ?p - package)
+    (can_edit_file ?u - user ?f - file)
+    (can_escalate ?u - object)
+    (can_execute_as ?u1 - user ?u2 - user)
+    (can_execute_as_group ?u - user ?g - group)
+    (chain_empty ?c - object)
     (chain_exists ?c - object)
-    (chain_loaded ?chain - object)
-    (chain_policy_set ?chain - object ?target - object)
-    (chain_renamed ?old_chain - object ?new_chain - object)
-    (chain_returned)
-    (changes_applied_in_chroot ?chroot_dir - object)
-    (changes_applied_in_prefix ?prefix_dir - object)
-    (chroot_dir_set ?d - directory)
-    (chrooted ?dir - object)
-    (cleaned_apt_lists)
-    (color_output_configured ?color_mode - object)
-    (color_setting ?state - object)
-    (command_executed ?cmd - object)
-    (command_executed_as_user ?user - object)
-    (command_exists ?cmd - object)
-    (config_applied ?svc - object)
-    (config_exported ?s - service ?f - configuration_file)
-    (config_file_exists ?f - configuration_file)
-    (config_file_used ?config - object)
-    (config_imported ?f - configuration_file ?s - service)
-    (config_option_set ?option - object)
-    (configuration_applied ?prefix_dir - object)
-    (configuration_loaded ?f - object)
-    (configures ?cfg - object ?svc - object)
-    (connection_active ?s - service)
-    (connection_exists ?s - service)
-    (connection_tracking_exempt ?rule - object)
-    (counters_zeroed ?c - object)
-    (current_network_namespace ?netns - object)
-    (default_acl_exists ?f - filesystem_object)
-    (default_group_set ?group - object)
-    (default_shell_set ?shell - object)
-    (default_user_info_updated)
-    (depends_on ?s - service ?p - package)
-    (device_available ?i - interface)
-    (different_filesystem ?dir - object)
-    (dir_equals_root ?dir - object)
-    (directory ?d - object)
-    (directory_changed ?user - object)
-    (directory_empty ?dir - object)
-    (directory_exists ?dir - object)
-    (directory_removed ?dir - object)
-    (download_disabled)
-    (environment_preserved ?user - object)
-    (environment_reset ?var - object)
-    (error_on_any_enabled)
-    (exact_output_enabled)
-    (exact_values_enabled)
-    (executed_as_root ?pr - process)
-    (extended_acl_exists ?f - filesystem_object)
-    (extra_users_enabled)
-    (file_access_time_updated ?f - object)
-    (file_backed_up ?dest - object)
-    (file_contents_copied ?src - object ?dest - object)
-    (file_copied_to_directory ?src - object ?dir - object)
-    (file_critical ?f - filesystem_object)
-    (file_device_special ?f - object)
-    (file_edited ?f - object)
-    (file_edited_as_user ?user - object ?file - object)
-    (file_executable ?config - object)
-    (file_exists ?file - object)
-    (file_group ?f - object ?group - object)
-    (file_group_id_mismatch ?f - object)
-    (file_in_directory ?src - object ?dir - object)
-    (file_mode_changed ?f - object)
-    (file_mode_referenced ?rfile - object)
-    (file_modification_time_updated ?f - object)
-    (file_modified ?file - object)
-    (file_not_traversed ?f - object)
+    (chain_has_no_references ?c - object)
+    (chain_in_table ?c - object ?t - object)
+    (chain_policy_set ?c - object ?p - object)
+    (character_columns_right_justified ?p - process)
+    (chassis_type_set ?c - object)
+    (cohort_keys_created ?p - package)
+    (color_mode_enabled ?p - process)
+    (column_highlight_enabled ?p - process)
+    (combine_cpus_mode_enabled ?p - process)
+    (command_column_right_justified)
+    (command_line_displayed ?p - process)
+    (command_line_full_display ?p - process)
+    (config_applied ?s - service)
+    (configures ?f - configuration_file ?s - service)
+    (connection_active ?c - object ?i - interface)
+    (connection_autoconnect_enabled ?c - object)
+    (connection_exists ?p1 - package ?p2 - package)
+    (connection_imported ?c - object)
+    (connection_modified ?i - interface)
+    (connection_persistent ?i - interface)
+    (connection_tied_to ?c - object ?i - interface)
+    (control_info_extracted ?p - package)
+    (core_type_display_enabled ?p - process)
+    (core_type_filter_e_only ?p - process)
+    (core_type_filter_p_only ?p - process)
+    (counter_exists ?r - firewall_rule)
+    (cpu_summary_separate_lines ?p - process)
+    (cpu_summary_single_line ?p - process)
+    (ct_expectation_exists ?r - firewall_rule)
+    (ct_helper_exists ?h - firewall_rule)
+    (ct_timeout_exists ?t - firewall_rule)
+    (cumulative_mode_enabled ?p - process)
+    (cumulative_time_mode_enabled ?p - process)
+    (default_acl_read ?f - directory)
+    (default_user_base_dir ?d - directory)
+    (default_user_expire_date ?date - object)
+    (default_user_group ?g - group)
+    (default_user_inactive ?days - object)
+    (default_user_shell ?s - file)
+    (dependencies_broken ?p - package)
+    (dependencies_satisfied ?p - package)
+    (deployment_env_set ?e - object)
+    (directory_contents_listed ?d - directory)
+    (directory_empty ?d - directory)
+    (directory_exists ?d - directory)
+    (directory_has_context ?d - directory)
+    (directory_has_mode ?d - directory)
+    (directory_owned_by ?d - directory ?u - user)
+    (directory_recursive_contents_listed ?d - directory)
+    (directory_writable ?d - directory)
+    (display_cmdline ?p - process)
+    (display_control_groups ?p - process)
+    (display_environment ?p - process)
+    (display_load_avg ?p - process)
+    (display_logged_messages ?p - process)
+    (display_mem_swap_usage ?p - process)
+    (display_namespaces ?p - process)
+    (display_scroll_coords ?p - process)
+    (display_supp_groups ?p - process)
+    (display_task_cpu_states ?p - process)
+    (dpkg_log_file_exists ?f - file)
+    (dpkg_robot_mode_active ?p - process)
+    (element_exists ?e - object ?s - firewall_rule)
+    (environment_preserved ?p - process)
+    (executed_as_root ?p - process)
+    (exists_user_with_primary_group ?g - object)
+    (fib_rule_configured ?r - firewall_rule)
+    (file_access_time_updated ?f - file)
+    (file_copied_to ?src - filesystem_object ?dst - filesystem_object)
+    (file_details_known ?f - file)
+    (file_executable ?f - filesystem_object)
+    (file_exists ?f - file)
+    (file_group_owned_by ?f - filesystem_object ?g - group)
+    (file_in_directory ?f - filesystem_object ?d - directory)
+    (file_inode_known ?f - file)
+    (file_is_directory ?f - filesystem_object)
+    (file_is_hardlink ?f - filesystem_object)
+    (file_is_symlink ?f - filesystem_object)
+    (file_logs_read ?f - file)
+    (file_metadata_extracted ?f - filesystem_object)
+    (file_mode_matches ?f1 - filesystem_object ?f2 - filesystem_object)
+    (file_modification_time_updated ?f - file)
     (file_owned_by ?f - filesystem_object ?u - user)
-    (file_owner ?f - object ?owner - object)
-    (file_ownership_adapted ?user - object)
-    (file_ownership_changed ?f - object)
-    (file_readable ?f - filesystem_object)
-    (file_reflinked ?dest - object)
-    (file_sparse ?dest - object)
-    (file_symlinked ?src - object ?dst - object)
-    (file_timestamp_changed ?link - object)
-    (file_traversed ?f - object)
-    (file_update_controlled ?update - object)
+    (file_readable ?f - file)
+    (file_security_context_known ?f - file)
+    (file_setgid_set ?f - filesystem_object)
+    (file_setuid_set ?f - filesystem_object)
+    (file_size_known ?f - file)
+    (file_status_known ?f - filesystem_object)
+    (file_sticky_bit_set ?f - filesystem_object)
     (file_writable ?f - filesystem_object)
-    (files_copied_standard ?src - object ?dst - object)
-    (files_not_replaced ?src - object ?dst - object)
-    (files_reflinked ?src - object ?dst - object)
-    (files_replaced ?dest - object)
-    (files_replaced_if_older ?dest - object)
-    (files_skipped ?dest - object)
-    (filesystem_boundary_respected ?src - object ?dst - object)
-    (filter_loaded ?f - file)
-    (firewall_chain_created ?table - object ?chain - object)
-    (firewall_chain_deleted ?table - object ?chain - object)
-    (firewall_chain_exists ?chain - object)
-    (firewall_chain_renamed ?table - object ?old_chain - object ?new_chain - object)
+    (filesystem_status_known ?f - filesystem_object)
+    (filter_file_exists ?f - file)
+    (firewall_chain_empty ?c - object)
+    (firewall_chain_exists ?c - object)
+    (firewall_chain_policy_accept ?c - object)
+    (firewall_chain_policy_drop ?c - object)
+    (firewall_element_exists ?e - object)
     (firewall_enabled)
-    (firewall_policy_set ?table - object ?chain - object ?policy - object)
-    (firewall_rule_added ?table - object ?chain - object ?target - object)
-    (firewall_rule_configured ?table - object)
-    (firewall_rule_counters_zeroed ?chain - object)
-    (firewall_rule_deleted ?table - object ?chain - object ?rulenum - object)
-    (firewall_rule_empty ?chain - object)
+    (firewall_hook_visible ?h - object)
+    (firewall_logging_on)
+    (firewall_monitor_active ?m - object)
+    (firewall_rule_accepts ?r - firewall_rule)
+    (firewall_rule_active ?r - firewall_rule)
+    (firewall_rule_allowed ?r - firewall_rule)
+    (firewall_rule_applied ?r - firewall_rule)
+    (firewall_rule_counts_packets ?r - firewall_rule)
+    (firewall_rule_denied ?r - firewall_rule)
+    (firewall_rule_drops ?r - firewall_rule)
     (firewall_rule_exists ?r - firewall_rule)
-    (firewall_rule_flushed ?chain - object)
-    (firewall_rule_inserted ?table - object ?chain - object ?rulenum - object ?rule_spec - object)
-    (firewall_rule_modified ?table - object ?chain - object ?rule_spec - object)
-    (firewall_rule_policy_changed ?chain - object ?target - object)
-    (firewall_rule_referenced ?chain - object)
-    (firewall_rule_removed ?chain - object)
-    (firewall_rule_replaced ?table - object ?chain - object ?rulenum - object ?rule_spec - object)
-    (firewall_rules_flushed ?table - object ?chain - object ?rulenum - object)
-    (firewall_table_defined ?table - object)
-    (fou_configured ?port - object)
-    (fragment_matching_enabled)
-    (gid_range_set ?min_gid - object ?max_gid - object)
-    (gid_used ?gid - object)
-    (global_config_enabled ?s - service)
-    (greater_than ?max_gid - object ?min_gid - object)
+    (firewall_rule_for_service ?r - firewall_rule ?s - service)
+    (firewall_rule_gotos ?r - firewall_rule ?target - firewall_rule)
+    (firewall_rule_in_chain ?r - firewall_rule ?c - object)
+    (firewall_rule_is_dnat ?r - firewall_rule)
+    (firewall_rule_is_load_balanced ?r - firewall_rule)
+    (firewall_rule_jumps ?r - firewall_rule ?target - firewall_rule)
+    (firewall_rule_limited ?r - firewall_rule)
+    (firewall_rule_loaded ?r - firewall_rule)
+    (firewall_rule_logged ?r - firewall_rule)
+    (firewall_rule_logs_packets ?r - firewall_rule)
+    (firewall_rule_matches_arp ?r - firewall_rule)
+    (firewall_rule_matches_ethernet ?r - firewall_rule)
+    (firewall_rule_matches_interface ?r - firewall_rule ?i - interface)
+    (firewall_rule_matches_ipv4 ?r - firewall_rule)
+    (firewall_rule_matches_port ?r - firewall_rule ?p - port)
+    (firewall_rule_matches_protocol ?r - firewall_rule)
+    (firewall_rule_matches_vlan ?r - firewall_rule)
+    (firewall_rule_matches_vni ?r - firewall_rule)
+    (firewall_rule_on_interface ?r - firewall_rule ?i - interface)
+    (firewall_rule_on_port ?r - firewall_rule ?p - port)
+    (firewall_rule_queues ?r - firewall_rule)
+    (firewall_rule_rejected ?r - firewall_rule)
+    (firewall_rule_rejects_packets ?r - firewall_rule)
+    (firewall_rule_sets_conntrack ?r - firewall_rule)
+    (firewall_ruleset_empty)
+    (firewall_ruleset_loaded ?f - file)
+    (firewall_ruleset_optimized ?f - file)
+    (firewall_ruleset_valid ?f - file)
+    (firewall_set_exists ?s - object)
+    (firewall_table_dormant ?t - object)
+    (firewall_table_exists ?t - object)
+    (flow_offloaded ?r - firewall_rule)
+    (flowtable_exists ?f - firewall_rule)
+    (forest_view_active)
+    (forest_view_enabled ?p - process)
+    (fss_keys_setup)
     (group_exists ?g - group)
-    (group_file_updated ?group - object)
-    (group_members_count ?group - object)
-    (group_operation_in_chroot ?g - object ?chroot - object)
-    (group_password_set ?g - object)
-    (group_split ?group - object)
-    (hard_link_created ?src - object ?dest - object)
-    (hierarchy_traversed ?link - object)
-    (home_directory_exists ?user - object)
-    (hook_executed ?script - object)
-    (host_architecture_set ?arch - object)
-    (ila_configured ?addr - object)
-    (integer ?min_gid - object)
-    (interactive_prompted ?file - object)
-    (interactive_prompted_once ?file - object)
+    (group_gid ?g - group ?gid - object)
+    (group_has_other_members ?g - group)
+    (group_has_password ?g - group)
+    (group_id_known ?g - group)
+    (group_is_system ?g - group)
+    (group_member ?u - user ?g - group)
+    (group_name ?g - group ?name - object)
+    (group_name_known ?g - group)
+    (group_owned_by_user ?g - group ?u - user)
+    (group_password_set ?g - group)
+    (home_migrated ?u - user)
+    (hostname_set ?h - object)
+    (hostnamectl_installed ?p - package)
+    (icon_name_set ?i - object)
+    (interface_autoconnect ?i - interface)
+    (interface_down ?i - interface)
     (interface_exists ?i - interface)
-    (interface_up ?iface - object)
-    (ioam_configured ?namespace - object)
-    (iptables_exit_code_111)
-    (iptables_setuid_to_root)
-    (l2tp_configured ?tunnel - object)
-    (lastlog_updated ?config - object)
-    (ldap_group_exists ?group - object)
-    (line_numbers_enabled)
-    (link_configured ?device - object)
-    (listing_rules)
-    (lock_exists)
-    (lock_obtained)
-    (log_init_skipped ?user - object)
-    (logging_enabled)
-    (logging_level_set ?level - object)
-    (logical_walk_active)
-    (login_shell_running ?user - object)
-    (login_shell_set ?user - object)
-    (login_shell_started ?p - process)
-    (macsec_configured ?device - object)
-    (maddress_configured ?addr - object)
-    (mail_spool_exists ?user - object)
-    (mail_spool_managed ?user - object)
-    (mail_spool_moved ?user - object ?new_home - object)
-    (mandatory_access_control_enabled ?rule - object)
-    (mask_not_recalculated ?f - filesystem_object)
-    (mask_recalculated ?f - filesystem_object)
-    (match_extension_specified ?match - object)
-    (match_loaded ?match - object)
-    (member_of ?u - object ?g - object)
-    (modprobe_command_set ?command - object)
-    (module_loaded ?module - object)
-    (modules_inserted ?command - object)
-    (monitor_configured ?monitor - object)
-    (mptcp_configured ?path - object)
-    (mroute_configured ?route - object)
-    (mrule_configured ?rule - object)
-    (neigh_configured ?entry - object)
-    (netfilter_hook_registered ?chain - object)
-    (netns_configured ?namespace - object)
-    (network_available)
-    (network_mask_set ?mask - object)
-    (network_namespace_exists ?netns - object)
-    (nis_group_exists ?group - object)
-    (no_user_group_created ?user - object)
-    (numeric_output_enabled)
-    (obsolete_cache_cleared)
-    (option_modified ?option - object)
-    (output_interface_set ?interface - object)
-    (output_oneline)
-    (ownership_referenced ?f - object ?rfile - object)
-    (package_auto_marked ?pkg - object)
+    (interface_managed ?i - interface)
+    (interface_managed_by_networkd ?i - interface)
+    (interface_up ?i - interface)
+    (ipsec_rule_configured ?r - firewall_rule)
+    (is_hard_link ?f - filesystem_object)
+    (is_primary_group ?u - user ?g - group)
+    (is_root ?u - user)
+    (is_symbolic_link ?f - filesystem_object)
+    (journal_boots_listed)
+    (journal_catalog_dumped)
+    (journal_catalog_listed)
+    (journal_catalog_updated)
+    (journal_cursor_updated ?f - file)
+    (journal_disk_usage_known)
+    (journal_field_values_listed ?f - file)
+    (journal_fields_listed)
+    (journal_flushed)
+    (journal_header_shown)
+    (journal_invocations_listed ?s - service)
+    (journal_logs_all_fields ?p - process)
+    (journal_logs_catalog_augmented ?p - process)
+    (journal_logs_exported ?p - process)
+    (journal_logs_followed ?p - process)
+    (journal_logs_json_formatted ?p - process)
+    (journal_logs_no_pager ?p - process)
+    (journal_logs_quiet ?p - process)
+    (journal_logs_read ?u - user)
+    (journal_logs_reversed ?p - process)
+    (journal_logs_utc ?p - process)
+    (journal_rotated)
+    (journal_synced)
+    (journal_vacuumed_by_files)
+    (journal_vacuumed_by_size)
+    (journal_vacuumed_by_time)
+    (journal_verified)
+    (journal_writing_to_run)
+    (journal_writing_to_var)
+    (kernel_logs_read ?p - process)
+    (kernel_parameter_read ?p - object)
+    (kernel_parameter_set ?p - object)
+    (keymap_available ?map - object)
+    (link_points_to ?link - filesystem_object ?target - filesystem_object)
+    (locale_available ?locale - object)
+    (location_set ?l - object)
+    (login_shell_active ?p - process)
+    (logs_filtered_by_unit ?p - process ?s - service)
+    (logs_followed ?s - service)
+    (logs_viewed ?p - process)
+    (netplan_config_generated ?f - configuration_file)
+    (netplan_config_valid ?f - configuration_file)
+    (netplan_status_known ?i - interface)
+    (network_connectivity_full)
+    (network_connectivity_limited)
+    (network_connectivity_none)
+    (network_connectivity_portal)
+    (network_connectivity_unknown)
+    (network_manager_running)
+    (network_namespace_switched ?p - process)
+    (networking_enabled)
+    (nft_describe_executed ?r - firewall_rule)
+    (nft_map_empty ?m - firewall_rule)
+    (nft_map_exists ?m - firewall_rule)
+    (nft_set_empty ?s - firewall_rule)
+    (nft_set_exists ?s - firewall_rule)
+    (niceness_adjusted ?p - process)
+    (nm_config_reloaded)
+    (nm_dns_plugin_restarted)
+    (nm_dns_updated)
+    (nm_logging_domain_set ?d - object)
+    (nm_logging_level_set ?l - object)
+    (nmcli_installed)
+    (nmcli_polkit_agent_running)
+    (nmcli_secret_agent_running)
+    (ntp_disabled ?s - service)
+    (ntp_enabled)
+    (ntp_server_configured ?i - interface ?s - service)
+    (numa_node_expanded ?p - process)
+    (numa_summary_enabled ?p - process)
+    (numeric_columns_left_justified ?p - process)
+    (observation_complete)
+    (observed_firewall_rule ?r - object)
+    (package_arch_mismatch ?p - package)
+    (package_audit_performed ?p - package)
+    (package_authenticity_failed ?p - package)
+    (package_autoremoved ?p - package)
     (package_available ?p - package)
-    (package_compiled ?pkg - object)
-    (package_configured ?pkg - object)
-    (package_downloaded ?pkg - object)
-    (package_enabled ?pkg - object)
-    (package_exists ?src - object)
-    (package_index_updated)
-    (package_installed ?pkg - object)
-    (package_list_updated)
-    (package_lists_updated)
-    (package_missing ?pkg - object)
-    (package_on_hold ?pkg - object)
-    (package_outdated ?pkg - object)
+    (package_build_deps_installed ?p - package)
+    (package_built ?p - package)
+    (package_cache_clean ?p - package)
+    (package_cache_exists ?p - package)
+    (package_compiled ?p - package)
+    (package_configured ?p - package)
+    (package_contents_known ?p - package)
+    (package_dependency_ignored ?p - package)
+    (package_disabled ?p - package)
+    (package_downloaded ?p - package)
+    (package_enabled ?p - package)
+    (package_exists_as_dir ?p - package ?d - directory)
+    (package_exists_as_file ?p - package ?f - file)
+    (package_files_known ?p - package)
+    (package_info_known ?p - package)
+    (package_installed ?p - package)
+    (package_manually_installed ?p - package)
+    (package_marked_reinstreq ?p - package)
+    (package_masked ?p - package)
+    (package_pinned ?p - package)
     (package_purged ?p - package)
     (package_removed ?p - package)
-    (package_reverted ?pkg - object)
-    (packages_installed)
-    (packages_upgraded)
-    (packet_accepted ?table - object ?chain - object)
-    (packet_dropped ?table - object ?chain - object)
-    (packet_filtering_rule_set ?iface - object)
-    (packet_processed ?target - object)
-    (password_aging_disabled ?user - object)
-    (password_inactive_days_set ?u - user)
-    (password_last_change_set ?u - user)
-    (password_max_age_set ?days - object)
+    (package_running ?p - package)
+    (package_selected ?p - package)
+    (package_selection_set ?p - package)
+    (package_source_downloaded ?p - package)
+    (package_status_known ?p - package)
+    (package_unpacked ?p - package)
+    (package_upgraded ?p - package)
+    (package_verified ?p - package)
+    (package_version_mismatch ?p - package)
+    (packet_duplicated_to ?r - firewall_rule ?i - interface)
+    (packet_forwarded_to ?r - firewall_rule ?i - interface)
+    (packet_queued ?r - firewall_rule)
+    (pager_disabled ?p - process)
+    (parent_directory_exists ?d - directory)
+    (parent_focus_enabled ?p - process)
+    (password_expiry_set ?u - user)
+    (password_inactive_set ?u - user)
+    (password_last_changed_set ?u - user)
     (password_max_days_set ?u - user)
-    (password_min_age_set ?days - object)
     (password_min_days_set ?u - user)
-    (password_policy_set ?u - user)
-    (password_warning_age_set ?days - object)
-    (password_warning_days_set ?u - user)
-    (path_exists ?p - object)
-    (path_monitored ?p - object)
-    (permissions_changed_recursively ?path - object)
-    (physical_walk_active)
+    (password_warn_days_set ?u - user)
+    (pidfile_contains_process ?f - file ?p - process)
     (pidfile_exists ?f - file)
-    (policy_set ?c - object)
-    (port_allowed ?p - object)
-    (port_exists ?p - port)
-    (port_open ?port - object)
-    (prefix_dir_set ?d - directory)
-    (prefix_set ?prefix - object)
-    (print_job_exists ?user - object)
-    (process_ancestors_ignored ?p - process)
-    (process_by_command ?p - process ?cmd - object)
-    (process_by_group ?p - process ?g - group)
-    (process_by_parent ?p - process ?pp - process)
-    (process_by_session ?p - process ?s - object)
-    (process_by_terminal ?p - process ?t - interface)
-    (process_by_user ?p - process ?u - user)
-    (process_case_insensitive ?p - process)
-    (process_cgroup_matches ?p - process)
-    (process_count_matches)
-    (process_delimiter_set)
-    (process_discovered ?p - process)
-    (process_echo_enabled)
-    (process_exact_match ?p - process)
-    (process_exists ?pr - process)
-    (process_full_cmdline_matches ?p - process)
-    (process_group_matches ?p - process ?g - group)
-    (process_inverse_match)
+    (plug_connected ?p1 - package ?p2 - package)
+    (port_exists ?port - object)
+    (port_open ?p - port)
+    (pretty_hostname_set ?h - object)
+    (process_attached_to_tty ?p - process ?i - interface)
+    (process_audit_info_known ?p - process)
+    (process_autogroup_reniced ?p - process)
+    (process_belongs_to_service ?p - process ?s - service)
+    (process_debug_info_obtained ?p - process)
+    (process_env_visible ?p - process)
+    (process_environment_obtained ?p - process)
+    (process_executed ?p - process)
+    (process_exists ?p - process)
+    (process_filter_active ?p - process)
+    (process_filter_case_sensitive ?p - process)
+    (process_filtered_by_user ?p - process ?u - user)
+    (process_format_specifiers_obtained ?p - process)
+    (process_has_handler ?p - process)
+    (process_has_niceness ?p - process)
+    (process_has_parent ?p - process ?pp - process)
+    (process_has_priority ?p - process ?priority - object)
+    (process_hierarchy_obtained ?p - process)
+    (process_identified_by_name ?p - process ?name - object)
+    (process_identified_by_pid ?p - process ?pid - object)
+    (process_ignores_hangup ?p - process)
+    (process_in_group ?p - process ?g - group)
+    (process_in_pgroup ?p - process ?pg - group)
+    (process_in_session ?p - process ?s - process)
+    (process_info_obtained ?p - process)
+    (process_info_visible ?p - process)
+    (process_is_control ?p - process)
+    (process_is_main ?p - process)
     (process_killed ?pr - process)
-    (process_lightweight_mode)
-    (process_lock_pidfile)
-    (process_name_matches ?p - process)
-    (process_namespace_matches ?p - process)
-    (process_newest ?p - process)
-    (process_older_than ?p - process)
-    (process_oldest ?p - process)
-    (process_parent_matches ?p - process)
-    (process_requires_handler ?p - process ?sig - object)
+    (process_logs_read ?p - process)
+    (process_monitored ?p - process)
+    (process_on_interface ?p - process ?i - interface)
+    (process_on_terminal ?p - process ?t - interface)
+    (process_owned_by ?p - process ?u - user)
+    (process_owned_by_effective_user ?p - process ?u - user)
+    (process_owned_by_group ?p - process ?g - group)
+    (process_owned_by_real_user ?p - process ?u - user)
+    (process_owned_by_user ?p - process ?u - user)
+    (process_reniced ?p - process)
+    (process_resumed ?p - process)
     (process_running ?p - process)
-    (process_session_matches ?p - process)
-    (process_state_matches ?p - process)
-    (process_terminal_matches ?p - process)
-    (process_terminated ?signal - object)
-    (process_user_matches ?p - process ?u - user)
-    (prompted_always ?dir - object)
-    (prompted_interactive ?when - object)
-    (prompted_once ?dir - object)
-    (protocol_allowed ?protocol - object)
-    (protocol_family_set ?family - object)
-    (protocol_inverted ?protocol - object)
+    (process_running_as ?p - process ?u - user)
+    (process_running_as_group ?p - process ?g - group)
+    (process_security_context_obtained ?p - process)
+    (process_signaled ?p - process)
+    (process_smaps_visible ?p - process)
+    (process_stopped ?p - process)
+    (process_terminated ?p - process)
+    (process_threads_obtained ?p - process)
+    (process_version_obtained ?p - process)
+    (process_visible ?p - process)
+    (process_waited ?p - process)
     (pty_allocated ?p - process)
-    (pty_created ?user - object)
-    (quiet_mode_enabled)
-    (recursive_mode_active)
-    (reflink_supported)
+    (quota_exists ?r - firewall_rule)
     (repository_configured ?r - repository)
-    (requires_env_preservation ?pr - object)
-    (resource_cleaned ?s - service)
-    (root_access ?u - user)
-    (root_not_preserved ?f - object)
-    (root_not_special ?file - object)
-    (root_preservation_disabled)
-    (root_preservation_enabled)
-    (root_preserved ?file - object)
-    (route_configured ?route - object)
-    (rule_allows ?r - firewall_rule)
-    (rule_appends_to ?r - firewall_rule ?o - object)
-    (rule_configured ?rule - object)
-    (rule_deleted ?r - firewall_rule)
-    (rule_denies ?r - firewall_rule)
-    (rule_exists ?chain - object ?rulenum - object)
-    (rule_from_source ?r - firewall_rule ?src - object)
+    (repository_exists ?r - repository)
+    (repository_updated ?r - repository)
+    (resource_exists ?r - object ?s - service)
+    (root_directory_switched ?d - directory)
+    (row_highlight_enabled ?p - process)
+    (rt_rule_configured ?r - firewall_rule)
+    (rtc_local_time)
+    (rtc_utc_time)
+    (rule_allows_traffic ?r - firewall_rule)
+    (rule_at_position ?r - firewall_rule ?pos - object)
+    (rule_filters_sctp_port ?r - firewall_rule ?p - port)
+    (rule_filters_tcp_port ?r - firewall_rule ?p - port)
+    (rule_filters_udp_port ?r - firewall_rule ?p - port)
+    (rule_filters_udplite_port ?r - firewall_rule ?p - port)
     (rule_in_chain ?r - firewall_rule ?c - object)
-    (rule_limits ?r - firewall_rule)
-    (rule_on_interface ?r - firewall_rule ?i - interface)
-    (rule_proto_tcp ?r - firewall_rule)
-    (rule_proto_udp ?r - firewall_rule)
-    (rule_rejects ?r - firewall_rule)
-    (rule_to_port ?r - firewall_rule ?p - port)
-    (runtime_config_enabled ?s - service)
-    (same_name ?src - object ?dst - object)
-    (security_context_set ?dst - object ?ctx - object)
-    (segment_routing_configured ?sr - object)
-    (segment_routing_exists ?sr - object)
-    (selected_snapshot ?snapshot - object)
-    (selinux_context_set ?dst - object)
-    (selinux_context_set_custom ?dest - object ?ctx - object)
-    (selinux_range_set ?user - object ?range - object)
-    (selinux_user_mapping_removed ?user - object)
-    (selinux_user_mapping_updated ?user - object)
-    (selinux_user_removed ?user - object)
-    (selinux_user_set ?user - object)
-    (separate_device ?dir - object)
-    (service_configured ?s - service)
+    (rule_in_table ?r - firewall_rule ?t - object)
+    (rule_is_dnat ?r - firewall_rule)
+    (rule_is_masquerade ?r - firewall_rule)
+    (rule_is_nat ?r - firewall_rule)
+    (rule_is_notrack ?r - firewall_rule)
+    (rule_is_redirect ?r - firewall_rule)
+    (rule_is_snat ?r - firewall_rule)
+    (rule_is_synproxy ?r - firewall_rule)
+    (rule_is_tproxy ?r - firewall_rule)
+    (rule_limits_rate ?r - firewall_rule)
+    (rule_matches_group ?r - firewall_rule ?g - group)
+    (rule_matches_interface ?r - firewall_rule ?i - interface)
+    (rule_matches_os ?r - firewall_rule)
+    (rule_matches_port ?r - firewall_rule ?p - port)
+    (rule_matches_user ?r - firewall_rule ?u - user)
+    (rule_sets_meta ?r - firewall_rule)
+    (security_context_known ?p - process)
+    (service_activating ?s - service)
+    (service_automount_listed ?s - service)
+    (service_deactivating ?s - service)
+    (service_dependencies_listed ?s - service)
     (service_disabled ?s - service)
-    (service_enabled ?svc - object)
-    (service_exists ?svc - object)
+    (service_enabled ?s - service)
+    (service_exists ?s - service)
     (service_failed ?s - service)
+    (service_inactive ?s - service)
+    (service_installed ?s - service)
+    (service_jobs_listed ?s - service)
+    (service_known ?s - service)
+    (service_linked ?s - service)
+    (service_list_automounts_executed)
+    (service_list_paths_executed)
+    (service_list_sockets_executed)
+    (service_list_timers_executed)
+    (service_list_units_executed)
+    (service_listed ?s - service)
+    (service_loaded ?s - service)
+    (service_logs_read ?s - service)
+    (service_maintenance ?s - service)
+    (service_manager_exited)
     (service_masked ?s - service)
-    (service_running ?svc - object)
+    (service_path_listed ?s - service)
+    (service_preset ?s - service)
+    (service_refreshing ?s - service)
+    (service_reloading ?s - service)
+    (service_running ?s - service)
+    (service_socket_listed ?s - service)
+    (service_status_known ?s - service)
     (service_stopped ?s - service)
+    (service_timer_listed ?s - service)
     (service_unmasked ?s - service)
-    (session_cache_removed ?user - object)
-    (session_created ?p - process)
-    (session_record_exists)
-    (session_timestamp_reset ?user - object)
-    (setgid_bit_cleared ?f - object)
-    (sgid_bit_cleared ?d - object)
-    (sgid_bit_preserved ?d - object)
-    (shadow_file_exists ?f - configuration_file)
-    (signal_available ?sig - object)
-    (signal_sent ?p - process ?sig - object)
-    (skipped_directory ?dir - object)
-    (skipped_files_fail ?src - object ?dst - object)
-    (snap_available ?p - package)
-    (snap_cache_exists)
-    (snap_change_aborted ?c - process)
-    (snap_change_exists ?c - process)
-    (snap_channel_available ?p - package ?ch - object)
-    (snap_cohort_available ?p - package ?coh - object)
-    (snap_component_available ?p - package ?comp - object)
-    (snap_configured ?p - package)
-    (snap_connected ?p - package ?i - interface)
+    (session_cached ?u - user)
+    (signal_sent ?p - process)
+    (snap_alias_exists ?p - package ?a - object)
+    (snap_assertion_added ?a - object)
+    (snap_change_pending ?c - object)
+    (snap_cohort_created ?p - package)
+    (snap_component_listed ?p - package)
+    (snap_connection_exists ?p1 - package ?p2 - package)
     (snap_disabled ?p - package)
-    (snap_disconnected ?p - package ?i - interface)
     (snap_downloaded ?p - package)
     (snap_enabled ?p - package)
     (snap_installed ?p - package)
-    (snap_pending_change ?c - process)
-    (snap_private_snap ?p - package)
-    (snap_publisher_verified ?p - package)
-    (snap_revision_available ?p - package ?rev - object)
-    (snap_section_available ?sec - object)
-    (snap_seed_valid)
-    (snap_snapshot_exists ?s - service)
-    (snap_task_exists ?t - process)
-    (snapshot_available ?snapshot - object)
-    (socket_data_dumped ?s - object ?f - file)
-    (socket_device ?s - object ?i - interface)
-    (socket_exists ?s - object)
-    (socket_family ?s - object ?f - object)
-    (socket_family_exists ?f - object)
-    (socket_listening ?s - object)
-    (socket_owner ?s - object ?pr - process)
-    (socket_port ?s - object ?p - port)
-    (socket_state ?s - object ?st - object)
-    (socket_state_exists ?st - object)
-    (socket_table ?s - object ?t - object)
-    (socket_table_exists ?t - object)
-    (socket_user ?s - object ?u - user)
-    (source_downloaded ?src - object)
-    (source_file_added ?filename - object)
-    (subid_entries_added ?user - object)
-    (subordinate_gids_added ?user - object ?first - object ?last - object)
-    (subordinate_gids_allocated ?user - object)
-    (subordinate_group_ids_allocated ?user - object)
-    (subordinate_uids_added ?user - object ?first - object ?last - object)
-    (subordinate_uids_allocated ?user - object)
-    (subordinate_uids_removed ?user - object ?first - object ?last - object)
-    (sudo_timestamp_refreshed)
-    (suid_bit_cleared ?d - object)
-    (suid_bit_preserved ?d - object)
-    (symbolic_link_exists ?dst - object)
-    (symbolic_links_skipped ?link - object)
-    (symlink_dereferenced ?src - object ?dest - object)
-    (symlink_followed ?src - object ?dest - object)
-    (symlinks_not_traversed ?f - object)
-    (symlinks_traversed ?f - object)
-    (system_upgraded)
-    (table_exists)
-    (table_set ?table - object)
-    (target_loaded ?target - object)
-    (tcp_metrics_configured ?tcp_metrics - object)
-    (tcp_metrics_exists ?tcp_metrics - object)
-    (temp_file_edited ?f - object)
-    (temp_file_exists ?f - object)
-    (temp_file_owner ?f - object ?u - object)
-    (test_mode_active)
-    (time_type_valid ?time_type - object)
-    (timer_exists ?t - object)
-    (timer_scheduled ?t - object)
-    (token_configured ?token - object)
-    (token_exists ?token - object)
-    (traffic_blocked ?rule - object)
-    (tunnel_configured ?tunnel - object)
-    (tunnel_exists ?tunnel - object)
-    (tuntap_configured ?tuntap - object)
-    (tuntap_exists ?tuntap - object)
-    (uid_exists ?uid - object)
-    (uid_max_set ?max - object)
-    (uid_min_set ?min - object)
-    (uid_set ?uid - object)
-    (umask_set ?mask - object)
-    (unit_activating ?u - object)
-    (unit_active ?u - object)
-    (unit_deactivating ?u - object)
-    (unit_exists ?u - object)
-    (unit_failed ?u - object)
-    (unit_file_exists ?s - service)
-    (unit_inactive ?u - object)
-    (unit_loaded ?u - object)
-    (unit_masked ?u - object)
-    (unit_matches_pattern ?u - object ?pattern - object)
-    (unit_not_found ?u - object)
-    (unit_reloading ?u - object)
-    (unnecessary_packages_removed)
-    (unused_dependencies_removed ?pkg - object)
-    (update_mode_set ?mode - object)
-    (update_run_before_command)
-    (user_authenticated ?u - user)
-    (user_comment_set ?user - object)
-    (user_critical ?user - object)
-    (user_exists ?users - object)
-    (user_expiration_set ?user - object)
-    (user_gecos ?user - object ?comment - object)
-    (user_group_exists ?group - object)
-    (user_groups_set ?user - object ?groups - object)
-    (user_has_bad_name ?user - object)
-    (user_has_privileges)
-    (user_has_selinux_user ?user - object ?seuser - object)
-    (user_has_subordinate_gids ?user - object ?first - object ?last - object)
-    (user_home_directory ?user - object ?new_home - object)
-    (user_id_non_unique ?user - object)
-    (user_in_group ?users - object ?group - object)
-    (user_is_root ?u - object)
-    (user_locked ?user - object)
+    (snap_plug_connected ?p1 - package ?p2 - package)
+    (snap_snapshot_exists ?p - package)
+    (snap_snapshot_verified ?s - object)
+    (snapshot_exists ?p - package)
+    (snapshot_verified ?p - package ?u - user)
+    (socket_bpf_info_obtained ?p - process)
+    (socket_closed ?p - process)
+    (socket_context_obtained ?p - process)
+    (socket_family_known ?p - process)
+    (socket_info_dumped_to_file ?f - file)
+    (socket_info_obtained ?p - process)
+    (socket_interface_known ?p - process ?i - interface)
+    (socket_internal_info_obtained ?p - process)
+    (socket_memory_info_obtained ?p - process)
+    (socket_port_known ?p - process ?port - port)
+    (socket_state_known ?p - process)
+    (socket_summary_obtained ?p - process)
+    (source_downloaded ?p - package)
+    (stateful_object_exists ?o - object)
+    (static_hostname_set ?h - object)
+    (sudoers_file_invalid ?f - configuration_file)
+    (sudoers_file_valid ?f - configuration_file)
+    (system_boot_loader_entry_pending ?entry - object)
+    (system_boot_loader_menu_pending)
+    (system_firmware_setup_pending)
+    (system_has_hybrid_cores ?p - process)
+    (system_has_numa_support ?p - process)
+    (system_hibernated)
+    (system_hybrid_sleep)
+    (system_hybrid_sleeping)
+    (system_keymap_set ?map - object)
+    (system_locale_set ?locale - object)
+    (system_manager_exited)
+    (system_manager_running_at ?proc - process)
+    (system_reboot_argument_pending ?arg - object)
+    (system_rebooted)
+    (system_running)
+    (system_service_manager_accessed)
+    (system_settings_all_loaded)
+    (system_settings_loaded ?f - file)
+    (system_sleeping)
+    (system_status_known ?s - service)
+    (system_suspend_then_hibernate)
+    (system_suspended)
+    (system_suspended_then_hibernated)
+    (system_time_set)
+    (system_time_status_known)
+    (system_userspace_reboot_pending)
+    (table_exists ?t - object)
+    (timesync_status_available ?s - service)
+    (timesync_status_known)
+    (timezone_set)
+    (top_alternate_display_mode ?p - process)
+    (top_alternate_mode ?p - process)
+    (top_bold_enabled ?p - process)
+    (top_children_collapsed)
+    (top_command_line_mode)
+    (top_config_exists ?f - configuration_file)
+    (top_config_saved ?f - configuration_file)
+    (top_config_updated ?f - configuration_file)
+    (top_cpu_time_scaled)
+    (top_delay_changed ?p - process)
+    (top_displaying_accum_time ?p - process)
+    (top_displaying_cmdline ?p - process)
+    (top_displaying_idle ?p - process)
+    (top_displaying_single_cpu ?p - process)
+    (top_displaying_threads ?p - process)
+    (top_filter_active ?p - process)
+    (top_forest_view_enabled)
+    (top_idle_processes_hidden)
+    (top_irix_mode_enabled)
+    (top_irix_solaris_mode ?p - process)
+    (top_memory_scaled)
+    (top_restrictions_active ?f - configuration_file)
+    (top_running)
+    (top_running_batch_mode ?p - process)
+    (top_running_secure_mode ?p - process)
+    (top_scroll_coords_visible ?p - process)
+    (top_search_string_set ?p - process)
+    (top_sort_reversed)
+    (top_summary_cpu_abridged)
+    (top_threads_mode ?p - process)
+    (top_threads_mode_enabled)
+    (top_user_filter_enabled ?u - user)
+    (top_window_scrolled ?p - process)
+    (top_window_visible)
+    (top_zero_suppress_enabled ?p - process)
+    (transient_hostname_set ?h - object)
+    (triggers_awaited ?p - package)
+    (triggers_pending ?p - package)
+    (ufw_enabled)
+    (ufw_logging_level ?l - object)
+    (unit_list_obtained ?s - service)
+    (unit_listed ?s - service)
+    (user_account_expired ?u - user)
+    (user_account_locked ?u - user)
+    (user_aging_info_known ?u - user)
+    (user_exists ?u - user)
+    (user_forced_password_change ?u - user)
+    (user_has_group ?u - user ?g - group)
+    (user_has_password ?u - user)
+    (user_has_running_processes ?u - user)
+    (user_has_selinux_mapping ?u - user)
+    (user_has_selinux_range ?u - user ?sr - object)
+    (user_has_selinux_user ?u - user ?su - object)
+    (user_has_shell ?u - user ?s - file)
+    (user_has_subuid ?u - user)
+    (user_has_uid ?u - user ?uid - object)
+    (user_home_dir ?u - user ?d - directory)
+    (user_home_dir_writable ?u - user)
+    (user_home_directory ?u - user ?d - directory)
+    (user_id_known ?u - user)
+    (user_in_group ?u - user ?g - group)
+    (user_is_member_of ?u - user ?g - group)
+    (user_is_root ?u - user)
     (user_logged_in ?u - user)
-    (user_login_changed ?user - object ?new_login - object)
-    (user_not_in_group ?user - object ?group - object)
-    (user_password_changed ?user - object)
-    (user_password_inactive ?user - object ?inactive - object)
-    (user_primary_group ?user - object ?group - object)
-    (user_shell_set ?user - object ?shell - object)
-    (user_supplementary_groups ?user - object ?groups - object)
-    (user_uid_set ?user - object ?uid - object)
-    (user_with_uid ?user - object ?uid - object)
-    (usergroups_ena_set ?enabled - object)
-    (valid_policy ?target - object)
-    (valid_when ?when - object)
-    (version_control_set ?method - object)
-    (vrf_configured ?vrf - object)
-    (vrf_exists ?vrf - object)
-    (vulnerable ?pkg - object)
-    (wait_time_set ?seconds - object)
-    (when_in_never_once_always ?when - object)
-    (xfrm_configured ?policy - object)
-    (xfrm_exists ?xfrm - object)
+    (user_logged_in_store ?u - user)
+    (user_mail_spool ?u - user ?f - file)
+    (user_member_of ?u - user ?g - group)
+    (user_name_known ?u - user)
+    (user_password_empty ?u - user)
+    (user_password_expired ?u - user)
+    (user_password_locked ?u - user)
+    (user_primary_group ?u - user ?g - group)
+    (user_service_manager_accessed ?u - user)
+    (user_shell ?u - user ?s - file)
+    (user_supplementary_group ?u - user ?g - group)
+    (user_system_account ?u - user)
+    (username_known ?u - user)
+    (vpn_plugin_installed ?i - interface)
+    (wifi_ap_known ?ap - object)
+    (wifi_connected ?i - interface)
+    (wifi_enabled)
+    (wifi_hotspot_active ?i - interface)
+    (wwan_enabled)
+    (x11_keymap_set ?layout - object ?model - object ?variant - object ?options - object)
+    (x11_layout_available ?layout - object)
+    (x11_model_available ?model - object)
+    (x11_option_available ?option - object)
+    (x11_variant_available ?variant - object)
+    (network_available)
   )
 
-  ;; Action: abort_on_remove
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action abort_on_remove
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
+  ;; Action: add_arp_match_rule
+  (:action add_arp_match_rule
+    :parameters (?r - firewall_rule)
+    :precondition ()
     :effect (and
-      (abort_on_remove ?pkg)
-    )
-  )
-
-  ;; Action: accept_packet
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action accept_packet
-    :parameters (?table - firewall_rule ?chain - firewall_rule)
-    :precondition (and
-      (firewall_table_defined ?table)
-      (firewall_chain_exists ?chain)
-    )
-    :effect (and
-      (packet_accepted ?table ?chain)
-    )
-  )
-
-  ;; Action: activate_build_profiles
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action activate_build_profiles
-    :parameters (?profiles - directory)
-    :precondition (and
-      (not (build_profiles_active ?profiles))
-    )
-    :effect (and
-      (build_profiles_active ?profiles)
-    )
-  )
-
-  ;; Action: adapt_file_ownership
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action adapt_file_ownership
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (file_ownership_adapted ?user)
-    )
-  )
-
-  ;; Action: add_firewall_rule
-  (:action add_firewall_rule
-    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object ?chain - firewall_rule ?o - file ?table - object ?target - object)
-    :precondition (and
-      (firewall_chain_exists ?chain)
-      (chain_exists ?o)
-      (firewall_table_defined ?table)
-      (firewall_enabled)
-      (interface_exists ?i)
-      (port_exists ?p)
-    )
-    :effect (and
-      (firewall_rule_added ?table ?chain ?target)
-      (rule_on_interface ?r ?i)
       (firewall_rule_exists ?r)
-      (rule_from_source ?r ?src)
-      (rule_to_port ?r ?p)
-      (rule_appends_to ?r ?o)
-      (rule_allows ?r)
+      (firewall_rule_matches_arp ?r)
     )
-  )
+)
 
-  ;; Action: add_ip_command
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action add_ip_command
-    :parameters (?cmd - file)
-    :precondition (and
-      (not (command_exists ?cmd))
-    )
-    :effect (and
-      (command_exists ?cmd)
-    )
-  )
-
-  ;; Action: add_line_numbers
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action add_line_numbers
-    :parameters (?obj - file)
-    :precondition (and
-      (listing_rules)
-    )
-    :effect (and
-      (line_numbers_enabled)
-    )
-  )
-
-  ;; Action: add_source_file
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action add_source_file
-    :parameters (?filename - file)
-    :precondition (and
-      (file_exists ?filename)
-    )
-    :effect (and
-      (source_file_added ?filename)
-    )
-  )
-
-  ;; Action: add_sub_gids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action add_sub_gids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: add_sub_uids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action add_sub_uids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: add_subids_for_system
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action add_subids_for_system
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (subid_entries_added ?user)
-    )
-  )
-
-  ;; Action: add_subordinate_gids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action add_subordinate_gids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (subordinate_gids_added ?user ?first ?last)
-    )
-  )
-
-  ;; Action: add_subordinate_uids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action add_subordinate_uids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (subordinate_uids_added ?user ?first ?last)
-    )
-  )
-
-  ;; Action: add_user_to_existing_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action add_user_to_existing_group
-    :parameters (?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-    )
-    :effect (and
-      (user_in_group ?user ?group)
-    )
-  )
-
-  ;; Action: add_user_to_group
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action add_user_to_group
-    :parameters (?u - user ?g - group)
-    :precondition (and
-      (user_exists ?u)
-      (group_exists ?g)
-      (not (member_of ?u ?g))
-    )
-    :effect (and
-      (member_of ?u ?g)
-    )
-  )
-
-  ;; Action: add_user_to_supplementary_groups
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action add_user_to_supplementary_groups
-    :parameters (?user - user ?groups - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?groups)
-    )
-    :effect (and
-      (user_in_group ?user ?groups)
-    )
-  )
-
-  ;; Action: add_users_to_group
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action add_users_to_group
-    :parameters (?group - group ?users - user)
-    :precondition (and
-      (group_exists ?group)
-      (user_exists ?users)
-    )
-    :effect (and
-      (user_in_group ?users ?group)
-    )
-  )
-
-  ;; Action: allocate_pty
-  (:action allocate_pty
-    :parameters (?target_user - user ?caller - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?caller)
-      (can_switch_to ?target_user)
-    )
-    :effect (and
-      (pty_allocated ?target_user)
-      (session_created ?target_user)
-    )
-  )
-
-  ;; Action: allocate_subordinate_gids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action allocate_subordinate_gids
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (subordinate_gids_allocated ?user))
-    )
-    :effect (and
-      (subordinate_gids_allocated ?user)
-    )
-  )
-
-  ;; Action: allocate_subordinate_group_ids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action allocate_subordinate_group_ids
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (subordinate_group_ids_allocated ?user))
-    )
-    :effect (and
-      (subordinate_group_ids_allocated ?user)
-    )
-  )
-
-  ;; Action: allocate_subordinate_uids
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action allocate_subordinate_uids
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (subordinate_uids_allocated ?user))
-    )
-    :effect (and
-      (subordinate_uids_allocated ?user)
-    )
-  )
-
-  ;; Action: allow_bad_names
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action allow_bad_names
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_has_bad_name ?user)
-    )
-  )
-
-  ;; Action: allow_downgrades
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action allow_downgrades
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: allow_insecure_repositories
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action allow_insecure_repositories
-    :parameters (?obj - file)
+  ;; Action: add_dnat_jhash_rule
+  (:action add_dnat_jhash_rule
+    :parameters (?r - firewall_rule)
     :precondition (and)
     :effect (and
-      (allow_insecure_repositories)
-    )
-  )
-
-  ;; Action: allow_new_packages
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action allow_new_packages
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_outdated ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: allow_releaseinfo_change
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action allow_releaseinfo_change
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (allow_releaseinfo_change)
-    )
-  )
-
-  ;; Action: allow_traffic
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action allow_traffic
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (traffic_blocked ?rule)
-    )
-    :effect (and
-      (not (traffic_blocked ?rule))
-    )
-  )
-
-  ;; Action: allow_unauthenticated
-  ;; Source: apt-get
-  (:action allow_unauthenticated
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: append_iptables_rule
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action append_iptables_rule
-    :parameters (?chain - firewall_rule ?rule_spec - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-    )
-    :effect (and
-      (firewall_rule_modified ?chain)
-    )
-  )
-
-  ;; Action: append_rule
-  (:action append_rule
-    :parameters (?r - firewall_rule ?c - object ?t - object)
-    :precondition (and
-      (chain_exists ?c)
-      (table_exists ?t)
-    )
-    :effect (and
-      (rule_in_chain ?r ?c)
       (firewall_rule_exists ?r)
+      (firewall_rule_is_dnat ?r)
+      (firewall_rule_is_load_balanced ?r)
     )
   )
 
-  ;; Action: append_supplementary_group
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action append_supplementary_group
-    :parameters (?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-    )
+  ;; Action: add_dnat_numgen_rule
+  (:action add_dnat_numgen_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
     :effect (and
-      (user_in_group ?user ?group)
+      (firewall_rule_exists ?r)
+      (firewall_rule_is_dnat ?r)
+      (firewall_rule_is_load_balanced ?r)
     )
   )
 
-  ;; Action: append_user_to_groups
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action append_user_to_groups
-    :parameters (?user - user ?groups - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?groups)
-    )
+  ;; Action: add_dnat_symhash_rule
+  (:action add_dnat_symhash_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
     :effect (and
-      (user_in_group ?user ?groups)
+      (firewall_rule_exists ?r)
+      (firewall_rule_is_dnat ?r)
+      (firewall_rule_is_load_balanced ?r)
     )
   )
 
-  ;; Action: apply_changes_chroot
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action apply_changes_chroot
-    :parameters (?chroot_dir - directory)
-    :precondition (and
-      (directory_exists ?chroot_dir)
-    )
+  ;; Action: add_ethernet_match_rule
+  (:action add_ethernet_match_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
     :effect (and
-      (changes_applied_in_chroot ?chroot_dir)
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_ethernet ?r)
     )
   )
 
-  ;; Action: apply_changes_prefix
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action apply_changes_prefix
-    :parameters (?prefix_dir - directory)
-    :precondition (and
-      (directory_exists ?prefix_dir)
-    )
+  ;; Action: add_ipv4_match_rule
+  (:action add_ipv4_match_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
     :effect (and
-      (changes_applied_in_prefix ?prefix_dir)
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_ipv4 ?r)
     )
   )
 
-  ;; Action: apply_chroot_changes
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action apply_chroot_changes
-    :parameters (?chroot_dir - directory)
-    :precondition (and
-      (directory_exists ?chroot_dir)
-    )
+  ;; Action: add_vlan_match_rule
+  (:action add_vlan_match_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
     :effect (and
-      (changes_applied_in_chroot ?chroot_dir)
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_vlan ?r)
     )
   )
 
-  ;; Action: apply_config_changes
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action apply_config_changes
-    :parameters (?prefix_dir - directory)
-    :precondition (and
-      (directory_exists ?prefix_dir)
-    )
-    :effect (and
-      (config_applied ?prefix_dir)
-    )
-  )
-
-  ;; Action: apply_configuration_changes
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action apply_configuration_changes
-    :parameters (?prefix_dir - directory)
-    :precondition (and
-      (directory_exists ?prefix_dir)
-    )
-    :effect (and
-      (configuration_applied ?prefix_dir)
-    )
-  )
-
-  ;; Action: apply_prefix_changes
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action apply_prefix_changes
-    :parameters (?prefix_dir - directory)
-    :precondition (and
-      (directory_exists ?prefix_dir)
-    )
-    :effect (and
-      (changes_applied_in_prefix ?prefix_dir)
-    )
-  )
-
-  ;; Action: apply_temp_file_changes
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action apply_temp_file_changes
-    :parameters (?f - file)
-    :precondition (and
-      (temp_file_edited ?f)
-    )
-    :effect (and
-      (file_modified ?f)
-      (not (temp_file_exists ?f))
-    )
-  )
-
-  ;; Action: apt
-  (:action apt
-    :parameters (?p - package ?r - repository ?c - file ?f - file)
+  ;; Action: apt_autoremove
+  (:action apt_autoremove
+    :parameters (?p - package)
     :precondition (and
       (package_installed ?p)
-      (file_exists ?c)
-      (repository_configured ?r)
-      (package_available ?p)
-      (config_file_exists ?f)
+      (not (package_manually_installed ?p))
+    )
+    :effect (and
       (not (package_installed ?p))
     )
+  )
+
+  ;; Action: apt_get_autoclean
+  (:action apt_get_autoclean
+    :parameters ()
+    :precondition (and)
     :effect (and
-      (not (package_available ?p))
+      (observation_complete)
+    )
+  )
+
+  ;; Action: apt_get_autoremove
+  (:action apt_get_autoremove
+    :parameters (?p - package)
+    :precondition (and
       (package_installed ?p)
-      (apt_lists_updated)
-      (cache_clean)
-      (package_removed ?p)
-      (not (config_file_exists ?f))
+      (not (dependencies_satisfied ?p))
+    )
+    :effect (and
+      (package_autoremoved ?p)
+      (observation_complete)
+      (not (package_installed ?p))
+    )
+  )
+
+  ;; Action: apt_get_build_dep
+  (:action apt_get_build_dep
+    :parameters (?p - package ?r - repository)
+    :precondition (and
+      (repository_updated ?r)
+      (repository_exists ?r)
+    )
+    :effect (and
+      (package_installed ?p)
+      (package_build_deps_installed ?p)
+      (build_dependencies_satisfied ?p)
+    )
+  )
+
+  ;; Action: apt_get_check
+  (:action apt_get_check
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (dependencies_broken ?p)
+    )
+  )
+
+  ;; Action: apt_get_clean
+  (:action apt_get_clean
+    :parameters (?r - repository)
+    :precondition (and
+      (repository_exists ?r)
+    )
+    :effect (and
+      (observation_complete)
+      (apt_cache_cleaned ?r)
+    )
+  )
+
+  ;; Action: apt_get_dist_upgrade
+  (:action apt_get_dist_upgrade
+    :parameters (?p - package ?r - repository)
+    :precondition (and
+      (package_installed ?p)
+      (repository_updated ?r)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: apt_get_download
+  (:action apt_get_download
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (package_downloaded ?p)
+    )
+  )
+
+  ;; Action: apt_get_install
+  (:action apt_get_install
+    :parameters (?p - package ?r - repository)
+    :precondition (and
+      (package_available ?p)
+      (repository_updated ?r)
+      (repository_exists ?r)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: apt_get_purge
+  (:action apt_get_purge
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
       (package_purged ?p)
       (not (package_installed ?p))
     )
   )
 
-  ;; Action: autoclean_cache
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action autoclean_cache
-    :parameters (?obj - file)
+  ;; Action: apt_get_remove
+  (:action apt_get_remove
+    :parameters (?p - package)
     :precondition (and
-      (cache_exists)
+      (package_installed ?p)
     )
     :effect (and
-      (obsolete_cache_cleared)
+      (package_removed ?p)
+      (not (package_installed ?p))
     )
   )
 
-  ;; Action: autoremove
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action autoremove
-    :parameters (?pkg - package)
+  ;; Action: apt_get_source
+  (:action apt_get_source
+    :parameters (?p - package ?r - repository)
     :precondition (and
-      (package_installed ?pkg)
+      (package_available ?p)
+      (repository_updated ?r)
+      (repository_exists ?r)
     )
     :effect (and
-      (unused_dependencies_removed ?pkg)
+      (package_source_downloaded ?p)
+      (source_downloaded ?p)
     )
   )
 
-  ;; Action: autoremove_packages
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action autoremove_packages
-    :parameters (?obj - file)
+  ;; Action: apt_get_update
+  (:action apt_get_update
+    :parameters (?r - repository)
     :precondition (and
-      (packages_installed)
+      (repository_exists ?r)
     )
     :effect (and
-      (unnecessary_packages_removed)
+      (repository_updated ?r)
     )
   )
 
-  ;; Action: backup_destination_file
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action backup_destination_file
-    :parameters (?src - file ?dest - file)
+  ;; Action: apt_get_upgrade
+  (:action apt_get_upgrade
+    :parameters (?p - package ?r - repository)
     :precondition (and
-      (file_exists ?dest)
+      (package_installed ?p)
+      (repository_updated ?r)
+      (repository_exists ?r)
     )
     :effect (and
-      (file_backed_up ?dest)
+      (observation_complete)
+      (package_installed ?p)
+      (repository_updated ?r)
     )
   )
 
-  ;; Action: backup_existing
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_existing
-    :parameters (?src - file ?dst - file)
+  ;; Action: apt_install
+  (:action apt_install
+    :parameters (?p - package ?r - repository)
     :precondition (and
-      (file_exists ?src)
+      (repository_updated ?r)
+      (package_available ?p)
     )
     :effect (and
-      (file_exists ?dst)
+      (package_installed ?p)
+      (package_manually_installed ?p)
     )
   )
 
-  ;; Action: backup_file
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_file
-    :parameters (?src - file ?dst - file)
+  ;; Action: apt_purge
+  (:action apt_purge
+    :parameters (?p - package)
     :precondition (and
-      (file_exists ?dst)
+      (package_installed ?p)
     )
     :effect (and
-      (file_exists ?dst)
-      (file_backed_up ?dst)
+      (not (package_installed ?p))
+      (package_purged ?p)
     )
   )
 
-  ;; Action: backup_none
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_none
-    :parameters (?src - file ?dst - file)
+  ;; Action: apt_remove
+  (:action apt_remove
+    :parameters (?p - package)
     :precondition (and
-      (file_exists ?src)
+      (package_installed ?p)
     )
     :effect (and
-      (file_exists ?dst)
+      (not (package_installed ?p))
     )
   )
 
-  ;; Action: backup_numbered
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_numbered
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-    )
+  ;; Action: apt_update
+  (:action apt_update
+    :parameters (?r - repository)
+    :precondition (and)
     :effect (and
-      (file_exists ?dst)
+      (repository_updated ?r)
     )
   )
 
-  ;; Action: backup_simple
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_simple
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: backup_with_suffix
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action backup_with_suffix
-    :parameters (?src - file ?dst - file ?suffix - directory)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: block_traffic
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action block_traffic
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (not (firewall_rule_exists ?rule))
-    )
-    :effect (and
-      (firewall_rule_exists ?rule)
-      (traffic_blocked ?rule)
-    )
-  )
-
-  ;; Action: bring_down_interface
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action bring_down_interface
-    :parameters (?x - interface)
-    :precondition (and
-      (interface_exists ?x)
-      (interface_up ?x)
-    )
-    :effect (and
-      (not (interface_up ?x))
-    )
-  )
-
-  ;; Action: bring_up_interface
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action bring_up_interface
-    :parameters (?x - interface)
-    :precondition (and
-      (interface_exists ?x)
-      (not (interface_up ?x))
-    )
-    :effect (and
-      (interface_up ?x)
-    )
-  )
-
-  ;; Action: build_dependencies
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action build_dependencies
-    :parameters (?src - package)
-    :precondition (and
-      (package_exists ?src)
-      (network_available)
-    )
-    :effect (and
-      (build_dependencies_installed ?src)
-    )
-  )
-
-  ;; Action: cache_apt_archives
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action cache_apt_archives
-    :parameters (?archive - file)
-    :precondition (and
-      (file_exists ?archive)
-    )
-    :effect (and
-      (file_executable ?archive)
-    )
-  )
-
-  ;; Action: cache_apt_archives_partial
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action cache_apt_archives_partial
-    :parameters (?partial_archive - file)
-    :precondition (and
-      (file_exists ?partial_archive)
-    )
-    :effect (and
-      (file_executable ?partial_archive)
-    )
-  )
-
-  ;; Action: cache_apt_lists
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action cache_apt_lists
-    :parameters (?list - file)
-    :precondition (and
-      (file_exists ?list)
-    )
-    :effect (and
-      (file_executable ?list)
-    )
-  )
-
-  ;; Action: chage_list_info
-  (:action chage_list_info
+  ;; Action: chage_force_password_change
+  (:action chage_force_password_change
     :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
     )
     :effect (and
-      (aging_info_available ?u)
+      (user_forced_password_change ?u)
+    )
+  )
+
+  ;; Action: chage_list
+  (:action chage_list
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_aging_info_known ?u)
+    )
+  )
+
+  ;; Action: chage_root_dir
+  (:action chage_root_dir
+    :parameters (?u - user ?d - directory)
+    :precondition (and
+      (user_exists ?u)
+      (directory_exists ?d)
+    )
+    :effect (and
+      (user_aging_info_known ?u)
     )
   )
 
   ;; Action: chage_set_expiredate
   (:action chage_set_expiredate
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
-      (account_expiration_set ?u)
-      (password_policy_set ?u)
+      (password_expiry_set ?u)
     )
   )
 
   ;; Action: chage_set_inactive
   (:action chage_set_inactive
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
-      (password_inactive_days_set ?u)
-      (password_policy_set ?u)
+      (password_inactive_set ?u)
     )
   )
 
   ;; Action: chage_set_lastday
   (:action chage_set_lastday
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
-      (password_last_change_set ?u)
-      (password_policy_set ?u)
+      (password_last_changed_set ?u)
     )
   )
 
   ;; Action: chage_set_maxdays
   (:action chage_set_maxdays
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
       (password_max_days_set ?u)
-      (password_policy_set ?u)
     )
   )
 
   ;; Action: chage_set_mindays
   (:action chage_set_mindays
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
       (password_min_days_set ?u)
-      (password_policy_set ?u)
-    )
-  )
-
-  ;; Action: chage_set_prefix
-  (:action chage_set_prefix
-    :parameters (?d - directory)
-    :precondition (and
-      (directory ?d)
-    )
-    :effect (and
-      (prefix_dir_set ?d)
-    )
-  )
-
-  ;; Action: chage_set_root
-  (:action chage_set_root
-    :parameters (?d - directory)
-    :precondition (and
-      (directory ?d)
-    )
-    :effect (and
-      (chroot_dir_set ?d)
     )
   )
 
   ;; Action: chage_set_warndays
   (:action chage_set_warndays
-    :parameters (?u - user ?d - object)
+    :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (root_access ?u)
     )
     :effect (and
-      (password_warning_days_set ?u)
-      (password_policy_set ?u)
+      (password_warn_days_set ?u)
     )
   )
 
-  ;; Action: change_default_options
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action change_default_options
-    :parameters (?option - file)
-    :precondition (and
-      (file_exists ?option)
-    )
-    :effect (and
-      (option_modified ?option)
-    )
-  )
-
-  ;; Action: change_file_mode
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action change_file_mode
-    :parameters (?f - file ?mode - directory)
+  ;; Action: chmod_add_execute
+  (:action chmod_add_execute
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_mode_changed ?f)
+      (file_executable ?f)
     )
   )
 
-  ;; Action: change_group_only
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action change_group_only
-    :parameters (?f - file ?group - group)
+  ;; Action: chmod_add_read
+  (:action chmod_add_read
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_group ?f ?group)
+      (file_readable ?f)
     )
   )
 
-  ;; Action: change_home_directory
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action change_home_directory
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (directory_changed ?user)
-    )
-  )
-
-  ;; Action: change_mode
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action change_mode
-    :parameters (?f - file ?mode - file)
+  ;; Action: chmod_add_write
+  (:action chmod_add_write
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_mode_changed ?f ?mode)
+      (file_writable ?f)
     )
   )
 
-  ;; Action: change_mode_recursive
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action change_mode_recursive
-    :parameters (?f - file ?mode - file)
+  ;; Action: chmod_reference
+  (:action chmod_reference
+    :parameters (?f - filesystem_object ?ref - filesystem_object)
+    :precondition (and
+      (file_exists ?f)
+      (file_exists ?ref)
+    )
+    :effect (and
+      (file_mode_matches ?f ?ref)
+    )
+  )
+
+  ;; Action: chmod_remove_execute
+  (:action chmod_remove_execute
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_mode_changed ?f ?mode)
+      (not (file_executable ?f))
     )
   )
 
-  ;; Action: change_mode_reference
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action change_mode_reference
-    :parameters (?f - file ?rfile - file)
-    :precondition (and
-      (file_exists ?f)
-      (file_exists ?rfile)
-    )
-    :effect (and
-      (file_mode_changed ?f ?rfile)
-    )
-  )
-
-  ;; Action: change_owner_group
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action change_owner_group
-    :parameters (?f - file ?owner - user ?group - group)
+  ;; Action: chmod_remove_read
+  (:action chmod_remove_read
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_owner ?f ?owner)
-      (file_group ?f ?group)
+      (not (file_readable ?f))
     )
   )
 
-  ;; Action: change_owner_group_reference
-  ;; Source: chown
-  (:action change_owner_group_reference
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: change_ownership
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action change_ownership
-    :parameters (?f - file ?owner - user ?group - group)
+  ;; Action: chmod_remove_setgid
+  (:action chmod_remove_setgid
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_owned_by ?f ?owner ?group)
+      (not (file_setgid_set ?f))
     )
   )
 
-  ;; Action: change_ownership_if_match
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action change_ownership_if_match
-    :parameters (?f - file ?owner - user ?group - group)
+  ;; Action: chmod_remove_setuid
+  (:action chmod_remove_setuid
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_ownership_changed ?f)
+      (not (file_setuid_set ?f))
     )
   )
 
-  ;; Action: change_policy
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action change_policy
-    :parameters (?chain - firewall_rule ?target - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-      (firewall_rule_exists ?target)
-    )
-    :effect (and
-      (firewall_rule_policy_changed ?chain ?target)
-    )
-  )
-
-  ;; Action: change_primary_group
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_primary_group
-    :parameters (?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-    )
-    :effect (and
-      (user_primary_group ?user ?group)
-    )
-  )
-
-  ;; Action: change_specific_timestamp
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action change_specific_timestamp
-    :parameters (?target - file ?time_type - file)
-    :precondition (and
-      (file_exists ?target)
-      (time_type_valid ?time_type)
-    )
-    :effect (and
-      (file_timestamp_changed ?target)
-    )
-  )
-
-  ;; Action: change_supplementary_groups
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_supplementary_groups
-    :parameters (?user - user ?groups - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?groups)
-    )
-    :effect (and
-      (user_supplementary_groups ?user ?groups)
-    )
-  )
-
-  ;; Action: change_symlink_timestamp
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action change_symlink_timestamp
-    :parameters (?link - file)
-    :precondition (and
-      (file_exists ?link)
-    )
-    :effect (and
-      (file_timestamp_changed ?link)
-    )
-  )
-
-  ;; Action: change_user
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action change_user
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_critical ?user)
-    )
-  )
-
-  ;; Action: change_user_id_non_unique
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_user_id_non_unique
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_id_non_unique ?user)
-    )
-  )
-
-  ;; Action: change_user_login
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_user_login
-    :parameters (?user - user ?new_login - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_login_changed ?user ?new_login)
-    )
-  )
-
-  ;; Action: change_user_password
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_user_password
-    :parameters (?user - user ?password - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_password_changed ?user)
-    )
-  )
-
-  ;; Action: change_user_shell
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_user_shell
-    :parameters (?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_shell_set ?user ?shell)
-    )
-  )
-
-  ;; Action: change_user_uid
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_user_uid
-    :parameters (?user - user ?uid - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_uid_set ?user ?uid)
-    )
-  )
-
-  ;; Action: change_username
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action change_username
-    :parameters (?old_login - user ?new_login - user)
-    :precondition (and
-      (user_exists ?old_login)
-    )
-    :effect (and
-      (user_exists ?new_login)
-      (not (user_exists ?old_login))
-    )
-  )
-
-  ;; Action: check
-  (:action check
-    :parameters (?u - object ?a - file ?p - package ?s - service ?t - file)
-    :precondition (and
-      (timer_exists ?t)
-      (automount_exists ?a)
-      (path_exists ?p)
-      (unit_exists ?u)
-      (service_exists ?s)
-      (socket_exists ?s)
-    )
-    :effect (and
-      (automount_mounted ?a)
-      (path_monitored ?p)
-      (service_configured ?s)
-      (unit_loaded ?u)
-      (timer_scheduled ?t)
-      (socket_listening ?s)
-    )
-  )
-
-  ;; Action: check_rule
-  (:action check_rule
-    :parameters (?r - firewall_rule ?c - object)
-    :precondition (and
-      (chain_exists ?c)
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-    )
-  )
-
-  ;; Action: chroot_directory
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action chroot_directory
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (chrooted ?dir)
-    )
-  )
-
-  ;; Action: chroot_group_operation
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action chroot_group_operation
-    :parameters (?g - group ?chroot - directory)
-    :precondition (and
-      (directory_exists ?chroot)
-    )
-    :effect (and
-      (group_operation_in_chroot ?g ?chroot)
-    )
-  )
-
-  ;; Action: clean_cache
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action clean_cache
-    :parameters (?obj - file)
-    :precondition (and
-      (cache_exists)
-    )
-    :effect (and
-      (cache_cleared)
-    )
-  )
-
-  ;; Action: clean_service
-  (:action clean_service
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (file_exists ?s)
-    )
-    :effect (and
-      (resource_cleaned ?s)
-    )
-  )
-
-  ;; Action: cleanup_apt_lists
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action cleanup_apt_lists
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (cleaned_apt_lists)
-    )
-  )
-
-  ;; Action: clear_setgid_bit
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action clear_setgid_bit
+  ;; Action: chmod_remove_sticky
+  (:action chmod_remove_sticky
     :parameters (?f - file)
     :precondition (and
       (file_exists ?f)
-      (not (user_has_privileges))
-      (file_group_id_mismatch ?f)
     )
     :effect (and
-      (setgid_bit_cleared ?f)
+      (not (file_sticky_bit_set ?f))
     )
   )
 
-  ;; Action: clear_suid_sgid_bits_numeric
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action clear_suid_sgid_bits_numeric
-    :parameters (?d - directory)
+  ;; Action: chmod_remove_write
+  (:action chmod_remove_write
+    :parameters (?f - filesystem_object)
     :precondition (and
-      (directory_exists ?d)
+      (file_exists ?f)
     )
     :effect (and
-      (suid_bit_cleared ?d)
-      (sgid_bit_cleared ?d)
+      (not (file_writable ?f))
     )
   )
 
-  ;; Action: compile_source
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action compile_source
-    :parameters (?pkg - package)
+  ;; Action: chmod_set_setgid
+  (:action chmod_set_setgid
+    :parameters (?f - filesystem_object)
     :precondition (and
-      (package_installed ?pkg)
-      (not (package_compiled ?pkg))
+      (file_exists ?f)
     )
     :effect (and
-      (package_compiled ?pkg)
+      (file_setgid_set ?f)
     )
   )
 
-  ;; Action: configure_addrlabel
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_addrlabel
-    :parameters (?label - file)
+  ;; Action: chmod_set_setuid
+  (:action chmod_set_setuid
+    :parameters (?f - filesystem_object)
     :precondition (and
-      (file_exists ?label)
+      (file_exists ?f)
     )
     :effect (and
-      (addrlabel_configured ?label)
+      (file_setuid_set ?f)
     )
   )
 
-  ;; Action: configure_apt
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt
-    :parameters (?config - file)
+  ;; Action: chmod_set_sticky
+  (:action chmod_set_sticky
+    :parameters (?f - filesystem_object)
     :precondition (and
-      (file_exists ?config)
+      (file_exists ?f)
     )
     :effect (and
-      (file_executable ?config)
+      (file_sticky_bit_set ?f)
     )
   )
 
-  ;; Action: configure_apt_fragments
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt_fragments
-    :parameters (?fragment - file)
+  ;; Action: chown_group
+  (:action chown_group
+    :parameters (?f - filesystem_object ?g - group)
     :precondition (and
-      (file_exists ?fragment)
+      (file_exists ?f)
+      (group_exists ?g)
     )
     :effect (and
-      (file_executable ?fragment)
+      (file_group_owned_by ?f ?g)
     )
   )
 
-  ;; Action: configure_apt_partial_state_directory
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt_partial_state_directory
-    :parameters (?dir - directory)
+  ;; Action: chown_recursive
+  (:action chown_recursive
+    :parameters (?d - directory ?f - file ?u - user ?g - group)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?d)
+      (file_exists ?f)
+      (user_exists ?u)
+      (group_exists ?g)
     )
     :effect (and
-      (apt_partial_state_directory_configured ?dir)
+      (file_owned_by ?d ?u)
+      (file_group_owned_by ?d ?g)
+      (file_owned_by ?f ?u)
+      (file_group_owned_by ?f ?g)
     )
   )
 
-  ;; Action: configure_apt_preferences
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt_preferences
-    :parameters (?pref - file)
+  ;; Action: chown_reference
+  (:action chown_reference
+    :parameters (?f - filesystem_object ?ref - filesystem_object ?u - user ?g - group)
     :precondition (and
-      (file_exists ?pref)
+      (file_exists ?f)
+      (file_exists ?ref)
+      (file_owned_by ?ref ?u)
+      (file_group_owned_by ?ref ?g)
     )
     :effect (and
-      (file_executable ?pref)
+      (file_owned_by ?f ?u)
+      (file_group_owned_by ?f ?g)
     )
   )
 
-  ;; Action: configure_apt_preferences_fragments
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt_preferences_fragments
-    :parameters (?pref_fragment - file)
+  ;; Action: chown_user
+  (:action chown_user
+    :parameters (?f - filesystem_object ?u - user)
     :precondition (and
-      (file_exists ?pref_fragment)
+      (file_exists ?f)
+      (user_exists ?u)
     )
     :effect (and
-      (file_executable ?pref_fragment)
+      (file_owned_by ?f ?u)
     )
   )
 
-  ;; Action: configure_apt_state_directory
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action configure_apt_state_directory
-    :parameters (?dir - directory)
+  ;; Action: chown_user_group
+  (:action chown_user_group
+    :parameters (?f - filesystem_object ?u - user ?g - group)
     :precondition (and
-      (directory_exists ?dir)
+      (file_exists ?f)
+      (user_exists ?u)
+      (group_exists ?g)
     )
     :effect (and
-      (apt_state_directory_configured ?dir)
+      (file_owned_by ?f ?u)
+      (file_group_owned_by ?f ?g)
     )
   )
 
-  ;; Action: configure_color_output
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_color_output
-    :parameters (?color_mode - file)
-    :precondition (and)
-    :effect (and
-      (color_output_configured ?color_mode)
-    )
-  )
-
-  ;; Action: configure_connection_tracking_exemption
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action configure_connection_tracking_exemption
-    :parameters (?rule - firewall_rule)
+  ;; Action: configure_fib_rule
+  (:action configure_fib_rule
+    :parameters (?r - firewall_rule ?i - interface)
     :precondition (and
-      (firewall_rule_exists ?rule)
+      (firewall_rule_exists ?r)
+      (interface_exists ?i)
     )
     :effect (and
-      (connection_tracking_exempt ?rule)
+      (fib_rule_configured ?r)
     )
   )
 
-  ;; Action: configure_firewall
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action configure_firewall
-    :parameters (?table - file ?chain - file ?rule_spec - file)
-    :precondition (and)
-    :effect (and
-      (firewall_rule_modified ?table ?chain ?rule_spec)
-    )
-  )
-
-  ;; Action: configure_firewall_rules
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action configure_firewall_rules
-    :parameters (?table - firewall_rule)
-    :precondition (and)
-    :effect (and
-      (firewall_rule_configured ?table)
-    )
-  )
-
-  ;; Action: configure_fou
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_fou
-    :parameters (?port - port)
+  ;; Action: configure_ipsec_rule
+  (:action configure_ipsec_rule
+    :parameters (?r - firewall_rule)
     :precondition (and
-      (port_open ?port)
+      (firewall_rule_exists ?r)
     )
     :effect (and
-      (fou_configured ?port)
+      (ipsec_rule_configured ?r)
     )
   )
 
-  ;; Action: configure_ila
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_ila
-    :parameters (?addr - file)
+  ;; Action: configure_rt_rule
+  (:action configure_rt_rule
+    :parameters (?r - firewall_rule)
     :precondition (and
-      (file_exists ?addr)
+      (firewall_rule_exists ?r)
     )
     :effect (and
-      (ila_configured ?addr)
+      (rt_rule_configured ?r)
     )
   )
 
-  ;; Action: configure_ioam
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_ioam
-    :parameters (?namespace - file)
-    :precondition (and
-      (file_exists ?namespace)
-    )
-    :effect (and
-      (ioam_configured ?namespace)
-    )
-  )
-
-  ;; Action: configure_l2tp
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_l2tp
-    :parameters (?tunnel - file)
-    :precondition (and
-      (file_exists ?tunnel)
-    )
-    :effect (and
-      (l2tp_configured ?tunnel)
-    )
-  )
-
-  ;; Action: configure_link
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_link
-    :parameters (?device - file)
-    :precondition (and
-      (file_exists ?device)
-    )
-    :effect (and
-      (link_configured ?device)
-    )
-  )
-
-  ;; Action: configure_macsec
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_macsec
-    :parameters (?device - file)
-    :precondition (and
-      (file_exists ?device)
-    )
-    :effect (and
-      (macsec_configured ?device)
-    )
-  )
-
-  ;; Action: configure_maddress
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_maddress
-    :parameters (?addr - file)
-    :precondition (and
-      (file_exists ?addr)
-    )
-    :effect (and
-      (maddress_configured ?addr)
-    )
-  )
-
-  ;; Action: configure_mandatory_access_control
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action configure_mandatory_access_control
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?rule)
-    )
-    :effect (and
-      (mandatory_access_control_enabled ?rule)
-    )
-  )
-
-  ;; Action: configure_monitor
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_monitor
-    :parameters (?monitor - file)
-    :precondition (and
-      (file_exists ?monitor)
-    )
-    :effect (and
-      (monitor_configured ?monitor)
-    )
-  )
-
-  ;; Action: configure_mptcp
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_mptcp
-    :parameters (?path - file)
-    :precondition (and
-      (file_exists ?path)
-    )
-    :effect (and
-      (mptcp_configured ?path)
-    )
-  )
-
-  ;; Action: configure_mroute
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_mroute
-    :parameters (?route - file)
-    :precondition (and
-      (file_exists ?route)
-    )
-    :effect (and
-      (mroute_configured ?route)
-    )
-  )
-
-  ;; Action: configure_mrule
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_mrule
-    :parameters (?rule - file)
-    :precondition (and
-      (file_exists ?rule)
-    )
-    :effect (and
-      (mrule_configured ?rule)
-    )
-  )
-
-  ;; Action: configure_neigh
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_neigh
-    :parameters (?entry - file)
-    :precondition (and
-      (file_exists ?entry)
-    )
-    :effect (and
-      (neigh_configured ?entry)
-    )
-  )
-
-  ;; Action: configure_netns
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_netns
-    :parameters (?namespace - file)
-    :precondition (and
-      (file_exists ?namespace)
-    )
-    :effect (and
-      (netns_configured ?namespace)
-    )
-  )
-
-  ;; Action: configure_package
-  ;; Source: dpkg
-  ;; Reused from Phase 1
-  (:action configure_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_configured ?pkg)
-    )
-  )
-
-  ;; Action: configure_route
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_route
-    :parameters (?route - file)
-    :precondition (and
-      (file_exists ?route)
-    )
-    :effect (and
-      (route_configured ?route)
-    )
-  )
-
-  ;; Action: configure_rule
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_rule
-    :parameters (?rule - file)
-    :precondition (and
-      (file_exists ?rule)
-    )
-    :effect (and
-      (rule_configured ?rule)
-    )
-  )
-
-  ;; Action: configure_tunnel
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_tunnel
-    :parameters (?tunnel - file)
-    :precondition (and
-      (file_exists ?tunnel)
-    )
-    :effect (and
-      (tunnel_configured ?tunnel)
-    )
-  )
-
-  ;; Action: configure_xfrm
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action configure_xfrm
-    :parameters (?policy - file)
-    :precondition (and
-      (file_exists ?policy)
-    )
-    :effect (and
-      (xfrm_configured ?policy)
-    )
-  )
-
-  ;; Action: control_file_update
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action control_file_update
-    :parameters (?src - file ?dst - file ?update - file)
+  ;; Action: cp_file_to_dir
+  (:action cp_file_to_dir
+    :parameters (?src - file ?dir - directory)
     :precondition (and
       (file_exists ?src)
-      (file_exists ?dst)
+      (file_readable ?src)
+      (directory_exists ?dir)
+      (directory_writable ?dir)
     )
     :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: control_file_updates
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action control_file_updates
-    :parameters (?update - file)
-    :precondition (and
-      (file_exists ?update)
-    )
-    :effect (and
-      (file_update_controlled ?update)
-    )
-  )
-
-  ;; Action: control_sparse_file_creation
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action control_sparse_file_creation
-    :parameters (?src - file ?dst - file ?when - file)
-    :precondition (and
       (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
+      (file_copied_to ?src ?dir)
     )
   )
 
-  ;; Action: copy_all_files
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_all_files
-    :parameters (?src - directory ?dst - directory)
-    :precondition (and
-      (directory_exists ?src)
-      (directory_exists ?dst)
-    )
-    :effect (and
-      (files_replaced ?src ?dst)
-    )
-  )
-
-  ;; Action: copy_directory_recursively
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_directory_recursively
-    :parameters (?src - directory ?dst - directory)
-    :precondition (and
-      (directory_exists ?src)
-    )
-    :effect (and
-      (directory_exists ?dst)
-    )
-  )
-
-  ;; Action: copy_fail
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_fail
+  ;; Action: cp_file_to_file
+  (:action cp_file_to_file
     :parameters (?src - file ?dst - file)
     :precondition (and
       (file_exists ?src)
+      (file_readable ?src)
+    )
+    :effect (and
       (file_exists ?dst)
-    )
-    :effect (and
-      (not (file_exists ?dst))
+      (file_copied_to ?src ?dst)
     )
   )
 
-  ;; Action: copy_file_to_directory
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_file_to_directory
-    :parameters (?source - file ?directory - directory)
-    :precondition (and
-      (directory_exists ?directory)
-    )
-    :effect (and
-      (file_exists ?source)
-    )
-  )
-
-  ;; Action: copy_files_to_directory
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_files_to_directory
-    :parameters (?sources - file ?directory - directory)
-    :precondition (and
-      (directory_exists ?directory)
-    )
-    :effect (and
-      (file_exists ?sources)
-    )
-  )
-
-  ;; Action: copy_no_clobber
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_no_clobber
-    :parameters (?src - directory ?dst - directory)
-    :precondition (and
-      (directory_exists ?src)
-      (directory_exists ?dst)
-    )
-    :effect (and
-      (files_not_replaced ?src ?dst)
-    )
-  )
-
-  ;; Action: copy_no_clobber_fail
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_no_clobber_fail
-    :parameters (?src - directory ?dst - directory)
-    :precondition (and
-      (directory_exists ?src)
-      (directory_exists ?dst)
-    )
-    :effect (and
-      (files_not_replaced ?src ?dst)
-      (skipped_files_fail ?src ?dst)
-    )
-  )
-
-  ;; Action: copy_reflink
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_reflink
-    :parameters (?src - directory ?dst - directory)
-    :precondition (and
-      (directory_exists ?src)
-      (directory_exists ?dst)
-      (reflink_supported)
-    )
-    :effect (and
-      (files_reflinked ?src ?dst)
-    )
-  )
-
-  ;; Action: copy_special_file_contents
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_special_file_contents
-    :parameters (?src - file ?dest - file)
+  ;; Action: cp_hard_link
+  (:action cp_hard_link
+    :parameters (?src - file ?dst - file)
     :precondition (and
       (file_exists ?src)
     )
     :effect (and
-      (file_contents_copied ?src ?dest)
+      (file_exists ?dst)
+      (file_is_hardlink ?dst)
     )
   )
 
-  ;; Action: copy_standard
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_standard
+  ;; Action: cp_recursive
+  (:action cp_recursive
     :parameters (?src - directory ?dst - directory)
     :precondition (and
       (directory_exists ?src)
       (directory_exists ?dst)
+      (directory_writable ?dst)
     )
     :effect (and
-      (files_copied_standard ?src ?dst)
+      (file_copied_to ?src ?dst)
     )
   )
 
-  ;; Action: copy_to_directory
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_to_directory
+  ;; Action: cp_symbolic_link
+  (:action cp_symbolic_link
+    :parameters (?src - filesystem_object ?dst - filesystem_object)
+    :precondition (and
+      (file_exists ?src)
+    )
+    :effect (and
+      (file_exists ?dst)
+      (file_is_symlink ?dst)
+    )
+  )
+
+  ;; Action: cp_target_directory
+  (:action cp_target_directory
     :parameters (?src - file ?dir - directory)
     :precondition (and
       (file_exists ?src)
       (directory_exists ?dir)
+      (directory_writable ?dir)
     )
     :effect (and
-      (file_copied_to_directory ?src ?dir)
+      (file_exists ?src)
+      (file_copied_to ?src ?dir)
     )
   )
 
-  ;; Action: copy_update_older
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action copy_update_older
-    :parameters (?src - directory ?dst - directory)
+  ;; Action: create_hard_link
+  (:action create_hard_link
+    :parameters (?target - file ?link_name - file)
     :precondition (and
-      (directory_exists ?src)
-      (directory_exists ?dst)
+      (file_exists ?target)
+      (not (file_exists ?link_name))
     )
     :effect (and
-      (files_replaced_if_older ?src ?dst)
+      (file_exists ?link_name)
+      (is_hard_link ?link_name)
+      (link_points_to ?link_name ?target)
     )
   )
 
-  ;; Action: create_chain
-  ;; Source: iptables
-  (:action create_chain
-    :parameters (?chain - firewall_rule ?c - file ?t - file)
+  ;; Action: create_hard_link_force
+  (:action create_hard_link_force
+    :parameters (?target - file ?link_name - file)
     :precondition (and
-      (table_exists ?t)
-      (not (firewall_rule_exists ?chain))
+      (file_exists ?target)
+      (file_writable ?link_name)
     )
     :effect (and
-      (firewall_rule_exists ?chain)
-      (chain_exists ?c)
+      (file_exists ?link_name)
+      (is_hard_link ?link_name)
+      (link_points_to ?link_name ?target)
     )
   )
 
-  ;; Action: create_firewall_chain
-  (:action create_firewall_chain
-    :parameters (?o - object ?chain - firewall_rule ?table - object)
+  ;; Action: create_link_in_directory
+  (:action create_link_in_directory
+    :parameters (?target - filesystem_object ?link_name - file ?dir - directory)
     :precondition (and
-      (not (chain_exists ?o))
+      (directory_exists ?dir)
+      (not (file_exists ?link_name))
     )
     :effect (and
-      (chain_exists ?o)
-      (firewall_chain_created ?table ?chain)
+      (file_exists ?link_name)
+      (is_symbolic_link ?link_name)
+      (link_points_to ?link_name ?target)
     )
   )
 
-  ;; Action: create_group
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action create_group
+  ;; Action: create_symbolic_link
+  (:action create_symbolic_link
+    :parameters (?target - filesystem_object ?link_name - file)
+    :precondition (and
+      (file_exists ?target)
+      (not (file_exists ?link_name))
+    )
+    :effect (and
+      (file_exists ?link_name)
+      (is_symbolic_link ?link_name)
+      (link_points_to ?link_name ?target)
+    )
+  )
+
+  ;; Action: create_symbolic_link_force
+  (:action create_symbolic_link_force
+    :parameters (?target - filesystem_object ?link_name - file)
+    :precondition (and
+      (file_writable ?link_name)
+    )
+    :effect (and
+      (file_exists ?link_name)
+      (is_symbolic_link ?link_name)
+      (link_points_to ?link_name ?target)
+    )
+  )
+
+  ;; Action: create_system_user
+  (:action create_system_user
+    :parameters (?u - user)
+    :precondition (and
+      (not (user_exists ?u))
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_system_account ?u)
+    )
+  )
+
+  ;; Action: create_user
+  (:action create_user
+    :parameters (?u - user ?shell - file ?uid - object ?root_dir - directory)
+    :precondition (and
+      (directory_exists ?root_dir)
+      (file_exists ?shell)
+      (not (user_exists ?u))
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_has_shell ?u ?shell)
+      (user_has_uid ?u ?uid)
+    )
+  )
+
+  ;; Action: create_user_selinux
+  (:action create_user_selinux
+    :parameters (?u - user ?su - object ?sr - object)
+    :precondition (and
+      (not (user_exists ?u))
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_has_selinux_user ?u ?su)
+      (user_has_selinux_range ?u ?sr)
+    )
+  )
+
+  ;; Action: create_user_with_group
+  (:action create_user_with_group
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (group_exists ?g)
+      (not (user_exists ?u))
+    )
+    :effect (and
+      (user_primary_group ?u ?g)
+      (group_exists ?g)
+      (user_in_group ?u ?g)
+      (user_exists ?u)
+      (user_has_group ?u ?g)
+    )
+  )
+
+  ;; Action: create_user_with_home
+  (:action create_user_with_home
+    :parameters (?u - user ?d - directory)
+    :precondition (and
+      (not (user_exists ?u))
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_home_dir ?u ?d)
+      (directory_exists ?d)
+    )
+  )
+
+  ;; Action: create_user_with_skel
+  (:action create_user_with_skel
+    :parameters (?u - user ?d_home - directory ?d_skel - directory)
+    :precondition (and
+      (not (user_exists ?u))
+      (directory_exists ?d_skel)
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_home_dir ?u ?d_home)
+      (directory_exists ?d_home)
+    )
+  )
+
+  ;; Action: create_user_with_subuid
+  (:action create_user_with_subuid
+    :parameters (?u - user ?f - file)
+    :precondition (and
+      (not (user_exists ?u))
+      (file_exists ?f)
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_has_subuid ?u)
+    )
+  )
+
+  ;; Action: create_user_with_supplementary_groups
+  (:action create_user_with_supplementary_groups
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (not (user_exists ?u))
+      (group_exists ?g)
+    )
+    :effect (and
+      (user_exists ?u)
+      (user_member_of ?u ?g)
+    )
+  )
+
+  ;; Action: dpkg_add_architecture
+  (:action dpkg_add_architecture
+    :parameters (?a - object)
+    :precondition (and)
+    :effect (and
+      (architecture_supported ?a)
+    )
+  )
+
+  ;; Action: dpkg_audit
+  (:action dpkg_audit
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_audit_performed ?p)
+    )
+  )
+
+  ;; Action: dpkg_build
+  (:action dpkg_build
+    :parameters (?d - directory ?p - package)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (package_built ?p)
+    )
+  )
+
+  ;; Action: dpkg_clear_selections
+  (:action dpkg_clear_selections
+    :parameters (?p - package)
+    :precondition (and
+      (package_selected ?p)
+    )
+    :effect (and
+      (not (package_selected ?p))
+    )
+  )
+
+  ;; Action: dpkg_configure
+  (:action dpkg_configure
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (user_is_root ?u)
+      (package_unpacked ?p)
+      (not (package_configured ?p))
+    )
+    :effect (and
+      (package_installed ?p)
+      (package_configured ?p)
+    )
+  )
+
+  ;; Action: dpkg_configure_pending
+  (:action dpkg_configure_pending
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (package_configured ?p)
+    )
+  )
+
+  ;; Action: dpkg_contents
+  (:action dpkg_contents
+    :parameters (?p - package)
+    :precondition (and
+      (file_exists ?p)
+    )
+    :effect (and
+      (package_contents_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_disable_triggers
+  (:action dpkg_disable_triggers
+    :parameters (?p - process ?pkg - package)
+    :precondition (and
+      (executed_as_root ?p)
+      (package_installed ?pkg)
+    )
+    :effect (and
+      (triggers_pending ?pkg)
+      (triggers_awaited ?pkg)
+    )
+  )
+
+  ;; Action: dpkg_enable_robot_mode
+  (:action dpkg_enable_robot_mode
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (dpkg_robot_mode_active ?p)
+    )
+  )
+
+  ;; Action: dpkg_enable_triggers
+  (:action dpkg_enable_triggers
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (triggers_pending ?p))
+      (not (triggers_awaited ?p))
+    )
+  )
+
+  ;; Action: dpkg_extract
+  (:action dpkg_extract
+    :parameters (?p - package ?d - directory)
+    :precondition (and
+      (file_exists ?p)
+      (directory_exists ?d)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: dpkg_extract_control
+  (:action dpkg_extract_control
+    :parameters (?p - package ?d - directory)
+    :precondition (and
+      (file_exists ?p)
+      (directory_exists ?d)
+    )
+    :effect (and
+      (control_info_extracted ?p)
+    )
+  )
+
+  ;; Action: dpkg_field
+  (:action dpkg_field
+    :parameters (?p - package)
+    :precondition (and
+      (file_exists ?p)
+    )
+    :effect (and
+      (package_info_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_force_install_bad_arch
+  (:action dpkg_force_install_bad_arch
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (package_arch_mismatch ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: dpkg_force_install_bad_verify
+  (:action dpkg_force_install_bad_verify
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (package_authenticity_failed ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: dpkg_force_install_bad_version
+  (:action dpkg_force_install_bad_version
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (package_version_mismatch ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: dpkg_info
+  (:action dpkg_info
+    :parameters (?p - package)
+    :precondition (and
+      (file_exists ?p)
+    )
+    :effect (and
+      (package_info_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_install
+  (:action dpkg_install
+    :parameters (?p - package ?f - file ?u - user)
+    :precondition (and
+      (file_exists ?f)
+      (package_unpacked ?p)
+      (user_is_root ?u)
+      (package_exists_as_file ?p ?f)
+    )
+    :effect (and
+      (package_installed ?p)
+      (package_configured ?p)
+    )
+  )
+
+  ;; Action: dpkg_install_not_root
+  (:action dpkg_install_not_root
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (not (user_is_root ?u))
+      (user_has_sudo_privileges ?u)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+)
+
+  ;; Action: dpkg_install_selected_only
+  (:action dpkg_install_selected_only
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (package_selected ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: dpkg_list
+  (:action dpkg_list
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_info_known ?p)
+      (package_available ?p)
+    )
+  )
+
+  ;; Action: dpkg_listfiles
+  (:action dpkg_listfiles
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_files_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_print_avail
+  (:action dpkg_print_avail
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (package_available ?p)
+    )
+  )
+
+  ;; Action: dpkg_printavail
+  (:action dpkg_printavail
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (package_info_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_purge
+  (:action dpkg_purge
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (not (package_marked_reinstreq ?p))
+      (package_installed ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (not (package_unpacked ?p))
+      (not (package_installed ?p))
+      (not (package_configured ?p))
+    )
+  )
+
+  ;; Action: dpkg_remove
+  (:action dpkg_remove
+    :parameters (?p - package ?u - user)
+    :precondition (and
+      (not (package_marked_reinstreq ?p))
+      (package_installed ?p)
+      (user_is_root ?u)
+    )
+    :effect (and
+      (not (package_unpacked ?p))
+      (not (package_installed ?p))
+      (not (package_configured ?p))
+    )
+  )
+
+  ;; Action: dpkg_remove_architecture
+  (:action dpkg_remove_architecture
+    :parameters (?a - object)
+    :precondition (and
+      (architecture_supported ?a)
+    )
+    :effect (and
+      (not (architecture_supported ?a))
+    )
+  )
+
+  ;; Action: dpkg_search
+  (:action dpkg_search
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (package_info_known ?f)
+    )
+  )
+
+  ;; Action: dpkg_set_log_file
+  (:action dpkg_set_log_file
+    :parameters (?p - process ?f - file)
+    :precondition (and
+      (executed_as_root ?p)
+      (file_writable ?f)
+    )
+    :effect (and
+      (dpkg_log_file_exists ?f)
+    )
+  )
+
+  ;; Action: dpkg_set_selections
+  (:action dpkg_set_selections
+    :parameters (?p - package ?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (package_selected ?p)
+    )
+  )
+
+  ;; Action: dpkg_status
+  (:action dpkg_status
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_status_known ?p)
+    )
+  )
+
+  ;; Action: dpkg_unpack
+  (:action dpkg_unpack
+    :parameters (?p - package ?f - file ?u - user)
+    :precondition (and
+      (user_is_root ?u)
+      (package_exists_as_file ?p ?f)
+    )
+    :effect (and
+      (package_unpacked ?p)
+      (not (package_configured ?p))
+    )
+  )
+
+  ;; Action: dpkg_verify
+  (:action dpkg_verify
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_verified ?p)
+    )
+  )
+
+  ;; Action: flatpak_document_export
+  (:action flatpak_document_export
+    :parameters (?p - package ?f - file)
+    :precondition (and
+      (package_installed ?p)
+      (file_exists ?f)
+    )
+    :effect (and
+      (app_has_access ?p ?f)
+    )
+  )
+
+  ;; Action: flatpak_document_unexport
+  (:action flatpak_document_unexport
+    :parameters (?p - package ?f - file)
+    :precondition (and
+      (app_has_access ?p ?f)
+    )
+    :effect (and
+      (not (app_has_access ?p ?f))
+    )
+  )
+
+  ;; Action: flatpak_install
+  (:action flatpak_install
+    :parameters (?p - package ?r - repository)
+    :precondition (and
+      (repository_configured ?r)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: flatpak_kill
+  (:action flatpak_kill
+    :parameters (?p - package)
+    :precondition (and
+      (package_running ?p)
+    )
+    :effect (and
+      (not (package_running ?p))
+    )
+  )
+
+  ;; Action: flatpak_mask
+  (:action flatpak_mask
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_masked ?p)
+    )
+  )
+
+  ;; Action: flatpak_permission_reset
+  (:action flatpak_permission_reset
+    :parameters (?p - package)
+    :precondition (and
+      (app_has_permission ?p)
+    )
+    :effect (and
+      (not (app_has_permission ?p))
+    )
+  )
+
+  ;; Action: flatpak_permission_set
+  (:action flatpak_permission_set
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (app_has_permission ?p)
+    )
+  )
+
+  ;; Action: flatpak_pin
+  (:action flatpak_pin
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_pinned ?p)
+    )
+  )
+
+  ;; Action: flatpak_remote_add
+  (:action flatpak_remote_add
+    :parameters (?r - repository)
+    :precondition (and)
+    :effect (and
+      (repository_configured ?r)
+    )
+  )
+
+  ;; Action: flatpak_remote_delete
+  (:action flatpak_remote_delete
+    :parameters (?r - repository)
+    :precondition (and
+      (repository_configured ?r)
+    )
+    :effect (and
+      (not (repository_configured ?r))
+    )
+  )
+
+  ;; Action: flatpak_run
+  (:action flatpak_run
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_running ?p)
+    )
+  )
+
+  ;; Action: flatpak_uninstall
+  (:action flatpak_uninstall
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (not (package_installed ?p))
+    )
+  )
+
+  ;; Action: flatpak_unmask
+  (:action flatpak_unmask
+    :parameters (?p - package)
+    :precondition (and
+      (package_masked ?p)
+    )
+    :effect (and
+      (not (package_masked ?p))
+    )
+  )
+
+  ;; Action: flatpak_unpin
+  (:action flatpak_unpin
+    :parameters (?p - package)
+    :precondition (and
+      (package_pinned ?p)
+    )
+    :effect (and
+      (not (package_pinned ?p))
+    )
+  )
+
+  ;; Action: flatpak_update
+  (:action flatpak_update
+    :parameters (?p - package)
+    :precondition (and
+      (package_installed ?p)
+    )
+    :effect (and
+      (package_installed ?p)
+    )
+  )
+
+  ;; Action: getfacl_read_acl
+  (:action getfacl_read_acl
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (acl_read ?f)
+    )
+  )
+
+  ;; Action: getfacl_read_default_acl
+  (:action getfacl_read_default_acl
+    :parameters (?d - directory)
+    :precondition (and
+      (file_exists ?d)
+    )
+    :effect (and
+      (default_acl_read ?d)
+    )
+  )
+
+  ;; Action: getfacl_read_recursive
+  (:action getfacl_read_recursive
+    :parameters (?f - filesystem_object)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (acl_recursive_read ?f)
+    )
+)
+
+  ;; Action: groupadd_basic
+  (:action groupadd_basic
     :parameters (?g - group)
     :precondition (and
       (not (group_exists ?g))
@@ -2490,4053 +2123,163 @@
     )
   )
 
-  ;; Action: create_group_entry
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action create_group_entry
-    :parameters (?group - group)
-    :precondition (and
-      (not (group_exists ?group))
-    )
-    :effect (and
-      (group_exists ?group)
-    )
-  )
-
-  ;; Action: create_group_with_gid
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action create_group_with_gid
-    :parameters (?group - group ?gid - file)
-    :precondition (and
-      (not (group_exists ?group))
-      (not (gid_used ?gid))
-    )
-    :effect (and
-      (group_exists ?group)
-      (gid_used ?gid)
-    )
-  )
-
-  ;; Action: create_group_with_non_unique_gid
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action create_group_with_non_unique_gid
-    :parameters (?group - group ?gid - file)
-    :precondition (and
-      (not (group_exists ?group))
-    )
-    :effect (and
-      (group_exists ?group)
-      (gid_used ?gid)
-    )
-  )
-
-  ;; Action: create_home_directory
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_home_directory
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (home_directory_exists ?user))
-    )
-    :effect (and
-      (home_directory_exists ?user)
-    )
-  )
-
-  ;; Action: create_login_session
-  (:action create_login_session
-    :parameters (?target_user - user ?caller - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?caller)
-      (can_switch_to ?target_user)
-    )
-    :effect (and
-      (login_shell_started ?target_user)
-      (session_created ?target_user)
-    )
-  )
-
-  ;; Action: create_mail_spool
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action create_mail_spool
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (CREATE_MAIL_SPOOL)
-    )
-    :effect (and
-      (mail_spool_exists ?user)
-    )
-  )
-
-  ;; Action: create_non_unique_user
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_non_unique_user
-    :parameters (?user - user ?uid - file)
-    :precondition (and
-      (user_exists ?user)
-      (uid_exists ?uid)
-    )
-    :effect (and
-      (user_with_uid ?user ?uid)
-    )
-  )
-
-  ;; Action: create_pty
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action create_pty
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (pty_created ?user)
-    )
-  )
-
-  ;; Action: create_sparse_file
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action create_sparse_file
-    :parameters (?dest - file ?source - file)
-    :precondition (and
-      (file_exists ?source)
-    )
-    :effect (and
-      (file_sparse ?dest)
-    )
-  )
-
-  ;; Action: create_symbolic_link
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action create_symbolic_link
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (symbolic_link_exists ?dst)
-    )
-  )
-
-  ;; Action: create_system_account
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_system_account
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: create_system_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_system_group
-    :parameters (?group - group)
-    :precondition (and
-      (not (group_exists ?group))
-    )
-    :effect (and
-      (group_exists ?group)
-    )
-  )
-
-  ;; Action: create_system_user
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_system_user
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-      (user_locked ?user)
-    )
-  )
-
-  ;; Action: create_temp_file_copies
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action create_temp_file_copies
-    :parameters (?f - file ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (user_exists ?u)
-      (not (user_is_root ?u))
-    )
-    :effect (and
-      (temp_file_exists ?f)
-      (temp_file_owner ?f ?u)
-    )
-  )
-
-  ;; Action: create_user
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user
-    :parameters (?u - user)
-    :precondition (and
-      (not (user_exists ?u))
-    )
-    :effect (and
-      (user_exists ?u)
-    )
-  )
-
-  ;; Action: create_user_default_home
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user_default_home
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: create_user_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user_group
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (group_exists ?user))
-    )
-    :effect (and
-      (group_exists ?user)
-      (user_in_group ?user ?user)
-    )
-  )
-
-  ;; Action: create_user_with_default_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user_with_default_group
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: create_user_with_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user_with_group
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-      (group_exists ?user)
-    )
-  )
-
-  ;; Action: create_user_with_home
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action create_user_with_home
-    :parameters (?user - user ?home_dir - directory)
-    :precondition (and
-      (not (user_exists ?user))
-      (not (directory_exists ?home_dir))
-    )
-    :effect (and
-      (user_exists ?user)
-      (directory_exists ?home_dir)
-    )
-  )
-
-  ;; Action: define_firewall_table
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action define_firewall_table
-    :parameters (?table - firewall_rule)
-    :precondition (and)
-    :effect (and
-      (firewall_table_defined ?table)
-    )
-  )
-
-  ;; Action: delete_chain
-  ;; Source: iptables
-  (:action delete_chain
-    :parameters (?chain - firewall_rule ?c - file)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-      (chain_exists ?c)
-      (not (firewall_rule_referenced ?chain))
-    )
-    :effect (and
-      (not (chain_exists ?c))
-      (not (firewall_rule_exists ?chain))
-    )
-  )
-
-  ;; Action: delete_empty_chains
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action delete_empty_chains
-    :parameters (?obj - file)
-    :precondition (and
-      (table_exists)
-    )
-    :effect (and
-      (all_chains_empty)
-    )
-  )
-
-  ;; Action: delete_files_manually
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action delete_files_manually
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (not (file_exists ?f))
-    )
-  )
-
-  ;; Action: delete_firewall_chain
-  (:action delete_firewall_chain
-    :parameters (?o - object ?chain - firewall_rule ?table - object)
-    :precondition (and
-      (chain_exists ?o)
-      (not (chain_policy_set ?o))
-    )
-    :effect (and
-      (firewall_chain_deleted ?table ?chain)
-      (not (chain_exists ?o))
-      (chain_deleted ?o)
-    )
-  )
-
-  ;; Action: delete_firewall_rule
-  (:action delete_firewall_rule
-    :parameters (?r - firewall_rule ?chain - firewall_rule ?o - object ?rulenum - repository ?table - object)
-    :precondition (and
-      (rule_appends_to ?r ?o)
-      (firewall_rule_exists ?r)
-    )
-    :effect (and
-      (not (rule_allows ?r))
-      (not (rule_appends_to ?r ?o))
-      (rule_deleted ?r)
-      (not (firewall_rule_exists ?r))
-      (firewall_rule_deleted ?table ?chain ?rulenum)
-      (not (rule_rejects ?r))
-      (not (rule_denies ?r))
-      (not (rule_limits ?r))
-    )
-  )
-
-  ;; Action: delete_iptables_rule
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action delete_iptables_rule
-    :parameters (?chain - file ?rule_spec - file)
-    :precondition (and
-      (firewall_rule_exists ?rule_spec)
-    )
-    :effect (and
-      (firewall_rule_deleted ?rule_spec)
-    )
-  )
-
-  ;; Action: delete_iptables_rule_by_num
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action delete_iptables_rule_by_num
-    :parameters (?chain - firewall_rule ?rulenum - file)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-      (rule_exists ?chain ?rulenum)
-    )
-    :effect (and
-      (firewall_rule_removed ?chain)
-    )
-  )
-
-  ;; Action: delete_mail_spool
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action delete_mail_spool
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (mail_spool_exists ?user)
-    )
-    :effect (and
-      (not (mail_spool_exists ?user))
-    )
-  )
-
-  ;; Action: delete_referring_rules
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action delete_referring_rules
-    :parameters (?chain - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-      (not (chain_empty ?chain))
-    )
-    :effect (and
-      (chain_empty ?chain)
-    )
-  )
-
-  ;; Action: delete_rule
-  (:action delete_rule
-    :parameters (?r - firewall_rule ?c - object)
-    :precondition (and
-      (chain_exists ?c)
-      (rule_in_chain ?r ?c)
-    )
-    :effect (and
-      (not (rule_in_chain ?r ?c))
-    )
-  )
-
-  ;; Action: delete_user
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action delete_user
-    :parameters (?u - user)
-    :precondition (and
-      (user_exists ?u)
-      (not (user_critical ?u))
-    )
-    :effect (and
-      (not (user_exists ?u))
-    )
-  )
-
-  ;; Action: deny_firewall_rule
-  (:action deny_firewall_rule
-    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object)
-    :precondition (and
-      (interface_exists ?i)
-      (port_exists ?p)
-      (firewall_enabled)
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-      (rule_denies ?r)
-      (rule_on_interface ?r ?i)
-      (rule_to_port ?r ?p)
-      (rule_from_source ?r ?src)
-    )
-  )
-
-  ;; Action: dereference_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action dereference_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: dereference_symbolic_link
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action dereference_symbolic_link
-    :parameters (?link - file)
-    :precondition (and
-      (file_exists ?link)
-    )
-    :effect (and
-      (file_modified ?link)
-    )
-  )
-
-  ;; Action: dereference_symlinks
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action dereference_symlinks
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (symlink_dereferenced ?src ?dest)
-    )
-  )
-
-  ;; Action: disable_backups
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action disable_backups
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (backup_disabled)
-    )
-  )
-
-  ;; Action: disable_download
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action disable_download
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (download_disabled)
-    )
-  )
-
-  ;; Action: disable_interface
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action disable_interface
-    :parameters (?iface - interface)
-    :precondition (and
-      (interface_up ?iface)
-    )
-    :effect (and
-      (not (interface_up ?iface))
-    )
-  )
-
-  ;; Action: disable_password_aging
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action disable_password_aging
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (password_aging_disabled ?user)
-    )
-  )
-
-  ;; Action: disable_root_preservation
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action disable_root_preservation
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (root_preservation_disabled)
-    )
-  )
-
-  ;; Action: disable_service
-  (:action disable_service
-    :parameters (?s - service ?u - user ?svc - service)
-    :precondition (and
-      (service_enabled ?s)
-      (service_exists ?s)
-      (service_enabled ?svc)
-    )
-    :effect (and
-      (not (service_enabled ?s))
-      (not (service_enabled ?svc))
-      (service_disabled ?s)
-    )
-  )
-
-  ;; Action: disable_service_global
-  (:action disable_service_global
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (service_enabled ?s)
-      (global_config_enabled ?s)
-    )
-    :effect (and
-      (service_disabled ?s)
-      (not (service_enabled ?s))
-      (not (global_config_enabled ?s))
-    )
-  )
-
-  ;; Action: disable_service_runtime
-  (:action disable_service_runtime
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (service_enabled ?s)
-      (runtime_config_enabled ?s)
-    )
-    :effect (and
-      (service_disabled ?s)
-      (not (service_enabled ?s))
-      (not (runtime_config_enabled ?s))
-    )
-  )
-
-  ;; Action: disable_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action disable_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_enabled ?pkg)
-    )
-    :effect (and
-      (not (package_enabled ?pkg))
-    )
-  )
-
-  ;; Action: dist_upgrade
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action dist_upgrade
-    :parameters (?obj - file)
-    :precondition (and
-      (package_list_updated)
-      (network_available)
-    )
-    :effect (and
-      (system_upgraded)
-    )
-  )
-
-  ;; Action: do_not_traverse_symbolic_links
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action do_not_traverse_symbolic_links
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_not_traversed ?f)
-    )
-  )
-
-  ;; Action: do_not_treat_root_special
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action do_not_treat_root_special
-    :parameters (?file - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (root_not_special ?file)
-    )
-  )
-
-  ;; Action: downgrade_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action downgrade_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_outdated ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-      (not (package_outdated ?pkg))
-    )
-  )
-
-  ;; Action: download_diff_only
-  ;; Source: apt-get
-  (:action download_diff_only
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (apt_get_diff_only ?pkg)
-    )
-  )
-
-  ;; Action: download_dsc_only
-  ;; Source: apt-get
-  (:action download_dsc_only
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: download_only
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action download_only
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_downloaded ?pkg)
-    )
-  )
-
-  ;; Action: download_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action download_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (network_available)
-    )
-    :effect (and
-      (file_exists ?pkg)
-    )
-  )
-
-  ;; Action: download_source
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action download_source
-    :parameters (?src - package)
-    :precondition (and
-      (package_exists ?src)
-      (network_available)
-    )
-    :effect (and
-      (source_downloaded ?src)
-    )
-  )
-
-  ;; Action: download_tar_only
-  ;; Source: apt-get
-  (:action download_tar_only
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: drop_packet
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action drop_packet
-    :parameters (?table - firewall_rule ?chain - firewall_rule)
-    :precondition (and
-      (firewall_table_defined ?table)
-      (firewall_chain_exists ?chain)
-    )
-    :effect (and
-      (packet_dropped ?table ?chain)
-    )
-  )
-
-  ;; Action: dump_socket_data
-  (:action dump_socket_data
-    :parameters (?s - object ?f - file)
-    :precondition (and
-      (socket_exists ?s)
-      (file_exists ?f)
-    )
-    :effect (and
-      (socket_data_dumped ?s ?f)
-    )
-  )
-
-  ;; Action: edit_file
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action edit_file
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-      (not (file_device_special ?f))
-    )
-    :effect (and
-      (file_edited ?f)
-    )
-  )
-
-  ;; Action: edit_file_as_user
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action edit_file_as_user
-    :parameters (?user - user ?file - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_exists ?file)
-    )
-    :effect (and
-      (file_edited_as_user ?user ?file)
-    )
-  )
-
-  ;; Action: edit_files
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action edit_files
-    :parameters (?file - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (file_modified ?file)
-    )
-  )
-
-  ;; Action: edit_sources
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action edit_sources
-    :parameters (?file - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (file_modified ?file)
-    )
-  )
-
-  ;; Action: edit_temp_files
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action edit_temp_files
-    :parameters (?f - file ?u - user)
-    :precondition (and
-      (temp_file_exists ?f)
-      (temp_file_owner ?f ?u)
-    )
-    :effect (and
-      (temp_file_edited ?f)
-    )
-  )
-
-  ;; Action: enable_existing_backups
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action enable_existing_backups
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (backup_method_existing)
-    )
-  )
-
-  ;; Action: enable_firewall
-  (:action enable_firewall
-    :parameters ()
-    :precondition (and
-      (not (firewall_enabled))
-    )
-    :effect (and
-      (firewall_enabled)
-    )
-  )
-
-  ;; Action: enable_interface
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action enable_interface
-    :parameters (?iface - interface)
-    :precondition (and
-      (interface_exists ?iface)
-      (not (interface_up ?iface))
-    )
-    :effect (and
-      (interface_up ?iface)
-    )
-  )
-
-  ;; Action: enable_numbered_backups
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action enable_numbered_backups
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (backup_method_numbered)
-    )
-  )
-
-  ;; Action: enable_root_preservation
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action enable_root_preservation
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (root_preservation_enabled)
-    )
-  )
-
-  ;; Action: enable_service
-  (:action enable_service
-    :parameters (?s - service ?u - user ?svc - service)
-    :precondition (and
-      (service_exists ?svc)
-      (file_exists ?s)
-      (service_exists ?s)
-      (file_writable ?s)
-    )
-    :effect (and
-      (service_enabled ?s)
-      (config_applied ?s)
-      (service_enabled ?svc)
-    )
-  )
-
-  ;; Action: enable_service_global
-  (:action enable_service_global
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (file_exists ?s)
-      (file_writable ?s)
-    )
-    :effect (and
-      (service_enabled ?s)
-      (global_config_enabled ?s)
-      (config_applied ?s)
-    )
-  )
-
-  ;; Action: enable_service_now
-  (:action enable_service_now
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (file_exists ?s)
-      (file_writable ?s)
-    )
-    :effect (and
-      (service_enabled ?s)
-      (service_running ?s)
-      (config_applied ?s)
-    )
-  )
-
-  ;; Action: enable_service_runtime
-  (:action enable_service_runtime
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (file_exists ?s)
-      (file_writable ?s)
-    )
-    :effect (and
-      (service_enabled ?s)
-      (runtime_config_enabled ?s)
-      (config_applied ?s)
-    )
-  )
-
-  ;; Action: enable_simple_backups
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action enable_simple_backups
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (backup_method_simple)
-    )
-  )
-
-  ;; Action: enable_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action enable_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (not (package_enabled ?pkg))
-    )
-    :effect (and
-      (package_enabled ?pkg)
-    )
-  )
-
-  ;; Action: error_on_any
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action error_on_any
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (error_on_any_enabled)
-    )
-  )
-
-  ;; Action: exact_output
-  ;; Source: iptables
-  (:action exact_output
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: execute_as_user
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action execute_as_user
-    :parameters (?user - user ?cmd - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (command_executed ?cmd)
-    )
-  )
-
-  ;; Action: execute_command_as_user
-  (:action execute_command_as_user
-    :parameters (?target_user - user ?command - object ?caller - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?caller)
-      (can_switch_to ?target_user)
-    )
-    :effect (and
-      (command_executed ?command)
-      (session_created ?command)
-    )
-  )
-
-  ;; Action: execute_command_on_all_objects
-  ;; Source: ip
-  (:action execute_command_on_all_objects
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: expand_numbers
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action expand_numbers
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (exact_values_enabled)
-    )
-  )
-
-  ;; Action: extended_match
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action extended_match
-    :parameters (?match - file)
-    :precondition (and
-      (file_exists ?match)
-    )
-    :effect (and
-      (match_loaded ?match)
-    )
-  )
-
-  ;; Action: fallback_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action fallback_copy
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: fetch_source_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action fetch_source_package
-    :parameters (?pkg - package)
-    :precondition (and
-        (network_available)
-        (source_repos_enabled)
-    )
-    :effect (and
-        (source_fetched ?pkg)
-    )
-)
-
-  ;; Action: flush_chain
-  (:action flush_chain
-    :parameters (?o - object ?c - file ?chain - firewall_rule)
-    :precondition (and
-      (chain_exists ?o)
-      (firewall_rule_exists ?chain)
-      (chain_exists ?c)
-    )
-    :effect (and
-      (chain_exists ?o)
-      (not (chain_policy_set ?o))
-      (chain_exists ?c)
-      (firewall_rule_flushed ?chain)
-    )
-  )
-
-  ;; Action: flush_firewall_rules
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action flush_firewall_rules
-    :parameters (?table - file ?chain - file ?rulenum - file)
-    :precondition (and)
-    :effect (and
-      (firewall_rules_flushed ?table ?chain ?rulenum)
-    )
-  )
-
-  ;; Action: flush_rules
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action flush_rules
-    :parameters (?chain - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-    )
-    :effect (and
-      (firewall_rule_empty ?chain)
-    )
-  )
-
-  ;; Action: follow_command_line_symlinks
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action follow_command_line_symlinks
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (symlink_followed ?src ?dest)
-    )
-  )
-
-  ;; Action: follow_directory_symlinks
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action follow_directory_symlinks
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_symlinked ?src ?dst)
-    )
-  )
-
-  ;; Action: follow_symlink_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action follow_symlink_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: force_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action force_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?dest)
-    )
-    :effect (and
-      (not (file_exists ?dest))
-    )
-  )
-
-  ;; Action: force_delete_user
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action force_delete_user
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (user_exists ?user))
-    )
-  )
-
-  ;; Action: force_overwrite
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action force_overwrite
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: force_remove_user
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action force_remove_user
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (user_exists ?user))
-    )
-  )
-
-  ;; Action: goto_chain
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action goto_chain
-    :parameters (?chain - firewall_rule)
-    :precondition (and)
-    :effect (and
-      (packet_processed ?chain)
-    )
-  )
-
-  ;; Action: hard_link_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action hard_link_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-      (not (file_exists ?dest))
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-)
-
-  ;; Action: hard_link_files
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action hard_link_files
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (hard_link_created ?src ?dest)
-    )
-  )
-
-  ;; Action: hold_back_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action hold_back_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (package_outdated ?pkg)
-    )
-    :effect (and
-      (package_reverted ?pkg)
-    )
-  )
-
-  ;; Action: ignore_holds
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action ignore_holds
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_on_hold ?pkg)
-    )
-    :effect (and
-      (package_on_hold ?pkg)
-    )
-  )
-
-  ;; Action: ignore_missing
-  ;; Source: apt-get
-  (:action ignore_missing
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: inhibit_sparse_file
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action inhibit_sparse_file
-    :parameters (?dest - file ?source - file)
-    :precondition (and
-      (file_exists ?source)
-    )
-    :effect (and
-      (not (file_sparse ?dest))
-    )
-  )
-
-  ;; Action: initialize_environment
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action initialize_environment
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (requires_env_preservation ?user)
-    )
-  )
-
-  ;; Action: insert_firewall_rule
-  (:action insert_firewall_rule
-    :parameters (?r - firewall_rule ?num - object ?chain - firewall_rule ?rule_spec - repository ?rulenum - repository ?table - object)
-    :precondition (and
-      (firewall_rule_exists ?r)
-    )
-    :effect (and
-      (firewall_rule_inserted ?table ?chain ?rulenum ?rule_spec)
-      (firewall_rule_exists ?r)
-    )
-  )
-
-  ;; Action: insert_iptables_rule
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action insert_iptables_rule
-    :parameters (?chain - file ?rulenum - file ?rule_spec - file)
-    :precondition (and
-      (firewall_rule_exists ?rule_spec)
-    )
-    :effect (and
-      (firewall_rule_inserted ?rule_spec)
-    )
-  )
-
-  ;; Action: insert_rule
-  (:action insert_rule
-    :parameters (?r - firewall_rule ?c - object ?num - object)
-    :precondition (and
-      (chain_exists ?c)
-    )
-    :effect (and
-      (rule_in_chain ?r ?c)
-      (firewall_rule_exists ?r)
-    )
-  )
-
-  ;; Action: insert_rule_with_ipv4_option
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action insert_rule_with_ipv4_option
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (not (traffic_blocked ?rule))
-    )
-    :effect (and
-      (traffic_blocked ?rule)
-    )
-  )
-
-  ;; Action: insert_rule_with_ipv6_option
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action insert_rule_with_ipv6_option
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (not (traffic_blocked ?rule))
-    )
-    :effect (and
-      (traffic_blocked ?rule)
-    )
-  )
-
-  ;; Action: install_dependencies
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action install_dependencies
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_local_package
-  ;; Source: dpkg
-  ;; Reused from Phase 1
-  (:action install_local_package
-    :parameters (?pkg - package ?deb_file - file)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (file_exists ?deb_file)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action install_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_package_before_upgrade
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action install_package_before_upgrade
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_package_distribution
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action install_package_distribution
-    :parameters (?pkg - package ?distro - file)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_package_version
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action install_package_version
-    :parameters (?pkg - package ?version - file)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: install_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action install_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: interactive_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action interactive_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?dest)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: interactive_overwrite
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action interactive_overwrite
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: invert_address_sense
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action invert_address_sense
-    :parameters (?address - file)
-    :precondition (and
-      (file_exists ?address)
-    )
-    :effect (and
-      (address_sense_inverted ?address)
-    )
-  )
-
-  ;; Action: invert_protocol_test
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action invert_protocol_test
-    :parameters (?protocol - file)
-    :precondition (and
-      (protocol_allowed ?protocol)
-    )
-    :effect (and
-      (protocol_inverted ?protocol)
-    )
-  )
-
-  ;; Action: iptables_setuid_error
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action iptables_setuid_error
-    :parameters (?obj - file)
-    :precondition (and
-      (iptables_setuid_to_root)
-    )
-    :effect (and
-      (iptables_exit_code_111)
-    )
-  )
-
-  ;; Action: jump_target
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action jump_target
-    :parameters (?target - firewall_rule)
-    :precondition (and)
-    :effect (and
-      (packet_processed ?target)
-    )
-  )
-
-  ;; Action: jump_to_chain
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action jump_to_chain
-    :parameters (?chain - file)
-    :precondition (and
-      (file_exists ?chain)
-    )
-    :effect (and
-      (chain_loaded ?chain)
-    )
-  )
-
-  ;; Action: jump_to_target
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action jump_to_target
-    :parameters (?target - file)
-    :precondition (and
-      (file_exists ?target)
-    )
-    :effect (and
-      (target_loaded ?target)
-    )
-  )
-
-  ;; Action: kill_service
-  (:action kill_service
-    :parameters (?s - service ?pr - process ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (process_exists ?pr)
-      (executed_as_root ?pr)
-    )
-    :effect (and
-      (process_killed ?pr)
-      (not (process_exists ?pr))
-    )
-  )
-
-  ;; Action: lightweight_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action lightweight_copy
-    :parameters (?dest - file ?source - file)
-    :precondition (and
-      (file_exists ?source)
-    )
-    :effect (and
-      (file_reflinked ?dest)
-    )
-  )
-
-  ;; Action: limit_firewall_rule
-  (:action limit_firewall_rule
-    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object)
-    :precondition (and
-      (interface_exists ?i)
-      (port_exists ?p)
-      (firewall_enabled)
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-      (rule_limits ?r)
-      (rule_on_interface ?r ?i)
-      (rule_to_port ?r ?p)
-      (rule_from_source ?r ?src)
-    )
-  )
-
-  ;; Action: limit_group_members
-  ;; Source: userdel
-  (:action limit_group_members
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: list_firewall_rules
-  (:action list_firewall_rules
-    :parameters (?o - object)
-    :precondition (and
-      (chain_exists ?o)
-    )
-    :effect (and
-      (chain_exists ?o)
-    )
-  )
-
-  ;; Action: list_rules
-  (:action list_rules
-    :parameters (?c - object)
-    :precondition (and
-      (chain_exists ?c)
-    )
-    :effect (and
-      (chain_exists ?c)
-    )
-  )
-
-  ;; Action: load_iptables_modules
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action load_iptables_modules
-    :parameters (?module - file)
-    :precondition (and
-      (file_exists ?module)
-    )
-    :effect (and
-      (module_loaded ?module)
-    )
-  )
-
-  ;; Action: lock_user
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action lock_user
-    :parameters (?u - user)
-    :precondition (and
-      (user_exists ?u)
-      (not (user_locked ?u))
-    )
-    :effect (and
-      (user_locked ?u)
-    )
-  )
-
-  ;; Action: lock_user_account
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action lock_user_account
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_locked ?user))
-    )
-    :effect (and
-      (user_locked ?user)
-    )
-  )
-
-  ;; Action: lock_user_password
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action lock_user_password
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-      (not (user_locked ?user))
-    )
-    :effect (and
-      (user_locked ?user)
-    )
-  )
-
-  ;; Action: make_backup
-  ;; Source: cp
-  (:action make_backup
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: make_backup_force
-  ;; Source: cp
-  (:action make_backup_force
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-      (file_exists ?dst)
-      (same_name ?src ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: make_numbered_backup
-  ;; Source: cp
-  (:action make_numbered_backup
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: make_simple_backup
-  ;; Source: cp
-  (:action make_simple_backup
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: manage_ipsec_policies
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_ipsec_policies
-    :parameters (?xfrm - file)
-    :precondition (and
-      (xfrm_exists ?xfrm)
-    )
-    :effect (and
-      (xfrm_configured ?xfrm)
-    )
-  )
-
-  ;; Action: manage_ipv6_segment_routing
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_ipv6_segment_routing
-    :parameters (?sr - file)
-    :precondition (and
-      (segment_routing_exists ?sr)
-    )
-    :effect (and
-      (segment_routing_configured ?sr)
-    )
-  )
-
-  ;; Action: manage_mail_spool
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action manage_mail_spool
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (mail_spool_managed ?user)
-    )
-  )
-
-  ;; Action: manage_package
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action manage_package
-    :parameters (?pkg - package ?action - file)
-    :precondition (and
-      (not (package_installed ?pkg))
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: manage_tcp_metrics
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_tcp_metrics
-    :parameters (?tcp_metrics - file)
-    :precondition (and
-      (tcp_metrics_exists ?tcp_metrics)
-    )
-    :effect (and
-      (tcp_metrics_configured ?tcp_metrics)
-    )
-  )
-
-  ;; Action: manage_tokenized_interface_identifiers
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_tokenized_interface_identifiers
-    :parameters (?token - file)
-    :precondition (and
-      (token_exists ?token)
-    )
-    :effect (and
-      (token_configured ?token)
-    )
-  )
-
-  ;; Action: manage_tun_tap_devices
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_tun_tap_devices
-    :parameters (?tuntap - file)
-    :precondition (and
-      (tuntap_exists ?tuntap)
-    )
-    :effect (and
-      (tuntap_configured ?tuntap)
-    )
-  )
-
-  ;; Action: manage_vrf_devices
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action manage_vrf_devices
-    :parameters (?vrf - file)
-    :precondition (and
-      (vrf_exists ?vrf)
-    )
-    :effect (and
-      (vrf_configured ?vrf)
-    )
-  )
-
-  ;; Action: mark_auto
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action mark_auto
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_auto_marked ?pkg)
-    )
-  )
-
-  ;; Action: mask_service
-  (:action mask_service
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-      (file_exists ?s)
-    )
-    :effect (and
-      (service_masked ?s)
-      (service_disabled ?s)
-      (not (service_enabled ?s))
-    )
-  )
-
-  ;; Action: match_all_protocols
-  ;; Source: iptables
-  (:action match_all_protocols
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: match_fragmented_packets
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action match_fragmented_packets
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (network_available)
-    )
-    :effect (and
-      (traffic_blocked ?rule)
-    )
-  )
-
-  ;; Action: match_fragments
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action match_fragments
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (fragment_matching_enabled)
-    )
-  )
-
-  ;; Action: match_head_fragments
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action match_head_fragments
-    :parameters (?rule - firewall_rule)
-    :precondition (and
-      (network_available)
-    )
-    :effect (and
-      (traffic_blocked ?rule)
-    )
-  )
-
-  ;; Action: modify_acl
-  (:action modify_acl
-    :parameters (?f - filesystem_object ?u - user ?perms - object)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (acl_modified ?f)
-      (acl_exists ?f)
-    )
-  )
-
-  ;; Action: modify_symbolic_link
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action modify_symbolic_link
-    :parameters (?link - file)
-    :precondition (and
-      (file_exists ?link)
-    )
-    :effect (and
-      (file_modified ?link)
-    )
-  )
-
-  ;; Action: modify_user_account
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action modify_user_account
-    :parameters (?login - user)
-    :precondition (and
-      (user_exists ?login)
-    )
-    :effect (and
-      (user_exists ?login)
-    )
-  )
-
-  ;; Action: modprobe_command
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action modprobe_command
-    :parameters (?command - file)
-    :precondition (and
-      (file_exists ?command)
-    )
-    :effect (and
-      (modules_inserted ?command)
-    )
-  )
-
-  ;; Action: move_home_directory
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action move_home_directory
-    :parameters (?user - user ?new_home - directory)
-    :precondition (and
-      (user_exists ?user)
-      (directory_exists ?new_home)
-    )
-    :effect (and
-      (user_home_directory ?user ?new_home)
-    )
-  )
-
-  ;; Action: move_mail_spool
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action move_mail_spool
-    :parameters (?user - user ?new_home - directory)
-    :precondition (and
-      (user_exists ?user)
-      (mail_spool_exists ?user)
-    )
-    :effect (and
-      (mail_spool_moved ?user ?new_home)
-    )
-  )
-
-  ;; Action: move_to_directory
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action move_to_directory
-    :parameters (?src - file ?dir - directory)
-    :precondition (and
-      (file_exists ?src)
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (file_in_directory ?src ?dir)
-    )
-  )
-
-  ;; Action: nmcli_connection_add
-  (:action nmcli_connection_add
-    :parameters (?s - service ?i - interface ?p - process)
-    :precondition (and
-      (interface_exists ?i)
-      (device_available ?i)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (connection_exists ?s)
-      (not (connection_active ?s))
-    )
-  )
-
-  ;; Action: nmcli_connection_export
-  (:action nmcli_connection_export
-    :parameters (?s - service ?f - configuration_file ?p - process)
-    :precondition (and
-      (connection_exists ?s)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (config_exported ?s ?f)
-    )
-  )
-
-  ;; Action: nmcli_connection_import
-  (:action nmcli_connection_import
-    :parameters (?f - configuration_file ?s - service ?p - process)
-    :precondition (and
-      (file_exists ?f)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (connection_exists ?s)
-      (config_imported ?f ?s)
-    )
-  )
-
-  ;; Action: nmcli_connection_modify
-  (:action nmcli_connection_modify
-    :parameters (?s - service ?p - process)
-    :precondition (and
-      (connection_exists ?s)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (connection_exists ?s)
-    )
-  )
-
-  ;; Action: nmcli_connection_up
-  (:action nmcli_connection_up
-    :parameters (?s - service ?i - interface ?p - process)
-    :precondition (and
-      (connection_exists ?s)
-      (interface_exists ?i)
-      (device_available ?i)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (connection_active ?s)
-      (not (device_available ?i))
-    )
-  )
-
-  ;; Action: nmcli_device_down
-  (:action nmcli_device_down
-    :parameters (?i - interface ?p - process)
-    :precondition (and
-      (interface_exists ?i)
-      (device_available ?i)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (not (device_available ?i))
-    )
-  )
-
-  ;; Action: nmcli_device_modify
-  (:action nmcli_device_modify
-    :parameters (?i - interface ?p - process)
-    :precondition (and
-      (interface_exists ?i)
-      (device_available ?i)
-      (executed_as_root ?p)
-    )
-    :effect (and
-      (device_available ?i)
-    )
-  )
-
-  ;; Action: no_clobber
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_clobber
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?dst)
-    )
-    :effect (and
-      (not (file_exists ?dst))
-    )
-  )
-
-  ;; Action: no_clobber_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_clobber_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?dest)
-    )
-    :effect (and
-      (not (file_exists ?dest))
-    )
-  )
-
-  ;; Action: no_dereference
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_dereference
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: no_dereference_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_dereference_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: no_preserve_attributes
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_preserve_attributes
-    :parameters (?src - file ?dst - file ?attrs - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: no_preserve_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action no_preserve_copy
-    :parameters (?src - file ?dest - file ?attrs - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: no_preserve_root
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action no_preserve_root
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (root_not_preserved ?f)
-    )
-  )
-
-  ;; Action: no_target_directory
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action no_target_directory
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: no_traverse_symlinks
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action no_traverse_symlinks
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (symlinks_not_traversed ?f)
-    )
-  )
-
-  ;; Action: no_upgrade
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action no_upgrade
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: no_user_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action no_user_group
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (no_user_group_created ?user)
-    )
-  )
-
-  ;; Action: non_unique_user
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action non_unique_user
-    :parameters (?user - user)
-    :precondition (and
-      (not (user_exists ?user))
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: numeric_output
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action numeric_output
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (numeric_output_enabled)
-    )
-  )
-
-  ;; Action: obtain_lock
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action obtain_lock
-    :parameters (?seconds - file)
-    :precondition (and)
-    :effect (and
-      (lock_obtained)
-    )
-  )
-
-  ;; Action: only_upgrade
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action only_upgrade
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_outdated ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: open_port
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action open_port
-    :parameters (?p - port)
-    :precondition (and
-      (not (port_allowed ?p))
-    )
-    :effect (and
-      (port_allowed ?p)
-    )
-  )
-
-  ;; Action: output_oneline
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action output_oneline
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (output_oneline)
-    )
-  )
-
-  ;; Action: override_backup_suffix
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action override_backup_suffix
-    :parameters (?suffix - file)
-    :precondition (and)
-    :effect (and
-      (backup_suffix_set ?suffix)
-    )
-  )
-
-  ;; Action: pkill_ancestors_ignored
-  (:action pkill_ancestors_ignored
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_ancestors_ignored ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_cgroup
-  (:action pkill_by_cgroup
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_full_cmdline
-  (:action pkill_by_full_cmdline
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_group
-  (:action pkill_by_group
-    :parameters (?p - process ?g - group ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_group_matches ?p ?g)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_namespace
-  (:action pkill_by_namespace
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_parent
-  (:action pkill_by_parent
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_session
-  (:action pkill_by_session
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_state
-  (:action pkill_by_state
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_state_matches ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_terminal
-  (:action pkill_by_terminal
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_by_user
-  (:action pkill_by_user
-    :parameters (?p - process ?u - user ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_user_matches ?p ?u)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_case_insensitive
-  (:action pkill_case_insensitive
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_case_insensitive ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_count
-  (:action pkill_count
-    :parameters (?p - process)
-    :precondition (and
-      (process_exists ?p)
-    )
-    :effect (and
-      (process_count_matches ?p)
-    )
-  )
-
-  ;; Action: pkill_echo
-  (:action pkill_echo
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-      (process_echo_enabled)
-    )
-  )
-
-  ;; Action: pkill_exact_match
-  (:action pkill_exact_match
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_exact_match ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_from_pidfile
-  (:action pkill_from_pidfile
-    :parameters (?p - process ?f - file ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (pidfile_exists ?f)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_inverse
-  (:action pkill_inverse
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_inverse_match ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_lock_pidfile
-  (:action pkill_lock_pidfile
-    :parameters (?p - process ?f - file ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (pidfile_exists ?f)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-      (process_lock_pidfile)
-    )
-  )
-
-  ;; Action: pkill_newest
-  (:action pkill_newest
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_newest ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_older_than
-  (:action pkill_older_than
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_oldest
-  (:action pkill_oldest
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_oldest ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_require_handler
-  (:action pkill_require_handler
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_requires_handler ?p ?sig)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: pkill_signal
-  (:action pkill_signal
-    :parameters (?p - process ?sig - object)
-    :precondition (and
-      (process_exists ?p)
-      (signal_available ?sig)
-    )
-    :effect (and
-      (signal_sent ?p ?sig)
-      (process_killed ?p)
-    )
-  )
-
-  ;; Action: prepend_firewall_rule
-  (:action prepend_firewall_rule
-    :parameters (?r - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?r)
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-    )
-  )
-
-  ;; Action: preserve_attributes
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action preserve_attributes
-    :parameters (?src - file ?dst - file ?attrs - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: preserve_attributes_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action preserve_attributes_copy
-    :parameters (?src - file ?dest - file ?attrs - object)
-    :precondition (and
-      (file_exists ?src)
-      (not (file_exists ?dest))
-    )
-    :effect (and
-      (file_exists ?dest)
-      (attributes_preserved ?dest ?attrs)
-    )
-  )
-
-  ;; Action: preserve_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action preserve_copy
-    :parameters (?src - file ?dest - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: preserve_environment
-  (:action preserve_environment
-    :parameters (?target_user - user ?caller - user ?user - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?user)
-      (can_switch_to ?target_user)
-      (user_exists ?caller)
-    )
-    :effect (and
-      (environment_preserved ?user)
-      (session_created ?target_user)
-      (environment_preserved ?target_user)
-    )
-  )
-
-  ;; Action: preserve_root
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action preserve_root
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-      (dir_equals_root ?dir)
-    )
-    :effect (and
-      (not (directory_removed ?dir))
-    )
-  )
-
-  ;; Action: preserve_suid_sgid_bits
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action preserve_suid_sgid_bits
-    :parameters (?d - directory)
-    :precondition (and
+  ;; Action: groupadd_chroot
+  (:action groupadd_chroot
+    :parameters (?g - group ?d - directory)
+    :precondition (and
+      (not (group_exists ?g))
       (directory_exists ?d)
     )
     :effect (and
-      (suid_bit_preserved ?d)
-      (sgid_bit_preserved ?d)
+      (group_exists ?g)
     )
   )
 
-  ;; Action: process_arch_only
-  ;; Source: apt-get
-  (:action process_arch_only
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: process_indep_only
-  ;; Source: apt-get
-  (:action process_indep_only
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: prompt_according_to_when
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action prompt_according_to_when
-    :parameters (?file - file ?when - file)
-    :precondition (and
-      (file_exists ?file)
-      (valid_when ?when)
-    )
-    :effect (and
-      (interactive_prompted ?file)
-    )
-  )
-
-  ;; Action: prompt_always
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action prompt_always
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (prompted_always ?dir)
-    )
-  )
-
-  ;; Action: prompt_before_removal
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action prompt_before_removal
-    :parameters (?file - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (interactive_prompted ?file)
-    )
-  )
-
-  ;; Action: prompt_interactive
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action prompt_interactive
-    :parameters (?when - file)
-    :precondition (and
-      (when_in_never_once_always ?when)
-    )
-    :effect (and
-      (prompted_interactive ?when)
-    )
-  )
-
-  ;; Action: prompt_once
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action prompt_once
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (prompted_once ?dir)
-    )
-  )
-
-  ;; Action: prompt_once_before_removal
-  ;; Source: rm
-  (:action prompt_once_before_removal
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: ps_list_by_command
-  (:action ps_list_by_command
-    :parameters (?p - process ?cmd - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_command ?p ?cmd)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_group
-  (:action ps_list_by_group
-    :parameters (?p - process ?g - group)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_group ?p ?g)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_parent
-  (:action ps_list_by_parent
-    :parameters (?p - process ?pp - process)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_parent ?p ?pp)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_pid
-  (:action ps_list_by_pid
-    :parameters (?p - process)
-    :precondition (and
-      (process_exists ?p)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_session
-  (:action ps_list_by_session
-    :parameters (?p - process ?s - object)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_session ?p ?s)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_terminal
-  (:action ps_list_by_terminal
-    :parameters (?p - process ?t - interface)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_terminal ?p ?t)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_by_user
-  (:action ps_list_by_user
-    :parameters (?p - process ?u - user)
-    :precondition (and
-      (process_exists ?p)
-      (process_by_user ?p ?u)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: ps_list_running
-  (:action ps_list_running
-    :parameters (?p - process)
-    :precondition (and
-      (process_exists ?p)
-      (process_running ?p)
-    )
-    :effect (and
-      (process_discovered ?p)
-    )
-  )
-
-  ;; Action: purge_package
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action purge_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (not (package_installed ?pkg))
-    )
-    :effect (and
-      (package_reverted ?pkg)
-    )
-  )
-
-  ;; Action: query_bpf_map_data
-  (:action query_bpf_map_data
-    :parameters (?s - object ?map_id - object)
-    :precondition (and
-      (socket_exists ?s)
-    )
-    :effect (and
-      (bpf_map_data ?s ?map_id)
-    )
-  )
-
-  ;; Action: query_socket_by_device
-  (:action query_socket_by_device
-    :parameters (?s - object ?i - interface)
-    :precondition (and
-      (socket_exists ?s)
-      (interface_exists ?i)
-    )
-    :effect (and
-      (socket_device ?s ?i)
-    )
-  )
-
-  ;; Action: query_socket_by_family
-  (:action query_socket_by_family
-    :parameters (?s - object ?f - object)
-    :precondition (and
-      (socket_exists ?s)
-      (socket_family_exists ?f)
-    )
-    :effect (and
-      (socket_family ?s ?f)
-    )
-  )
-
-  ;; Action: query_socket_by_port
-  (:action query_socket_by_port
-    :parameters (?s - object ?p - port)
-    :precondition (and
-      (socket_exists ?s)
-      (port_exists ?p)
-    )
-    :effect (and
-      (socket_port ?s ?p)
-    )
-  )
-
-  ;; Action: query_socket_by_state
-  (:action query_socket_by_state
-    :parameters (?s - object ?st - object)
-    :precondition (and
-      (socket_exists ?s)
-      (socket_state_exists ?st)
-    )
-    :effect (and
-      (socket_state ?s ?st)
-    )
-  )
-
-  ;; Action: query_socket_by_table
-  (:action query_socket_by_table
-    :parameters (?s - object ?t - object)
-    :precondition (and
-      (socket_exists ?s)
-      (socket_table_exists ?t)
-    )
-    :effect (and
-      (socket_table ?s ?t)
-    )
-  )
-
-  ;; Action: quiet_mode
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action quiet_mode
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (quiet_mode_enabled)
-    )
-  )
-
-  ;; Action: read_default_config
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action read_default_config
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (configuration_loaded ?f)
-    )
-  )
-
-  ;; Action: read_filter_from_file
-  (:action read_filter_from_file
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (filter_loaded ?f)
-    )
-  )
-
-  ;; Action: read_su_config
-  (:action read_su_config
-    :parameters (?config - configuration_file)
-    :precondition (and
-      (config_file_exists ?config)
-    )
-    :effect (and
-      (config_applied ?config)
-    )
-  )
-
-  ;; Action: recursive_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action recursive_copy
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: recursive_ownership_change
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action recursive_ownership_change
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_ownership_changed ?f)
-    )
-  )
-
-  ;; Action: recursive_permission_change
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action recursive_permission_change
-    :parameters (?path - directory)
-    :precondition (and
-      (directory_exists ?path)
-    )
-    :effect (and
-      (permissions_changed_recursively ?path)
-    )
-  )
-
-  ;; Action: reference_file_mode
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action reference_file_mode
-    :parameters (?rfile - file)
-    :precondition (and
-      (file_exists ?rfile)
-    )
-    :effect (and
-      (file_mode_referenced ?rfile)
-    )
-  )
-
-  ;; Action: reference_file_times
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action reference_file_times
-    :parameters (?ref - file ?target - file)
-    :precondition (and
-      (file_exists ?ref)
-      (file_exists ?target)
-    )
-    :effect (and
-      (file_timestamp_changed ?target)
-    )
-  )
-
-  ;; Action: reference_ownership
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action reference_ownership
-    :parameters (?f - file ?rfile - file)
-    :precondition (and
-      (file_exists ?f)
-      (file_exists ?rfile)
-    )
-    :effect (and
-      (ownership_referenced ?f ?rfile)
-    )
-  )
-
-  ;; Action: refresh_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action refresh_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (network_available)
-    )
-    :effect (and
-      (not (package_outdated ?pkg))
-    )
-  )
-
-  ;; Action: refresh_sudo_timestamp
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action refresh_sudo_timestamp
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (sudo_timestamp_refreshed)
-    )
-  )
-
-  ;; Action: register_netfilter_hook
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action register_netfilter_hook
-    :parameters (?chain - firewall_rule)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-    )
-    :effect (and
-      (netfilter_hook_registered ?chain)
-    )
-  )
-
-  ;; Action: reinstall_package
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action reinstall_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_installed ?pkg)
-    )
-  )
-
-  ;; Action: reject_firewall_rule
-  (:action reject_firewall_rule
-    :parameters (?r - firewall_rule ?i - interface ?p - port ?src - object)
-    :precondition (and
-      (interface_exists ?i)
-      (port_exists ?p)
-      (firewall_enabled)
-    )
-    :effect (and
-      (firewall_rule_exists ?r)
-      (rule_rejects ?r)
-      (rule_on_interface ?r ?i)
-      (rule_to_port ?r ?p)
-      (rule_from_source ?r ?src)
-    )
-  )
-
-  ;; Action: reject_separate_device
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action reject_separate_device
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-      (separate_device ?dir)
-    )
-    :effect (and
-      (not (directory_removed ?dir))
-    )
-  )
-
-  ;; Action: reload_daemon
-  (:action reload_daemon
-    :parameters (?u - user)
-    :precondition (and
-      (executed_as_root ?u)
-    )
-    :effect (and
-      (config_applied ?u)
-    )
-  )
-
-  ;; Action: remove_acl_entry
-  (:action remove_acl_entry
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (not (acl_exists ?f))
-    )
-  )
-
-  ;; Action: remove_all_extended_acl
-  (:action remove_all_extended_acl
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-      (extended_acl_exists ?f)
-    )
-    :effect (and
-      (not (extended_acl_exists ?f))
-      (acl_exists ?f)
-    )
-  )
-
-  ;; Action: remove_at_jobs
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action remove_at_jobs
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (at_job_exists ?user))
-    )
-  )
-
-  ;; Action: remove_default_acl
-  (:action remove_default_acl
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-      (default_acl_exists ?f)
-    )
-    :effect (and
-      (not (default_acl_exists ?f))
-    )
-  )
-
-  ;; Action: remove_destination_before_copy
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action remove_destination_before_copy
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-      (file_exists ?dst)
-    )
-    :effect (and
-      (file_exists ?dst)
-    )
-  )
-
-  ;; Action: remove_directory
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_directory
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  ;; Action: remove_directory_recursively
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_directory_recursively
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  ;; Action: remove_empty_directories
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_empty_directories
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-      (directory_empty ?dir)
-    )
-    :effect (and
-      (directory_removed ?dir)
-    )
-  )
-
-  ;; Action: remove_empty_directory
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_empty_directory
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-      (directory_empty ?dir)
-    )
-    :effect (and
-      (not (directory_exists ?dir))
-    )
-  )
-
-  ;; Action: remove_file
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_file
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (not (file_exists ?f))
-    )
-  )
-
-  ;; Action: remove_file_with_dash_prefix
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_file_with_dash_prefix
-    :parameters (?file - file)
-    :precondition (and
-      (file_exists ?file)
-    )
-    :effect (and
-      (not (file_exists ?file))
-    )
-  )
-
-  ;; Action: remove_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action remove_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (not (package_installed ?pkg))
-    )
-  )
-
-  ;; Action: remove_print_jobs
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action remove_print_jobs
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (print_job_exists ?user))
-    )
-  )
-
-  ;; Action: remove_recursively
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action remove_recursively
-    :parameters (?dir - directory)
-    :precondition (and
-      (directory_exists ?dir)
-    )
-    :effect (and
-      (directory_removed ?dir)
-    )
-  )
-
-  ;; Action: remove_selinux_user
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action remove_selinux_user
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (selinux_user_removed ?user)
-    )
-  )
-
-  ;; Action: remove_selinux_user_mapping
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action remove_selinux_user_mapping
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (selinux_user_mapping_removed ?user)
-    )
-  )
-
-  ;; Action: remove_session_cache
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action remove_session_cache
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (session_cache_removed ?user)
-    )
-  )
-
-  ;; Action: remove_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action remove_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (not (package_installed ?pkg))
-    )
-  )
-
-  ;; Action: remove_sub_gids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action remove_sub_gids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: remove_sub_uids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action remove_sub_uids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_exists ?user)
-    )
-  )
-
-  ;; Action: remove_subordinate_gids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action remove_subordinate_gids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-      (user_has_subordinate_gids ?user ?first ?last)
-    )
-    :effect (and
-      (not (user_has_subordinate_gids ?user ?first ?last))
-    )
-  )
-
-  ;; Action: remove_subordinate_uids
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action remove_subordinate_uids
-    :parameters (?user - user ?first - file ?last - file)
-    :precondition (and
-      (user_exists ?user)
-      (subordinate_uids_added ?user ?first ?last)
-    )
-    :effect (and
-      (subordinate_uids_removed ?user ?first ?last)
-    )
-  )
-
-  ;; Action: remove_user_from_group
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action remove_user_from_group
-    :parameters (?user - user ?group - group)
-    :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
-    )
-    :effect (and
-      (user_not_in_group ?user ?group)
-    )
-  )
-
-  ;; Action: remove_user_home
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action remove_user_home
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (user_exists ?user))
-    )
-  )
-
-  ;; Action: rename_chain
-  (:action rename_chain
-    :parameters (?old - object ?new - object ?new_chain - firewall_rule ?old_chain - firewall_rule)
-    :precondition (and
-      (chain_exists ?old)
-      (firewall_rule_exists ?old_chain)
-    )
-    :effect (and
-      (not (chain_exists ?old))
-      (chain_exists ?new)
-      (chain_renamed ?old_chain ?new_chain)
-    )
-  )
-
-  ;; Action: rename_file
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action rename_file
-    :parameters (?source - file ?dest - file)
-    :precondition (and
-      (file_exists ?source)
-    )
-    :effect (and
-      (file_exists ?dest)
-    )
-  )
-
-  ;; Action: rename_firewall_chain
-  (:action rename_firewall_chain
-    :parameters (?o_old - object ?o_new - object ?new_chain - firewall_rule ?old_chain - firewall_rule ?table - object)
-    :precondition (and
-      (not (chain_exists ?o_new))
-      (chain_exists ?o_old)
-    )
-    :effect (and
-      (chain_exists ?o_new)
-      (not (chain_exists ?o_old))
-      (firewall_chain_renamed ?table ?old_chain ?new_chain)
-    )
-  )
-
-  ;; Action: replace_all_files
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action replace_all_files
-    :parameters (?dest - directory ?source - directory)
-    :precondition (and
-      (directory_exists ?dest)
-      (directory_exists ?source)
-    )
-    :effect (and
-      (files_replaced ?dest)
-    )
-  )
-
-  ;; Action: replace_firewall_rule
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action replace_firewall_rule
-    :parameters (?table - file ?chain - file ?rulenum - file ?rule_spec - file)
-    :precondition (and)
-    :effect (and
-      (firewall_rule_replaced ?table ?chain ?rulenum ?rule_spec)
-    )
-  )
-
-  ;; Action: replace_iptables_rule
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action replace_iptables_rule
-    :parameters (?chain - firewall_rule ?rulenum - file)
-    :precondition (and
-      (firewall_rule_exists ?chain)
-      (rule_exists ?chain ?rulenum)
-    )
-    :effect (and
-      (firewall_rule_modified ?chain)
-    )
-  )
-
-  ;; Action: replace_older_files
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action replace_older_files
-    :parameters (?dest - directory ?source - directory)
-    :precondition (and
-      (directory_exists ?dest)
-      (directory_exists ?source)
-    )
-    :effect (and
-      (files_replaced_if_older ?dest)
-    )
-  )
-
-  ;; Action: replace_rule
-  (:action replace_rule
-    :parameters (?r - firewall_rule ?c - object ?num - object)
-    :precondition (and
-      (chain_exists ?c)
-      (rule_in_chain ?r ?c)
-    )
-    :effect (and
-      (rule_in_chain ?r ?c)
-    )
-  )
-
-  ;; Action: reset_environment
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action reset_environment
-    :parameters (?var - file)
-    :precondition (and
-      (file_exists ?var)
-    )
-    :effect (and
-      (environment_reset ?var)
-    )
-  )
-
-  ;; Action: reset_resource_limits
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action reset_resource_limits
-    :parameters (?pr - process)
-    :precondition (and
-      (process_running ?pr)
-    )
-    :effect (and
-      (requires_env_preservation ?pr)
-    )
-  )
-
-  ;; Action: reset_session_timestamp
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action reset_session_timestamp
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (session_timestamp_reset ?user)
-    )
-  )
-
-  ;; Action: restart_service
-  ;; Source: systemctl
-  ;; Reused from Phase 1
-  (:action restart_service
-    :parameters (?svc - service ?cfg - configuration_file)
-    :precondition (and
-      (service_exists ?svc)
-      (configures ?cfg ?svc)
-      (file_exists ?cfg)
-    )
-    :effect (and
-      (service_running ?svc)
-      (config_applied ?svc)
-    )
-  )
-
-  ;; Action: restore_acl
-  (:action restore_acl
-    :parameters (?f - filesystem_object ?backup - file ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (backup_file_exists ?backup)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (acl_restored ?f)
-      (acl_exists ?f)
-    )
-  )
-
-  ;; Action: return_from_chain
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action return_from_chain
-    :parameters (?obj - file)
-    :precondition (and)
-    :effect (and
-      (chain_returned)
-    )
-  )
-
-  ;; Action: revert_snap
-  ;; Source: snap
-  ;; Reused from Phase 1
-  (:action revert_snap
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-    )
-    :effect (and
-      (package_reverted ?pkg)
-    )
-  )
-
-  ;; Action: run_additional_command
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action run_additional_command
-    :parameters (?cmd - file)
-    :precondition (and
-      (session_record_exists)
-    )
-    :effect (and
-      (command_executed ?cmd)
-    )
-  )
-
-  ;; Action: run_as_user
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action run_as_user
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (command_executed_as_user ?user)
-    )
-  )
-
-  ;; Action: run_login_shell
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action run_login_shell
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (login_shell_running ?user)
-    )
-  )
-
-  ;; Action: run_useradd_hook
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action run_useradd_hook
-    :parameters (?script - file ?action_type - file ?subject - user)
-    :precondition (and
-      (file_exists ?script)
-      (user_exists ?subject)
-    )
-    :effect (and
-      (hook_executed ?script)
-    )
-  )
-
-  ;; Action: run_userdel_cmd
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action run_userdel_cmd
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (not (user_exists ?user))
-    )
-  )
-
-  ;; Action: satisfy_dependencies
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action satisfy_dependencies
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (not (package_configured ?pkg))
-    )
-    :effect (and
-      (package_configured ?pkg)
-    )
-  )
-
-  ;; Action: satisfy_dependency
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action satisfy_dependency
-    :parameters (?dep - package)
-    :precondition (and
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?dep)
-    )
-  )
-
-  ;; Action: secure_group_account
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action secure_group_account
-    :parameters (?group - group)
-    :precondition (and
-      (not (group_exists ?group))
-      (not (nis_group_exists ?group))
-      (not (ldap_group_exists ?group))
-    )
-    :effect (and
-      (group_exists ?group)
-    )
-  )
-
-  ;; Action: select_snapshot
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action select_snapshot
-    :parameters (?snapshot - file)
-    :precondition (and
-      (snapshot_available ?snapshot)
-    )
-    :effect (and
-      (selected_snapshot ?snapshot)
-    )
-  )
-
-  ;; Action: set_account_expiration
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_account_expiration
-    :parameters (?login - user ?expire_date - file)
-    :precondition (and
-      (user_exists ?login)
-    )
-    :effect (and
-      (user_exists ?login)
-    )
-  )
-
-  ;; Action: set_app_default_policy
-  (:action set_app_default_policy
-    :parameters (?policy - object)
+  ;; Action: groupadd_system
+  (:action groupadd_system
+    :parameters (?g - group)
     :precondition (and
-      (firewall_enabled)
+      (not (group_exists ?g))
     )
     :effect (and
-      (app_default_policy_set ?policy)
+      (group_exists ?g)
+      (group_is_system ?g)
     )
   )
 
-  ;; Action: set_apt_config
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action set_apt_config
-    :parameters (?f - file)
+  ;; Action: groupadd_with_password
+  (:action groupadd_with_password
+    :parameters (?g - group)
     :precondition (and
-      (file_exists ?f)
+      (not (group_exists ?g))
     )
     :effect (and
-      (apt_config_set ?f)
+      (group_exists ?g)
+      (group_has_password ?g)
     )
   )
 
-  ;; Action: set_chain_policy
-  ;; Source: iptables
-  (:action set_chain_policy
-    :parameters (?chain - firewall_rule ?target - file ?o - file)
+  ;; Action: groupadd_with_users
+  (:action groupadd_with_users
+    :parameters (?g - group ?u - user)
     :precondition (and
-      (chain_exists ?o)
-      (firewall_rule_exists ?chain)
-      (valid_policy ?target)
+      (not (group_exists ?g))
+      (user_exists ?u)
     )
     :effect (and
-      (chain_policy_set ?o)
-      (chain_policy_set ?chain ?target)
+      (group_exists ?g)
+      (user_is_member_of ?u ?g)
     )
   )
 
-  ;; Action: set_config_option
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action set_config_option
-    :parameters (?option - file)
+  ;; Action: groupdel
+  (:action groupdel
+    :parameters (?g - group)
     :precondition (and
-      (file_exists ?option)
+      (group_exists ?g)
+      (not (exists_user_with_primary_group ?g))
     )
     :effect (and
-      (config_option_set ?option)
+      (not (group_exists ?g))
     )
   )
 
-  ;; Action: set_counters
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_counters
-    :parameters (?rule - firewall_rule ?packets - file ?bytes - file)
+  ;; Action: groupdel_force
+  (:action groupdel_force
+    :parameters (?g - group)
     :precondition (and
-      (network_available)
+      (group_exists ?g)
     )
     :effect (and
-      (traffic_blocked ?rule)
+      (not (group_exists ?g))
     )
   )
 
-  ;; Action: set_default_acl_mode
-  (:action set_default_acl_mode
-    :parameters (?f - filesystem_object ?u - user)
+  ;; Action: groupdel_prefix
+  (:action groupdel_prefix
+    :parameters (?g - group ?dir - directory)
     :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
+      (group_exists ?g)
+      (not (exists_user_with_primary_group ?g))
     )
     :effect (and
-      (default_acl_exists ?f)
+      (not (group_exists ?g))
     )
   )
 
-  ;; Action: set_default_group
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_default_group
-    :parameters (?group - group)
+  ;; Action: groupdel_root
+  (:action groupdel_root
+    :parameters (?g - group ?dir - directory)
     :precondition (and
-      (group_exists ?group)
+      (group_exists ?g)
+      (not (exists_user_with_primary_group ?g))
     )
     :effect (and
-      (default_group_set ?group)
+      (not (group_exists ?g))
     )
   )
 
-  ;; Action: set_default_release
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action set_default_release
-    :parameters (?release - file)
+  ;; Action: groupmod_add_user
+  (:action groupmod_add_user
+    :parameters (?g - group ?u - user)
     :precondition (and
-      (file_exists ?release)
+      (group_exists ?g)
+      (user_exists ?u)
     )
     :effect (and
-      (apt_default_release_set ?release)
+      (group_member ?u ?g)
     )
   )
 
-  ;; Action: set_default_shell
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_default_shell
-    :parameters (?shell - file)
+  ;; Action: groupmod_change_gid
+  (:action groupmod_change_gid
+    :parameters (?g - group ?gid - object)
     :precondition (and
-      (file_exists ?shell)
+      (group_exists ?g)
     )
     :effect (and
-      (default_shell_set ?shell)
+      (group_gid ?g ?gid)
     )
   )
 
-  ;; Action: set_file_mode
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action set_file_mode
-    :parameters (?f - file ?mode - file)
+  ;; Action: groupmod_change_name
+  (:action groupmod_change_name
+    :parameters (?g - group ?new_name - object)
     :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_executable ?f)
+      (group_exists ?g)
     )
-  )
-
-  ;; Action: set_firewall_policy
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_firewall_policy
-    :parameters (?table - file ?chain - file ?policy - file)
-    :precondition (and)
     :effect (and
-      (firewall_policy_set ?table ?chain ?policy)
+      (group_name ?g ?new_name)
     )
   )
 
-  ;; Action: set_gecos_field
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_gecos_field
-    :parameters (?user - user ?comment - file)
+  ;; Action: groupmod_chroot
+  (:action groupmod_chroot
+    :parameters (?g - group ?d - directory)
     :precondition (and
-      (user_exists ?user)
+      (group_exists ?g)
+      (directory_exists ?d)
     )
     :effect (and
-      (user_gecos ?user ?comment)
+      (group_exists ?g)
     )
   )
 
-  ;; Action: set_gid_range
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_gid_range
-    :parameters (?min_gid - file ?max_gid - file)
+  ;; Action: groupmod_replace_users
+  (:action groupmod_replace_users
+    :parameters (?g - group ?u - user)
     :precondition (and
-      (integer ?min_gid)
-      (integer ?max_gid)
-      (greater_than ?max_gid ?min_gid)
+      (group_exists ?g)
+      (user_exists ?u)
     )
     :effect (and
-      (gid_range_set ?min_gid ?max_gid)
+      (group_member ?u ?g)
     )
   )
 
-  ;; Action: set_group_password
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action set_group_password
-    :parameters (?g - group ?pwd - file)
+  ;; Action: groupmod_set_password
+  (:action groupmod_set_password
+    :parameters (?g - group)
     :precondition (and
       (group_exists ?g)
     )
@@ -6545,664 +2288,3903 @@
     )
   )
 
-  ;; Action: set_home_directory
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_home_directory
-    :parameters (?user - user ?home - directory)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_home_directory ?user ?home)
-    )
-  )
-
-  ;; Action: set_host_architecture
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action set_host_architecture
-    :parameters (?arch - directory)
-    :precondition (and
-      (not (host_architecture_set ?arch))
-    )
-    :effect (and
-      (host_architecture_set ?arch)
-    )
-  )
-
-  ;; Action: set_in_interface
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_in_interface
-    :parameters (?iface - interface)
-    :precondition (and
-      (interface_exists ?iface)
-    )
-    :effect (and
-      (packet_filtering_rule_set ?iface)
-    )
-  )
-
-  ;; Action: set_logging_level
-  (:action set_logging_level
-    :parameters (?level - object)
-    :precondition (and
-      (firewall_enabled)
-    )
-    :effect (and
-      (logging_enabled)
-      (logging_level_set ?level)
-    )
-  )
-
-  ;; Action: set_logical_walk
-  (:action set_logical_walk
+  ;; Action: id_get_all_groups
+  (:action id_get_all_groups
     :parameters (?u - user)
     :precondition (and
-      (can_modify_acl ?u)
-      (recursive_mode_active)
+      (user_exists ?u)
     )
     :effect (and
-      (logical_walk_active)
+      (group_id_known ?u)
     )
   )
 
-  ;; Action: set_login_shell
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action set_login_shell
-    :parameters (?user - user)
+  ;; Action: id_get_audit_info
+  (:action id_get_audit_info
+    :parameters (?p - process)
     :precondition (and
-      (user_exists ?user)
+      (process_exists ?p)
+      (executed_as_root ?p)
     )
     :effect (and
-      (login_shell_set ?user)
+      (process_audit_info_known ?p)
     )
   )
 
-  ;; Action: set_mask_recalculation
-  (:action set_mask_recalculation
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (mask_recalculated ?f)
-    )
-  )
-
-  ;; Action: set_max_password_age
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_max_password_age
-    :parameters (?days - file)
-    :precondition (and)
-    :effect (and
-      (password_max_age_set ?days)
-    )
-  )
-
-  ;; Action: set_min_password_age
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_min_password_age
-    :parameters (?days - file)
-    :precondition (and)
-    :effect (and
-      (password_min_age_set ?days)
-    )
-  )
-
-  ;; Action: set_modprobe_command
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_modprobe_command
-    :parameters (?command - file)
-    :precondition (and)
-    :effect (and
-      (modprobe_command_set ?command)
-    )
-  )
-
-  ;; Action: set_network_mask
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_network_mask
-    :parameters (?mask - file)
-    :precondition (and
-      (file_exists ?mask)
-    )
-    :effect (and
-      (network_mask_set ?mask)
-    )
-  )
-
-  ;; Action: set_no_mask_recalculation
-  (:action set_no_mask_recalculation
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (file_writable ?f)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (mask_not_recalculated ?f)
-    )
-  )
-
-  ;; Action: set_only_source
-  ;; Source: apt-get
-  (:action set_only_source
-    :parameters ()
-    :precondition (and)
-    :effect (and)
-  )
-
-  ;; Action: set_out_interface
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_out_interface
-    :parameters (?iface - interface)
-    :precondition (and
-      (interface_exists ?iface)
-    )
-    :effect (and
-      (packet_filtering_rule_set ?iface)
-    )
-  )
-
-  ;; Action: set_output_interface
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_output_interface
-    :parameters (?interface - interface)
-    :precondition (and
-      (interface_exists ?interface)
-    )
-    :effect (and
-      (output_interface_set ?interface)
-    )
-  )
-
-  ;; Action: set_password
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_password
-    :parameters (?user - user ?password - file)
-    :precondition (and
-      (user_exists ?user)
-      (user_locked ?user)
-    )
-    :effect (and
-      (not (user_locked ?user))
-    )
-  )
-
-  ;; Action: set_password_grace_period
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_password_grace_period
-    :parameters (?user - user ?days - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_exists ?days)
-    )
-    :effect (and
-      (user_locked ?user)
-    )
-  )
-
-  ;; Action: set_password_inactive
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_password_inactive
-    :parameters (?user - user ?inactive - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_password_inactive ?user ?inactive)
-    )
-  )
-
-  ;; Action: set_password_warning_age
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_password_warning_age
-    :parameters (?days - file)
-    :precondition (and)
-    :effect (and
-      (password_warning_age_set ?days)
-    )
-  )
-
-  ;; Action: set_physical_walk
-  (:action set_physical_walk
+  ;; Action: id_get_group_id
+  (:action id_get_group_id
     :parameters (?u - user)
     :precondition (and
-      (can_modify_acl ?u)
-      (recursive_mode_active)
+      (user_exists ?u)
     )
     :effect (and
-      (physical_walk_active)
+      (group_id_known ?u)
     )
   )
 
-  ;; Action: set_policy
-  (:action set_policy
-    :parameters (?c - object ?policy - object)
+  ;; Action: id_get_group_name
+  (:action id_get_group_name
+    :parameters (?u - user)
     :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (group_name_known ?u)
+    )
+  )
+
+  ;; Action: id_get_security_context
+  (:action id_get_security_context
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (security_context_known ?p)
+    )
+  )
+
+  ;; Action: id_get_user_id
+  (:action id_get_user_id
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_id_known ?u)
+    )
+  )
+
+  ;; Action: id_get_user_name
+  (:action id_get_user_name
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_name_known ?u)
+    )
+  )
+
+  ;; Action: ip6tables_append_rule
+  (:action ip6tables_append_rule
+    :parameters (?p - process ?t - object ?c - object ?r - firewall_rule)
+    :precondition (and
+      (chain_exists ?c)
+      (firewall_chain_exists ?c)
+      (table_exists ?t)
+      (chain_in_table ?c ?t)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (firewall_rule_in_chain ?r ?c)
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+      (firewall_rule_active ?r)
+    )
+  )
+
+  ;; Action: ip6tables_create_chain
+  (:action ip6tables_create_chain
+    :parameters (?c - object)
+    :precondition (and
+      (not (firewall_chain_exists ?c))
+    )
+    :effect (and
+      (firewall_chain_exists ?c)
+      (firewall_chain_empty ?c)
+      (chain_exists ?c)
+    )
+  )
+
+  ;; Action: ip6tables_delete_chain
+  (:action ip6tables_delete_chain
+    :parameters (?p - process ?t - object ?c - object)
+    :precondition (and
+      (chain_exists ?c)
+      (firewall_chain_exists ?c)
+      (table_exists ?t)
+      (firewall_chain_empty ?c)
+      (chain_in_table ?c ?t)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (chain_in_table ?c ?t))
+      (not (chain_exists ?c))
+      (not (firewall_chain_exists ?c))
+    )
+  )
+
+  ;; Action: ip6tables_delete_rule
+  (:action ip6tables_delete_rule
+    :parameters (?p - process ?t - object ?c - object ?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+      (table_exists ?t)
+      (rule_in_chain ?r ?c)
+      (chain_in_table ?c ?t)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (firewall_rule_in_chain ?r ?c))
+      (not (rule_in_chain ?r ?c))
+      (not (firewall_rule_active ?r))
+      (not (firewall_rule_exists ?r))
+    )
+  )
+
+  ;; Action: ip6tables_insert_rule
+  (:action ip6tables_insert_rule
+    :parameters (?p - process ?t - object ?c - object ?r - firewall_rule)
+    :precondition (and
+      (table_exists ?t)
+      (chain_in_table ?c ?t)
+      (executed_as_root ?p)
       (chain_exists ?c)
     )
     :effect (and
-      (policy_set ?c)
+      (firewall_rule_in_chain ?r ?c)
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+      (firewall_rule_active ?r)
     )
   )
 
-  ;; Action: set_prefix
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action set_prefix
-    :parameters (?prefix - directory)
+  ;; Action: ip6tables_new_chain
+  (:action ip6tables_new_chain
+    :parameters (?p - process ?t - object ?c - object)
     :precondition (and
-      (directory_exists ?prefix)
+      (executed_as_root ?p)
+      (table_exists ?t)
     )
     :effect (and
-      (prefix_set ?prefix)
+      (chain_exists ?c)
+      (chain_in_table ?c ?t)
     )
   )
 
-  ;; Action: set_primary_group
-  ;; Source: sudo
-  ;; Reused from Phase 1
-  (:action set_primary_group
-    :parameters (?user - user ?group - group)
+  ;; Action: ip6tables_rename_chain
+  (:action ip6tables_rename_chain
+    :parameters (?old_c - object ?new_c - object ?c_new - file ?c_old - directory)
     :precondition (and
-      (user_exists ?user)
-      (group_exists ?group)
+      (firewall_chain_exists ?old_c)
+      (chain_exists ?c_old)
+      (not (firewall_chain_exists ?new_c))
+      (not (chain_exists ?c_new))
     )
     :effect (and
-      (user_primary_group ?user ?group)
+      (not (firewall_chain_exists ?old_c))
+      (chain_exists ?c_new)
+      (firewall_chain_exists ?new_c)
+      (not (chain_exists ?c_old))
     )
   )
 
-  ;; Action: set_protocol
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_protocol
-    :parameters (?protocol - file)
+  ;; Action: ip6tables_replace_rule
+  (:action ip6tables_replace_rule
+    :parameters (?p - process ?t - object ?c - object ?r_old - firewall_rule ?r_new - firewall_rule)
     :precondition (and
-      (file_exists ?protocol)
+      (table_exists ?t)
+      (firewall_rule_exists ?r_old)
+      (rule_in_chain ?r_old ?c)
+      (chain_in_table ?c ?t)
+      (executed_as_root ?p)
+      (firewall_rule_in_chain ?r_old ?c)
     )
     :effect (and
-      (protocol_allowed ?protocol)
+      (not (rule_in_chain ?r_old ?c))
+      (not (firewall_rule_exists ?r_old))
+      (firewall_rule_active ?r_new)
+      (firewall_rule_in_chain ?r_new ?c)
+      (firewall_rule_exists ?r_new)
+      (rule_in_chain ?r_new ?c)
     )
   )
 
-  ;; Action: set_protocol_family
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action set_protocol_family
-    :parameters (?family - file)
+  ;; Action: ip6tables_set_policy_accept
+  (:action ip6tables_set_policy_accept
+    :parameters (?c - object)
+    :precondition (and
+      (firewall_chain_exists ?c)
+    )
+    :effect (and
+      (firewall_chain_policy_accept ?c)
+      (not (firewall_chain_policy_drop ?c))
+    )
+  )
+
+  ;; Action: ip6tables_set_policy_drop
+  (:action ip6tables_set_policy_drop
+    :parameters (?c - object)
+    :precondition (and
+      (firewall_chain_exists ?c)
+    )
+    :effect (and
+      (firewall_chain_policy_drop ?c)
+      (not (firewall_chain_policy_accept ?c))
+    )
+  )
+
+  ;; Action: ip_link_set_down
+  (:action ip_link_set_down
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (interface_down ?i)
+      (not (interface_up ?i))
+    )
+  )
+
+  ;; Action: ip_link_set_up
+  (:action ip_link_set_up
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (interface_up ?i)
+      (not (interface_down ?i))
+    )
+  )
+
+  ;; Action: iptables_append_rule
+  (:action iptables_append_rule
+    :parameters (?r - firewall_rule ?c - object ?t - object)
+    :precondition (and
+      (table_exists ?t)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+    )
+    :effect (and
+      (firewall_rule_in_chain ?r ?c)
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: iptables_delete_chain
+  (:action iptables_delete_chain
+    :parameters (?c - object ?t - object)
+    :precondition (and
+      (chain_empty ?c)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+      (chain_has_no_references ?c)
+    )
+    :effect (and
+      (not (chain_in_table ?c ?t))
+      (not (chain_exists ?c))
+    )
+  )
+
+  ;; Action: iptables_delete_rule
+  (:action iptables_delete_rule
+    :parameters (?r - firewall_rule ?c - object ?t - object)
+    :precondition (and
+      (firewall_rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+      (rule_in_chain ?r ?c)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+    )
+    :effect (and
+      (not (firewall_rule_in_chain ?r ?c))
+      (not (rule_in_chain ?r ?c))
+      (not (firewall_rule_exists ?r))
+    )
+  )
+
+  ;; Action: iptables_flush_chain
+  (:action iptables_flush_chain
+    :parameters (?c - object ?t - object)
+    :precondition (and
+      (chain_exists ?c)
+      (chain_in_table ?c ?t)
+    )
+    :effect (and
+      (not (firewall_rule_in_chain ?c ?t))
+    )
+  )
+
+  ;; Action: iptables_insert_rule
+  (:action iptables_insert_rule
+    :parameters (?r - firewall_rule ?c - object ?t - object)
+    :precondition (and
+      (table_exists ?t)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+    )
+    :effect (and
+      (firewall_rule_in_chain ?r ?c)
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: iptables_new_chain
+  (:action iptables_new_chain
+    :parameters (?c - object ?t - object)
+    :precondition (and
+      (table_exists ?t)
+      (not (chain_exists ?c))
+    )
+    :effect (and
+      (chain_empty ?c)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+    )
+  )
+
+  ;; Action: iptables_rename_chain
+  (:action iptables_rename_chain
+    :parameters (?c_old - object ?c_new - object ?t - object)
+    :precondition (and
+      (chain_exists ?c_old)
+      (chain_in_table ?c_old ?t)
+      (not (chain_exists ?c_new))
+    )
+    :effect (and
+      (chain_exists ?c_new)
+      (not (chain_exists ?c_old))
+      (chain_in_table ?c_new ?t)
+    )
+  )
+
+  ;; Action: iptables_replace_rule
+  (:action iptables_replace_rule
+    :parameters (?r_old - firewall_rule ?r_new - firewall_rule ?c - object ?t - object)
+    :precondition (and
+      (firewall_rule_exists ?r_old)
+      (rule_in_chain ?r_old ?c)
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+      (firewall_rule_in_chain ?r_old ?c)
+    )
+    :effect (and
+      (not (rule_in_chain ?r_old ?c))
+      (not (firewall_rule_exists ?r_old))
+      (firewall_rule_in_chain ?r_new ?c)
+      (firewall_rule_exists ?r_new)
+      (rule_in_chain ?r_new ?c)
+    )
+  )
+
+  ;; Action: iptables_set_policy
+  (:action iptables_set_policy
+    :parameters (?c - object ?p - object ?t - object)
+    :precondition (and
+      (chain_in_table ?c ?t)
+      (chain_exists ?c)
+    )
+    :effect (and
+      (chain_policy_set ?c ?p)
+    )
+  )
+
+  ;; Action: journalctl_all_fields
+  (:action journalctl_all_fields
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_all_fields ?p)
+    )
+  )
+
+  ;; Action: journalctl_catalog_output
+  (:action journalctl_catalog_output
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_catalog_augmented ?p)
+    )
+  )
+
+  ;; Action: journalctl_cursor
+  (:action journalctl_cursor
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (protocol_family_set ?family)
+      (journal_logs_read ?p)
     )
   )
 
-  ;; Action: set_recursive_mode
-  (:action set_recursive_mode
+  ;; Action: journalctl_cursor_file
+  (:action journalctl_cursor_file
+    :parameters (?p - process ?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (journal_logs_read ?p)
+      (journal_cursor_updated ?f)
+    )
+  )
+
+  ;; Action: journalctl_disk_usage
+  (:action journalctl_disk_usage
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_disk_usage_known)
+    )
+  )
+
+  ;; Action: journalctl_dmesg
+  (:action journalctl_dmesg
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_logs_read ?p)
+      (kernel_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_dump_catalog
+  (:action journalctl_dump_catalog
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_catalog_dumped)
+    )
+  )
+
+  ;; Action: journalctl_executable
+  (:action journalctl_executable
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_logs_read ?f)
+    )
+  )
+
+  ;; Action: journalctl_export_logs
+  (:action journalctl_export_logs
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_exported ?p)
+    )
+  )
+
+  ;; Action: journalctl_facility
+  (:action journalctl_facility
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_field_values
+  (:action journalctl_field_values
+    :parameters (?p - process ?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (journal_field_values_listed ?f)
+    )
+  )
+
+  ;; Action: journalctl_fields
+  (:action journalctl_fields
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_fields_listed)
+    )
+  )
+
+  ;; Action: journalctl_filter_unit
+  (:action journalctl_filter_unit
+    :parameters (?u - user ?s - service ?p - package)
+    :precondition (and
+      (user_exists ?u)
+      (journal_logs_read ?u)
+      (service_exists ?s)
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_read ?u)
+      (logs_filtered_by_unit ?p ?s)
+      (logs_viewed ?p)
+    )
+  )
+
+  ;; Action: journalctl_flush
+  (:action journalctl_flush
+    :parameters (?p - process)
+    :precondition (and
+      (journal_writing_to_run)
+    )
+    :effect (and
+      (journal_flushed)
+      (journal_writing_to_var)
+      (not (journal_writing_to_run))
+    )
+  )
+
+  ;; Action: journalctl_follow_logs
+  (:action journalctl_follow_logs
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_followed ?p)
+    )
+  )
+
+  ;; Action: journalctl_follow_unit
+  (:action journalctl_follow_unit
+    :parameters (?s - service)
+    :precondition (and)
+    :effect (and
+      (logs_followed ?s)
+      (service_logs_read ?s)
+    )
+  )
+
+  ;; Action: journalctl_grep
+  (:action journalctl_grep
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_header
+  (:action journalctl_header
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_header_shown)
+    )
+  )
+
+  ;; Action: journalctl_identifier
+  (:action journalctl_identifier
+    :parameters (?p - process ?id - object)
+    :precondition (and (process_has_identifier ?p ?id))
+    :effect (and
+      (journal_logs_read ?p)
+    )
+)
+
+  ;; Action: journalctl_json_output
+  (:action journalctl_json_output
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_json_formatted ?p)
+    )
+  )
+
+  ;; Action: journalctl_kernel_boot
+  (:action journalctl_kernel_boot
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (kernel_logs_read)
+      (boot_logs_read)
+    )
+  )
+
+  ;; Action: journalctl_list_boots
+  (:action journalctl_list_boots
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_boots_listed)
+    )
+  )
+
+  ;; Action: journalctl_list_catalog
+  (:action journalctl_list_catalog
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_catalog_listed)
+    )
+  )
+
+  ;; Action: journalctl_list_invocations
+  (:action journalctl_list_invocations
+    :parameters (?p - process ?s - service)
+    :precondition (and)
+    :effect (and
+      (journal_invocations_listed ?s)
+    )
+  )
+
+  ;; Action: journalctl_no_pager
+  (:action journalctl_no_pager
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (pager_disabled ?p)
+      (journal_logs_no_pager ?p)
+      (logs_viewed ?p)
+    )
+  )
+
+  ;; Action: journalctl_priority
+  (:action journalctl_priority
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_process
+  (:action journalctl_process
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_quiet_output
+  (:action journalctl_quiet_output
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_quiet ?p)
+    )
+  )
+
+  ;; Action: journalctl_read_directory
+  (:action journalctl_read_directory
+    :parameters (?u - user ?d - directory)
+    :precondition (and
+      (user_exists ?u)
+      (directory_exists ?d)
+    )
+    :effect (and
+      (journal_logs_read ?u)
+    )
+  )
+
+  ;; Action: journalctl_read_file
+  (:action journalctl_read_file
+    :parameters (?u - user ?f - file)
+    :precondition (and
+      (user_exists ?u)
+      (file_exists ?f)
+      (journal_logs_exist ?u ?f)
+    )
+    :effect (and
+      (journal_logs_read ?u)
+    )
+  )
+
+  ;; Action: journalctl_read_logs
+  (:action journalctl_read_logs
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (journal_logs_read ?p)
+    )
+  )
+
+  ;; Action: journalctl_read_system
+  (:action journalctl_read_system
     :parameters (?u - user)
     :precondition (and
-      (can_modify_acl ?u)
+      (user_exists ?u)
     )
     :effect (and
-      (recursive_mode_active)
+      (journal_logs_read ?u)
     )
   )
 
-  ;; Action: set_rule_protocol
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_rule_protocol
-    :parameters (?rule - firewall_rule ?protocol - file)
+  ;; Action: journalctl_read_user
+  (:action journalctl_read_user
+    :parameters (?u - user)
     :precondition (and
-      (not (traffic_blocked ?rule))
+      (user_exists ?u)
     )
     :effect (and
-      (traffic_blocked ?rule)
+      (journal_logs_read ?u)
     )
   )
 
-  ;; Action: set_security_context
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action set_security_context
-    :parameters (?dst - file ?ctx - file)
+  ;; Action: journalctl_relinquish_var
+  (:action journalctl_relinquish_var
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?dst)
+      (journal_writing_to_var)
     )
     :effect (and
-      (security_context_set ?dst ?ctx)
+      (journal_writing_to_run)
+      (not (journal_writing_to_var))
     )
   )
 
-  ;; Action: set_selinux_context
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action set_selinux_context
-    :parameters (?dst - file)
+  ;; Action: journalctl_reverse_output
+  (:action journalctl_reverse_output
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?dst)
+      (process_running ?p)
     )
     :effect (and
-      (selinux_context_set ?dst)
+      (journal_logs_reversed ?p)
     )
   )
 
-  ;; Action: set_selinux_context_custom
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action set_selinux_context_custom
-    :parameters (?dest - file ?ctx - file)
-    :precondition (and
-      (file_exists ?dest)
-      (file_exists ?ctx)
-    )
-    :effect (and
-      (selinux_context_set_custom ?dest ?ctx)
-    )
-  )
-
-  ;; Action: set_selinux_range
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_selinux_range
-    :parameters (?user - user ?range - file)
-    :precondition (and
-      (user_exists ?user)
-      (selinux_user_set ?user)
-    )
-    :effect (and
-      (selinux_range_set ?user ?range)
-    )
-  )
-
-  ;; Action: set_selinux_user
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_selinux_user
-    :parameters (?user - user ?seuser - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_has_selinux_user ?user ?seuser)
-    )
-  )
-
-  ;; Action: set_table
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_table
-    :parameters (?table - file)
-    :precondition (and
-      (file_exists ?table)
-    )
-    :effect (and
-      (table_set ?table)
-    )
-  )
-
-  ;; Action: set_trivial_only
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action set_trivial_only
-    :parameters (?obj - file)
+  ;; Action: journalctl_rotate
+  (:action journalctl_rotate
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (apt_trivial_only_enabled)
+      (journal_rotated)
     )
   )
 
-  ;; Action: set_uid_range
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_uid_range
-    :parameters (?min - file ?max - file)
+  ;; Action: journalctl_setup_keys
+  (:action journalctl_setup_keys
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (uid_min_set ?min)
-      (uid_max_set ?max)
+      (fss_keys_setup)
     )
   )
 
-  ;; Action: set_umask
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_umask
-    :parameters (?mask - file)
+  ;; Action: journalctl_smart_relinquish_var
+  (:action journalctl_smart_relinquish_var
+    :parameters (?p - process)
+    :precondition (and
+      (journal_writing_to_var)
+    )
+    :effect (and
+      (journal_writing_to_run)
+      (not (journal_writing_to_var))
+    )
+  )
+
+  ;; Action: journalctl_sync
+  (:action journalctl_sync
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (umask_set ?mask)
+      (journal_synced)
     )
   )
 
-  ;; Action: set_update_mode
-  ;; Source: mv
-  ;; Reused from Phase 1
-  (:action set_update_mode
-    :parameters (?mode - file)
-    :precondition (and
-      (file_exists ?mode)
-    )
-    :effect (and
-      (update_mode_set ?mode)
-    )
-  )
-
-  ;; Action: set_user_comment
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_user_comment
-    :parameters (?user - user ?comment - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_comment_set ?user)
-    )
-  )
-
-  ;; Action: set_user_expiration
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_user_expiration
-    :parameters (?user - user ?expire_date - file)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_expiration_set ?user)
-    )
-  )
-
-  ;; Action: set_user_groups
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_user_groups
-    :parameters (?user - user ?groups - group)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (user_groups_set ?user ?groups)
-    )
-  )
-
-  ;; Action: set_user_shell
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action set_user_shell
-    :parameters (?user - user ?shell - file)
-    :precondition (and
-      (user_exists ?user)
-      (file_exists ?shell)
-    )
-    :effect (and
-      (user_shell_set ?user ?shell)
-    )
-  )
-
-  ;; Action: set_user_uid
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_user_uid
-    :parameters (?uid - user)
-    :precondition (and
-      (user_exists ?uid)
-    )
-    :effect (and
-      (uid_set ?uid)
-    )
-  )
-
-  ;; Action: set_usergroups_ena
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action set_usergroups_ena
-    :parameters (?enabled - file)
+  ;; Action: journalctl_unit
+  (:action journalctl_unit
+    :parameters (?p - process ?s - service)
     :precondition (and)
     :effect (and
-      (usergroups_ena_set ?enabled)
+      (service_logs_read ?s)
+      (journal_logs_read ?p)
     )
   )
 
-  ;; Action: set_version_control
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action set_version_control
-    :parameters (?method - file)
-    :precondition (and
-      (file_exists ?method)
-    )
-    :effect (and
-      (version_control_set ?method)
-    )
-  )
-
-  ;; Action: set_wait_time
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action set_wait_time
-    :parameters (?seconds - file)
+  ;; Action: journalctl_update_catalog
+  (:action journalctl_update_catalog
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (wait_time_set ?seconds)
+      (journal_catalog_updated)
     )
   )
 
-  ;; Action: skip_different_filesystem
-  ;; Source: rm
-  ;; Reused from Phase 1
-  (:action skip_different_filesystem
-    :parameters (?dir - directory)
+  ;; Action: journalctl_user_unit
+  (:action journalctl_user_unit
+    :parameters (?p - process ?s - service)
+    :precondition (and)
+    :effect (and
+      (journal_logs_read ?p)
+      (service_logs_read ?s)
+    )
+  )
+
+  ;; Action: journalctl_utc_output
+  (:action journalctl_utc_output
+    :parameters (?p - process)
     :precondition (and
-      (directory_exists ?dir)
-      (different_filesystem ?dir)
+      (process_running ?p)
     )
     :effect (and
-      (skipped_directory ?dir)
+      (journal_logs_utc ?p)
     )
   )
 
-  ;; Action: skip_files
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action skip_files
-    :parameters (?dest - directory ?source - directory)
+  ;; Action: journalctl_vacuum_files
+  (:action journalctl_vacuum_files
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_vacuumed_by_files)
+    )
+  )
+
+  ;; Action: journalctl_vacuum_size
+  (:action journalctl_vacuum_size
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_vacuumed_by_size)
+    )
+  )
+
+  ;; Action: journalctl_vacuum_time
+  (:action journalctl_vacuum_time
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_vacuumed_by_time)
+    )
+  )
+
+  ;; Action: journalctl_verify
+  (:action journalctl_verify
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (journal_verified)
+    )
+  )
+
+  ;; Action: journalctl_view_all
+  (:action journalctl_view_all
+    :parameters (?p - process)
     :precondition (and
-      (directory_exists ?dest)
-      (directory_exists ?source)
+      (process_running ?p)
     )
     :effect (and
-      (files_skipped ?dest)
+      (logs_viewed ?p)
     )
   )
 
-  ;; Action: skip_log_init
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action skip_log_init
-    :parameters (?user - user)
+  ;; Action: justify_command_column_right
+  (:action justify_command_column_right
+    :parameters ()
     :precondition (and
-      (user_exists ?user)
+      (forest_view_active)
     )
     :effect (and
-      (log_init_skipped ?user)
+      (command_column_right_justified)
     )
   )
 
-  ;; Action: skip_symbolic_links
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action skip_symbolic_links
-    :parameters (?link - file)
+  ;; Action: kill_process_default
+  (:action kill_process_default
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?link)
+      (process_exists ?p)
     )
     :effect (and
-      (symbolic_links_skipped ?link)
+      (process_terminated ?p)
+      (signal_sent ?p)
     )
   )
 
-  ;; Action: skip_user_group_creation
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action skip_user_group_creation
-    :parameters (?user - user ?group - group)
+  ;; Action: kill_process_sigcont
+  (:action kill_process_sigcont
+    :parameters (?p - process)
     :precondition (and
-      (user_exists ?user)
+      (process_exists ?p)
     )
     :effect (and
-      (not (user_group_exists ?group))
+      (process_resumed ?p)
+      (signal_sent ?p)
     )
   )
 
-  ;; Action: snap_abort
-  (:action snap_abort
-    :parameters (?c - process)
+  ;; Action: kill_process_sigkill
+  (:action kill_process_sigkill
+    :parameters (?p - process)
     :precondition (and
-      (snap_pending_change ?c)
+      (process_exists ?p)
     )
     :effect (and
-      (snap_change_aborted ?c)
-      (not (snap_pending_change ?c))
+      (process_terminated ?p)
+      (signal_sent ?p)
     )
   )
 
-  ;; Action: snap_debug_seeding
-  (:action snap_debug_seeding
-    :parameters (?p - package)
+  ;; Action: kill_process_signal
+  (:action kill_process_signal
+    :parameters (?p - process)
     :precondition (and
-      (snap_installed ?p)
+      (process_exists ?p)
     )
     :effect (and
-      (snap_seed_valid)
+      (signal_sent ?p)
     )
   )
 
-  ;; Action: snap_debug_validate_seed
-  (:action snap_debug_validate_seed
+  ;; Action: kill_process_sigstop
+  (:action kill_process_sigstop
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_stopped ?p)
+      (signal_sent ?p)
+    )
+  )
+
+  ;; Action: list_automounts
+  (:action list_automounts
+    :parameters (?s - service)
+    :precondition (and
+      (service_active ?s)
+      (service_known ?s)
+      (service_loaded ?s)
+      (service_running ?s)
+      (service_exists ?s)
+    )
+    :effect (and
+      (unit_listed ?s)
+      (unit_list_obtained ?s)
+      (service_list_automounts_executed)
+      (service_automount_listed ?s)
+      (service_running ?s)
+    )
+  )
+
+  ;; Action: list_paths
+  (:action list_paths
+    :parameters (?s - service)
+    :precondition (and
+      (service_running ?s)
+      (service_exists ?s)
+      (service_loaded ?s)
+      (service_known ?s)
+    )
+    :effect (and
+      (unit_listed ?s)
+      (unit_list_obtained ?s)
+      (service_list_paths_executed)
+      (service_running ?s)
+      (service_path_listed ?s)
+    )
+  )
+
+  ;; Action: list_sockets
+  (:action list_sockets
+    :parameters (?s - service)
+    :precondition (and
+      (service_running ?s)
+      (service_exists ?s)
+      (service_loaded ?s)
+      (service_known ?s)
+    )
+    :effect (and
+      (unit_listed ?s)
+      (service_list_sockets_executed)
+      (unit_list_obtained ?s)
+      (service_socket_listed ?s)
+      (service_running ?s)
+    )
+  )
+
+  ;; Action: list_timers
+  (:action list_timers
+    :parameters (?s - service)
+    :precondition (and
+      (service_running ?s)
+      (service_exists ?s)
+      (service_loaded ?s)
+      (service_known ?s)
+    )
+    :effect (and
+      (service_timer_listed ?s)
+      (unit_listed ?s)
+      (unit_list_obtained ?s)
+      (service_list_timers_executed)
+      (service_running ?s)
+    )
+  )
+
+  ;; Action: list_units
+  (:action list_units
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+      (service_loaded ?s)
+      (service_known ?s)
+    )
+    :effect (and
+      (service_list_units_executed)
+      (unit_list_obtained ?s)
+      (service_listed ?s)
+      (unit_listed ?s)
+    )
+  )
+
+  ;; Action: localectl_set_keymap
+  (:action localectl_set_keymap
+    :parameters (?map - object)
+    :precondition (and
+      (keymap_available ?map)
+    )
+    :effect (and
+      (system_keymap_set ?map)
+    )
+  )
+
+  ;; Action: localectl_set_locale
+  (:action localectl_set_locale
+    :parameters (?locale - object)
+    :precondition (and
+      (locale_available ?locale)
+    )
+    :effect (and
+      (system_locale_set ?locale)
+    )
+  )
+
+  ;; Action: localectl_set_x11_keymap
+  (:action localectl_set_x11_keymap
+    :parameters (?layout - object ?model - object ?variant - object ?options - object)
+    :precondition (and
+      (x11_layout_available ?layout)
+      (x11_model_available ?model)
+      (x11_variant_available ?variant)
+      (x11_option_available ?options)
+    )
+    :effect (and
+      (x11_keymap_set ?layout ?model ?variant ?options)
+    )
+  )
+
+  ;; Action: localectl_status
+  (:action localectl_status
+    :parameters (?s - service)
+    :precondition (and)
+    :effect (and
+      (system_status_known ?s)
+    )
+  )
+
+  ;; Action: ls_context_list
+  (:action ls_context_list
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_security_context_known ?f)
+    )
+  )
+
+  ;; Action: ls_inode_list
+  (:action ls_inode_list
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_inode_known ?f)
+    )
+  )
+
+  ;; Action: ls_list_directory
+  (:action ls_list_directory
     :parameters (?d - directory)
     :precondition (and
       (directory_exists ?d)
     )
     :effect (and
-      (snap_seed_valid)
+      (directory_contents_listed ?d)
+    )
+  )
+
+  ;; Action: ls_long_list
+  (:action ls_long_list
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (directory_contents_listed ?d)
+      (file_details_known ?d)
+    )
+  )
+
+  ;; Action: ls_recursive_list
+  (:action ls_recursive_list
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (directory_recursive_contents_listed ?d)
+    )
+  )
+
+  ;; Action: ls_size_list
+  (:action ls_size_list
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_size_known ?f)
+    )
+  )
+
+  ;; Action: mkdir_basic
+  (:action mkdir_basic
+    :parameters (?d - directory)
+    :precondition (and
+      (not (directory_exists ?d))
+    )
+    :effect (and
+      (directory_exists ?d)
+    )
+  )
+
+  ;; Action: mkdir_context
+  (:action mkdir_context
+    :parameters (?d - directory)
+    :precondition (and
+      (not (directory_exists ?d))
+    )
+    :effect (and
+      (directory_exists ?d)
+      (directory_has_context ?d)
+    )
+  )
+
+  ;; Action: mkdir_mode
+  (:action mkdir_mode
+    :parameters (?d - directory ?m - object)
+    :precondition (and
+      (not (directory_exists ?d))
+    )
+    :effect (and
+      (directory_exists ?d)
+      (directory_has_mode ?d ?m)
+    )
+  )
+
+  ;; Action: mkdir_parents
+  (:action mkdir_parents
+    :parameters (?d - directory)
+    :precondition (and
+      (not (directory_exists ?d))
+    )
+    :effect (and
+      (directory_exists ?d)
+    )
+  )
+
+  ;; Action: mv_exchange
+  (:action mv_exchange
+    :parameters (?src - file ?dest - file ?u - user)
+    :precondition (and
+      (file_exists ?src)
+      (file_exists ?dest)
+      (file_owned_by ?src ?u)
+      (file_owned_by ?dest ?u)
+    )
+    :effect (and
+      (not (file_exists ?src))
+      (not (file_exists ?dest))
+      (file_exists ?src)
+      (file_exists ?dest)
+    )
+  )
+
+  ;; Action: mv_rename
+  (:action mv_rename
+    :parameters (?src - file ?dest - file ?u - user)
+    :precondition (and
+      (file_exists ?src)
+      (file_owned_by ?src ?u)
+      (file_writable ?src)
+    )
+    :effect (and
+      (not (file_exists ?src))
+      (file_exists ?dest)
+      (file_owned_by ?dest ?u)
+    )
+  )
+
+  ;; Action: mv_to_directory
+  (:action mv_to_directory
+    :parameters (?src - file ?dest_dir - directory ?u - user)
+    :precondition (and
+      (file_exists ?src)
+      (directory_exists ?dest_dir)
+      (directory_writable ?dest_dir)
+      (file_owned_by ?src ?u)
+    )
+    :effect (and
+      (not (file_exists ?src))
+      (file_exists ?src)
+      (file_in_directory ?src ?dest_dir)
+    )
+  )
+
+  ;; Action: netplan_apply
+  (:action netplan_apply
+    :parameters (?f - configuration_file ?s - service ?pr - process)
+    :precondition (and
+      (netplan_config_generated ?f)
+      (configures ?f ?s)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (config_applied ?s)
+    )
+  )
+
+  ;; Action: netplan_generate
+  (:action netplan_generate
+    :parameters (?f - configuration_file ?s - service ?pr - process)
+    :precondition (and
+      (file_exists ?f)
+      (configures ?f ?s)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (netplan_config_generated ?f)
+    )
+  )
+
+  ;; Action: netplan_get
+  (:action netplan_get
+    :parameters (?f - configuration_file ?pr - process)
+    :precondition (and
+      (file_exists ?f)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (netplan_config_valid ?f)
+    )
+  )
+
+  ;; Action: netplan_set
+  (:action netplan_set
+    :parameters (?f - configuration_file ?pr - process)
+    :precondition (and
+      (file_exists ?f)
+      (file_writable ?f)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (netplan_config_valid ?f)
+    )
+  )
+
+  ;; Action: netplan_status
+  (:action netplan_status
+    :parameters (?i - interface ?pr - process)
+    :precondition (and
+      (interface_exists ?i)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (netplan_status_known ?i)
+    )
+  )
+
+  ;; Action: netplan_try
+  (:action netplan_try
+    :parameters (?f - configuration_file ?s - service ?pr - process)
+    :precondition (and
+      (file_exists ?f)
+      (configures ?f ?s)
+      (executed_as_root ?pr)
+    )
+    :effect (and
+      (config_applied ?s)
+    )
+  )
+
+  ;; Action: nft_add_chain
+  (:action nft_add_chain
+    :parameters (?p - process ?c - object ?t - object ?r - repository)
+    :precondition (and
+      (firewall_table_exists ?t)
+      (firewall_rule_exists ?r)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (firewall_chain_exists ?c)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_conntrack_rule
+  (:action nft_add_conntrack_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_sets_conntrack ?r)
+    )
+  )
+
+  ;; Action: nft_add_counter
+  (:action nft_add_counter
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (counter_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_counter_rule
+  (:action nft_add_counter_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_counts_packets ?r)
+    )
+  )
+
+  ;; Action: nft_add_ct_expectation
+  (:action nft_add_ct_expectation
+    :parameters (?r - firewall_rule)
+    :precondition ()
+    :effect (and
+      (ct_expectation_exists ?r)
+    )
+)
+
+  ;; Action: nft_add_ct_helper
+  (:action nft_add_ct_helper
+    :parameters (?h - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (ct_helper_exists ?h)
+    )
+  )
+
+  ;; Action: nft_add_ct_timeout
+  (:action nft_add_ct_timeout
+    :parameters (?t - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (ct_timeout_exists ?t)
+    )
+  )
+
+  ;; Action: nft_add_dnat_rule
+  (:action nft_add_dnat_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and
+      (port_open ?p)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_dnat ?r)
+    )
+  )
+
+  ;; Action: nft_add_dup_rule
+  (:action nft_add_dup_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (packet_duplicated_to ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_element
+  (:action nft_add_element
+    :parameters (?s - object ?e - object)
+    :precondition (and
+      (firewall_set_exists ?s)
+    )
+    :effect (and
+      (element_exists ?e ?s)
+      (firewall_element_exists ?e)
+    )
+  )
+
+  ;; Action: nft_add_flow_rule
+  (:action nft_add_flow_rule
+    :parameters (?r - firewall_rule ?t - object)
+    :precondition (and (nft_table_exists ?t))
+    :effect (and
+      (firewall_rule_exists ?r)
+      (flow_offloaded ?r)
+    )
+  )
+
+  ;; Action: nft_add_flowtable
+  (:action nft_add_flowtable
+    :parameters (?f - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (flowtable_exists ?f)
+    )
+  )
+
+  ;; Action: nft_add_fwd_rule
+  (:action nft_add_fwd_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (packet_forwarded_to ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_limit_rule
+  (:action nft_add_limit_rule
+    :parameters (?r - firewall_rule ?t - object ?c - object)
+    :precondition (and
+      (nft_table_exists ?t)
+      (nft_chain_exists ?c)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_limits_rate ?r)
+    )
+)
+
+  ;; Action: nft_add_log_rule
+  (:action nft_add_log_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_logs_packets ?r)
+    )
+  )
+
+  ;; Action: nft_add_map
+  (:action nft_add_map
+    :parameters (?m - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (nft_map_exists ?m)
+    )
+  )
+
+  ;; Action: nft_add_masquerade_rule
+  (:action nft_add_masquerade_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_masquerade ?r)
+    )
+  )
+
+  ;; Action: nft_add_meta_rule
+  (:action nft_add_meta_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_sets_meta ?r)
+    )
+  )
+
+  ;; Action: nft_add_nat_rule
+  (:action nft_add_nat_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (firewall_rule_exists ?r)
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_nat ?r)
+    )
+  )
+
+  ;; Action: nft_add_notrack_rule
+  (:action nft_add_notrack_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_notrack ?r)
+    )
+  )
+
+  ;; Action: nft_add_queue_rule
+  (:action nft_add_queue_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (packet_queued ?r)
+    )
+  )
+
+  ;; Action: nft_add_quota
+  (:action nft_add_quota
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (quota_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_redirect_rule
+  (:action nft_add_redirect_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and
+      (port_open ?p)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_redirect ?r)
+    )
+  )
+
+  ;; Action: nft_add_reject_rule
+  (:action nft_add_reject_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_rejects_packets ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule
+  (:action nft_add_rule
+    :parameters (?p - process ?r - firewall_rule ?c - object ?t - object)
+    :precondition (and
+      (firewall_table_exists ?t)
+      (firewall_chain_exists ?c)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (rule_in_table ?r ?t)
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_accept
+  (:action nft_add_rule_accept
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_accepts ?r)
+      (firewall_rule_on_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_dccp_port
+  (:action nft_add_rule_dccp_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_port ?r ?p)
+    )
+  )
+
+  ;; Action: nft_add_rule_drop
+  (:action nft_add_rule_drop
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_drops ?r)
+      (firewall_rule_on_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_geneve_vni
+  (:action nft_add_rule_geneve_vni
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_vni ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_goto
+  (:action nft_add_rule_goto
+    :parameters (?r - firewall_rule ?target - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (firewall_rule_exists ?target)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_gotos ?r ?target)
+      (firewall_rule_on_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_gre_ip_daddr
+  (:action nft_add_rule_gre_ip_daddr
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_gretap_tcp_port
+  (:action nft_add_rule_gretap_tcp_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition ()
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_port ?r ?p)
+    )
+)
+
+  ;; Action: nft_add_rule_group
+  (:action nft_add_rule_group
+    :parameters (?r - firewall_rule ?g - group)
+    :precondition (and
+      (group_exists ?g)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_matches_group ?r ?g)
+    )
+)
+
+  ;; Action: nft_add_rule_interface
+  (:action nft_add_rule_interface
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (rule_matches_interface ?r ?i)
+      (rule_allows_traffic ?r)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_jump
+  (:action nft_add_rule_jump
+    :parameters (?r - firewall_rule ?target - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (firewall_rule_exists ?target)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_jumps ?r ?target)
+      (firewall_rule_on_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_os_fingerprint
+  (:action nft_add_rule_os_fingerprint
+    :parameters (?r - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_matches_os ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_port
+  (:action nft_add_rule_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_matches_port ?r ?p)
+      (rule_allows_traffic ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_queue
+  (:action nft_add_rule_queue
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_queues ?r)
+      (firewall_rule_on_interface ?r ?i)
+    )
+  )
+
+  ;; Action: nft_add_rule_user
+  (:action nft_add_rule_user
+    :parameters (?r - firewall_rule ?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_matches_user ?r ?u)
+    )
+  )
+
+  ;; Action: nft_add_rule_vxlan_vni
+  (:action nft_add_rule_vxlan_vni
+    :parameters (?r - firewall_rule)
+    :precondition ()
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_matches_vni ?r)
+    )
+  )
+
+  ;; Action: nft_add_rule_with_interface
+  (:action nft_add_rule_with_interface
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_applied ?r)
+    )
+  )
+
+  ;; Action: nft_add_sctp_rule
+  (:action nft_add_sctp_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_filters_sctp_port ?r ?p)
+    )
+  )
+
+  ;; Action: nft_add_set
+  (:action nft_add_set
+    :parameters (?s - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (nft_set_exists ?s)
+    )
+  )
+
+  ;; Action: nft_add_snat_rule
+  (:action nft_add_snat_rule
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_snat ?r)
+    )
+  )
+
+  ;; Action: nft_add_stateful_object
+  (:action nft_add_stateful_object
+    :parameters (?o - object)
+    :precondition (and)
+    :effect (and
+      (stateful_object_exists ?o)
+    )
+  )
+
+  ;; Action: nft_add_synproxy_rule
+  (:action nft_add_synproxy_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_synproxy ?r)
+    )
+  )
+
+  ;; Action: nft_add_table
+  (:action nft_add_table
+    :parameters (?p - process ?t - object ?r - repository)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (firewall_table_exists ?t)
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: nft_add_tcp_rule
+  (:action nft_add_tcp_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_filters_tcp_port ?r ?p)
+    )
+  )
+
+  ;; Action: nft_add_tproxy_rule
+  (:action nft_add_tproxy_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and
+      (firewall_rule_exists ?r)
+      (port_open ?p)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_is_tproxy ?r)
+    )
+  )
+
+  ;; Action: nft_add_udp_rule
+  (:action nft_add_udp_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_filters_udp_port ?r ?p)
+    )
+  )
+
+  ;; Action: nft_add_udplite_rule
+  (:action nft_add_udplite_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_filters_udplite_port ?r ?p)
+    )
+  )
+
+  ;; Action: nft_apply_config
+  (:action nft_apply_config
+    :parameters (?f - configuration_file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (firewall_rule_applied ?f)
+    )
+  )
+
+  ;; Action: nft_apply_rule
+  (:action nft_apply_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (firewall_rule_loaded ?r)
+    )
+  )
+
+  ;; Action: nft_check_ruleset
+  (:action nft_check_ruleset
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (firewall_ruleset_valid ?f)
+    )
+  )
+
+  ;; Action: nft_create_chain
+  (:action nft_create_chain
+    :parameters (?p - process ?c - object ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_table_exists ?t)
+      (not (firewall_chain_exists ?c))
+    )
+    :effect (and
+      (firewall_chain_exists ?c)
+    )
+  )
+
+  ;; Action: nft_create_element
+  (:action nft_create_element
+    :parameters (?e - object ?s - firewall_rule)
+    :precondition (and
+      (not (element_exists ?e ?s))
+    )
+    :effect (and
+      (element_exists ?e ?s)
+    )
+  )
+
+  ;; Action: nft_create_table
+  (:action nft_create_table
+    :parameters (?p - process ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (not (firewall_table_exists ?t))
+    )
+    :effect (and
+      (firewall_table_exists ?t)
+    )
+  )
+
+  ;; Action: nft_delete_chain
+  (:action nft_delete_chain
+    :parameters (?p - process ?c - object ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_chain_exists ?c)
+      (firewall_table_exists ?t)
+    )
+    :effect (and
+      (not (firewall_chain_exists ?c))
+    )
+  )
+
+  ;; Action: nft_delete_counter
+  (:action nft_delete_counter
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (counter_exists ?r)
+    )
+    :effect (and
+      (not (counter_exists ?r))
+    )
+  )
+
+  ;; Action: nft_delete_ct_expectation
+  (:action nft_delete_ct_expectation
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (ct_expectation_exists ?r)
+    )
+    :effect (and
+      (not (ct_expectation_exists ?r))
+    )
+  )
+
+  ;; Action: nft_delete_ct_helper
+  (:action nft_delete_ct_helper
+    :parameters (?h - firewall_rule)
+    :precondition (and
+      (ct_helper_exists ?h)
+    )
+    :effect (and
+      (not (ct_helper_exists ?h))
+    )
+  )
+
+  ;; Action: nft_delete_ct_timeout
+  (:action nft_delete_ct_timeout
+    :parameters (?t - firewall_rule)
+    :precondition (and
+      (ct_timeout_exists ?t)
+    )
+    :effect (and
+      (not (ct_timeout_exists ?t))
+    )
+  )
+
+  ;; Action: nft_delete_element
+  (:action nft_delete_element
+    :parameters (?e - object ?s - firewall_rule)
+    :precondition (and
+      (element_exists ?e ?s)
+    )
+    :effect (and
+      (not (element_exists ?e ?s))
+    )
+  )
+
+  ;; Action: nft_delete_flowtable
+  (:action nft_delete_flowtable
+    :parameters (?f - firewall_rule)
+    :precondition (and
+      (flowtable_exists ?f)
+    )
+    :effect (and
+      (not (flowtable_exists ?f))
+    )
+  )
+
+  ;; Action: nft_delete_map
+  (:action nft_delete_map
+    :parameters (?m - firewall_rule)
+    :precondition (and
+      (nft_map_exists ?m)
+    )
+    :effect (and
+      (not (nft_map_exists ?m))
+    )
+  )
+
+  ;; Action: nft_delete_quota
+  (:action nft_delete_quota
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (quota_exists ?r)
+    )
+    :effect (and
+      (not (quota_exists ?r))
+    )
+  )
+
+  ;; Action: nft_delete_rule
+  (:action nft_delete_rule
+    :parameters (?r - firewall_rule ?t - object ?c - object)
+    :precondition (and
+      (rule_in_chain ?r ?c)
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (not (firewall_rule_exists ?r))
+    )
+  )
+
+  ;; Action: nft_delete_set
+  (:action nft_delete_set
+    :parameters (?s - firewall_rule)
+    :precondition (and
+      (nft_set_exists ?s)
+    )
+    :effect (and
+      (not (nft_set_exists ?s))
+    )
+  )
+
+  ;; Action: nft_delete_stateful_object
+  (:action nft_delete_stateful_object
+    :parameters (?o - object)
+    :precondition (and
+      (stateful_object_exists ?o)
+    )
+    :effect (and
+      (not (stateful_object_exists ?o))
+    )
+  )
+
+  ;; Action: nft_delete_table
+  (:action nft_delete_table
+    :parameters (?p - process ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_table_exists ?t)
+    )
+    :effect (and
+      (not (firewall_table_exists ?t))
+    )
+  )
+
+  ;; Action: nft_describe
+  (:action nft_describe
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (nft_describe_executed ?r)
+    )
+  )
+
+  ;; Action: nft_destroy_chain
+  (:action nft_destroy_chain
+    :parameters (?p - process ?c - object ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_table_exists ?t)
+    )
+    :effect (and
+      (not (firewall_chain_exists ?c))
+    )
+  )
+
+  ;; Action: nft_destroy_flowtable
+  (:action nft_destroy_flowtable
+    :parameters (?f - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (not (flowtable_exists ?f))
+    )
+  )
+
+  ;; Action: nft_destroy_map
+  (:action nft_destroy_map
+    :parameters (?m - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (not (nft_map_exists ?m))
+    )
+  )
+
+  ;; Action: nft_destroy_rule
+  (:action nft_destroy_rule
+    :parameters (?r - firewall_rule ?t - object ?c - object)
+    :precondition (and)
+    :effect (and
+      (not (firewall_rule_exists ?r))
+    )
+  )
+
+  ;; Action: nft_destroy_set
+  (:action nft_destroy_set
+    :parameters (?s - firewall_rule)
+    :precondition (and)
+    :effect (and
+      (not (nft_set_exists ?s))
+    )
+  )
+
+  ;; Action: nft_destroy_stateful_object
+  (:action nft_destroy_stateful_object
+    :parameters (?o - object)
+    :precondition (and)
+    :effect (and
+      (not (stateful_object_exists ?o))
+    )
+  )
+
+  ;; Action: nft_destroy_table
+  (:action nft_destroy_table
+    :parameters (?p - process ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (firewall_table_exists ?t))
+    )
+  )
+
+  ;; Action: nft_flush_map
+  (:action nft_flush_map
+    :parameters (?m - firewall_rule)
+    :precondition (and
+      (nft_map_exists ?m)
+    )
+    :effect (and
+      (nft_map_empty ?m)
+    )
+  )
+
+  ;; Action: nft_flush_ruleset
+  (:action nft_flush_ruleset
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (firewall_ruleset_empty)
+    )
+  )
+
+  ;; Action: nft_flush_set
+  (:action nft_flush_set
+    :parameters (?s - firewall_rule)
+    :precondition (and
+      (nft_set_exists ?s)
+    )
+    :effect (and
+      (nft_set_empty ?s)
+    )
+  )
+
+  ;; Action: nft_insert_rule
+  (:action nft_insert_rule
+    :parameters (?r - firewall_rule ?t - object ?c - object)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (rule_in_chain ?r ?c)
+      (rule_in_table ?r ?t)
+    )
+  )
+
+  ;; Action: nft_list_hooks
+  (:action nft_list_hooks
+    :parameters (?h - object)
+    :precondition (and)
+    :effect (and
+      (firewall_hook_visible ?h)
+    )
+  )
+
+  ;; Action: nft_list_hooks_netdev
+  (:action nft_list_hooks_netdev
+    :parameters (?i - interface ?h - object)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_hook_visible ?h)
+    )
+  )
+
+  ;; Action: nft_list_set
+  (:action nft_list_set
+    :parameters (?s - object)
+    :precondition (and
+      (firewall_set_exists ?s)
+    )
+    :effect (and
+      (firewall_set_exists ?s)
+    )
+  )
+
+  ;; Action: nft_load_config
+  (:action nft_load_config
+    :parameters (?f - configuration_file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (firewall_rule_loaded ?f)
+    )
+  )
+
+  ;; Action: nft_load_ruleset
+  (:action nft_load_ruleset
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (firewall_ruleset_loaded ?f)
+    )
+  )
+
+  ;; Action: nft_monitor
+  (:action nft_monitor
+    :parameters (?m - process)
+    :precondition ()
+    :effect (and
+      (firewall_monitor_active ?m)
+    )
+)
+
+  ;; Action: nft_optimize_ruleset
+  (:action nft_optimize_ruleset
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (firewall_ruleset_optimized ?f)
+    )
+  )
+
+  ;; Action: nft_replace_rule
+  (:action nft_replace_rule
+    :parameters (?r_old - firewall_rule ?r_new - firewall_rule ?t - object ?c - object)
+    :precondition (and
+      (firewall_rule_exists ?r_old)
+      (rule_in_chain ?r_old ?c)
+    )
+    :effect (and
+      (not (firewall_rule_exists ?r_old))
+      (firewall_rule_exists ?r_new)
+      (rule_in_chain ?r_new ?c)
+      (rule_in_table ?r_new ?t)
+    )
+  )
+
+  ;; Action: nft_reset_rule
+  (:action nft_reset_rule
+    :parameters (?r - firewall_rule ?t - object ?c - object)
+    :precondition (and
+      (firewall_rule_exists ?r)
+      (rule_in_chain ?r ?c)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+    )
+  )
+
+  ;; Action: nft_set_table_active
+  (:action nft_set_table_active
+    :parameters (?p - process ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_table_exists ?t)
+      (firewall_table_dormant ?t)
+    )
+    :effect (and
+      (not (firewall_table_dormant ?t))
+    )
+  )
+
+  ;; Action: nft_set_table_dormant
+  (:action nft_set_table_dormant
+    :parameters (?p - process ?t - object)
+    :precondition (and
+      (executed_as_root ?p)
+      (firewall_table_exists ?t)
+    )
+    :effect (and
+      (firewall_table_dormant ?t)
+    )
+  )
+
+  ;; Action: nmcli_agent_all
+  (:action nmcli_agent_all
+    :parameters (?s - service ?p - process)
+    :precondition (and
+      (network_manager_running ?s)
+    )
+    :effect (and
+      (nmcli_secret_agent_running)
+      (nmcli_polkit_agent_running)
+    )
+  )
+
+  ;; Action: nmcli_agent_polkit
+  (:action nmcli_agent_polkit
+    :parameters (?s - service ?p - process ?u - user)
+    :precondition (and
+      (network_manager_running ?s)
+    )
+    :effect (and
+      (nmcli_polkit_agent_running)
+    )
+  )
+
+  ;; Action: nmcli_agent_secret
+  (:action nmcli_agent_secret
+    :parameters (?s - service ?p - process)
+    :precondition (and
+      (network_manager_running ?s)
+    )
+    :effect (and
+      (nmcli_secret_agent_running)
+    )
+  )
+
+  ;; Action: nmcli_con_add_ethernet
+  (:action nmcli_con_add_ethernet
+    :parameters (?c - object ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (connection_exists ?c)
+      (connection_tied_to ?c ?i)
+    )
+  )
+
+  ;; Action: nmcli_con_export
+  (:action nmcli_con_export
+    :parameters (?c - object ?f - file)
+    :precondition (and
+      (connection_exists ?c)
+    )
+    :effect (and
+      (file_exists ?f)
+    )
+  )
+
+  ;; Action: nmcli_con_import
+  (:action nmcli_con_import
+    :parameters (?c - object ?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (connection_exists ?c)
+      (connection_imported ?c)
+    )
+  )
+
+  ;; Action: nmcli_con_mod_autoconnect
+  (:action nmcli_con_mod_autoconnect
+    :parameters (?c - object)
+    :precondition (and
+      (connection_exists ?c)
+    )
+    :effect (and
+      (not (connection_autoconnect_enabled ?c))
+    )
+  )
+
+  ;; Action: nmcli_con_up
+  (:action nmcli_con_up
+    :parameters (?c - object ?i - interface)
+    :precondition (and
+      (connection_exists ?c)
+      (interface_exists ?i)
+    )
+    :effect (and
+      (connection_active ?c)
+      (connection_tied_to ?c ?i)
+    )
+  )
+
+  ;; Action: nmcli_connection_add
+  (:action nmcli_connection_add
+    :parameters (?i - interface)
+    :precondition (and (interface_exists ?i))
+    :effect (and
+      (connection_exists ?i)
+      (connection_persistent ?i)
+    )
+  )
+
+  ;; Action: nmcli_connection_clone
+  (:action nmcli_connection_clone
+    :parameters (?i_src - interface ?i_dst - interface)
+    :precondition (and
+      (connection_exists ?i_src)
+    )
+    :effect (and
+      (connection_exists ?i_dst)
+      (connection_persistent ?i_dst)
+    )
+  )
+
+  ;; Action: nmcli_connection_delete
+  (:action nmcli_connection_delete
+    :parameters (?i - interface)
+    :precondition (and
+      (connection_exists ?i)
+    )
+    :effect (and
+      (not (connection_exists ?i))
+    )
+  )
+
+  ;; Action: nmcli_connection_down
+  (:action nmcli_connection_down
+    :parameters (?c - object ?i - interface)
+    :precondition (and
+      (connection_exists ?c)
+      (connection_active ?c ?i)
+    )
+    :effect (and
+      (not (connection_active ?c ?i))
+    )
+  )
+
+  ;; Action: nmcli_connection_export
+  (:action nmcli_connection_export
+    :parameters (?i - interface ?f - configuration_file)
+    :precondition (and
+      (connection_exists ?i)
+      (vpn_plugin_installed ?i)
+    )
+    :effect (and
+      (file_exists ?f)
+    )
+  )
+
+  ;; Action: nmcli_connection_import
+  (:action nmcli_connection_import
+    :parameters (?i - interface ?f - configuration_file)
+    :precondition (and
+      (file_exists ?f)
+      (vpn_plugin_installed ?i)
+    )
+    :effect (and
+      (connection_exists ?i)
+      (connection_persistent ?i)
+    )
+  )
+
+  ;; Action: nmcli_connection_modify
+  (:action nmcli_connection_modify
+    :parameters (?i - interface)
+    :precondition (and
+      (connection_exists ?i)
+    )
+    :effect (and
+      (connection_modified ?i)
+    )
+  )
+
+  ;; Action: nmcli_connection_up
+  (:action nmcli_connection_up
+    :parameters (?c - object ?i - interface)
+    :precondition (and
+      (connection_exists ?c)
+      (interface_exists ?i)
+    )
+    :effect (and
+      (connection_active ?c ?i)
+    )
+  )
+
+  ;; Action: nmcli_connection_up_with_passwd
+  (:action nmcli_connection_up_with_passwd
+    :parameters (?c - object ?i - interface ?f - file)
+    :precondition (and
+      (connection_exists ?c)
+      (interface_exists ?i)
+      (file_exists ?f)
+    )
+    :effect (and
+      (connection_active ?c ?i)
+    )
+  )
+
+  ;; Action: nmcli_dev_wifi_connect
+  (:action nmcli_dev_wifi_connect
+    :parameters (?ap - object ?c - object)
+    :precondition (and
+      (wifi_ap_known ?ap)
+    )
+    :effect (and
+      (connection_exists ?c)
+      (connection_active ?c)
+    )
+  )
+
+  ;; Action: nmcli_dev_wifi_hotspot
+  (:action nmcli_dev_wifi_hotspot
+    :parameters (?c - object)
+    :precondition (and (nmcli_installed))
+    :effect (and
+      (connection_exists ?c)
+      (connection_active ?c)
+    )
+  )
+
+  ;; Action: nmcli_device_delete
+  (:action nmcli_device_delete
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (not (interface_exists ?i))
+    )
+  )
+
+  ;; Action: nmcli_device_down
+  (:action nmcli_device_down
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (interface_up ?i)
+    )
+    :effect (and
+      (not (interface_up ?i))
+    )
+  )
+
+  ;; Action: nmcli_device_set_autoconnect
+  (:action nmcli_device_set_autoconnect
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (interface_autoconnect ?i)
+    )
+  )
+
+  ;; Action: nmcli_device_set_managed
+  (:action nmcli_device_set_managed
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (interface_managed ?i)
+    )
+  )
+
+  ;; Action: nmcli_device_set_no_autoconnect
+  (:action nmcli_device_set_no_autoconnect
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (not (interface_autoconnect ?i))
+    )
+  )
+
+  ;; Action: nmcli_device_set_unmanaged
+  (:action nmcli_device_set_unmanaged
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (not (interface_managed ?i))
+    )
+  )
+
+  ;; Action: nmcli_device_up
+  (:action nmcli_device_up
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (interface_up ?i)
+    )
+  )
+
+  ;; Action: nmcli_device_wifi_connect
+  (:action nmcli_device_wifi_connect
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (not (wifi_connected ?i))
+    )
+    :effect (and
+      (interface_up ?i)
+      (wifi_connected ?i)
+    )
+  )
+
+  ;; Action: nmcli_device_wifi_hotspot
+  (:action nmcli_device_wifi_hotspot
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (not (wifi_hotspot_active ?i))
+    )
+    :effect (and
+      (interface_up ?i)
+      (wifi_hotspot_active ?i)
+    )
+  )
+
+  ;; Action: nmcli_device_wifi_stop_hotspot
+  (:action nmcli_device_wifi_stop_hotspot
+    :parameters (?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+      (wifi_hotspot_active ?i)
+    )
+    :effect (and
+      (not (wifi_hotspot_active ?i))
+    )
+  )
+
+  ;; Action: nmcli_networking_off
+  (:action nmcli_networking_off
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (networking_enabled))
+    )
+  )
+
+  ;; Action: nmcli_networking_on
+  (:action nmcli_networking_on
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (networking_enabled)
+    )
+  )
+
+  ;; Action: nmcli_radio_all_off
+  (:action nmcli_radio_all_off
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (wifi_enabled))
+      (not (wwan_enabled))
+    )
+  )
+
+  ;; Action: nmcli_radio_all_on
+  (:action nmcli_radio_all_on
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (wifi_enabled)
+      (wwan_enabled)
+    )
+  )
+
+  ;; Action: nmcli_radio_wifi_off
+  (:action nmcli_radio_wifi_off
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (wifi_enabled))
+    )
+  )
+
+  ;; Action: nmcli_radio_wifi_on
+  (:action nmcli_radio_wifi_on
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (wifi_enabled)
+    )
+  )
+
+  ;; Action: nmcli_radio_wwan_off
+  (:action nmcli_radio_wwan_off
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (wwan_enabled))
+    )
+  )
+
+  ;; Action: nmcli_radio_wwan_on
+  (:action nmcli_radio_wwan_on
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (wwan_enabled)
+    )
+  )
+
+  ;; Action: nmcli_reload_conf
+  (:action nmcli_reload_conf
+    :parameters ()
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (nm_config_reloaded)
+    )
+  )
+
+  ;; Action: nmcli_reload_dns_full
+  (:action nmcli_reload_dns_full
+    :parameters ()
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (nm_dns_plugin_restarted)
+    )
+  )
+
+  ;; Action: nmcli_reload_dns_rc
+  (:action nmcli_reload_dns_rc
+    :parameters ()
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (nm_dns_updated)
+    )
+  )
+
+  ;; Action: nmcli_set_hostname
+  (:action nmcli_set_hostname
+    :parameters (?h - object)
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (hostname_set ?h)
+    )
+  )
+
+  ;; Action: nmcli_set_logging_domain
+  (:action nmcli_set_logging_domain
+    :parameters (?d - object)
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (nm_logging_domain_set ?d)
+    )
+  )
+
+  ;; Action: nmcli_set_logging_level
+  (:action nmcli_set_logging_level
+    :parameters (?l - object)
+    :precondition (and
+      (nmcli_installed)
+      (network_manager_running)
+    )
+    :effect (and
+      (nm_logging_level_set ?l)
+    )
+  )
+
+  ;; Action: passwd_change_password
+  (:action passwd_change_password
+    :parameters (?u_exec - user ?u_target - user)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+    )
+    :effect (and
+      (user_has_password ?u_target)
+      (not (user_password_empty ?u_target))
+      (not (user_password_locked ?u_target))
+    )
+  )
+
+  ;; Action: passwd_chroot
+  (:action passwd_chroot
+    :parameters (?u_exec - user ?u_target - user ?d - directory)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (directory_exists ?d)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (user_has_password ?u_target)
+    )
+  )
+
+  ;; Action: passwd_delete
+  (:action passwd_delete
+    :parameters (?u_exec - user ?u_target - user)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (user_password_empty ?u_target)
+      (not (user_has_password ?u_target))
+    )
+  )
+
+  ;; Action: passwd_expire
+  (:action passwd_expire
+    :parameters (?u_exec - user ?u_target - user)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (user_password_expired ?u_target)
+    )
+  )
+
+  ;; Action: passwd_lock
+  (:action passwd_lock
+    :parameters (?u_exec - user ?u_target - user)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (user_password_locked ?u_target)
+      (not (user_has_password ?u_target))
+    )
+  )
+
+  ;; Action: passwd_repository
+  (:action passwd_repository
+    :parameters (?u_exec - user ?u_target - user ?r - repository)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (repository_exists ?r)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (user_has_password ?u_target)
+    )
+  )
+
+  ;; Action: passwd_unlock
+  (:action passwd_unlock
+    :parameters (?u_exec - user ?u_target - user)
+    :precondition (and
+      (user_exists ?u_exec)
+      (user_exists ?u_target)
+      (is_root ?u_exec)
+    )
+    :effect (and
+      (not (user_password_locked ?u_target))
+      (user_has_password ?u_target)
+    )
+  )
+
+  ;; Action: pgrep_find_by_group
+  (:action pgrep_find_by_group
+    :parameters (?p - process ?g - group)
+    :precondition (and
+      (process_running ?p)
+      (process_owned_by_group ?p ?g)
+    )
+    :effect (and
+      (process_running ?p)
+    )
+  )
+
+  ;; Action: pgrep_find_by_parent
+  (:action pgrep_find_by_parent
+    :parameters (?p - process ?pp - process)
+    :precondition (and
+      (process_running ?p)
+      (process_has_parent ?p ?pp)
+    )
+    :effect (and
+      (process_running ?p)
+    )
+  )
+
+  ;; Action: pgrep_find_by_user
+  (:action pgrep_find_by_user
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (process_running ?p)
+      (process_owned_by_user ?p ?u)
+    )
+    :effect (and
+      (process_running ?p)
+    )
+  )
+
+  ;; Action: pidwait_process
+  (:action pidwait_process
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (process_waited ?p)
+      (not (process_running ?p))
+    )
+  )
+
+  ;; Action: pkill_by_group
+  (:action pkill_by_group
+    :parameters (?p - process ?g - group)
+    :precondition (and
+      (process_running ?p)
+      (process_owned_by_group ?p ?g)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_parent
+  (:action pkill_by_parent
+    :parameters (?p - process ?pp - process)
+    :precondition (and
+      (process_running ?p)
+      (process_has_parent ?p ?pp)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_pattern
+  (:action pkill_by_pattern
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (process_running ?p)
+      (process_owned_by_user ?p ?u)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_pgroup
+  (:action pkill_by_pgroup
+    :parameters (?p - process ?pg - group)
+    :precondition (and
+      (process_running ?p)
+      (process_in_pgroup ?p ?pg)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_session
+  (:action pkill_by_session
+    :parameters (?p - process ?s - group)
+    :precondition (and
+      (process_running ?p)
+      (process_in_session ?p ?s)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_terminal
+  (:action pkill_by_terminal
+    :parameters (?p - process ?t - interface)
+    :precondition (and
+      (process_running ?p)
+      (process_on_terminal ?p ?t)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_by_user
+  (:action pkill_by_user
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (process_running ?p)
+      (process_owned_by_user ?p ?u)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_from_pidfile
+  (:action pkill_from_pidfile
+    :parameters (?f - file ?p - process)
+    :precondition (and
+      (pidfile_exists ?f)
+      (pidfile_contains_process ?f ?p)
+      (process_running ?p)
+    )
+    :effect (and
+      (process_signaled ?p)
+      (not (process_running ?p))
+    )
+  )
+
+  ;; Action: pkill_pidfile
+  (:action pkill_pidfile
+    :parameters (?f - file ?p - process)
+    :precondition (and
+      (file_exists ?f)
+      (pidfile_contains_process ?f ?p)
+      (process_running ?p)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_require_handler
+  (:action pkill_require_handler
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+      (process_has_handler ?p)
+    )
+    :effect (and
+      (not (process_running ?p))
+      (process_terminated ?p)
+    )
+  )
+
+  ;; Action: pkill_signal_process
+  (:action pkill_signal_process
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (process_signaled ?p)
+      (not (process_running ?p))
+    )
+  )
+
+  ;; Action: pkill_signal_with_handler
+  (:action pkill_signal_with_handler
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+      (process_has_handler ?p)
+    )
+    :effect (and
+      (process_signaled ?p)
+      (not (process_running ?p))
+    )
+  )
+
+  ;; Action: ps_display_context
+  (:action ps_display_context
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_security_context_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_display_forest
+  (:action ps_display_forest
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_hierarchy_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_get_debug_info
+  (:action ps_get_debug_info
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_debug_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_get_version
+  (:action ps_get_version
+    :parameters (?p - package)
+    :precondition (package_installed ?p)
+    :effect (and
+      (process_version_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_list_format_specifiers
+  (:action ps_list_format_specifiers
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_format_specifiers_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_report_process
+  (:action ps_report_process
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_all
+  (:action ps_select_all
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_by_command_name
+  (:action ps_select_by_command_name
+    :parameters (?p - process ?name - object)
+    :precondition (and
+      (process_exists ?p)
+      (process_identified_by_name ?p ?name)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_by_group
+  (:action ps_select_by_group
+    :parameters (?p - process ?g - group)
+    :precondition (and
+      (process_exists ?p)
+      (process_in_group ?p ?g)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_by_pid
+  (:action ps_select_by_pid
+    :parameters (?p - process ?pid - object)
+    :precondition (and
+      (process_exists ?p)
+      (process_identified_by_pid ?p ?pid)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_by_tty
+  (:action ps_select_by_tty
+    :parameters (?p - process ?i - interface)
+    :precondition (and
+      (process_exists ?p)
+      (process_on_interface ?p ?i)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_by_user
+  (:action ps_select_by_user
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (process_exists ?p)
+      (process_owned_by ?p ?u)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_effective_user
+  (:action ps_select_effective_user
+    :parameters (?u - user ?p - process)
+    :precondition (and
+      (user_exists ?u)
+      (process_exists ?p)
+      (process_owned_by_effective_user ?p ?u)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_real_user
+  (:action ps_select_real_user
+    :parameters (?u - user ?p - process)
+    :precondition (and
+      (user_exists ?u)
+      (process_exists ?p)
+      (process_owned_by_real_user ?p ?u)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_running
+  (:action ps_select_running
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+      (process_running ?p)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_select_tty
+  (:action ps_select_tty
+    :parameters (?i - interface ?p - process)
+    :precondition (and
+      (interface_exists ?i)
+      (process_exists ?p)
+      (process_attached_to_tty ?p ?i)
+    )
+    :effect (and
+      (process_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_show_environment
+  (:action ps_show_environment
+    :parameters (?p - process)
+    :precondition (and
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_environment_obtained ?p)
+    )
+  )
+
+  ;; Action: ps_show_threads
+  (:action ps_show_threads
+    :parameters (?p - process)
+    :precondition (and
+      (process_info_obtained ?p)
+    )
+    :effect (and
+      (process_threads_obtained ?p)
+    )
+  )
+
+  ;; Action: renice_process_absolute
+  (:action renice_process_absolute
+    :parameters (?p - process ?u - user ?priority - object)
+    :precondition (and
+      (process_exists ?p)
+      (user_exists ?u)
+      (or (is_root ?u) (process_owned_by ?p ?u))
+    )
+    :effect (and
+      (process_has_priority ?p ?priority)
+    )
+  )
+
+  ;; Action: renice_process_relative
+  (:action renice_process_relative
+    :parameters (?p - process ?u - user ?priority_diff - object)
+    :precondition (and
+      (process_exists ?p)
+      (user_exists ?u)
+      (or (is_root ?u) (process_owned_by ?p ?u))
+    )
+    :effect (and
+      (process_has_priority ?p ?priority_diff)
+    )
+  )
+
+  ;; Action: rm_dir_empty
+  (:action rm_dir_empty
+    :parameters (?d - directory)
+    :precondition (and
+      (file_exists ?d)
+      (directory_empty ?d)
+    )
+    :effect (and
+      (not (file_exists ?d))
+    )
+  )
+
+  ;; Action: rm_file
+  (:action rm_file
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  ;; Action: rm_force_file
+  (:action rm_force_file
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (file_exists ?f))
+    )
+  )
+
+  ;; Action: rm_recursive
+  (:action rm_recursive
+    :parameters (?d - directory)
+    :precondition (and
+      (file_exists ?d)
+    )
+    :effect (and
+      (not (file_exists ?d))
+    )
+  )
+
+  ;; Action: run_nohup
+  (:action run_nohup
+    :parameters (?p - process ?u - user ?out - file)
+    :precondition (and
+      (file_exists ?out)
+      (file_writable ?out)
+    )
+    :effect (and
+      (process_running ?p)
+      (process_ignores_hangup ?p)
+    )
+  )
+
+  ;; Action: run_top_batch
+  (:action run_top_batch
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_running ?p)
+      (top_running_batch_mode ?p)
+    )
+  )
+
+  ;; Action: run_with_nice
+  (:action run_with_nice
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (niceness_adjusted ?p)
+    )
+  )
+
+  ;; Action: service_full_restart
+  (:action service_full_restart
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+    )
+    :effect (and
+      (service_running ?s)
+      (not (service_stopped ?s))
+    )
+  )
+
+  ;; Action: service_reload
+  (:action service_reload
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+      (service_running ?s)
+    )
+    :effect (and
+      (service_status_known ?s)
+    )
+  )
+
+  ;; Action: service_start
+  (:action service_start
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+    )
+    :effect (and
+      (service_running ?s)
+      (not (service_stopped ?s))
+    )
+  )
+
+  ;; Action: service_status
+  (:action service_status
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+    )
+    :effect (and
+      (service_status_known ?s)
+    )
+  )
+
+  ;; Action: service_status_all
+  (:action service_status_all
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+    )
+    :effect (and
+      (service_status_known ?s)
+    )
+  )
+
+  ;; Action: service_stop
+  (:action service_stop
+    :parameters (?s - service)
+    :precondition (and
+      (service_installed ?s)
+    )
+    :effect (and
+      (service_stopped ?s)
+      (not (service_running ?s))
+    )
+  )
+
+  ;; Action: set_chassis_type
+  (:action set_chassis_type
+    :parameters (?p - package ?c - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (chassis_type_set ?c)
+    )
+  )
+
+  ;; Action: set_default_base_dir
+  (:action set_default_base_dir
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (default_user_base_dir ?d)
+    )
+  )
+
+  ;; Action: set_default_expire_date
+  (:action set_default_expire_date
+    :parameters (?date - object)
+    :precondition (and)
+    :effect (and
+      (default_user_expire_date ?date)
+    )
+  )
+
+  ;; Action: set_default_group
+  (:action set_default_group
+    :parameters (?g - group)
+    :precondition (and
+      (group_exists ?g)
+    )
+    :effect (and
+      (default_user_group ?g)
+    )
+  )
+
+  ;; Action: set_default_inactive
+  (:action set_default_inactive
+    :parameters (?days - object)
+    :precondition (and)
+    :effect (and
+      (default_user_inactive ?days)
+    )
+  )
+
+  ;; Action: set_default_shell
+  (:action set_default_shell
+    :parameters (?s - file)
+    :precondition (and
+      (file_exists ?s)
+    )
+    :effect (and
+      (default_user_shell ?s)
+    )
+  )
+
+  ;; Action: set_deployment_environment
+  (:action set_deployment_environment
+    :parameters (?p - package ?e - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (deployment_env_set ?e)
+    )
+  )
+
+  ;; Action: set_hostname_all
+  (:action set_hostname_all
+    :parameters (?p - package ?h - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (hostname_set ?h)
+      (pretty_hostname_set ?h)
+      (static_hostname_set ?h)
+      (transient_hostname_set ?h)
+    )
+  )
+
+  ;; Action: set_hostname_pretty
+  (:action set_hostname_pretty
+    :parameters (?p - package ?h - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (pretty_hostname_set ?h)
+    )
+  )
+
+  ;; Action: set_hostname_static
+  (:action set_hostname_static
+    :parameters (?p - package ?h - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (static_hostname_set ?h)
+    )
+  )
+
+  ;; Action: set_hostname_transient
+  (:action set_hostname_transient
+    :parameters (?p - package ?h - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (transient_hostname_set ?h)
+    )
+  )
+
+  ;; Action: set_icon_name
+  (:action set_icon_name
+    :parameters (?p - package ?i - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (icon_name_set ?i)
+    )
+  )
+
+  ;; Action: set_location
+  (:action set_location
+    :parameters (?p - package ?l - object)
+    :precondition (and
+      (hostnamectl_installed ?p)
+    )
+    :effect (and
+      (location_set ?l)
+    )
+  )
+
+  ;; Action: setfacl_modify_dir
+  (:action setfacl_modify_dir
+    :parameters (?d - directory ?u - user)
+    :precondition (and
+      (directory_exists ?d)
+      (user_exists ?u)
+    )
+    :effect (and
+      (acl_entry_exists ?d ?u)
+    )
+  )
+
+  ;; Action: setfacl_modify_group
+  (:action setfacl_modify_group
+    :parameters (?f - file ?g - group)
+    :precondition (and
+      (group_exists ?g)
+      (file_exists ?f)
+    )
+    :effect (and
+      (acl_entry_exists_group ?f ?g)
+      (acl_has_entry_group ?f ?g)
+    )
+  )
+
+  ;; Action: setfacl_modify_user
+  (:action setfacl_modify_user
+    :parameters (?f - file ?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (file_exists ?f)
+    )
+    :effect (and
+      (file_readable ?f)
+      (acl_entry_exists ?f ?u)
+      (acl_has_entry ?f ?u)
+    )
+  )
+
+  ;; Action: setfacl_remove_all
+  (:action setfacl_remove_all
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+    )
+    :effect (and
+      (acl_all_extended_removed ?f)
+    )
+  )
+
+  ;; Action: setfacl_remove_default
+  (:action setfacl_remove_default
+    :parameters (?d - directory)
+    :precondition (and
+      (directory_exists ?d)
+    )
+    :effect (and
+      (acl_default_removed ?d)
+    )
+  )
+
+  ;; Action: setfacl_remove_group
+  (:action setfacl_remove_group
+    :parameters (?f - file ?g - group)
+    :precondition (and
+      (acl_entry_exists_group ?f ?g)
+      (acl_has_entry_group ?f ?g)
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (acl_has_entry_group ?f ?g))
+      (not (acl_entry_exists_group ?f ?g))
+    )
+  )
+
+  ;; Action: setfacl_remove_user
+  (:action setfacl_remove_user
+    :parameters (?f - file ?u - user)
+    :precondition (and
+      (acl_entry_exists ?f ?u)
+      (acl_has_entry ?f ?u)
+      (file_exists ?f)
+    )
+    :effect (and
+      (not (acl_entry_exists ?f ?u))
+      (not (acl_has_entry ?f ?u))
+    )
+  )
+
+  ;; Action: setfacl_restore
+  (:action setfacl_restore
+    :parameters (?f - file ?backup - file)
+    :precondition (and
+      (file_exists ?f)
+      (file_exists ?backup)
+    )
+    :effect (and
+      (acl_has_mask ?f)
+    )
+  )
+
+  ;; Action: setfacl_set_default_group
+  (:action setfacl_set_default_group
+    :parameters (?d - directory ?g - group)
+    :precondition (and
+      (directory_exists ?d)
+      (group_exists ?g)
+    )
+    :effect (and
+      (acl_has_default_entry_group ?d ?g)
+    )
+  )
+
+  ;; Action: setfacl_set_default_user
+  (:action setfacl_set_default_user
+    :parameters (?d - directory ?u - user)
+    :precondition (and
+      (directory_exists ?d)
+      (user_exists ?u)
+    )
+    :effect (and
+      (acl_has_default_entry ?d ?u)
+    )
+  )
+
+  ;; Action: snap_abort
+  (:action snap_abort
+    :parameters (?c - object ?p - package)
+    :precondition (and
+      (snap_change_pending ?p)
+      (snap_change_pending ?c)
+    )
+    :effect (and
+      (not (snap_change_pending ?c))
+      (not (snap_change_pending ?p))
+    )
+  )
+
+  ;; Action: snap_ack
+  (:action snap_ack
+    :parameters (?p - package ?a - object)
+    :precondition (and
+      (snap_installed ?p)
+    )
+    :effect (and
+      (snap_assertion_added ?a)
+      (assertion_added ?p)
+    )
+  )
+
+  ;; Action: snap_alias
+  (:action snap_alias
+    :parameters (?p - package ?a - object)
+    :precondition (and
+      (snap_installed ?p)
+      (file_exists ?p)
+    )
+    :effect (and
+      (alias_set ?p ?a)
+      (snap_alias_exists ?p ?a)
+    )
+  )
+
+  ;; Action: snap_check_snapshot
+  (:action snap_check_snapshot
+    :parameters (?p - package ?u - user ?s - service)
+    :precondition (and
+      (snap_installed ?p)
+      (file_exists ?p)
+    )
+    :effect (and
+      (snap_snapshot_verified ?p ?u)
+      (snapshot_verified ?p ?u)
+      (snap_snapshot_verified ?s)
+    )
+  )
+
+  ;; Action: snap_connect
+  (:action snap_connect
+    :parameters (?p1 - package ?p2 - package)
+    :precondition (and
+      (snap_installed ?p2)
+      (file_exists ?p1)
+      (file_exists ?p2)
+      (snap_installed ?p1)
+    )
+    :effect (and
+      (plug_connected ?p1 ?p2)
+      (snap_plug_connected ?p1 ?p2)
+    )
+  )
+
+  ;; Action: snap_create_cohort
+  (:action snap_create_cohort
+    :parameters (?p - package)
+    :precondition (and
+      (snap_installed ?p)
+      (file_exists ?p)
+    )
+    :effect (and
+      (snap_cohort_created ?p)
+      (cohort_keys_created ?p)
+    )
+  )
+
+  ;; Action: snap_debug_api
+  (:action snap_debug_api
+    :parameters (?p - package)
+    :precondition (and)
+    :effect (and
+      (api_query_executed ?p)
+    )
+  )
+
+  ;; Action: snap_debug_migrate_home
+  (:action snap_debug_migrate_home
+    :parameters (?u - user)
+    :precondition (and
+      (file_exists ?u)
+    )
+    :effect (and
+      (home_migrated ?u)
     )
   )
 
@@ -7211,33 +6193,30 @@
     :parameters (?p - package)
     :precondition (and
       (snap_installed ?p)
+      (snap_enabled ?p)
+      (package_installed ?p)
+      (package_enabled ?p)
     )
     :effect (and
-      (snap_disabled ?p)
+      (not (package_enabled ?p))
+      (package_disabled ?p)
       (not (snap_enabled ?p))
+      (snap_disabled ?p)
     )
   )
 
   ;; Action: snap_disconnect
   (:action snap_disconnect
-    :parameters (?p - package ?i - interface)
+    :parameters (?p1 - package ?p2 - package)
     :precondition (and
-      (snap_connected ?p ?i)
+      (snap_installed ?p2)
+      (snap_connection_exists ?p1 ?p2)
+      (connection_exists ?p1 ?p2)
+      (snap_installed ?p1)
     )
     :effect (and
-      (snap_disconnected ?p ?i)
-      (not (snap_connected ?p ?i))
-    )
-  )
-
-  ;; Action: snap_disconnect_forget
-  (:action snap_disconnect_forget
-    :parameters (?p - package ?i - interface)
-    :precondition (and
-      (snap_disconnected ?p ?i)
-    )
-    :effect (and
-      (snap_connected ?p ?i)
+      (not (snap_connection_exists ?p1 ?p2))
+      (not (connection_exists ?p1 ?p2))
     )
   )
 
@@ -7245,37 +6224,12 @@
   (:action snap_download
     :parameters (?p - package ?d - directory)
     :precondition (and
-      (snap_available ?p)
       (directory_exists ?d)
+      (file_exists ?d)
     )
     :effect (and
       (snap_downloaded ?p)
-    )
-  )
-
-  ;; Action: snap_download_with_channel
-  (:action snap_download_with_channel
-    :parameters (?p - package ?d - directory ?ch - object)
-    :precondition (and
-      (snap_available ?p)
-      (directory_exists ?d)
-      (snap_channel_available ?p ?ch)
-    )
-    :effect (and
-      (snap_downloaded ?p)
-    )
-  )
-
-  ;; Action: snap_download_with_revision
-  (:action snap_download_with_revision
-    :parameters (?p - package ?d - directory ?rev - object)
-    :precondition (and
-      (snap_available ?p)
-      (directory_exists ?d)
-      (snap_revision_available ?p ?rev)
-    )
-    :effect (and
-      (snap_downloaded ?p)
+      (package_downloaded ?p)
     )
   )
 
@@ -7283,688 +6237,2346 @@
   (:action snap_enable
     :parameters (?p - package)
     :precondition (and
+      (package_disabled ?p)
+      (package_installed ?p)
       (snap_installed ?p)
       (snap_disabled ?p)
     )
     :effect (and
       (snap_enabled ?p)
+      (not (package_disabled ?p))
       (not (snap_disabled ?p))
-    )
-  )
-
-  ;; Action: snap_export_key
-  (:action snap_export_key
-    :parameters (?f - file)
-    :precondition (and
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_exists ?f)
-    )
-  )
-
-  ;; Action: snap_export_snapshot
-  (:action snap_export_snapshot
-    :parameters (?s - service ?f - file)
-    :precondition (and
-      (snap_snapshot_exists ?s)
-      (file_exists ?f)
-    )
-    :effect (and
-      (file_exists ?f)
-    )
-  )
-
-  ;; Action: snap_find
-  (:action snap_find
-    :parameters (?p - package)
-    :precondition (and
-      (snap_available ?p)
-    )
-    :effect (and
-      (snap_configured ?p)
+      (package_enabled ?p)
     )
   )
 
   ;; Action: snap_find_private
   (:action snap_find_private
-    :parameters (?p - package ?u - user)
+    :parameters (?u - user ?p - package)
     :precondition (and
-      (snap_private_snap ?p)
+      (user_logged_in_store ?u)
       (user_logged_in ?u)
     )
     :effect (and
-      (snap_configured ?p)
+      (snap_installed ?p)
+      (package_installed ?p)
     )
   )
 
   ;; Action: snap_forget
   (:action snap_forget
-    :parameters (?s - service)
+    :parameters (?p - package)
     :precondition (and
-      (snap_snapshot_exists ?s)
+      (snapshot_exists ?p)
     )
     :effect (and
-      (not (snap_snapshot_exists ?s))
+      (not (snapshot_exists ?p))
     )
   )
 
-  ;; Action: snap_get_config
-  (:action snap_get_config
-    :parameters (?p - package ?f - configuration_file)
+  ;; Action: snap_forget_snapshot
+  (:action snap_forget_snapshot
+    :parameters (?p - package)
+    :precondition (and
+      (snapshot_exists ?p)
+      (snap_snapshot_exists ?p)
+    )
+    :effect (and
+      (not (snap_snapshot_exists ?p))
+      (not (snapshot_exists ?p))
+    )
+  )
+
+  ;; Action: snap_list_components
+  (:action snap_list_components
+    :parameters (?p - package)
     :precondition (and
       (snap_installed ?p)
-      (file_exists ?f)
     )
     :effect (and
-      (snap_configured ?p)
+      (snap_component_listed ?p)
     )
   )
 
-  ;; Action: specify_match_extension
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action specify_match_extension
-    :parameters (?match - file)
+  ;; Action: soft_reboot
+  (:action soft_reboot
+    :parameters (?s - service)
     :precondition (and
-      (file_exists ?match)
+      (service_running ?s)
     )
     :effect (and
-      (match_extension_specified ?match)
+      (system_rebooted)
+      (not (service_running ?s))
     )
   )
 
-  ;; Action: split_group
-  ;; Source: groupadd
-  ;; Reused from Phase 1
-  (:action split_group
-    :parameters (?group - group ?max_members - file)
-    :precondition (and
-      (group_exists ?group)
-    )
-    :effect (and
-      (group_split ?group)
-    )
-  )
-
-  ;; Action: start_login_shell
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action start_login_shell
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (login_shell_running ?user)
-    )
-  )
-
-  ;; Action: start_service
-  ;; Source: systemctl
-  ;; Reused from Phase 1
-  (:action start_service
-    :parameters (?svc - service)
-    :precondition (and
-      (service_exists ?svc)
-      (not (service_running ?svc))
-    )
-    :effect (and
-      (service_running ?svc)
-    )
-  )
-
-  ;; Action: status_service
-  (:action status_service
-    :parameters (?s - service ?u - user)
-    :precondition (and
-      (service_exists ?s)
-    )
-    :effect (and
-      (service_exists ?s)
-    )
-  )
-
-  ;; Action: stay_on_filesystem
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action stay_on_filesystem
-    :parameters (?src - file ?dst - file)
-    :precondition (and
-      (file_exists ?src)
-      (file_exists ?dst)
-    )
-    :effect (and
-      (filesystem_boundary_respected ?src ?dst)
-    )
-  )
-
-  ;; Action: stop_service
-  ;; Source: systemctl
-  ;; Reused from Phase 1
-  (:action stop_service
-    :parameters (?svc - service)
-    :precondition (and
-      (service_running ?svc)
-    )
-    :effect (and
-      (not (service_running ?svc))
-    )
-  )
-
-  ;; Action: strip_trailing_slashes
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action strip_trailing_slashes
-    :parameters (?src - file)
-    :precondition (and
-      (file_exists ?src)
-    )
-    :effect (and
-      (file_exists ?src)
-    )
-  )
-
-  ;; Action: switch_network_namespace
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action switch_network_namespace
-    :parameters (?netns - file)
-    :precondition (and
-      (network_namespace_exists ?netns)
-    )
-    :effect (and
-      (current_network_namespace ?netns)
-    )
-  )
-
-  ;; Action: switch_user
-  (:action switch_user
-    :parameters (?target_user - user ?caller - user)
-    :precondition (and
-      (user_exists ?target_user)
-      (user_exists ?caller)
-      (can_switch_to ?target_user)
-    )
-    :effect (and
-      (session_created ?target_user)
-      (user_authenticated ?target_user)
-    )
-  )
-
-  ;; Action: terminate_child
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action terminate_child
-    :parameters (?signal - file)
-    :precondition (and
-      (process_running ?signal)
-    )
-    :effect (and
-      (process_terminated ?signal)
-    )
-  )
-
-  ;; Action: test_acl
-  (:action test_acl
-    :parameters (?f - filesystem_object ?u - user)
-    :precondition (and
-      (file_exists ?f)
-      (can_modify_acl ?u)
-    )
-    :effect (and
-      (acl_tested ?f)
-      (test_mode_active)
-    )
-  )
-
-  ;; Action: toggle_color
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action toggle_color
-    :parameters (?state - file)
-    :precondition (and
-      (file_exists ?state)
-    )
-    :effect (and
-      (color_setting ?state)
-    )
-  )
-
-  ;; Action: traverse_all_symbolic_links
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action traverse_all_symbolic_links
-    :parameters (?link - file)
-    :precondition (and
-      (file_exists ?link)
-    )
-    :effect (and
-      (all_links_traversed ?link)
-    )
-  )
-
-  ;; Action: traverse_all_symlinks
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action traverse_all_symlinks
+  ;; Action: ss_dump_tcp_diag
+  (:action ss_dump_tcp_diag
     :parameters (?f - file)
     :precondition (and
+      (file_writable ?f)
+    )
+    :effect (and
+      (socket_info_dumped_to_file ?f)
+    )
+  )
+
+  ;; Action: ss_filter_by_device
+  (:action ss_filter_by_device
+    :parameters (?p - process ?i - interface)
+    :precondition (and
+      (socket_info_obtained ?p)
+      (interface_exists ?i)
+    )
+    :effect (and
+      (socket_interface_known ?p ?i)
+    )
+  )
+
+  ;; Action: ss_filter_by_family
+  (:action ss_filter_by_family
+    :parameters (?p - process)
+    :precondition (and
+      (socket_info_obtained ?p)
+    )
+    :effect (and
+      (socket_family_known ?p)
+    )
+  )
+
+  ;; Action: ss_filter_by_port
+  (:action ss_filter_by_port
+    :parameters (?p - process ?port - port)
+    :precondition (and
+      (socket_info_obtained ?p)
+      (port_exists ?port)
+    )
+    :effect (and
+      (socket_port_known ?p ?port)
+    )
+  )
+
+  ;; Action: ss_filter_by_state
+  (:action ss_filter_by_state
+    :parameters (?p - process)
+    :precondition (and
+      (socket_info_obtained ?p)
+    )
+    :effect (and
+      (socket_state_known ?p)
+    )
+  )
+
+  ;; Action: ss_kill_sockets
+  (:action ss_kill_sockets
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_closed ?p)
+    )
+  )
+
+  ;; Action: ss_list_sockets
+  (:action ss_list_sockets
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_show_bpf
+  (:action ss_show_bpf
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (can_escalate ?u)
+    )
+    :effect (and
+      (socket_bpf_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_show_context
+  (:action ss_show_context
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_context_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_show_internal
+  (:action ss_show_internal
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_internal_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_show_memory
+  (:action ss_show_memory
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_memory_info_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_summary
+  (:action ss_summary
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (socket_summary_obtained ?p)
+    )
+  )
+
+  ;; Action: ss_switch_namespace
+  (:action ss_switch_namespace
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (network_namespace_switched ?p)
+    )
+  )
+
+  ;; Action: stat_file
+  (:action stat_file
+    :parameters (?f - filesystem_object)
+    :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (symlinks_traversed ?f)
+      (file_status_known ?f)
     )
   )
 
-  ;; Action: traverse_symbolic_link_hierarchy
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action traverse_symbolic_link_hierarchy
-    :parameters (?link - file)
-    :precondition (and
-      (file_exists ?link)
-    )
-    :effect (and
-      (hierarchy_traversed ?link)
-    )
-  )
-
-  ;; Action: traverse_symbolic_links
-  ;; Source: chmod
-  ;; Reused from Phase 1
-  (:action traverse_symbolic_links
-    :parameters (?f - file)
+  ;; Action: stat_filesystem
+  (:action stat_filesystem
+    :parameters (?f - filesystem_object)
     :precondition (and
       (file_exists ?f)
     )
     :effect (and
-      (file_traversed ?f)
+      (filesystem_status_known ?f)
     )
   )
 
-  ;; Action: treat_dest_as_normal_file
-  ;; Source: cp
-  ;; Reused from Phase 1
-  (:action treat_dest_as_normal_file
-    :parameters (?src - file ?dst - file)
+  ;; Action: stat_format
+  (:action stat_format
+    :parameters (?f - filesystem_object)
     :precondition (and
-      (file_exists ?src)
+      (file_exists ?f)
     )
     :effect (and
-      (file_exists ?dst)
+      (file_metadata_extracted ?f)
     )
   )
 
-  ;; Action: tunnel_over_ip
-  ;; Source: ip
-  ;; Reused from Phase 1
-  (:action tunnel_over_ip
-    :parameters (?tunnel - file)
+  ;; Action: sudo_chdir
+  (:action sudo_chdir
+    :parameters (?u_invoking - user ?d - directory ?p - process)
     :precondition (and
-      (tunnel_exists ?tunnel)
+      (user_exists ?u_invoking)
+      (directory_exists ?d)
     )
     :effect (and
-      (tunnel_configured ?tunnel)
+      (process_running_as ?p ?u_invoking)
     )
   )
 
-  ;; Action: unlock_user
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action unlock_user
+  ;; Action: sudo_execute_as_group
+  (:action sudo_execute_as_group
+    :parameters (?u_invoking - user ?g_target - group ?p - process)
+    :precondition (and
+      (user_exists ?u_invoking)
+      (group_exists ?g_target)
+      (can_execute_as_group ?u_invoking ?g_target)
+    )
+    :effect (and
+      (process_running_as ?p ?u_invoking)
+    )
+  )
+
+  ;; Action: sudo_execute_as_user
+  (:action sudo_execute_as_user
+    :parameters (?u_invoking - user ?u_target - user ?p - process)
+    :precondition (and
+      (user_exists ?u_invoking)
+      (user_exists ?u_target)
+      (can_execute_as ?u_invoking ?u_target)
+    )
+    :effect (and
+      (process_running_as ?p ?u_target)
+    )
+  )
+
+  ;; Action: sudo_remove_timestamp
+  (:action sudo_remove_timestamp
     :parameters (?u - user)
     :precondition (and
       (user_exists ?u)
-      (user_locked ?u)
+      (session_cached ?u)
     )
     :effect (and
-      (not (user_locked ?u))
+      (not (session_cached ?u))
     )
   )
 
-  ;; Action: unmask_service
-  (:action unmask_service
-    :parameters (?s - service ?u - user)
+  ;; Action: sudo_reset_timestamp
+  (:action sudo_reset_timestamp
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (session_cached ?u)
+    )
+    :effect (and
+      (not (session_cached ?u))
+    )
+  )
+
+  ;; Action: sudo_validate
+  (:action sudo_validate
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (session_cached ?u)
+    )
+  )
+
+  ;; Action: sudoedit_file
+  (:action sudoedit_file
+    :parameters (?u - user ?f - file)
+    :precondition (and
+      (user_exists ?u)
+      (file_exists ?f)
+      (can_edit_file ?u ?f)
+    )
+    :effect (and
+      (file_writable ?f)
+    )
+  )
+
+  ;; Action: switch_root
+  (:action switch_root
+    :parameters (?d - directory ?s - service)
+    :precondition (and
+      (service_running ?s)
+      (file_exists ?d)
+    )
+    :effect (and
+      (root_directory_switched ?d)
+    )
+  )
+
+  ;; Action: sysctl_load_file
+  (:action sysctl_load_file
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+      (file_readable ?f)
+    )
+    :effect (and
+      (system_settings_loaded ?f)
+    )
+  )
+
+  ;; Action: sysctl_load_system
+  (:action sysctl_load_system
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (system_settings_all_loaded)
+    )
+  )
+
+  ;; Action: sysctl_read_parameter
+  (:action sysctl_read_parameter
+    :parameters (?p - object)
+    :precondition (and)
+    :effect (and
+      (kernel_parameter_read ?p)
+    )
+  )
+
+  ;; Action: sysctl_write_parameter
+  (:action sysctl_write_parameter
+    :parameters (?p - object)
+    :precondition (and)
+    :effect (and
+      (kernel_parameter_set ?p)
+    )
+  )
+
+  ;; Action: system_sleep
+  (:action system_sleep
+    :parameters (?s - service)
+    :precondition (and
+      (service_running ?s)
+    )
+    :effect (and
+      (system_sleeping)
+    )
+  )
+
+  ;; Action: systemctl_clean_resource
+  (:action systemctl_clean_resource
+    :parameters (?s - service ?r - object)
+    :precondition (and
+      (resource_exists ?r ?s)
+    )
+    :effect (and
+      (not (resource_exists ?r ?s))
+    )
+  )
+
+  ;; Action: systemctl_disable
+  (:action systemctl_disable
+    :parameters (?s - service)
+    :precondition (and
+      (service_enabled ?s)
+    )
+    :effect (and
+      (not (service_enabled ?s))
+      (service_disabled ?s)
+    )
+  )
+
+  ;; Action: systemctl_enable
+  (:action systemctl_enable
+    :parameters (?s - service)
     :precondition (and
       (service_exists ?s)
+    )
+    :effect (and
+      (service_enabled ?s)
+    )
+  )
+
+  ;; Action: systemctl_exit
+  (:action systemctl_exit
+    :parameters (?s - service)
+    :precondition (and
+      (system_running)
+      (service_running ?s)
+    )
+    :effect (and
+      (not (system_running))
+      (not (service_running ?s))
+      (service_manager_exited)
+      (system_manager_exited)
+    )
+  )
+
+  ;; Action: systemctl_hibernate
+  (:action systemctl_hibernate
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (not (system_running))
+      (system_hibernated)
+    )
+  )
+
+  ;; Action: systemctl_hybrid_sleep
+  (:action systemctl_hybrid_sleep
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (not (system_running))
+      (system_hybrid_sleeping)
+      (system_hybrid_sleep)
+    )
+  )
+
+  ;; Action: systemctl_kill_all
+  (:action systemctl_kill_all
+    :parameters (?s - service ?p - process)
+    :precondition (and
+      (process_exists ?p)
+      (process_belongs_to_service ?p ?s)
+    )
+    :effect (and
+      (not (process_exists ?p))
+    )
+  )
+
+  ;; Action: systemctl_kill_control
+  (:action systemctl_kill_control
+    :parameters (?s - service ?p - process)
+    :precondition (and
+      (process_exists ?p)
+      (process_belongs_to_service ?p ?s)
+      (process_is_control ?p)
+    )
+    :effect (and
+      (not (process_exists ?p))
+    )
+  )
+
+  ;; Action: systemctl_kill_main
+  (:action systemctl_kill_main
+    :parameters (?s - service ?p - process)
+    :precondition (and
+      (process_exists ?p)
+      (process_belongs_to_service ?p ?s)
+      (process_is_main ?p)
+    )
+    :effect (and
+      (not (process_exists ?p))
+    )
+  )
+
+  ;; Action: systemctl_link
+  (:action systemctl_link
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_linked ?s)
+    )
+  )
+
+  ;; Action: systemctl_list_dependencies
+  (:action systemctl_list_dependencies
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_dependencies_listed ?s)
+    )
+  )
+
+  ;; Action: systemctl_list_failed
+  (:action systemctl_list_failed
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+      (service_failed ?s)
+    )
+    :effect (and
+      (service_status_known ?s)
+    )
+  )
+
+  ;; Action: systemctl_list_jobs
+  (:action systemctl_list_jobs
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_jobs_listed ?s)
+    )
+  )
+
+  ;; Action: systemctl_mask
+  (:action systemctl_mask
+    :parameters (?s - service)
+    :precondition (and)
+    :effect (and
+      (service_masked ?s)
+    )
+  )
+
+  ;; Action: systemctl_preset
+  (:action systemctl_preset
+    :parameters (?s - service)
+    :precondition (and)
+    :effect (and
+      (service_preset ?s)
+    )
+  )
+
+  ;; Action: systemctl_reboot_argument
+  (:action systemctl_reboot_argument
+    :parameters (?arg - object)
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_reboot_argument_pending ?arg)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_reboot_boot_loader_entry
+  (:action systemctl_reboot_boot_loader_entry
+    :parameters (?entry - object)
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_boot_loader_entry_pending ?entry)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_reboot_boot_loader_menu
+  (:action systemctl_reboot_boot_loader_menu
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_boot_loader_menu_pending)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_reboot_firmware_setup
+  (:action systemctl_reboot_firmware_setup
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_firmware_setup_pending)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_restart
+  (:action systemctl_restart
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_running ?s)
+    )
+  )
+
+  ;; Action: systemctl_sleep
+  (:action systemctl_sleep
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_sleeping)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_soft_reboot
+  (:action systemctl_soft_reboot
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_userspace_reboot_pending)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_start
+  (:action systemctl_start
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_running ?s)
+      (not (service_stopped ?s))
+    )
+  )
+
+  ;; Action: systemctl_status
+  (:action systemctl_status
+    :parameters (?s - service)
+    :precondition (and
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_status_known ?s)
+    )
+  )
+
+  ;; Action: systemctl_stop
+  (:action systemctl_stop
+    :parameters (?s - service)
+    :precondition (and
+      (service_running ?s)
+      (service_exists ?s)
+    )
+    :effect (and
+      (service_stopped ?s)
+      (not (service_running ?s))
+    )
+  )
+
+  ;; Action: systemctl_suspend
+  (:action systemctl_suspend
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (not (system_running))
+      (system_suspended)
+    )
+  )
+
+  ;; Action: systemctl_suspend_then_hibernate
+  (:action systemctl_suspend_then_hibernate
+    :parameters ()
+    :precondition (and
+      (system_running)
+    )
+    :effect (and
+      (system_suspended_then_hibernated)
+      (system_suspend_then_hibernate)
+      (not (system_running))
+    )
+  )
+
+  ;; Action: systemctl_switch_root
+  (:action systemctl_switch_root
+    :parameters (?dir - directory ?proc - process)
+    :precondition (and
+      (system_running)
+      (directory_exists ?dir)
+    )
+    :effect (and
+      (root_directory_switched ?dir)
+      (system_manager_running_at ?proc)
+    )
+  )
+
+  ;; Action: systemctl_system_mode
+  (:action systemctl_system_mode
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (system_service_manager_accessed)
+    )
+  )
+
+  ;; Action: systemctl_unmask
+  (:action systemctl_unmask
+    :parameters (?s - service)
+    :precondition (and
       (service_masked ?s)
     )
     :effect (and
-      (service_unmasked ?s)
       (not (service_masked ?s))
+      (service_unmasked ?s)
     )
   )
 
-  ;; Action: update_access_time
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_access_time
-    :parameters (?f - file)
+  ;; Action: systemctl_user_mode
+  (:action systemctl_user_mode
+    :parameters (?u - user)
     :precondition (and
-      (file_exists ?f)
+      (user_exists ?u)
     )
     :effect (and
-      (file_access_time_updated ?f)
+      (user_service_manager_accessed ?u)
     )
   )
 
-  ;; Action: update_before_command
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action update_before_command
-    :parameters (?obj - file)
+  ;; Action: timedatectl_ntp_servers
+  (:action timedatectl_ntp_servers
+    :parameters (?p - process ?i - interface ?s - service)
+    :precondition (and
+      (executed_as_root ?p)
+      (interface_exists ?i)
+      (interface_managed_by_networkd ?i)
+    )
+    :effect (and
+      (ntp_server_configured ?i ?s)
+    )
+  )
+
+  ;; Action: timedatectl_set_local_rtc_false
+  (:action timedatectl_set_local_rtc_false
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (rtc_utc_time)
+      (not (rtc_local_time))
+    )
+  )
+
+  ;; Action: timedatectl_set_local_rtc_true
+  (:action timedatectl_set_local_rtc_true
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (rtc_local_time)
+      (not (rtc_utc_time))
+    )
+  )
+
+  ;; Action: timedatectl_set_ntp_false
+  (:action timedatectl_set_ntp_false
+    :parameters (?p - process ?s - service)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (ntp_enabled ?s))
+      (ntp_disabled ?s)
+      (not (ntp_enabled))
+    )
+  )
+
+  ;; Action: timedatectl_set_ntp_true
+  (:action timedatectl_set_ntp_true
+    :parameters (?p - process ?s - service)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (not (ntp_disabled ?s))
+      (ntp_enabled ?s)
+      (ntp_enabled)
+    )
+  )
+
+  ;; Action: timedatectl_set_time
+  (:action timedatectl_set_time
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (system_time_set)
+    )
+  )
+
+  ;; Action: timedatectl_set_timezone
+  (:action timedatectl_set_timezone
+    :parameters (?p - process)
+    :precondition (and
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (timezone_set)
+    )
+  )
+
+  ;; Action: timedatectl_status
+  (:action timedatectl_status
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (update_run_before_command)
+      (system_time_status_known)
     )
   )
 
-  ;; Action: update_default_user_info
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action update_default_user_info
-    :parameters (?obj - file)
+  ;; Action: timedatectl_timesync_status
+  (:action timedatectl_timesync_status
+    :parameters (?p - process ?s - service)
+    :precondition (and
+      (timesync_status_available ?s)
+    )
+    :effect (and
+      (timesync_status_known)
+      (timesync_status_available ?s)
+    )
+  )
+
+  ;; Action: toggle_command_lines
+  (:action toggle_command_lines
+    :parameters (?p - process)
+    :precondition (and
+      (process_visible ?p)
+    )
+    :effect (and
+      (command_line_displayed ?p)
+    )
+  )
+
+  ;; Action: toggle_forest_view
+  (:action toggle_forest_view
+    :parameters ()
     :precondition (and)
     :effect (and
-      (default_user_info_updated)
+      (forest_view_active)
     )
   )
 
-  ;; Action: update_file_times
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_file_times
-    :parameters (?f - file)
+  ;; Action: top_change_delay
+  (:action top_change_delay
+    :parameters (?p - process ?conf - configuration_file)
     :precondition (and
-      (file_exists ?f)
+      (not (top_restrictions_active ?conf))
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (top_delay_changed ?p)
     )
   )
 
-  ;; Action: update_file_times_no_create
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_file_times_no_create
-    :parameters (?f - file)
+  ;; Action: top_disable_forest_view
+  (:action top_disable_forest_view
+    :parameters ()
     :precondition (and
-      (file_exists ?f)
+      (top_running)
+      (top_forest_view_enabled)
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (not (top_forest_view_enabled))
     )
   )
 
-  ;; Action: update_file_times_with_date
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_file_times_with_date
-    :parameters (?f - file ?date - file)
+  ;; Action: top_display_cmdline
+  (:action top_display_cmdline
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?f)
+      (top_running ?p)
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (display_cmdline ?p)
     )
   )
 
-  ;; Action: update_file_times_with_stamp
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_file_times_with_stamp
-    :parameters (?f - file ?stamp - file)
+  ;; Action: top_display_control_groups
+  (:action top_display_control_groups
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?f)
+      (top_running ?p)
     )
     :effect (and
-      (file_access_time_updated ?f)
-      (file_modification_time_updated ?f)
+      (display_control_groups ?p)
     )
   )
 
-  ;; Action: update_file_timestamp
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_file_timestamp
-    :parameters (?f - file)
+  ;; Action: top_display_environ
+  (:action top_display_environ
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?f)
+      (process_exists ?p)
     )
     :effect (and
-      (file_modified ?f)
+      (process_env_visible ?p)
     )
   )
 
-  ;; Action: update_group_file
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action update_group_file
-    :parameters (?group - group)
+  ;; Action: top_display_environment
+  (:action top_display_environment
+    :parameters (?p - process)
     :precondition (and
-      (group_exists ?group)
+      (top_running ?p)
     )
     :effect (and
-      (group_file_updated ?group)
+      (display_environment ?p)
     )
   )
 
-  ;; Action: update_lastlog
-  ;; Source: su
-  ;; Reused from Phase 1
-  (:action update_lastlog
-    :parameters (?config - file)
+  ;; Action: top_display_logged_messages
+  (:action top_display_logged_messages
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?config)
+      (top_running ?p)
     )
     :effect (and
-      (lastlog_updated ?config)
+      (display_logged_messages ?p)
     )
   )
 
-  ;; Action: update_modification_time
-  ;; Source: touch
-  ;; Reused from Phase 1
-  (:action update_modification_time
-    :parameters (?f - file)
+  ;; Action: top_display_namespaces
+  (:action top_display_namespaces
+    :parameters (?p - process)
     :precondition (and
-      (file_exists ?f)
+      (top_running ?p)
     )
     :effect (and
-      (file_modification_time_updated ?f)
+      (display_namespaces ?p)
     )
   )
 
-  ;; Action: update_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action update_package
-    :parameters (?pkg - package)
+  ;; Action: top_display_smaps
+  (:action top_display_smaps
+    :parameters (?p - process)
     :precondition (and
-      (package_installed ?pkg)
-      (network_available)
+      (process_exists ?p)
+      (executed_as_root ?p)
     )
     :effect (and
-      (not (package_outdated ?pkg))
-      (not (vulnerable ?pkg))
+      (process_smaps_visible ?p)
     )
   )
 
-  ;; Action: update_package_index
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action update_package_index
-    :parameters (?obj - file)
+  ;; Action: top_display_supp_groups
+  (:action top_display_supp_groups
+    :parameters (?p - process)
     :precondition (and
-      (network_available)
+      (top_running ?p)
     )
     :effect (and
-      (package_index_updated)
+      (display_supp_groups ?p)
     )
   )
 
-  ;; Action: update_package_list
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action update_package_list
-    :parameters (?obj - file)
+  ;; Action: top_enable_secure_mode
+  (:action top_enable_secure_mode
+    :parameters (?p_top - process ?f_scsi - file)
     :precondition (and
-      (network_available)
+      (process_running ?p_top)
+      (file_exists ?f_scsi)
     )
     :effect (and
-      (package_list_updated)
+      (top_running_secure_mode ?p_top)
     )
   )
 
-  ;; Action: update_package_lists
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action update_package_lists
-    :parameters (?obj - file)
+  ;; Action: top_expand_numa_node
+  (:action top_expand_numa_node
+    :parameters (?p - process)
     :precondition (and
-      (network_available)
+      (top_running ?p)
+      (system_has_numa_support ?p)
     )
     :effect (and
-      (package_lists_updated)
+      (numa_node_expanded ?p)
     )
   )
 
-  ;; Action: update_selinux_user_mapping
-  ;; Source: useradd
-  ;; Reused from Phase 1
-  (:action update_selinux_user_mapping
-    :parameters (?user - user)
-    :precondition (and
-      (user_exists ?user)
-    )
-    :effect (and
-      (selinux_user_mapping_updated ?user)
-    )
-  )
-
-  ;; Action: update_user_comment
-  ;; Source: usermod
-  ;; Reused from Phase 1
-  (:action update_user_comment
-    :parameters (?login - user ?comment - file)
-    :precondition (and
-      (user_exists ?login)
-    )
-    :effect (and
-      (user_exists ?login)
-    )
-  )
-
-  ;; Action: upgrade_package
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action upgrade_package
-    :parameters (?pkg - package)
-    :precondition (and
-      (package_installed ?pkg)
-      (package_outdated ?pkg)
-      (network_available)
-    )
-    :effect (and
-      (package_installed ?pkg)
-      (not (package_outdated ?pkg))
-    )
-  )
-
-  ;; Action: upgrade_packages
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action upgrade_packages
-    :parameters (?obj - file)
-    :precondition (and
-      (package_list_updated)
-      (network_available)
-    )
-    :effect (and
-      (packages_upgraded)
-    )
-  )
-
-  ;; Action: use_config_file
-  ;; Source: apt-get
-  ;; Reused from Phase 1
-  (:action use_config_file
-    :parameters (?config - file)
-    :precondition (and
-      (file_exists ?config)
-    )
-    :effect (and
-      (config_file_used ?config)
-    )
-  )
-
-  ;; Action: use_extra_users
-  ;; Source: userdel
-  ;; Reused from Phase 1
-  (:action use_extra_users
-    :parameters (?obj - file)
+  ;; Action: top_filter_case_insensitive
+  (:action top_filter_case_insensitive
+    :parameters (?p - process)
     :precondition (and)
     :effect (and
-      (extra_users_enabled)
+      (process_filter_active ?p)
+      (not (process_filter_case_sensitive ?p))
     )
   )
 
-  ;; Action: use_reference_ownership
-  ;; Source: chown
-  ;; Reused from Phase 1
-  (:action use_reference_ownership
+  ;; Action: top_filter_case_sensitive
+  (:action top_filter_case_sensitive
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_filter_active ?p)
+      (process_filter_case_sensitive ?p)
+    )
+  )
+
+  ;; Action: top_filter_user_any
+  (:action top_filter_user_any
+    :parameters (?p_top - process ?u - user)
+    :precondition (and
+      (process_running ?p_top)
+      (user_exists ?u)
+    )
+    :effect (and
+      (process_filtered_by_user ?p_top ?u)
+    )
+  )
+
+  ;; Action: top_filter_user_effective
+  (:action top_filter_user_effective
+    :parameters (?p_top - process ?u - user)
+    :precondition (and
+      (process_running ?p_top)
+    )
+    :effect (and
+      (process_filtered_by_user ?p_top ?u)
+    )
+  )
+
+  ;; Action: top_hide_window
+  (:action top_hide_window
+    :parameters ()
+    :precondition (and
+      (top_running)
+      (top_window_visible)
+    )
+    :effect (and
+      (not (top_window_visible))
+    )
+  )
+
+  ;; Action: top_inspect_process
+  (:action top_inspect_process
+    :parameters (?p - process ?target - process)
+    :precondition (and
+      (top_running ?p)
+      (process_exists ?target)
+    )
+    :effect (and
+      (process_exists ?target)
+    )
+  )
+
+  ;; Action: top_jump_to_home
+  (:action top_jump_to_home
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (top_window_scrolled ?p))
+    )
+  )
+
+  ;; Action: top_kill_task
+  (:action top_kill_task
+    :parameters (?p - process ?target - process ?conf - file)
+    :precondition (and
+      (not (top_restrictions_active ?conf))
+      (top_running ?p)
+    )
+    :effect (and
+      (process_killed ?target)
+      (process_killed ?p)
+    )
+  )
+
+  ;; Action: top_locate_next
+  (:action top_locate_next
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (top_search_string_set ?p)
+    )
+    :effect (and
+      (top_window_scrolled ?p)
+    )
+  )
+
+  ;; Action: top_monitor_pid
+  (:action top_monitor_pid
+    :parameters (?p_top - process ?p_target - process)
+    :precondition (and
+      (process_running ?p_top)
+      (process_running ?p_target)
+    )
+    :effect (and
+      (process_monitored ?p_target)
+    )
+)
+
+  ;; Action: top_remove_cmdline
+  (:action top_remove_cmdline
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_cmdline ?p)
+    )
+    :effect (and
+      (not (display_cmdline ?p))
+    )
+  )
+
+  ;; Action: top_remove_control_groups
+  (:action top_remove_control_groups
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_control_groups ?p)
+    )
+    :effect (and
+      (not (display_control_groups ?p))
+    )
+  )
+
+  ;; Action: top_remove_environment
+  (:action top_remove_environment
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_environment ?p)
+    )
+    :effect (and
+      (not (display_environment ?p))
+    )
+  )
+
+  ;; Action: top_remove_logged_messages
+  (:action top_remove_logged_messages
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_logged_messages ?p)
+    )
+    :effect (and
+      (not (display_logged_messages ?p))
+    )
+  )
+
+  ;; Action: top_remove_namespaces
+  (:action top_remove_namespaces
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_namespaces ?p)
+    )
+    :effect (and
+      (not (display_namespaces ?p))
+    )
+  )
+
+  ;; Action: top_remove_supp_groups
+  (:action top_remove_supp_groups
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (display_supp_groups ?p)
+    )
+    :effect (and
+      (not (display_supp_groups ?p))
+    )
+  )
+
+  ;; Action: top_renice_autogroup
+  (:action top_renice_autogroup
+    :parameters (?p - process ?u - user)
+    :precondition (and
+      (top_running ?p)
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_autogroup_reniced ?p)
+    )
+  )
+
+  ;; Action: top_renice_task
+  (:action top_renice_task
+    :parameters (?p - process ?u - user ?conf - file)
+    :precondition (and
+      (not (top_restrictions_active ?conf))
+      (top_running ?p)
+      (process_exists ?p)
+    )
+    :effect (and
+      (process_reniced ?p)
+    )
+  )
+
+  ;; Action: top_reset_filter_all
+  (:action top_reset_filter_all
+    :parameters (?p - process)
+    :precondition (and
+      (process_filter_active ?p)
+    )
+    :effect (and
+      (not (process_filter_active ?p))
+    )
+  )
+
+  ;; Action: top_reset_filter_current
+  (:action top_reset_filter_current
+    :parameters (?p - process)
+    :precondition (and
+      (process_filter_active ?p)
+    )
+    :effect (and
+      (not (process_filter_active ?p))
+    )
+  )
+
+  ;; Action: top_reset_window
+  (:action top_reset_window
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_window_visible ?p)
+      (not (top_window_scrolled ?p))
+      (not (top_filter_active ?p))
+    )
+  )
+
+  ;; Action: top_save_config
+  (:action top_save_config
+    :parameters (?p - process ?f - configuration_file)
+    :precondition (and
+      (file_writable ?f)
+    )
+    :effect (and
+      (top_config_exists ?f)
+    )
+  )
+
+  ;; Action: top_scale_memory
+  (:action top_scale_memory
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_memory_scaled)
+    )
+  )
+
+  ;; Action: top_set_search_string
+  (:action top_set_search_string
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_search_string_set ?p)
+    )
+  )
+
+  ;; Action: top_toggle_accum_time
+  (:action top_toggle_accum_time
+    :parameters (?p_top - process)
+    :precondition (and
+      (process_running ?p_top)
+    )
+    :effect (and
+      (top_displaying_accum_time ?p_top)
+    )
+  )
+
+  ;; Action: top_toggle_adjacent_mode
+  (:action top_toggle_adjacent_mode
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (cpu_summary_single_line ?p))
+      (adjacent_mode_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_alternate_display
+  (:action top_toggle_alternate_display
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_alternate_display_mode ?p)
+    )
+  )
+
+  ;; Action: top_toggle_alternate_mode
+  (:action top_toggle_alternate_mode
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (top_alternate_mode ?p))
+    )
+  )
+
+  ;; Action: top_toggle_bold
+  (:action top_toggle_bold
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (bold_mode_enabled ?p)
+      (not (bold_mode_enabled ?p))
+      (top_bold_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_character_justify
+  (:action top_toggle_character_justify
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (character_columns_right_justified ?p))
+      (character_columns_right_justified ?p)
+    )
+  )
+
+  ;; Action: top_toggle_children_collapse
+  (:action top_toggle_children_collapse
+    :parameters ()
+    :precondition (and
+      (top_running)
+      (top_forest_view_enabled)
+    )
+    :effect (and
+      (not (top_children_collapsed))
+    )
+  )
+
+  ;; Action: top_toggle_children_visibility
+  (:action top_toggle_children_visibility
+    :parameters (?p - process)
+    :precondition (and
+      (top_running)
+      (top_forest_view_enabled)
+    )
+    :effect (and
+      (top_children_collapsed ?p)
+    )
+  )
+
+  ;; Action: top_toggle_cmdline
+  (:action top_toggle_cmdline
+    :parameters (?p_top - process)
+    :precondition (and
+      (process_running ?p_top)
+    )
+    :effect (and
+      (top_displaying_cmdline ?p_top)
+    )
+)
+
+  ;; Action: top_toggle_color
+  (:action top_toggle_color
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (color_mode_enabled ?p))
+      (color_mode_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_column_highlight
+  (:action top_toggle_column_highlight
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (column_highlight_enabled ?p))
+      (column_highlight_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_combine_cpus
+  (:action top_toggle_combine_cpus
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (combine_cpus_mode_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_command_display
+  (:action top_toggle_command_display
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (not (top_command_line_mode))
+    )
+  )
+
+  ;; Action: top_toggle_command_line
+  (:action top_toggle_command_line
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (command_line_full_display ?p))
+      (command_line_full_display ?p)
+    )
+  )
+
+  ;; Action: top_toggle_core_types
+  (:action top_toggle_core_types
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (system_has_hybrid_cores ?p)
+    )
+    :effect (and
+      (not (core_type_display_enabled ?p))
+      (not (core_type_filter_p_only ?p))
+      (not (core_type_filter_e_only ?p))
+      (core_type_display_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_cpu_summary
+  (:action top_toggle_cpu_summary
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (top_running)
+    )
+    :effect (and
+      (not (cpu_summary_single_line ?p))
+      (not (cpu_summary_separate_lines ?p))
+      (top_summary_cpu_abridged)
+      (cpu_summary_single_line ?p)
+    )
+  )
+
+  ;; Action: top_toggle_cpu_time_scale
+  (:action top_toggle_cpu_time_scale
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_cpu_time_scaled)
+    )
+  )
+
+  ;; Action: top_toggle_cumulative_mode
+  (:action top_toggle_cumulative_mode
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (cumulative_mode_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_cumulative_time
+  (:action top_toggle_cumulative_time
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (cumulative_time_mode_enabled ?p))
+      (cumulative_time_mode_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_forest_view
+  (:action top_toggle_forest_view
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_forest_view_enabled)
+      (not (top_forest_view_enabled))
+    )
+  )
+
+  ;; Action: top_toggle_idle
+  (:action top_toggle_idle
+    :parameters (?p_top - process)
+    :precondition (and
+      (process_running ?p_top)
+    )
+    :effect (and
+      (top_displaying_idle ?p_top)
+    )
+  )
+
+  ;; Action: top_toggle_idle_processes
+  (:action top_toggle_idle_processes
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_idle_processes_hidden)
+    )
+  )
+
+  ;; Action: top_toggle_irix_solaris
+  (:action top_toggle_irix_solaris
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (not (top_irix_mode_enabled))
+    )
+  )
+
+  ;; Action: top_toggle_irix_solaris_mode
+  (:action top_toggle_irix_solaris_mode
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_irix_solaris_mode ?p)
+    )
+  )
+
+  ;; Action: top_toggle_load_avg
+  (:action top_toggle_load_avg
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (display_load_avg ?p)
+    )
+  )
+
+  ;; Action: top_toggle_mem_swap_usage
+  (:action top_toggle_mem_swap_usage
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (display_mem_swap_usage ?p)
+    )
+  )
+
+  ;; Action: top_toggle_numa_summary
+  (:action top_toggle_numa_summary
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (system_has_numa_support ?p)
+    )
+    :effect (and
+      (not (numa_summary_enabled ?p))
+      (numa_summary_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_numeric_justify
+  (:action top_toggle_numeric_justify
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (numeric_columns_left_justified ?p))
+      (numeric_columns_left_justified ?p)
+    )
+  )
+
+  ;; Action: top_toggle_parent_focus
+  (:action top_toggle_parent_focus
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+      (forest_view_enabled ?p)
+    )
+    :effect (and
+      (not (parent_focus_enabled ?p))
+      (parent_focus_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_row_highlight
+  (:action top_toggle_row_highlight
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (not (row_highlight_enabled ?p))
+      (row_highlight_enabled ?p)
+    )
+  )
+
+  ;; Action: top_toggle_scroll_coords
+  (:action top_toggle_scroll_coords
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (display_scroll_coords ?p)
+      (not (top_scroll_coords_visible ?p))
+    )
+  )
+
+  ;; Action: top_toggle_single_cpu
+  (:action top_toggle_single_cpu
+    :parameters (?p_top - process)
+    :precondition (and
+      (process_running ?p_top)
+    )
+    :effect (and
+      (top_displaying_single_cpu ?p_top)
+    )
+)
+
+  ;; Action: top_toggle_sort_order
+  (:action top_toggle_sort_order
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_sort_reversed)
+    )
+  )
+
+  ;; Action: top_toggle_task_cpu_states
+  (:action top_toggle_task_cpu_states
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (display_task_cpu_states ?p)
+    )
+  )
+
+  ;; Action: top_toggle_threads
+  (:action top_toggle_threads
+    :parameters (?p_top - process)
+    :precondition (and
+      (process_running ?p_top)
+      (top_running)
+    )
+    :effect (and
+      (not (top_threads_mode_enabled))
+      (top_displaying_threads ?p_top)
+    )
+  )
+
+  ;; Action: top_toggle_threads_mode
+  (:action top_toggle_threads_mode
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_threads_mode ?p)
+    )
+  )
+
+  ;; Action: top_toggle_user_filter
+  (:action top_toggle_user_filter
+    :parameters (?u - user)
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_user_filter_enabled ?u)
+    )
+  )
+
+  ;; Action: top_toggle_window_visibility
+  (:action top_toggle_window_visibility
+    :parameters ()
+    :precondition (and
+      (top_running)
+    )
+    :effect (and
+      (top_window_visible)
+    )
+  )
+
+  ;; Action: top_toggle_zero_suppress
+  (:action top_toggle_zero_suppress
+    :parameters (?p - process)
+    :precondition (and
+      (top_running ?p)
+    )
+    :effect (and
+      (top_zero_suppress_enabled ?p)
+    )
+  )
+
+  ;; Action: top_view_process_info
+  (:action top_view_process_info
+    :parameters (?p - process)
+    :precondition (and
+      (process_running ?p)
+    )
+    :effect (and
+      (process_info_visible ?p)
+    )
+  )
+
+  ;; Action: top_write_config
+  (:action top_write_config
+    :parameters (?p - process ?f - configuration_file)
+    :precondition (and
+      (file_writable ?f)
+      (top_config_exists ?f)
+      (top_running ?p)
+    )
+    :effect (and
+      (top_config_updated ?f)
+      (top_config_saved ?f)
+    )
+  )
+
+  ;; Action: touch_create_file
+  (:action touch_create_file
+    :parameters (?f - file)
+    :precondition (and)
+    :effect (and
+      (file_exists ?f)
+      (file_access_time_updated ?f)
+      (file_modification_time_updated ?f)
+    )
+  )
+
+  ;; Action: touch_no_create
+  (:action touch_no_create
+    :parameters (?f - file)
+    :precondition (and
+      (file_exists ?f)
+      (file_writable ?f)
+    )
+    :effect (and
+      (file_access_time_updated ?f)
+      (file_modification_time_updated ?f)
+    )
+  )
+
+  ;; Action: touch_reference_file
+  (:action touch_reference_file
     :parameters (?f - file ?ref - file)
     :precondition (and
       (file_exists ?f)
       (file_exists ?ref)
+      (file_writable ?f)
     )
     :effect (and
-      (file_ownership_changed ?f)
+      (file_access_time_updated ?f)
+      (file_modification_time_updated ?f)
     )
   )
 
-  ;; Action: wait_for_lock
-  ;; Source: iptables
-  ;; Reused from Phase 1
-  (:action wait_for_lock
-    :parameters (?seconds - file)
+  ;; Action: touch_update_access_time
+  (:action touch_update_access_time
+    :parameters (?f - file)
     :precondition (and
-      (lock_exists)
-      (not (lock_obtained))
+      (file_exists ?f)
+      (file_writable ?f)
     )
     :effect (and
-      (lock_obtained)
+      (file_access_time_updated ?f)
     )
   )
 
-  ;; Action: why_not_package
-  ;; Source: apt
-  ;; Reused from Phase 1
-  (:action why_not_package
-    :parameters (?pkg - package)
+  ;; Action: touch_update_modification_time
+  (:action touch_update_modification_time
+    :parameters (?f - file)
     :precondition (and
-      (package_installed ?pkg)
+      (file_exists ?f)
+      (file_writable ?f)
     )
     :effect (and
-      (package_reverted ?pkg)
+      (file_modification_time_updated ?f)
     )
   )
 
-  ;; Action: zero_counters
-  ;; Source: iptables
-  (:action zero_counters
-    :parameters (?chain - firewall_rule ?c - file)
+  ;; Action: ufw_allow
+  (:action ufw_allow
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_allowed ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_allow_app
+  (:action ufw_allow_app
+    :parameters (?r - firewall_rule ?s - service)
     :precondition (and
-      (firewall_rule_exists ?chain)
-      (chain_exists ?c)
+      (app_profile_exists ?s)
     )
     :effect (and
-      (counters_zeroed ?c)
-      (firewall_rule_counters_zeroed ?chain)
+      (firewall_rule_exists ?r)
+      (firewall_rule_allowed ?r)
+      (firewall_rule_for_service ?r ?s)
+    )
+  )
+
+  ;; Action: ufw_allow_interface
+  (:action ufw_allow_interface
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_allowed ?r)
+    )
+  )
+
+  ;; Action: ufw_allow_log
+  (:action ufw_allow_log
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_allowed ?r)
+      (firewall_rule_logged ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_allow_on_interface
+  (:action ufw_allow_on_interface
+    :parameters (?r - firewall_rule ?i - interface ?p - port)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_allowed ?r)
+      (firewall_rule_on_interface ?r ?i)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_allow_port
+  (:action ufw_allow_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (port_open ?p)
+      (firewall_rule_allowed ?r)
+    )
+  )
+
+  ;; Action: ufw_app_update
+  (:action ufw_app_update
+    :parameters (?s - service)
+    :precondition (and
+      (app_profile_exists ?s)
+    )
+    :effect (and
+      (app_profile_updated ?s)
+    )
+  )
+
+  ;; Action: ufw_delete_rule
+  (:action ufw_delete_rule
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (not (firewall_rule_allowed ?r))
+      (not (firewall_rule_limited ?r))
+      (not (firewall_rule_denied ?r))
+      (not (firewall_rule_rejected ?r))
+      (not (firewall_rule_exists ?r))
+    )
+  )
+
+  ;; Action: ufw_deny
+  (:action ufw_deny
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_denied ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_deny_interface
+  (:action ufw_deny_interface
+    :parameters (?r - firewall_rule ?i - interface)
+    :precondition (and
+      (interface_exists ?i)
+    )
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_denied ?r)
+    )
+  )
+
+  ;; Action: ufw_deny_port
+  (:action ufw_deny_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_denied ?r)
+      (not (port_open ?p))
+    )
+  )
+
+  ;; Action: ufw_disable
+  (:action ufw_disable
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (firewall_enabled))
+    )
+  )
+
+  ;; Action: ufw_enable
+  (:action ufw_enable
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (firewall_enabled)
+      (ufw_enabled)
+    )
+  )
+
+  ;; Action: ufw_limit
+  (:action ufw_limit
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_limited ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_limit_port
+  (:action ufw_limit_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_limited ?r)
+    )
+  )
+
+  ;; Action: ufw_logging_off
+  (:action ufw_logging_off
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (firewall_logging_on))
+    )
+  )
+
+  ;; Action: ufw_logging_on
+  (:action ufw_logging_on
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (firewall_logging_on)
+    )
+  )
+
+  ;; Action: ufw_prepend_rule
+  (:action ufw_prepend_rule
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_denied ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_reject
+  (:action ufw_reject
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and)
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_rejected ?r)
+      (firewall_rule_on_port ?r ?p)
+    )
+  )
+
+  ;; Action: ufw_reject_port
+  (:action ufw_reject_port
+    :parameters (?r - firewall_rule ?p - port)
+    :precondition (and (port_exists ?p))
+    :effect (and
+      (firewall_rule_exists ?r)
+      (firewall_rule_rejected ?r)
+      (not (port_open ?p))
+    )
+)
+
+  ;; Action: ufw_reload
+  (:action ufw_reload
+    :parameters ()
+    :precondition (and
+      (firewall_enabled)
+    )
+    :effect (and
+      (firewall_enabled)
+    )
+  )
+
+  ;; Action: ufw_reset
+  (:action ufw_reset
+    :parameters ()
+    :precondition (and)
+    :effect (and
+      (not (firewall_enabled))
+    )
+  )
+
+  ;; Action: ufw_set_logging
+  (:action ufw_set_logging
+    :parameters (?l - object)
+    :precondition (and)
+    :effect (and
+      (ufw_logging_level ?l)
+    )
+  )
+
+  ;; Action: ufw_show_raw
+  (:action ufw_show_raw
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (observed_firewall_rule ?r)
+    )
+  )
+
+  ;; Action: ufw_status
+  (:action ufw_status
+    :parameters (?r - firewall_rule)
+    :precondition (and
+      (firewall_rule_exists ?r)
+    )
+    :effect (and
+      (observed_firewall_rule ?r)
+    )
+  )
+
+  ;; Action: userdel_basic
+  (:action userdel_basic
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (not (user_has_running_processes ?u))
+    )
+    :effect (and
+      (not (user_exists ?u))
+    )
+  )
+
+  ;; Action: userdel_force
+  (:action userdel_force
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (not (user_exists ?u))
+    )
+  )
+
+  ;; Action: userdel_remove_home
+  (:action userdel_remove_home
+    :parameters (?u - user ?d - directory ?m - file)
+    :precondition (and
+      (user_exists ?u)
+      (user_home_directory ?u ?d)
+      (user_mail_spool ?u ?m)
+    )
+    :effect (and
+      (not (user_exists ?u))
+      (not (file_exists ?d))
+      (not (file_exists ?m))
+    )
+  )
+
+  ;; Action: userdel_selinux
+  (:action userdel_selinux
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+      (user_has_selinux_mapping ?u)
+    )
+    :effect (and
+      (not (user_has_selinux_mapping ?u))
+    )
+  )
+
+  ;; Action: userdel_with_group
+  (:action userdel_with_group
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+      (group_owned_by_user ?g ?u)
+      (not (group_has_other_members ?g))
+    )
+    :effect (and
+      (not (user_exists ?u))
+      (not (group_exists ?g))
+    )
+  )
+
+  ;; Action: usermod_add_supplementary_group
+  (:action usermod_add_supplementary_group
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+    )
+    :effect (and
+      (user_supplementary_group ?u ?g)
+    )
+  )
+
+  ;; Action: usermod_change_home_directory
+  (:action usermod_change_home_directory
+    :parameters (?u - user ?d - directory)
+    :precondition (and
+      (user_exists ?u)
+      (directory_exists ?d)
+    )
+    :effect (and
+      (user_home_directory ?u ?d)
+    )
+  )
+
+  ;; Action: usermod_change_primary_group
+  (:action usermod_change_primary_group
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+    )
+    :effect (and
+      (user_primary_group ?u ?g)
+    )
+  )
+
+  ;; Action: usermod_expire_user
+  (:action usermod_expire_user
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_account_expired ?u)
+    )
+  )
+
+  ;; Action: usermod_lock_user
+  (:action usermod_lock_user
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_account_locked ?u)
+    )
+  )
+
+  ;; Action: usermod_set_selinux_range
+  (:action usermod_set_selinux_range
+    :parameters (?u - user ?range - object ?selinux_user - user)
+    :precondition (and
+      (user_exists ?u)
+      (user_has_selinux_user ?u ?selinux_user)
+    )
+    :effect (and
+      (user_has_selinux_range ?u ?range)
+    )
+  )
+
+  ;; Action: usermod_set_selinux_user
+  (:action usermod_set_selinux_user
+    :parameters (?u - user ?selinux_user - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (user_has_selinux_user ?u ?selinux_user)
+    )
+  )
+
+  ;; Action: usermod_set_shell
+  (:action usermod_set_shell
+    :parameters (?u - user ?s - file)
+    :precondition (and
+      (user_exists ?u)
+      (file_exists ?s)
+    )
+    :effect (and
+      (user_shell ?u ?s)
+    )
+  )
+
+  ;; Action: usermod_set_supplementary_groups
+  (:action usermod_set_supplementary_groups
+    :parameters (?u - user ?g - group)
+    :precondition (and
+      (user_exists ?u)
+      (group_exists ?g)
+    )
+    :effect (and
+      (user_supplementary_group ?u ?g)
+    )
+  )
+
+  ;; Action: usermod_unlock_user
+  (:action usermod_unlock_user
+    :parameters (?u - user)
+    :precondition (and
+      (user_exists ?u)
+    )
+    :effect (and
+      (not (user_account_locked ?u))
+    )
+  )
+
+  ;; Action: visudo_check
+  (:action visudo_check
+    :parameters (?f - configuration_file ?p - process)
+    :precondition (and
+      (file_exists ?f)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (sudoers_file_valid ?f)
+    )
+  )
+
+  ;; Action: visudo_edit
+  (:action visudo_edit
+    :parameters (?f - configuration_file ?p - process)
+    :precondition (and
+      (file_exists ?f)
+      (executed_as_root ?p)
+    )
+    :effect (and
+      (sudoers_file_valid ?f)
+    )
+  )
+
+  ;; Action: whoami_get_username
+  (:action whoami_get_username
+    :parameters (?p - process ?u - user)
+    :precondition (and)
+    :effect (and
+      (process_executed ?p)
+      (username_known ?u)
+    )
+  )
+
+  ;; Action: whoami_help
+  (:action whoami_help
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_executed ?p)
+    )
+  )
+
+  ;; Action: whoami_version
+  (:action whoami_version
+    :parameters (?p - process)
+    :precondition (and)
+    :effect (and
+      (process_executed ?p)
     )
   )
 

@@ -349,8 +349,9 @@ class OSQueryMapping:
 @dataclass
 class LLMExtractionConfig:
     """Configuration for LLM-based action extraction."""
-    model_id: str = "qwen2.5:32b"
-    model_url: str = "http://localhost:11434"
+    model_id: str = "gemma-4-31b"
+    model_url: str = "http://localhost:8001/v1"
+    api_key: str = "vllm"
     enabled: bool = True
     timeout: int = 600
     max_retries: int = 2

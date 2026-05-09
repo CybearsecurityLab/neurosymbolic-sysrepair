@@ -51,8 +51,9 @@ class Phase1Orchestrator:
         osquery_socket: Optional[str] = None,
         validate: bool = False,
         scoping_mode: str = "dynamic",
-        llm_model: str = "qwen2.5:32b",
-        llm_url: str = "http://localhost:11434",
+        llm_model: str = "gemma-4-31b",
+        llm_url: str = "http://localhost:8001/v1",
+        llm_api_key: str = "vllm",
         enable_llm: bool = True,
         max_llm_workers: int = 1,
     ):
@@ -68,6 +69,7 @@ class Phase1Orchestrator:
         self.actions: list[ActionSchema] = []
         self.llm_model = llm_model
         self.llm_url = llm_url
+        self.llm_api_key = llm_api_key
         self.enable_llm = enable_llm
         self.max_llm_workers = max_llm_workers
 
@@ -155,6 +157,7 @@ class Phase1Orchestrator:
             self.parser = create_hybrid_parser(
                 model_id=self.llm_model,
                 model_url=self.llm_url,
+                api_key=self.llm_api_key,
                 enable_llm=self.enable_llm,
                 known_predicates=known_preds,
                 max_workers=self.max_llm_workers,

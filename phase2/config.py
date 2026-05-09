@@ -288,9 +288,9 @@ class HardwareConfig:
 class LLMConfig:
     """LLM configuration for inference."""
 
-    model_name: str = "mistralai/Mistral-7B-Instruct-v0.3"
-    base_url: str = "http://localhost:8000/v1"
-    api_key: str = "dummy"
+    model_name: str = "gemma-4-31b"
+    base_url: str = "http://localhost:8001/v1"
+    api_key: str = "vllm"
     max_tokens: int = 4096
     temperature: float = 0.1
     tensor_parallel_size: int = 1

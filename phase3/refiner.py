@@ -100,14 +100,12 @@ class DomainRefiner:
         # Initialize Docker executor
         self.docker = DockerExecutor(
             config=self.config.docker,
-            use_mock=self.config.use_mock_docker,
         )
         self.docker.start_container()
 
         # Initialize planner
         self.planner = RandomWalkGenerator(
             config=self.config.planner,
-            use_mock=self.config.use_mock_planner,
         )
         self.planner.load_domain_string(self.domain_pddl, self.problem_pddl)
 
@@ -115,8 +113,7 @@ class DomainRefiner:
         self.effect_verifier = EffectVerifier(self.docker)
 
         # Initialize LLM
-        if not self.config.use_mock_llm:
-            self._initialize_llm()
+        self._initialize_llm()
 
         # Initialize concretizer with Phase 1 metadata and LLM client
         cache_path = self.config.concretizer_cache_path or os.path.join(
@@ -139,7 +136,8 @@ class DomainRefiner:
             from openai import OpenAI
             self.llm = OpenAI(
                 base_url=self.config.llm.base_url,
-                api_key="not-needed-for-vllm",
+                api_key=self.config.llm.api_key,
+                timeout=120.0,
             )
         except ImportError:
             logger.warning("OpenAI package not installed, LLM refinement disabled")
@@ -285,6 +283,20 @@ class DomainRefiner:
                         )
                         all_discrepancies.append(discrepancy)
                 else:
+                    # Check if failure was due to blocked dangerous command
+                    if "Command blocked" in result.stderr:
+                        # Don't count blocked commands as discrepancies —
+                        # they are safety constraints, not PDDL issues
+                        logger.debug(
+                            f"Skipping blocked command for {grounded.name}: {command[:60]}"
+                        )
+                        # Still apply PDDL effects (model assumes success)
+                        if parsed_action:
+                            simulator.apply_effects(parsed_action, grounded.bindings)
+                        # Don't count this step at all (reduce total_steps)
+                        total_steps -= 1
+                        continue
+
                     # Docker failure on PDDL-legal action = THE discrepancy
                     execution_failures += 1
                     discrepancy = Discrepancy(
@@ -733,6 +745,13 @@ class DomainRefiner:
                 )
                 return None
 
+            # Validate repaired action parses as valid PDDL
+            if not self._validate_single_action_pddl(content):
+                logger.warning(
+                    f"  LLM repair for '{action_name}' failed PDDL validation, keeping original"
+                )
+                return None
+
             logger.info(
                 f"  LLM repaired action '{action_name}' "
                 f"({len(content)} chars)"
@@ -742,6 +761,50 @@ class DomainRefiner:
         except Exception as e:
             logger.error(f"LLM repair failed for '{action_name}': {e}")
             return None
+
+    def _validate_single_action_pddl(self, action_pddl: str) -> bool:
+        """
+        Validate that a single action block is syntactically valid PDDL.
+
+        Wraps the action in a minimal domain and attempts to parse it.
+        """
+        try:
+            from pddl import parse_domain
+
+            # Build minimal domain with just this action
+            test_domain = (
+                "(define (domain test)\n"
+                "  (:requirements :strips :typing :negative-preconditions)\n"
+                "  (:types object)\n"
+                "  (:predicates (dummy ?x - object))\n"
+                f"  {action_pddl}\n"
+                ")"
+            )
+
+            # Parse it
+            tmp_path = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".pddl", delete=False
+                ) as tmp:
+                    tmp_path = tmp.name
+                    tmp.write(test_domain)
+
+                parse_domain(tmp_path)
+                return True
+            except Exception as e:
+                logger.debug(f"  Action validation error: {str(e)[:200]}")
+                return False
+            finally:
+                if tmp_path:
+                    try:
+                        os.remove(tmp_path)
+                    except OSError:
+                        pass
+
+        except ImportError:
+            # pddl library not available — skip validation
+            return True
 
     def llm_update_domain(self, discrepancies: list[Discrepancy]) -> str:
         """
@@ -756,8 +819,9 @@ class DomainRefiner:
         Returns:
             Updated PDDL domain string
         """
-        if self.config.use_mock_llm or not self.llm:
-            return self._mock_update_domain(discrepancies)
+        if not self.llm:
+            logger.error("LLM not available, cannot repair domain")
+            return self.domain_pddl
 
         original_domain = self.domain_pddl
         original_action_count = self._count_actions(original_domain)
@@ -779,6 +843,37 @@ class DomainRefiner:
                 error_desc += f" | Context: {d.context[:100]}"
             action_errors[d.action_name].append(error_desc)
 
+        # Categorize errors — skip those that can't be fixed by PDDL repair
+        UNFIXABLE_PATTERNS = [
+            "System has not been booted with systemd",
+            "command not found",
+            "Command blocked",
+            "Read-only file system",
+            "Cannot allocate memory",
+            "Connection refused",
+            "Host is down",
+        ]
+
+        fixable_errors: dict[str, list[str]] = defaultdict(list)
+        unfixable_count = 0
+        for action_name, errors in action_errors.items():
+            fixable = []
+            for err in errors:
+                if any(pat in err for pat in UNFIXABLE_PATTERNS):
+                    unfixable_count += 1
+                else:
+                    fixable.append(err)
+            if fixable:
+                fixable_errors[action_name] = fixable
+
+        if unfixable_count:
+            logger.info(
+                f"Skipped {unfixable_count} unfixable errors "
+                f"(container capability / missing tools)"
+            )
+
+        action_errors = fixable_errors
+
         if skipped_concretization:
             logger.info(
                 f"Skipped {skipped_concretization} concretization discrepancies "
@@ -791,7 +886,7 @@ class DomainRefiner:
 
         # Prioritize: repair actions with the most discrepancies first,
         # cap at 5 per iteration to avoid spending hours on LLM calls
-        max_repairs_per_iter = 5
+        max_repairs_per_iter = 20
         if len(action_errors) > max_repairs_per_iter:
             sorted_actions = sorted(
                 action_errors.items(), key=lambda x: -len(x[1])
@@ -892,17 +987,6 @@ class DomainRefiner:
             return match.group(1).strip()
 
         return None
-
-    def _mock_update_domain(self, discrepancies: list[Discrepancy]) -> str:
-        """Mock domain update for testing."""
-        logger.info(f"[MOCK] Updating domain based on {len(discrepancies)} discrepancies")
-
-        updated = self.domain_pddl.replace(
-            "(define (domain",
-            f"; Updated at {datetime.now().isoformat()} - {len(discrepancies)} discrepancies addressed\n(define (domain"
-        )
-
-        return updated
 
     # =========================================================================
     # Main Refinement Loop

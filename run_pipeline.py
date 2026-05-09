@@ -255,7 +255,7 @@ def run_minimal_phase1(output_dir: Path) -> dict:
 
 
 def run_phase2(
-    output_dir: Path, phase1_state: dict, model: str, use_mock: bool = False
+    output_dir: Path, phase1_state: dict, model: str
 ) -> dict:
     """Execute Phase 2: Parallel Synthesis."""
     print("\n" + "=" * 70)
@@ -281,7 +281,6 @@ def run_phase2(
         hardware_config=hardware,
         llm_config=llm_config,
         osquery_data=osquery_data,
-        use_mock_llm=use_mock,
         output_dir=str(output_dir),
     )
 
@@ -294,7 +293,6 @@ def run_phase3(
     problem_path: Path,
     target_score: float = 0.9,
     max_iterations: int = 10,
-    use_mock: bool = False,
 ) -> dict:
     """Execute Phase 3: Iterative Refinement via Exploration Walks."""
     print("\n" + "=" * 70)
@@ -315,9 +313,6 @@ def run_phase3(
     config.output_dir = str(output_dir / "phase3")
     config.ew_target_score = target_score
     config.max_refinement_iterations = max_iterations
-    config.use_mock_docker = use_mock
-    config.use_mock_planner = use_mock
-    config.use_mock_llm = use_mock
 
     # Run orchestrator
     orchestrator = Phase3Orchestrator(config=config)
@@ -433,9 +428,6 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with mock components (no GPU/Docker required)
-  python run_pipeline.py --mock
-
   # Run with Mistral-7B (single GPU)
   python run_pipeline.py --model mistralai/Mistral-7B-Instruct-v0.3
 
@@ -464,9 +456,6 @@ Examples:
         "-m",
         default="mistralai/Mistral-7B-Instruct-v0.3",
         help="LLM model to use",
-    )
-    parser.add_argument(
-        "--mock", action="store_true", help="Use mock components (for testing without GPU/Docker)"
     )
     parser.add_argument(
         "--skip-phase1",
@@ -527,7 +516,7 @@ Examples:
 
     try:
         # Start vLLM server if needed
-        if not args.mock and not args.no_vllm and deps["vllm"] and deps["cuda"]:
+        if not args.no_vllm and deps["vllm"] and deps["cuda"]:
             vllm_process = start_vllm_server(args.model, args.vllm_port)
             if not vllm_process:
                 # CHANGED: Abort if server start fails instead of fallback
@@ -547,7 +536,6 @@ Examples:
             output_dir=output_dir,
             phase1_state=phase1_results,
             model=args.model,
-            use_mock=args.mock,
         )
 
         # Phase 3 (if not skipped and Phase 2 succeeded)
@@ -563,7 +551,6 @@ Examples:
                     problem_path=problem_path,
                     target_score=args.ew_target,
                     max_iterations=args.max_refinement_iterations,
-                    use_mock=args.mock,
                 )
             else:
                 print(f"[!] Phase 2 domain not found at {domain_path}, skipping Phase 3")

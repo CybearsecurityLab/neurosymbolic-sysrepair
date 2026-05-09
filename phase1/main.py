@@ -2,6 +2,7 @@ import json
 import sys
 import os
 
+from common.config_loader import llm_settings
 from phase1.common.logger import (
     set_log_stream,
     log,
@@ -67,15 +68,23 @@ def main():
         help="GPU device(s) to use (e.g., '0', '1', '0,1'). Sets CUDA_VISIBLE_DEVICES. "
         "Default: use all available GPUs.",
     )
+    # Read defaults from config.yaml
+    cfg = llm_settings("phase1")
+
     parser.add_argument(
         "--llm-model",
-        default="qwen2.5:32b",
-        help="LLM model for action extraction (default: qwen2.5:32b)",
+        default=cfg.model,
+        help=f"LLM model for action extraction (default: {cfg.model})",
     )
     parser.add_argument(
         "--llm-url",
-        default="http://localhost:11434",
-        help="Ollama server URL (default: http://localhost:11434)",
+        default=cfg.base_url,
+        help=f"LLM server URL (default: {cfg.base_url})",
+    )
+    parser.add_argument(
+        "--llm-api-key",
+        default=cfg.api_key or "vllm",
+        help="API key for LLM service (default: from config.yaml)",
     )
     parser.add_argument(
         "--no-llm",
@@ -128,6 +137,7 @@ def main():
         scoping_mode=args.scoping,
         llm_model=args.llm_model,
         llm_url=args.llm_url,
+        llm_api_key=args.llm_api_key,
         enable_llm=not args.no_llm,
         max_llm_workers=args.max_llm_workers,
     )

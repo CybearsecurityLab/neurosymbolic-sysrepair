@@ -16,6 +16,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.models import Phase1State
+from common.config_loader import llm_settings
 
 from phase2.config import HardwareConfig, LLMConfig
 from phase2.orchestrator import Phase2Orchestrator, launch_vllm_server
@@ -90,21 +91,13 @@ def main():
         default="./pddl_output/phase2",
         help="Output directory for PDDL files",
     )
+    # Read defaults from config.yaml
+    cfg = llm_settings("phase2")
+
     parser.add_argument(
         "--model",
-        default="mistralai/Mistral-7B-Instruct-v0.3",
-        help="LLM model to use"
-    )
-    parser.add_argument(
-        "--mock-llm",
-        action="store_true",
-        help="Use mock LLM for testing without GPU (deprecated: use --backend mock)"
-    )
-    parser.add_argument(
-        "--backend",
-        choices=["auto", "vllm", "ollama", "mock"],
-        default="auto",
-        help="LLM backend to use: auto (detect), vllm, ollama, or mock"
+        default=cfg.model,
+        help=f"LLM model to use (default: {cfg.model})"
     )
     parser.add_argument(
         "--phase1-state",
@@ -151,8 +144,13 @@ def main():
         "--ollama-url",
         dest="base_url",
         default=None,
-        help="Base URL for LLM service (e.g., http://localhost:11434 for Ollama, "
-        "http://localhost:8000/v1 for vLLM). Overrides default based on backend."
+        help=f"Base URL for LLM service (default: {cfg.base_url}). "
+        "Overrides default based on backend."
+    )
+    parser.add_argument(
+        "--llm-api-key",
+        default=None,
+        help="API key for LLM service (default: from config.yaml)",
     )
 
     args = parser.parse_args()
@@ -199,13 +197,14 @@ def main():
         hardware.max_parallel_workers = args.workers
         logger.info(f"Using {args.workers} parallel workers (CLI override)")
 
-    # Configure LLM
+    # Configure LLM (CLI > config.yaml > defaults)
     llm_kwargs = {
         "model_name": args.model,
-        "max_llm_workers": args.max_llm_workers
+        "base_url": args.base_url or cfg.base_url,
+        "api_key": args.llm_api_key or cfg.api_key or "vllm",
+        "max_llm_workers": args.max_llm_workers,
     }
     if args.base_url:
-        llm_kwargs["base_url"] = args.base_url
         logger.info(f"Using custom base URL: {args.base_url}")
 
     llm_config = LLMConfig(**llm_kwargs)
@@ -215,7 +214,7 @@ def main():
 
     # Launch vLLM if requested
     vllm_process = None
-    if args.launch_vllm and not args.mock_llm:
+    if args.launch_vllm:
         vllm_process = launch_vllm_server(llm_config, hardware)
 
     try:
@@ -231,17 +230,12 @@ def main():
         # Run orchestrator with full Phase 1 state
         # =================================================================
 
-        # Determine backend (--mock-llm takes precedence for backwards compatibility)
-        backend = "mock" if args.mock_llm else args.backend
-
         orchestrator = Phase2Orchestrator(
             hardware_config=hardware,
             llm_config=llm_config,
             phase1_state=phase1_state,  # Pass full state
-            use_mock_llm=args.mock_llm,
             output_dir=args.output_dir,
             reuse_phase1_actions=reuse_actions,
-            backend=backend,
         )
 
         results = orchestrator.run()

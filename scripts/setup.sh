@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# setup_env.sh
+# scripts/setup.sh
 # Detects OS/Arch, installs osquery
 
 set -e

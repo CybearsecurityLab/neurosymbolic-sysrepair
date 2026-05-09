@@ -138,9 +138,8 @@ class RandomWalkGenerator:
     approach for quick testing.
     """
 
-    def __init__(self, config: Optional[PlannerConfig] = None, use_mock: bool = False):
+    def __init__(self, config: Optional[PlannerConfig] = None):
         self.config = config or PlannerConfig()
-        self.use_mock = use_mock
         self.domain_pddl: str = ""
         self.problem_pddl: str = ""
         self.parsed_domain: dict = {}
@@ -1002,9 +1001,6 @@ class RandomWalkGenerator:
         Returns:
             List of grounded actions
         """
-        if self.use_mock:
-            return self._mock_random_walk(depth, env_state)
-
         # Try Fast Downward first, fall back to random sampling
         try:
             return self._fd_random_walk(depth, env_state)
@@ -1307,49 +1303,6 @@ class RandomWalkGenerator:
                             bindings[param_name] = args[i]
 
                     walk.append(GroundedAction(action=action, bindings=bindings))
-
-        return walk
-
-    def _mock_random_walk(
-        self,
-        depth: int,
-        env_state: EnvironmentState
-    ) -> list[GroundedAction]:
-        """Generate mock random walk for testing."""
-        mock_actions = [
-            PDDLAction(
-                name="install_package",
-                parameters=[("?p", "package")],
-                preconditions=["(not (package_installed ?p))"],
-                effects=["(package_installed ?p)"],
-            ),
-            PDDLAction(
-                name="start_service",
-                parameters=[("?s", "service")],
-                preconditions=["(not (service_running ?s))"],
-                effects=["(service_running ?s)"],
-            ),
-            PDDLAction(
-                name="create_user",
-                parameters=[("?u", "user")],
-                preconditions=["(not (user_exists ?u))"],
-                effects=["(user_exists ?u)"],
-            ),
-        ]
-
-        walk = []
-        for i in range(min(depth, 3)):
-            action = mock_actions[i % len(mock_actions)]
-            bindings = {}
-
-            for param_name, param_type in action.parameters:
-                objects = env_state.get_objects_by_type(param_type)
-                if objects:
-                    bindings[param_name] = random.choice(objects)
-                else:
-                    bindings[param_name] = f"test_{param_type}"
-
-            walk.append(GroundedAction(action=action, bindings=bindings))
 
         return walk
 

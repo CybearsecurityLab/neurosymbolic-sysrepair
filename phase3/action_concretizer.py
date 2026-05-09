@@ -15,8 +15,6 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-import httpx
-
 from .config import PREDICATE_CHECKS
 from .models import GroundedAction
 
@@ -49,7 +47,7 @@ class ActionConcretizer:
         self,
         phase1_metadata_path: str = "",
         llm_client=None,
-        llm_model: str = "qwen3.5:35b",
+        llm_model: str = "gemma-4-31b",
         llm_max_tokens: int = 4096,
         llm_temperature: float = 0.6,
         cache_path: str = "",
@@ -63,17 +61,7 @@ class ActionConcretizer:
                 f"with command templates"
             )
 
-        # LLM: use native Ollama API (for thinking mode support)
-        # Extract base URL from OpenAI client if provided
-        self._llm_base_url = ""
-        if llm_client:
-            base = str(llm_client.base_url).rstrip("/")
-            # Convert OpenAI-compat URL to native Ollama URL
-            # http://host:port/v1 -> http://host:port/api/chat
-            if base.endswith("/v1"):
-                self._llm_base_url = base[:-3] + "/api/chat"
-            else:
-                self._llm_base_url = base + "/api/chat"
+        # LLM: OpenAI-compatible client (vLLM)
         self._llm = llm_client
         self._llm_model = llm_model
         self._llm_max_tokens = llm_max_tokens
@@ -89,6 +77,79 @@ class ActionConcretizer:
 
         # Stats
         self._stats = {"phase1_hits": 0, "cache_hits": 0, "llm_hits": 0, "failures": 0}
+
+    # ─── Type Compatibility Validation ─────────────────────────────
+
+    def _validate_type_compatibility(
+        self, command: str, normalized_bindings: dict
+    ) -> Optional[str]:
+        """
+        Validate and fix type mismatches in concretized commands.
+
+        Checks that the detected PDDL object type for each binding is
+        compatible with how that value is used in the command.  For
+        fixable mismatches (e.g. process name where PID is needed),
+        wraps the value with an appropriate sub-shell.  For unfixable
+        mismatches (e.g. config-file path used as a service name),
+        returns None so the caller can fall through to the next tier.
+
+        Returns:
+            Fixed command string, or None if the mismatch is unfixable.
+        """
+        if not hasattr(self, "_last_binding_types"):
+            return command
+
+        for key, detected_type in self._last_binding_types.items():
+            value = normalized_bindings.get(key, "")
+            if not value:
+                continue
+
+            # ── Process params should be PIDs in kill/ps/top ─────────
+            if key == "process" and detected_type == "process":
+                if any(cmd in command for cmd in ["kill ", "ps -p ", "top -p "]):
+                    if not value.isdigit() and "$(pgrep" not in command:
+                        command = command.replace(
+                            value, f"$(pgrep -f {value} | head -1)"
+                        )
+
+            # ── User object wrongly bound to a process/PID slot ──────
+            if key == "process" and detected_type == "user":
+                logger.debug(
+                    f"Type mismatch: user '{value}' bound as process"
+                )
+                return None
+
+            # ── Port params must be numeric ──────────────────────────
+            if key == "port" and detected_type != "port":
+                if not value.isdigit():
+                    logger.debug(
+                        f"Type mismatch: {key}={value} "
+                        f"(type={detected_type}) used as port"
+                    )
+                    return None
+
+            # ── Service slot filled with a config-file path ──────────
+            if key == "service" and detected_type == "configuration_file":
+                logger.debug(
+                    f"Type mismatch: config file '{value}' used as service"
+                )
+                return None
+
+            # ── Process object wrongly bound to a port slot ──────────
+            if key == "port" and detected_type == "process":
+                logger.debug(
+                    f"Type mismatch: process '{value}' used as port"
+                )
+                return None
+
+            # ── Service slot filled with a process name ──────────────
+            if key == "process" and detected_type == "service":
+                logger.debug(
+                    f"Type mismatch: service '{value}' bound as process name"
+                )
+                return None
+
+        return command
 
     # ─── Main Interface ──────────────────────────────────────────────
 
@@ -106,26 +167,32 @@ class ActionConcretizer:
         if action_name in self._cache:
             result = self._fill_template(self._cache[action_name], normalized)
             if result:
-                self._stats["cache_hits"] += 1
-                return result
+                result = self._validate_type_compatibility(result, normalized)
+                if result:
+                    self._stats["cache_hits"] += 1
+                    return result
 
         # Tier 1: Phase 1 template (no LLM, high confidence)
         result = self._try_phase1_template(action_name, normalized)
         if result:
-            # Cache the template form for future calls
-            template = self._extract_template_form(result, normalized)
-            self._cache[action_name] = template
-            self._stats["phase1_hits"] += 1
-            return result
+            result = self._validate_type_compatibility(result, normalized)
+            if result:
+                # Cache the template form for future calls
+                template = self._extract_template_form(result, normalized)
+                self._cache[action_name] = template
+                self._stats["phase1_hits"] += 1
+                return result
 
         # Tier 2: LLM concretization
         result = self._try_llm_concretize(action_name, action, normalized)
         if result:
-            template = self._extract_template_form(result, normalized)
-            self._cache[action_name] = template
-            self._save_cache()
-            self._stats["llm_hits"] += 1
-            return result
+            result = self._validate_type_compatibility(result, normalized)
+            if result:
+                template = self._extract_template_form(result, normalized)
+                self._cache[action_name] = template
+                self._save_cache()
+                self._stats["llm_hits"] += 1
+                return result
 
         # Tier 3: Can't concretize
         self._stats["failures"] += 1
@@ -239,7 +306,48 @@ class ActionConcretizer:
         "obj": "object", "o": "object",
     }
 
-    # ─── PDDL Object Name → Real System Value ───────────────────────
+    # ─── PDDL Object Name → Real System Value (with type detection) ──
+
+    @staticmethod
+    def _object_to_value_typed(pddl_name: str) -> tuple[str, str]:
+        """
+        Convert PDDL object name to (real_value, detected_type).
+
+        Returns:
+            (value, type) where type is one of: user, group, service, package,
+            process, port, configuration_file, file, unknown
+        """
+        name = pddl_name
+
+        if name.startswith("configuration_file_"):
+            path = name[len("configuration_file_"):]
+            if path.startswith("_"):
+                path = path[1:]
+            parts = path.split("_")
+            if len(parts) >= 2:
+                ext = parts[-1]
+                dir_and_name = parts[:-1]
+                file_path = "/" + "/".join(dir_and_name) + "." + ext
+                return file_path, "configuration_file"
+            return "/" + path.replace("_", "/"), "configuration_file"
+
+        if name.startswith("service_") and name.endswith("_service"):
+            return name[len("service_"):-len("_service")] + ".service", "service"
+        if name.startswith("service_"):
+            return name[len("service_"):], "service"
+        if name.startswith("user_"):
+            return name[len("user_"):], "user"
+        if name.startswith("group_"):
+            return name[len("group_"):], "group"
+        if name.startswith("package_"):
+            return name[len("package_"):], "package"
+        if name.startswith("process_"):
+            return name[len("process_"):], "process"
+        if name.startswith("port_"):
+            parts = name[len("port_"):].split("_")
+            return parts[-1] if len(parts) >= 2 else parts[0], "port"
+
+        return name, "unknown"
 
     @staticmethod
     def _object_to_value(pddl_name: str) -> str:
@@ -313,13 +421,18 @@ class ActionConcretizer:
 
         Input:  {"?pkg": "package_apt", "?u": "user_root"}
         Output: {"package": "apt", "user": "root"}
+
+        Also stores type information in self._last_binding_types for
+        downstream type-compatibility validation.
         """
         normalized = {}
+        self._last_binding_types = {}  # canonical_key -> detected_type
         for var_name, pddl_value in bindings.items():
             key = var_name.lstrip("?").replace("-", "_")
             canonical = self._KEY_MAPPINGS.get(key, key)
-            value = self._object_to_value(pddl_value)
+            value, detected_type = self._object_to_value_typed(pddl_value)
             normalized[canonical] = value
+            self._last_binding_types[canonical] = detected_type
         return normalized
 
     # ─── Tier 1: Phase 1 Template ────────────────────────────────────
@@ -394,43 +507,30 @@ class ActionConcretizer:
     ) -> Optional[str]:
         """Use LLM to generate a bash command for this action.
 
-        Uses native Ollama API to support thinking mode (think=true),
-        which gives better results than non-thinking mode.
-        Requires num_predict high enough for thinking + answer.
+        Uses the OpenAI-compatible chat completions API (vLLM).
         """
-        if not self._llm_base_url:
+        if not self._llm:
             return None
 
         prompt = self._build_llm_prompt(action_name, action, normalized_bindings)
 
         try:
-            response = httpx.post(
-                self._llm_base_url,
-                json={
-                    "model": self._llm_model,
-                    "messages": [
-                        {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "stream": False,
-                    "options": {
-                        "temperature": self._llm_temperature,
-                        "num_predict": self._llm_max_tokens,
-                    },
-                },
-                timeout=60.0,
+            response = self._llm.chat.completions.create(
+                model=self._llm_model,
+                messages=[
+                    {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=self._llm_max_tokens,
+                temperature=self._llm_temperature,
             )
-            response.raise_for_status()
-            data = response.json()
-            msg = data.get("message", {})
-            content = msg.get("content", "").strip()
+
+            content = ""
+            if response.choices:
+                content = (response.choices[0].message.content or "").strip()
 
             if not content:
-                thinking = msg.get("thinking", "")
-                logger.debug(
-                    f"LLM empty content for {action_name}, "
-                    f"thinking_len={len(thinking)}"
-                )
+                logger.debug(f"LLM empty content for {action_name}")
                 return None
 
             command = self._clean_llm_response(content)

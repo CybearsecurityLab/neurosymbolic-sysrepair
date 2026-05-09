@@ -5,7 +5,6 @@ Configuration for Phase 3: Iterative Refinement via Exploration Walks
 import os
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("Phase3.Config")
 
@@ -50,6 +49,8 @@ class DockerConfig:
             "tty": self.tty,
             # Capabilities needed for iptables/ufw/modprobe
             "cap_add": ["NET_ADMIN", "SYS_MODULE"],
+            # tmpfs for systemctl shim runtime state
+            "tmpfs": {"/run": ""},
         }
 
 
@@ -78,8 +79,9 @@ class PlannerConfig:
 class LLMRefinementConfig:
     """LLM configuration for domain refinement."""
 
-    model_name: str = "qwen3.5:122b"
-    base_url: str = "http://10.100.203.130:11434/v1"
+    model_name: str = "gemma-4-31b"
+    base_url: str = "http://localhost:8001/v1"
+    api_key: str = "vllm"
     max_tokens: int = 4096
     temperature: float = 0.3
 
@@ -87,10 +89,8 @@ class LLMRefinementConfig:
     max_feedback_items: int = 10  # Max discrepancies to include in prompt
     max_retries: int = 3  # Retries per refinement attempt
 
-    # Concretizer LLM (separate, smaller model for action→bash translation)
-    # Uses native Ollama API with thinking mode for better results
-    # num_predict must be high enough for thinking + answer (~4096)
-    concretizer_model: str = "qwen3.5:35b"
+    # Concretizer LLM (action→bash translation via OpenAI-compatible API)
+    concretizer_model: str = "gemma-4-31b"
     concretizer_max_tokens: int = 4096
     concretizer_temperature: float = 0.6
 
@@ -123,11 +123,6 @@ class Phase3Config:
     # Concretizer
     phase1_metadata_path: str = "./pddl_output/phase1/phase1_statep2.json"
     concretizer_cache_path: str = ""  # defaults to output_dir/concretizer_cache.json
-
-    # Mock mode for testing
-    use_mock_docker: bool = False
-    use_mock_planner: bool = False
-    use_mock_llm: bool = False
 
     def auto_scale_ew_params(self, num_actions: int) -> None:
         """

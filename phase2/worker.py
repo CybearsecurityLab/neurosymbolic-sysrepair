@@ -877,10 +877,33 @@ Generate ONLY valid PDDL. No markdown code fences, no explanations, no comments.
 
         # Action must have at least one effect to be useful
         if not action.effects:
-            logger.warning(f"Action '{action.name}' has no valid effects, discarding")
-            return None
+            # Try to add sensor predicate for observation actions
+            sensor_effect = self._generate_sensor_effect(action)
+            if sensor_effect:
+                action.effects = [sensor_effect]
+                logger.info(f"Action '{action.name}' converted to observation action with sensor effect")
+            else:
+                logger.warning(f"Action '{action.name}' has no valid effects, discarding")
+                return None
 
         return action
+
+    def _generate_sensor_effect(self, action) -> Optional[str]:
+        """Generate a sensor predicate effect for observation-only actions."""
+        name = action.name.lower()
+        # Observation action patterns
+        observation_prefixes = ['list_', 'show_', 'get_', 'status', 'report_', 'check_', 'display_', 'inspect_', 'cat_', 'read_']
+
+        is_observation = any(name.startswith(p) or f'_{p.rstrip("_")}' in name for p in observation_prefixes)
+        if not is_observation:
+            return None
+
+        # Use first parameter as the observed target
+        if action.parameters:
+            param_name, param_type = action.parameters[0]
+            return f"(observed_{param_type} ?{param_name})"
+        else:
+            return "(observation_complete)"
 
     def _condition_uses_only_declared_vars(
         self, condition: str, declared_vars: set[str]
