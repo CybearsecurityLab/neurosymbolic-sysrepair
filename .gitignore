@@ -26,3 +26,4 @@ eval/results/eval_results.db
 eval/results/home/resbears/projects/auto-sysrepair/eval/results/*
 *.log
 pddl_output/*
+eval/*
