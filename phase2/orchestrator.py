@@ -276,6 +276,67 @@ class Phase2Orchestrator:
                 print("  ⚠ No problem file generated (Phase 1 state has no objects)")
                 results["warnings"].append("No problem file generated")
 
+            # ─── Inject canonical sysadmin actions (defensible PDDL) ───
+            # Phase 1 mines from man pages and Phase 2 synthesises from
+            # utility groups; neither path produces a generic "edit setting
+            # in config file" or "reload service without systemd" action
+            # with proper precondition/effect semantics. Add a small library
+            # of canonical operators so the planner has plan-paths for
+            # common remediations. These are plain STRIPS, not scenario-
+            # specific shortcuts (see common.canonical_actions).
+            try:
+                from common.canonical_actions import merge_canonical_into_domain
+                canon = merge_canonical_into_domain(domain_path)
+                if canon["actions_added"] or canon["predicates_added"]:
+                    print(f"  → Canonical actions merged: "
+                          f"+{len(canon['actions_added'])} actions, "
+                          f"+{len(canon['predicates_added'])} predicates")
+                    self.unified_domain = domain_path.read_text()
+            except Exception as e:
+                logger.warning(f"canonical-action merge skipped: {e}")
+
+            # ─── Environment-aware enrichment (defensible PDDL) ───
+            # Insert capability preconditions into actions whose bash
+            # templates need tools that may or may not be present in the
+            # scenario container, and add the positive facts to the problem
+            # :init based on what Phase 1 actually detected. This makes
+            # auto-emitted domains environment-aware so Fast Downward
+            # naturally avoids grounding infeasible actions during EW walks.
+            try:
+                from common.domain_enrichment import enrich_in_place
+                caps = (self.phase1_state.metadata or {}).get("capabilities", {}) if self.phase1_state else {}
+                phase1_meta = self.output_dir / "phase1_statep2.json"
+                if phase1_meta.exists():
+                    er = enrich_in_place(
+                        domain_path=domain_path,
+                        problem_path=(self.output_dir / "sysadmin_problem.pddl")
+                                    if (self.output_dir / "sysadmin_problem.pddl").exists() else None,
+                        phase1_metadata=phase1_meta,
+                        capabilities=caps,
+                    )
+                    print(
+                        f"  → Environment enrichment: "
+                        f"{er['actions_with_capability_preconds']} actions tagged, "
+                        f"{len(er['predicates_added'])} predicates added, "
+                        f"{len(er['init_facts_added'])} init facts."
+                    )
+                    results["enrichment"] = er
+                    # Re-read the now-enriched domain into memory
+                    self.unified_domain = domain_path.read_text()
+            except Exception as e:
+                logger.warning(f"domain enrichment skipped: {e}")
+
+            # Validate via the pddl library at the artifact boundary so
+            # any structural defect surfaces here, not at planning time.
+            try:
+                from common.pddl_validation import assert_valid_domain, assert_valid_problem
+                assert_valid_domain(domain_path, source="phase2.domain")
+                problem_file = self.output_dir / "sysadmin_problem.pddl"
+                if problem_file.exists():
+                    assert_valid_problem(domain_path, problem_file, source="phase2.problem")
+            except Exception as e:
+                logger.warning(f"PDDL validation skipped: {e}")
+
             results["success"] = True
             results["domain_path"] = str(domain_path)
             results["domain_pddl"] = self.unified_domain
