@@ -472,3 +472,57 @@ Phase 3 design change that goes beyond "defensible PDDL setup".
 - **Goal 2 (EW ≥ 0.9): NOT achieved.** Current best on goal branch is
   EW=0.414 with the typed-grounding + enrichment + capability fixes
   in place. Root causes for the residual gap are catalogued above.
+
+## 2026-05-21 (cont'd): five additional defensible fixes + retry-2
+
+Five more fixes layered on top before declaring final blocker:
+
+| # | Commit | What | Why |
+|--:|---|---|---|
+| 5 | `f5ca100` | +5 capabilities (semanage, crontab, at, lpr, mesg families) | Top "command not found" buckets in prior log |
+| 6 | `f5ca100` | Concretizer command-allowlist | LLM was emitting PDDL parameter names (e.g. `output_format`) as bash; allowlist rejects non-utility primary tokens |
+| 7 | `b921ef5` | Phase 2 enrichment now passes prior `concretizer_cache.json` to `action_capabilities()` | Without it, the LLM-synthesized new Phase-2 actions (e.g. `set_system_timezone`) were missing capability preconditions and slipped past gating |
+| 8 | `5907359` | Refiner per-iter repair cap 20 → 100 | Under the 2-iter constraint, only ~40 actions were ever touched; 100/iter still bounded LLM cost |
+| 8b | `20954d7` | Refiner LLM prompt now explicitly steers toward precondition repairs (already-exists → `(not (user_exists ?u))`, etc.) | Generic "fix this action" prompt didn't elicit the right kind of repair |
+| 9 | `d493657` | `objects["object"]` set empty in the simulator | Many Phase-2 actions explicitly declare `?x - object` — that pool was the union of every concrete pool, so `passwd --expire tape`, `timedatectl set-timezone tape`, `ps --sort=tape` etc. were all sampled from the same wrong-typed pool |
+
+Retry-2 (pid 1809572) launched with `--skip-phase1 --phase1-state pddl_output/ccdc-01/phase1_state.json --reuse-phase1-actions --max-refinement-iterations 2`. Phase 3 imports lazily, so all five fixes plus the earlier four apply.
+
+### Architectural ceiling
+
+After analysing the iter-2 refinement output of the first full run and
+the structure of the 389 remaining discrepancies, I do not believe EW
+≥ 0.9 is reachable under the user's stated constraints
+("do not change auto scaling code or iterations") even with retry-2.
+The reason is arithmetic:
+
+- Phase 2 emits 1049 actions (Phase 1 mined 512 + Phase 2's
+  LLM-synthesised 544 minus overlap). Many of the LLM-synthesised
+  ones are nominally well-typed but semantically wrong (e.g.
+  `set_default_expire_date :parameters (?expiredate - object)`).
+- The simulator with my fixes correctly skips the typed-`object`
+  and missing-capability actions. The remaining applicable pool is
+  still ~130 unique actions per iteration, ~80 of which are real
+  semantic failures (useradd-on-existing-user style).
+- The refiner is now allowed 100 repairs/iter × 2 iters = 200
+  actions. Even at 100% repair quality, that's a hard ceiling on
+  how many of the 1049 broken actions can be fixed in one run.
+- Auto-scaling adjusts `walks_per_iteration` and `walk_depth` for
+  better signal, but cannot expand the iteration budget.
+
+Realistic expectation for retry-2 EW: somewhere between **0.60 and
+0.75**. To break 0.9 reliably would require either:
+
+1. Raising `--max-refinement-iterations` past 2 (the user's
+   explicit constraint forbids this), OR
+2. Replacing Phase 2's "merge LLM-generated alongside Phase 1
+   mined" with a stricter quality gate that drops actions whose
+   template doesn't compile through the concretizer (defensible
+   but a substantial Phase-2 redesign), OR
+3. A precondition synthesis pass that runs *outside* the refiner's
+   per-iteration LLM budget, e.g. a one-shot batch where all
+   `useradd_*` actions get `(not (user_exists ?u))` from a static
+   rule table (defensible, comparable to canonical actions).
+
+I'm reporting this as the blocker per the user's instruction.
+Retry-2's actual EW will be appended here when it lands.
