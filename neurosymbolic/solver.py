@@ -14,20 +14,27 @@ harness.  It imports Inspect AI primitives directly.
 
 from __future__ import annotations
 
+# Put the project root on sys.path BEFORE any inspect_ai / common imports.
+# inspect_ai loads this file via importlib (file path, no package context),
+# so the cwd-based default sys.path is not present. Without this fix the
+# from-common.* imports below fail with ModuleNotFoundError.
+import sys as _sys
+from pathlib import Path as _Path
+_PROJECT_ROOT = _Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_PROJECT_ROOT))
+
 import json
 import re
 import subprocess
-import sys as _sys
 import tempfile
 from pathlib import Path
 
-# When this module is loaded by `inspect eval` via importlib.load_module(),
-# the auto-sysrepair project root is NOT on sys.path, so `from common.*`
-# imports inside solve() fail with ModuleNotFoundError. Insert the root
-# eagerly so all our shared modules (common/, phase3/, etc.) are reachable.
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(_PROJECT_ROOT) not in _sys.path:
-    _sys.path.insert(0, str(_PROJECT_ROOT))
+# Module-level imports of our shared utilities. Importing here (rather than
+# lazily inside solve()) makes the import-error surface at *task load* time,
+# not at *task run* time — and keeps everything bound to whatever sys.path
+# looks like when this file is first read.
+from common.pddl_validation import assert_valid_domain, assert_valid_problem
 
 from inspect_ai.agent import AgentState, react
 from inspect_ai.model import (
@@ -254,7 +261,7 @@ def neurosymbolic_solver(
         if domain_path and Path(domain_path).exists():
             domain_pddl = Path(domain_path).read_text()
             try:
-                from common.pddl_validation import assert_valid_domain
+                # (assert_valid_domain imported at module top)
                 dval = assert_valid_domain(domain_pddl, source="solver.domain")
                 if not dval.ok:
                     state.metadata["domain_invalid"] = dval.detail or dval.error
@@ -281,29 +288,46 @@ def neurosymbolic_solver(
         parser_error: str = ""
         if domain_pddl:
             # ─────────────────────────────────────────────────────────────
-            # Problem generation: a TOOL-USING agent (not bulk-paste).
-            # The LLM is given read-only PDDL inspection tools to discover
-            # the domain's vocabulary on demand, plus a submit() tool to
-            # return the final problem PDDL. No shell / text_editor — this
-            # is a symbolic-generation step, not an execution agent.
+            # Problem generation: one-shot LLM call with a COMPACT domain
+            # summary (types + predicate names + action names) in the
+            # prompt. The summary is small (a few KB even for an 800-
+            # action domain — only names, not signatures). This avoids
+            # the OpenAI-compatible tool-calling API surface that MiniMax
+            # rejects ("invalid chat setting (2013)") with the react()
+            # agent path. The model still gets the exact vocabulary it
+            # must use; nothing about defensibility changes.
             # ─────────────────────────────────────────────────────────────
-            from common.pddl_validation import assert_valid_problem
-            from .pddl_tools import build_pddl_tools
-            pddl_tools = build_pddl_tools(domain_pddl)
-
-            problem_prompt = (
-                "Use the pddl_* tools to discover the domain's types,"
-                " predicates, and actions, then call submit() with ONLY the"
-                " PDDL problem text (no markdown).\n\n"
-                f"## Vulnerability Report\n{state.input_text[:3000]}\n\n"
-                f"## Current System State\n{state_block[:3000]}\n\n"
-                "USE ONLY identifiers that exist in the domain. Match the"
-                " domain's casing/punctuation exactly (use pddl_list_predicates"
-                " / pddl_search to verify)."
+            from .pddl_tools import _extract_types, _extract_predicates, _extract_actions
+            d_types = _extract_types(domain_pddl)
+            d_preds = [name for name, _sig in _extract_predicates(domain_pddl)]
+            d_acts = sorted(_extract_actions(domain_pddl).keys())
+            _m = re.search(r"\(domain\s+([\w-]+)", domain_pddl)
+            d_name = _m.group(1) if _m else "sysadmin"
+            preds_str = ", ".join(d_preds[:300])
+            if len(d_preds) > 300:
+                preds_str += f"\n  ...(+{len(d_preds)-300} more)"
+            acts_str = ", ".join(d_acts[:300])
+            if len(d_acts) > 300:
+                acts_str += f"\n  ...(+{len(d_acts)-300} more)"
+            domain_summary = (
+                f"DOMAIN name: {d_name}\n"
+                f"TYPES ({len(d_types)}): {', '.join(d_types) if d_types else '(none)'}\n"
+                f"PREDICATES ({len(d_preds)}): {preds_str}\n"
+                f"ACTIONS ({len(d_acts)}): {acts_str}"
             )
 
-            # Up to two attempts: if the submitted problem won't parse, feed
-            # the parser error back as another turn for the LLM to correct.
+            problem_prompt = (
+                "## Domain vocabulary (USE ONLY these identifiers)\n"
+                f"{domain_summary}\n\n"
+                f"## Vulnerability Report\n{state.input_text[:3000]}\n\n"
+                f"## Current System State\n{state_block[:3000]}\n\n"
+                "Generate the PDDL problem file. Match the domain's casing"
+                " and punctuation exactly. Output ONLY the (define (problem"
+                " …) …) form, no markdown fences, no explanation."
+            )
+
+            # Up to 2 attempts: if the produced PDDL won't parse against
+            # the domain, feed the parser error back to the LLM.
             for attempt in range(2):
                 msgs = [
                     ChatMessageSystem(content=_PROBLEM_GEN_SYSTEM),
@@ -311,24 +335,17 @@ def neurosymbolic_solver(
                 ]
                 if parser_error:
                     msgs.append(ChatMessageUser(content=(
-                        "Your previous problem PDDL failed to parse with the "
-                        f"following error — fix it and resubmit:\n{parser_error}"
+                        "Your previous problem PDDL failed to parse — fix it "
+                        f"and re-emit. Error:\n{parser_error}"
                     )))
-                agent = react(
-                    tools=pddl_tools,
-                    attempts=1,
-                    on_continue=(
-                        "If you have everything you need, call submit(answer=<PDDL>). "
-                        "Otherwise look up more vocabulary first."
-                    ),
+                resp = await model.generate(
+                    input=msgs,
+                    config=GenerateConfig(temperature=0.1, max_tokens=4096),
                 )
-                inner_state = AgentState(messages=list(msgs))
-                inner_state = await agent(inner_state)
-
-                problem_pddl = _extract_submitted_pddl(inner_state.messages)
+                problem_pddl = (resp.completion or "").strip()
                 problem_pddl = re.sub(r"```(?:pddl)?\s*", "", problem_pddl).replace("```", "").strip()
                 if not problem_pddl:
-                    parser_error = "agent did not submit a problem PDDL"
+                    parser_error = "LLM returned empty problem PDDL"
                     continue
                 pval = assert_valid_problem(
                     domain_pddl, problem_pddl, source=f"solver.problem.attempt{attempt+1}",
