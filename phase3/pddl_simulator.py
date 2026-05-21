@@ -392,13 +392,24 @@ class PDDLStateSimulator:
                     break
                 cur = parent_of.get(cur)
 
-        # "object" supertype gets everything (kept for completeness — the
-        # grounding path no longer uses this as a free pass)
-        all_objs = set()
-        for t, objs in objects.items():
-            if t != "object":
-                all_objs.update(objs)
-        objects["object"] = list(all_objs)
+        # Deliberately set `objects["object"]` to the EMPTY pool.
+        #
+        # PDDL treats `object` as the root supertype, but a *parameter*
+        # declared `?x - object` means the action's type was never
+        # inferred — there is no concrete pool that's semantically
+        # right for it. Previously this pool was the union of every
+        # concrete pool, which let actions like
+        #   (:action set_default_expire_date
+        #     :parameters (?expiredate - object) ...)
+        # ground `?expiredate` to a username, group name, file path, etc.
+        # The resulting concretized command (`passwd --expire tape`) was
+        # always going to fail.
+        #
+        # Empty pool ⇒ such actions are inapplicable in EW, which is the
+        # correct PDDL-grounded outcome: the *domain* is under-specified
+        # for that action and the refiner should be the one that tightens
+        # the parameter type. Standard typed-PDDL behavior.
+        objects["object"] = []
 
         return objects
 
