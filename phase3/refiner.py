@@ -542,11 +542,31 @@ class DomainRefiner:
             "Your entire response must be a single (:action ...) block."
         )
 
+        # Pattern hint: most "fixable" execution-failure discrepancies are
+        # really missing preconditions, not malformed effects. Steer the
+        # LLM toward adding a guarding :precondition rather than rewriting
+        # effects, since the exploration walk only fails when the action
+        # was *legal* in PDDL but the actual command exited nonzero.
+        fix_hint = (
+            "GUIDANCE — most failures here mean the action's :precondition "
+            "is missing a guard. Examples:\n"
+            "- 'user X already exists' (useradd) → add (not (user_exists ?u))\n"
+            "- 'user X does not exist' (passwd/usermod/chage/userdel) → add (user_exists ?u)\n"
+            "- 'group X already exists' (groupadd) → add (not (group_exists ?g))\n"
+            "- 'group X does not exist' (groupdel/gpasswd) → add (group_exists ?g)\n"
+            "- 'file/path does not exist' → add (file_exists ?f) or (directory_exists ?d)\n"
+            "- 'invalid date' / 'invalid number' / 'invalid argument' → the "
+            "parameter is bound to the wrong type; tighten the :parameters "
+            "type from `?x - object` to a more specific declared type if one "
+            "exists in the domain.\n"
+            "Prefer adding a small :precondition over rewriting effects.\n"
+        )
         prompt = (
             f"Fix this PDDL action based on the discrepancies below.\n\n"
             f"ERRORS:\n{errors_str}\n\n"
             f"ACTION:\n{action_pddl}\n\n"
             f"PDDL SYNTAX RULES:\n{PDDL_SYNTAX_GUIDE}\n\n"
+            f"{fix_hint}\n"
             f"RULES:\n"
             f"- Keep the action name '{action_name}' unchanged.\n"
             f"- Declare all variables used in :precondition/:effect in :parameters.\n"
