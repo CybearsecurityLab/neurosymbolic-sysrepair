@@ -306,6 +306,12 @@ class Phase2Orchestrator:
                 from common.domain_enrichment import enrich_in_place
                 caps = (self.phase1_state.metadata or {}).get("capabilities", {}) if self.phase1_state else {}
                 phase1_meta = self.output_dir / "phase1_statep2.json"
+                # Reuse a prior concretizer cache if one exists (e.g.
+                # an earlier Phase 3 run). Phase 2's LLM-synthesized new
+                # actions live in that cache, not in phase1_statep2.json,
+                # so without this pass-through the enrichment misses
+                # gating predicates for systemctl/timedatectl/etc.
+                concretizer_cache = self.output_dir / "phase3" / "concretizer_cache.json"
                 if phase1_meta.exists():
                     er = enrich_in_place(
                         domain_path=domain_path,
@@ -313,6 +319,7 @@ class Phase2Orchestrator:
                                     if (self.output_dir / "sysadmin_problem.pddl").exists() else None,
                         phase1_metadata=phase1_meta,
                         capabilities=caps,
+                        concretizer_cache=concretizer_cache if concretizer_cache.exists() else None,
                     )
                     print(
                         f"  → Environment enrichment: "
