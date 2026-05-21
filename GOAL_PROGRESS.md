@@ -526,3 +526,21 @@ Realistic expectation for retry-2 EW: somewhere between **0.60 and
 
 I'm reporting this as the blocker per the user's instruction.
 Retry-2's actual EW will be appended here when it lands.
+
+### 2026-05-21: retry-2 EW = 0.549, post-hoc enrichment + synthesis EW = 0.589
+
+| Run | EW iter1 | EW iter2 | Best | Notes |
+|---|---:|---:|---:|---|
+| Full pipeline #1 | 0.378 | 0.414 | 0.414 | typed-grounding + first 4 fixes |
+| Retry-2 (P2+P3) | 0.549 | 0.544 | **0.549** | + 5 caps + allowlist + cache pass-through + repair-cap-100 + refiner prompt + object-pool empty |
+| Phase-3-only on re-enriched+synthesized domain | 0.582 | 0.589 | **0.589** | + manual re-enrichment (343 actions tagged) + precondition-synthesis flip-logic (42 actions patched) |
+
+**Cumulative lift: 0.414 → 0.589 (+0.175).** Substantial improvement under the user's constraints, but **0.589 is well below the 0.9 target**. The architectural ceiling is real:
+
+- The remaining ~297 of 723 walk steps fail on per-action semantic mismatches that the refiner cannot fix in a 2-iteration budget even with the 5x repair-cap bump (100 repairs/iter).
+- Each repair LLM call takes 8–15 s on MiniMax-M2.7; the 2-iteration budget is binding (~200 repair calls × ~15 s = 50 min just on repairs, before walks).
+- Top remaining failing actions are useradd-flag-conflict (`-U -g`), passwd-interactive-prompt, iptables (probed False but slipped past), useradd-on-existing-user, and verify_group / no_template_found classes — each requires per-action template/flag rewrites that are outside the refiner's per-iteration LLM budget.
+
+### Final Goal-2 status: NOT achieved
+
+EW = 0.589 with all ten committed fixes + manual re-enrichment/synthesis applied. Per the user's directive ("stop and report your finding"), the architectural ceiling under "do not change auto-scaling or iterations" is what's holding the result below 0.9. The three options that would close the gap (iteration budget, Phase-2 quality gate, batch refiner LLM coverage) all violate the user's constraint or scope.
