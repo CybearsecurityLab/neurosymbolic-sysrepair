@@ -249,6 +249,24 @@ class Phase1Orchestrator:
         results["actions"] = serialized_actions
         results["statistics"]["serialized_actions"] = len(serialized_actions)
 
+        # Probe the scenario container for runtime capabilities (does
+        # systemd run as PID 1, is iptables installed, …). These will be
+        # baked into the problem :init by the Phase 3 enrichment pass so
+        # the planner naturally avoids infeasible actions.
+        capabilities: dict[str, bool] = {}
+        if self.container is not None:
+            try:
+                from common.env_capabilities import probe_capabilities
+                from common.container import ScenarioContainerManager
+                def _run(cmd: str) -> int:
+                    res = ScenarioContainerManager.exec(self.container, cmd, timeout=15)
+                    return res.exit_code
+                capabilities = probe_capabilities(_run)
+                avail = [k for k, v in capabilities.items() if v]
+                log(f"\n  ✓ Container capabilities: {', '.join(avail) if avail else '(none detected)'}")
+            except Exception as e:
+                log(f"  ⚠ Capability probe failed: {e}")
+
         # Create complete Phase1State
         phase1_state = Phase1State(
             objects=self.state.get("objects", {}),
@@ -261,6 +279,7 @@ class Phase1Orchestrator:
                 "llm_model": self.llm_model,
                 "action_count": len(self.actions),
                 "detected_variants": getattr(self.parser, "detected_variants", {}),
+                "capabilities": capabilities,
             },
         )
 

@@ -168,6 +168,36 @@ own.
 in the rules that only those identifiers may appear. This is canonical
 planning practice — the problem must be in the same language as the domain.
 
+### 2026-05-21: defensible PDDL fixes landed
+
+1. **`common/pddl_validation.py`** — every PDDL artifact (Phase 2 domain,
+   Phase 3 refined domain, LLM-generated per-scenario problem) is now
+   parsed with the `pddl` library at the artifact boundary, so structural
+   errors surface where they're produced.
+2. **`neurosymbolic/solver.py` ReAct shell fallback removed.** The solver
+   must succeed symbolically. Explicit failure modes are returned
+   instead: `NO_DOMAIN_PROVIDED`, `PROBLEM_GENERATION_FAILED`,
+   `PLANNER_FOUND_NO_PLAN`, `PLAN_DID_NOT_REMEDIATE`.
+3. **`neurosymbolic/pddl_tools.py` + tool-using problem generator.** The
+   LLM that generates the per-scenario problem now uses read-only PDDL
+   inspection tools (`pddl_list_predicates`, `pddl_show_action`, etc.)
+   to navigate the domain rather than having it dumped into context.
+   Parser-error feedback retry: 1 retry max if first attempt won't parse.
+4. **`common/env_capabilities.py` + `common/domain_enrichment.py`** —
+   probe the scenario container for capability availability
+   (`systemd_init_present`, `iptables_available`, …); add the corresponding
+   precondition to every action whose bash template's primary command
+   needs that capability; emit the positive facts into the problem `:init`.
+   This is canonical STRIPS practice (real preconditions, real init facts)
+   and is the defensible answer to "actions reference tools the container
+   doesn't have". It does NOT change the auto-scale or iteration logic.
+
+For ccdc-01, capability probe produced: only `(apt_available)` and
+`(dpkg_available)` are true; everything else (systemctl, iptables, ufw,
+sudo, …) implicitly false. Enrichment added precondition predicates to
+**313 of 836** actions in `sysadmin.pddl`. PDDL library parses both
+domain and problem cleanly post-enrichment.
+
 ### Constraint reaffirmed
 
 - ✅ No changes to `Phase3Config.auto_scale_ew_params` or iterations.
