@@ -107,14 +107,69 @@ Env wiring used: `OPENAI_BASE_URL=https://api.minimax.io/v1`, `OPENAI_API_KEY=$M
 
 Current EW = 0.391 (2 iterations, 836-action domain).
 
-Within the constraint (no auto-scale/iterations changes), the lever is
-domain quality going **into** Phase 3. With a cleaner starting domain, the
-same 2 iterations and the same auto-scaled walks will converge higher.
-Concrete plan:
+### 2026-05-20: course-correction — NO ad-hoc pruning
 
-1. Inspect this run's discrepancy log to find actions that *always* fail
-   (e.g. `netplan_generate`, `system_reboot`, ones depending on absent tools).
-2. Prune those from `sysadmin.pddl` between Phase 2 output and Phase 3 input.
-3. Re-run Phase 3 only; measure EW.
+User direction: **don't prune. Investigate why invalid actions are being added
+in the first place.** This is an ACSAC paper — adjustments must be defensible
+under proper PDDL practice. Quick-fix tool-blacklists fail that bar.
 
-Step 1 is pure analysis of the data we already have.
+Reverted the `domain_pruner` work. The real question is: why does the Phase 1
+miner / Phase 2 synthesizer emit actions like `restart_service` that call
+`systemctl` without a precondition like `(systemd_init_present)` that
+reflects the actual container environment? That is the proper PDDL answer:
+**the precondition captures the requirement; the planner naturally excludes
+the action when the precondition is false in the init state.**
+
+### Updated / added goals
+
+1. **(was Goal 1) End-to-end NS planner on ccdc-01** — ✅ ACHIEVED. Score
+   1.000 (verify.sh PASS). But: investigate *how* it succeeded — see Goal 4.
+2. **(was Goal 2) EW ≥ 0.9** — pursue by improving the *generator* so
+   spurious / unsatisfiable actions don't get emitted, not by post-hoc
+   filtering. Treat EW as a side-effect of correct PDDL.
+3. **NEW: Run the NS planner end-to-end on ALL bench scenarios.** Each
+   scenario must get its own per-scenario problem PDDL + the planner
+   produces a plan that drives verify.sh to PASS. Goal: maximise the
+   aggregate ACSAC-paper-defensible score across the set.
+4. **NEW: Audit the AI-planning correctness of the scenario-01 run.**
+   - Did Fast Downward actually plan, or did the LLM-fallback ReAct loop
+     do the work?
+   - Are the plan's actions valid w.r.t. the domain's preconditions/effects?
+   - Are concretized bash commands faithful to the action's PDDL effects?
+   - Are we doing real AI planning, or LLM-as-a-shell with PDDL trim?
+5. **NEW: Investigate the domain generator on ccdc-01 specifically.** Where
+   do invalid actions come from? Phase 1 mining (man pages), Phase 2 LLM
+   synthesis, or merger? What preconditions are missing?
+
+### 2026-05-20: AI-planning audit on ccdc-01 — root defect found
+
+The score of 1.000 on ccdc-01 was achieved by the **LLM ReAct fallback**
+(text_editor + shell). Fast Downward **failed to plan** and the conversation
+literally pivoted with: *"Continue remediation using shell commands. The PDDL
+planner could not find a plan."*
+
+The PDDL problem the LLM emitted (stored as `metadata.pddl_problem` and
+extracted from the eval log) is structurally incompatible with the domain:
+
+| issue | problem says | domain has |
+|---|---|---|
+| Naming convention | `(service-running sshd-service)` | `(service_running ?s)` (underscores) |
+| Invented types | `sshd-config - config-file` | only `configuration_file`, `file`, … |
+| Invented predicates | `has-setting`, `setting-value`, `file-location`, `service-needs-restart-after-config-change` | none of these exist |
+
+Cause: `neurosymbolic/solver.py::_PROBLEM_GEN_SYSTEM` prompts the LLM to
+generate a problem for "the sysadmin domain" but **never includes the
+domain's actual `(:types ...)` / `(:predicates ...)`** in the prompt. The
+LLM has no way to know what vocabulary the domain offers and invents its
+own.
+
+**Defensible PDDL fix:** pass the domain's type & predicate declarations
+(and ideally action signatures) into the problem-generation prompt; insist
+in the rules that only those identifiers may appear. This is canonical
+planning practice — the problem must be in the same language as the domain.
+
+### Constraint reaffirmed
+
+- ✅ No changes to `Phase3Config.auto_scale_ew_params` or iterations.
+- ✅ No special-cased "this works for the benchmark" hacks. Whatever we
+  change must be defensible as good PDDL / planning engineering.

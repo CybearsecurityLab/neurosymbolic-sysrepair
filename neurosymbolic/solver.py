@@ -49,7 +49,12 @@ Rules:
 - Use (:init ...) for the current state as grounded predicates.
 - Use (:goal (and ...)) for the desired post-remediation state.
 - Keep the problem small: only include objects relevant to this vulnerability.
-- Use lowercase PDDL names with hyphens (e.g., openssh-server, sshd).
+- USE ONLY the types and predicates declared in the supplied domain — do NOT
+  invent new ones. Identifier convention must match the domain (e.g. if the
+  domain uses underscores, use underscores; if hyphens, use hyphens).
+- If the listed actions cannot reach the goal state, the problem is still
+  valid PDDL — but the planner will return no plan, which is the correct
+  signal that the domain needs additional actions/predicates.
 """
 
 _CONCRETIZE_PROMPT = (
@@ -234,10 +239,19 @@ def neurosymbolic_solver(
         os_name = state.metadata.get("os", "linux")
         model = get_model()
 
-        # Load PDDL domain
+        # Load PDDL domain (validate but DON'T bulk-paste into the LLM prompt;
+        # the agent will navigate it via pddl_search/pddl_show_* tools).
         domain_pddl = ""
         if domain_path and Path(domain_path).exists():
             domain_pddl = Path(domain_path).read_text()
+            try:
+                from common.pddl_validation import assert_valid_domain
+                dval = assert_valid_domain(domain_pddl, source="solver.domain")
+                if not dval.ok:
+                    state.metadata["domain_invalid"] = dval.detail or dval.error
+                    domain_pddl = ""  # don't ship a broken domain to FD
+            except Exception as e:
+                state.metadata["domain_validation_error"] = str(e)[:200]
 
         # ── Phase 1: Introspect ──
         sb = sandbox()
@@ -254,26 +268,76 @@ def neurosymbolic_solver(
         plan_actions: list[dict] = []
         planner_ok = False
 
+        problem_pddl = ""
+        parser_error: str = ""
         if domain_pddl:
+            # ─────────────────────────────────────────────────────────────
+            # Problem generation: a TOOL-USING agent (not bulk-paste).
+            # The LLM is given read-only PDDL inspection tools to discover
+            # the domain's vocabulary on demand, plus a submit() tool to
+            # return the final problem PDDL. No shell / text_editor — this
+            # is a symbolic-generation step, not an execution agent.
+            # ─────────────────────────────────────────────────────────────
+            from common.pddl_validation import assert_valid_problem
+            from .pddl_tools import build_pddl_tools
+            pddl_tools = build_pddl_tools(domain_pddl)
+
             problem_prompt = (
+                "Use the pddl_* tools to discover the domain's types,"
+                " predicates, and actions, then call submit() with ONLY the"
+                " PDDL problem text (no markdown).\n\n"
                 f"## Vulnerability Report\n{state.input_text[:3000]}\n\n"
                 f"## Current System State\n{state_block[:3000]}\n\n"
-                "Generate the PDDL problem file for domain \"sysadmin\"."
+                "USE ONLY identifiers that exist in the domain. Match the"
+                " domain's casing/punctuation exactly (use pddl_list_predicates"
+                " / pddl_search to verify)."
             )
-            problem_resp = await model.generate(
-                input=[
+
+            # Up to two attempts: if the submitted problem won't parse, feed
+            # the parser error back as another turn for the LLM to correct.
+            for attempt in range(2):
+                msgs = [
                     ChatMessageSystem(content=_PROBLEM_GEN_SYSTEM),
                     ChatMessageUser(content=problem_prompt),
-                ],
-                config=GenerateConfig(temperature=0.1, max_tokens=4096),
-            )
-            problem_pddl = (problem_resp.completion or "").strip()
-            problem_pddl = re.sub(r"```(?:pddl)?\s*", "", problem_pddl)
-            problem_pddl = problem_pddl.replace("```", "").strip()
+                ]
+                if parser_error:
+                    msgs.append(ChatMessageUser(content=(
+                        "Your previous problem PDDL failed to parse with the "
+                        f"following error — fix it and resubmit:\n{parser_error}"
+                    )))
+                agent = react(
+                    tools=pddl_tools,
+                    attempts=1,
+                    on_continue=(
+                        "If you have everything you need, call submit(answer=<PDDL>). "
+                        "Otherwise look up more vocabulary first."
+                    ),
+                )
+                inner_state = AgentState(messages=list(msgs))
+                inner_state = await agent(inner_state)
+
+                problem_pddl = _extract_submitted_pddl(inner_state.messages)
+                problem_pddl = re.sub(r"```(?:pddl)?\s*", "", problem_pddl).replace("```", "").strip()
+                if not problem_pddl:
+                    parser_error = "agent did not submit a problem PDDL"
+                    continue
+                pval = assert_valid_problem(
+                    domain_pddl, problem_pddl, source=f"solver.problem.attempt{attempt+1}",
+                )
+                if pval.ok:
+                    parser_error = ""
+                    break
+                parser_error = (pval.detail or pval.error or "unknown parse error")[:600]
+
             state.metadata["pddl_problem"] = problem_pddl[:2000]
+            state.metadata["pddl_problem_valid"] = (parser_error == "")
+            if parser_error:
+                state.metadata["pddl_problem_error"] = parser_error
 
             # ── Phase 3: Plan ──
-            if problem_pddl and Path(fd_path).exists():
+            # Only invoke the planner if the problem actually parsed; else
+            # the failure mode is "PROBLEM_GENERATION_FAILED", not "no plan".
+            if problem_pddl and not parser_error and Path(fd_path).exists():
                 plan_actions = await _run_fast_downward(
                     domain_pddl, problem_pddl, fd_path, plan_timeout,
                 )
@@ -329,34 +393,23 @@ def neurosymbolic_solver(
                     state.output.completion = "REMEDIATION_COMPLETE"
                     return state
 
-        # ── Phase 5: LLM fallback ──
-        if enable_llm_fallback and not (
-            state.output and state.output.completion == "REMEDIATION_COMPLETE"
-        ):
-            note = ""
-            if planner_ok:
-                note = " The PDDL plan was executed but verification still fails."
-            elif domain_pddl:
-                note = " The PDDL planner could not find a plan."
+        # No ReAct/LLM fallback. The neurosymbolic solver must succeed via
+        # the symbolic plan. If the planner produced no plan, or the plan
+        # was executed but verify.sh did not pass, that is a failure of the
+        # PDDL artifacts (domain or problem) and must be reported as such.
+        # Falling back to free-form LLM shell use was hiding planning
+        # defects (see GOAL_PROGRESS.md), so it has been removed.
+        #
+        # Record the failure mode so the score event has explanatory metadata.
+        if not (state.output and state.output.completion == "REMEDIATION_COMPLETE"):
+            if not domain_pddl:
+                state.output.completion = "NO_DOMAIN_PROVIDED"
+            elif not problem_pddl:
+                state.output.completion = "PROBLEM_GENERATION_FAILED"
+            elif not planner_ok:
+                state.output.completion = "PLANNER_FOUND_NO_PLAN"
             else:
-                note = " No PDDL domain available."
-
-            state.messages.append(ChatMessageUser(
-                content=f"Continue remediation using shell commands.{note}"
-            ))
-
-            tools = [_shell_tool(bash_timeout), text_editor(), think()]
-            inner = react(
-                tools=tools,
-                attempts=1,
-                on_continue="Continue, or call submit() if remediation is complete.",
-            )
-            inner_state = AgentState(messages=list(state.messages))
-            inner_state = await inner(inner_state)
-            state.messages = inner_state.messages
-
-            if await _verify_in_sandbox(scenario_path, verify_timeout, os_name):
-                state.output.completion = "REMEDIATION_COMPLETE"
+                state.output.completion = "PLAN_DID_NOT_REMEDIATE"
 
         return state
 
