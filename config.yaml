@@ -5,10 +5,10 @@ pipeline:
   output_dir: ./pddl_output
 
 llm:
-  model: gemma-4-31b
-  base_url: http://localhost:8001/v1
-  api_key: vllm
-  max_tokens: 4096
+  model: MiniMax-M2.7
+  base_url: https://api.minimax.io/v1
+  api_key: ${MINIMAX_API_KEY}
+  max_tokens: 0  # 0 = unlimited (omit from API request)
   temperature: 0.3
 
   phase1: null # inherits from default

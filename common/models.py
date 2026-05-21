@@ -357,3 +357,5 @@ class LLMExtractionConfig:
     max_retries: int = 2
     temperature: float = 0.0
     max_workers: int = 1  # Number of parallel LLM extraction workers
+    # Output cap per call. 0 means "no cap" (let reasoning models run).
+    max_tokens: int = 0

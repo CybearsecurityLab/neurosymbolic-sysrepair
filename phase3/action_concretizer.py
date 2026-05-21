@@ -12,10 +12,11 @@ Also contains EffectVerifier for post-execution effect checking.
 import json
 import re
 import logging
+import time
 from pathlib import Path
 from typing import Optional
 
-from .config import PREDICATE_CHECKS
+from .config import PREDICATE_CHECKS, LLM_CONCURRENCY_GATE
 from .models import GroundedAction
 
 logger = logging.getLogger("Phase3.ActionConcretizer")
@@ -515,15 +516,48 @@ class ActionConcretizer:
         prompt = self._build_llm_prompt(action_name, action, normalized_bindings)
 
         try:
-            response = self._llm.chat.completions.create(
-                model=self._llm_model,
-                messages=[
-                    {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=self._llm_max_tokens,
-                temperature=self._llm_temperature,
-            )
+            # App-level retry around the LLM call. The OpenAI SDK's internal
+            # max_retries already handles fast transient errors, but MiniMax
+            # occasionally drops connections under burst load that exhaust
+            # the SDK's retries. Sleep longer here so the burst clears, and
+            # log the underlying exception class so 'Connection error' is no
+            # longer opaque (__cause__ holds the wrapped httpx exception).
+            response = None
+            last_exc: Optional[BaseException] = None
+            for attempt in range(3):
+                try:
+                    # Throttle concurrent in-flight calls to MiniMax (undocumented
+                    # per-IP concurrent-connection cap; refused TCP otherwise).
+                    with LLM_CONCURRENCY_GATE:
+                        response = self._llm.chat.completions.create(
+                            model=self._llm_model,
+                            messages=[
+                                {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
+                                {"role": "user", "content": prompt},
+                            ],
+                            max_tokens=self._llm_max_tokens or None,
+                            temperature=self._llm_temperature,
+                        )
+                    break
+                except Exception as e:
+                    last_exc = e
+                    cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+                    logger.warning(
+                        f"LLM concretize attempt {attempt+1}/3 failed for "
+                        f"{action_name}: {type(e).__name__}: {e} | "
+                        f"cause={type(cause).__name__ if cause else 'None'}: {cause}"
+                    )
+                    if attempt < 2:
+                        # ECONNREFUSED = MiniMax LB throttle; observed windows
+                        # exceed 30s, so sleep 60s. Other transient errors get
+                        # the shorter exponential backoff.
+                        msg = f"{cause}"
+                        if "Connection refused" in msg or "Errno 111" in msg:
+                            time.sleep(60)
+                        else:
+                            time.sleep(5 * (2 ** attempt))  # 5s, 10s
+            if response is None:
+                raise last_exc if last_exc else RuntimeError("LLM call returned no response")
 
             content = ""
             if response.choices:

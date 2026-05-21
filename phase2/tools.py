@@ -23,41 +23,28 @@ class DocumentationExtractor:
     # Cache size for man pages
     CACHE_SIZE = 100
 
-    def __init__(self):
+    def __init__(self, shell=None):
         self._man_cache: dict[str, str] = {}
         self._help_cache: dict[str, str] = {}
+        if shell is None:
+            from common.shell import HostShellRunner
+            shell = HostShellRunner()
+        self.shell = shell
 
-    @lru_cache(maxsize=CACHE_SIZE)
     def _fetch_man_section(self, utility: str, section: int) -> str:
         """
-        Internal cached method to fetch a specific man page section.
+        Fetch a specific man page section via the configured shell runner.
         """
-        try:
-            # Use man with -P cat to avoid pager
-            result = subprocess.run(
-                ["man", "-P", "cat", str(section), utility],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                env={"MANWIDTH": "120", "LANG": "C"},
+        # MANWIDTH/LANG are exported inline so they apply equally to host shell and docker exec.
+        cmd = f"MANWIDTH=120 LANG=C man -P cat {section} {utility}"
+        res = self.shell.run(cmd, timeout=10)
+        if res.ok and res.stdout:
+            content = self._clean_man_output(res.stdout)
+            logger.debug(
+                f"Fetched man page for {utility} section {section} ({len(content)} chars)"
             )
-
-            if result.returncode == 0:
-                content = result.stdout
-                content = self._clean_man_output(content)
-                logger.debug(
-                    f"Fetched man page for {utility} section {section} ({len(content)} chars)"
-                )
-                return content
-            else:
-                return ""
-
-        except subprocess.TimeoutExpired:
-            logger.warning(f"Timeout fetching man page for {utility} section {section}")
-            return ""
-        except Exception as e:
-            logger.warning(f"Error fetching man page for {utility}: {e}")
-            return ""
+            return content
+        return ""
 
     def fetch_man_page(self, utility: str, sections: Optional[list[int]] = None) -> str:
         """
@@ -75,50 +62,25 @@ class DocumentationExtractor:
         logger.debug(f"Man page not found for {utility} in sections {sections}")
         return ""
 
-    @lru_cache(maxsize=CACHE_SIZE)
     def fetch_help_output(self, utility: str) -> str:
         """
-        Fetch --help output for a utility.
+        Fetch --help output for a utility (via configured shell runner).
         """
-        try:
-            # Try --help first
-            result = subprocess.run(
-                [utility, "--help"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
+        if utility in self._help_cache:
+            return self._help_cache[utility]
 
-            if result.returncode == 0 and result.stdout:
-                logger.debug(f"Fetched --help for {utility}")
-                return result.stdout
-            elif result.stderr:
-                return result.stderr
+        for flag in ("--help", "-h"):
+            res = self.shell.run(f"{utility} {flag}", timeout=5)
+            if res.ok and res.stdout:
+                self._help_cache[utility] = res.stdout
+                return res.stdout
+            if res.stderr and not res.ok:
+                # Many utilities print usage on stderr with nonzero exit
+                self._help_cache[utility] = res.stderr
+                return res.stderr
 
-            # Try -h as fallback
-            result = subprocess.run(
-                [utility, "-h"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-
-            if result.returncode == 0 and result.stdout:
-                return result.stdout
-            elif result.stderr:
-                return result.stderr
-
-            return ""
-
-        except FileNotFoundError:
-            logger.debug(f"Utility {utility} not found")
-            return ""
-        except subprocess.TimeoutExpired:
-            logger.warning(f"Timeout fetching help for {utility}")
-            return ""
-        except Exception as e:
-            logger.warning(f"Error fetching help for {utility}: {e}")
-            return ""
+        self._help_cache[utility] = ""
+        return ""
 
     def _clean_man_output(self, text: str) -> str:
         """Clean up man page output by removing control characters."""

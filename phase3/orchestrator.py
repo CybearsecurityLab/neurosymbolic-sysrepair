@@ -40,6 +40,7 @@ class Phase3Orchestrator:
         domain_path: Optional[str] = None,
         problem_path: Optional[str] = None,
         output_dir: Optional[str] = None,
+        scenario_image: Optional[str] = None,
     ):
         self.config = config or Phase3Config()
 
@@ -50,6 +51,11 @@ class Phase3Orchestrator:
             self.config.input_problem_path = problem_path
         if output_dir:
             self.config.output_dir = output_dir
+        if scenario_image:
+            # Spin Phase 3's sandbox on the scenario's own image so action
+            # execution probes the same environment Phase 1/2 saw.
+            self.config.docker.image = scenario_image
+            self.config.docker.container_name = f"sysrepair-phase3-{scenario_image.replace(':', '-').replace('/', '-')}"
 
         # Output directory
         self.output_dir = Path(self.config.output_dir)

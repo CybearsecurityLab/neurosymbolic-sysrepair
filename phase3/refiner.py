@@ -28,7 +28,7 @@ from typing import Optional
 from datetime import datetime
 from collections import defaultdict
 
-from .config import Phase3Config, LLMRefinementConfig
+from .config import Phase3Config, LLMRefinementConfig, LLM_CONCURRENCY_GATE
 from .models import (
     EWScore,
     ExplorationWalk,
@@ -131,13 +131,20 @@ class DomainRefiner:
         logger.info("DomainRefiner initialized")
 
     def _initialize_llm(self):
-        """Initialize LLM client for domain refinement."""
+        """Initialize LLM client for domain refinement.
+
+        Generous timeout + retries because reasoning models (e.g. MiniMax M2.7)
+        emit long <think> blocks before answering. A short 120s cap surfaced
+        as opaque "Connection error" (actually read-timeout) on the concretizer
+        path and tanked Phase 3 EW scores even though MiniMax was healthy.
+        """
         try:
             from openai import OpenAI
             self.llm = OpenAI(
                 base_url=self.config.llm.base_url,
                 api_key=self.config.llm.api_key,
-                timeout=120.0,
+                timeout=600.0,    # 10 min per call
+                max_retries=5,    # default is 2; absorb transient hiccups
             )
         except ImportError:
             logger.warning("OpenAI package not installed, LLM refinement disabled")
@@ -577,12 +584,14 @@ class DomainRefiner:
 
             content = None
             for variant_idx, msg_variant in enumerate(messages_variants):
-                response = self.llm.chat.completions.create(
-                    model=self.config.llm.model_name,
-                    messages=msg_variant,
-                    max_tokens=self.config.llm.max_tokens,
-                    temperature=self.config.llm.temperature,
-                )
+                # Throttle alongside the concretizer (shared gate).
+                with LLM_CONCURRENCY_GATE:
+                    response = self.llm.chat.completions.create(
+                        model=self.config.llm.model_name,
+                        messages=msg_variant,
+                        max_tokens=self.config.llm.max_tokens or None,
+                        temperature=self.config.llm.temperature,
+                    )
 
                 # Try multiple ways to extract content from the response
                 content = None

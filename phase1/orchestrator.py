@@ -56,6 +56,7 @@ class Phase1Orchestrator:
         llm_api_key: str = "vllm",
         enable_llm: bool = True,
         max_llm_workers: int = 1,
+        container=None,
     ):
         self.output_dir = output_dir
         self.osquery_socket = osquery_socket
@@ -72,6 +73,7 @@ class Phase1Orchestrator:
         self.llm_api_key = llm_api_key
         self.enable_llm = enable_llm
         self.max_llm_workers = max_llm_workers
+        self.container = container
 
     def run(self) -> dict:
         """
@@ -109,13 +111,21 @@ class Phase1Orchestrator:
 
         try:
             self.extractor = SystemStateExtractor(
-                socket_path=self.osquery_socket, scoping_mode=self.scoping_mode
+                socket_path=self.osquery_socket,
+                scoping_mode=self.scoping_mode,
+                container=self.container,
             )
-            log("  ✓ Connected to osquery")
+            if self.container is not None and not self.extractor.osquery.is_available():
+                log("  ⚠ osqueryi not available inside scenario container; objects/predicates will be empty")
+            else:
+                log("  ✓ Connected to osquery")
         except Exception as e:
             results["errors"].append(f"Failed to initialize osquery: {e}")
             log(f"  ✗ Failed: {e}")
-            log("  Hint: pip install osquery==3.1.1")
+            if self.container is None:
+                log("  Hint: pip install osquery==3.1.1")
+            else:
+                log("  Hint: rebuild scenario image with --install-osquery or install osquery in its Dockerfile")
 
         # Step 2: Extract system state
         log(f"\n[2/4] Extracting system state (scoping: {self.scoping_mode})...")
@@ -154,6 +164,10 @@ class Phase1Orchestrator:
         known_preds = get_base_predicates()
 
         try:
+            shell = None
+            if self.container is not None:
+                from common.shell import ContainerShellRunner
+                shell = ContainerShellRunner(self.container)
             self.parser = create_hybrid_parser(
                 model_id=self.llm_model,
                 model_url=self.llm_url,
@@ -161,6 +175,7 @@ class Phase1Orchestrator:
                 enable_llm=self.enable_llm,
                 known_predicates=known_preds,
                 max_workers=self.max_llm_workers,
+                shell=shell,
             )
             self.actions = self.parser.extract_all_actions()
             results["actions_mined"] = True

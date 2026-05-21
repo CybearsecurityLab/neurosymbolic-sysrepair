@@ -48,6 +48,7 @@ class Phase2Orchestrator:
         phase1_state: Optional[Phase1State] = None,
         output_dir: str = "./pddl_output",
         reuse_phase1_actions: bool = False,
+        container=None,
     ):
         self.hardware = hardware_config or HardwareConfig.detect()
         self.llm_config = llm_config or LLMConfig()
@@ -55,6 +56,7 @@ class Phase2Orchestrator:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.reuse_phase1_actions = reuse_phase1_actions
+        self.container = container
 
         # Initialize LLM interface
         self.llm = get_llm_interface(self.llm_config)
@@ -93,6 +95,13 @@ class Phase2Orchestrator:
                 "Phase 1 state contains no actions. Pure Phase 2 generation enabled."
             )
 
+        # Build a shell runner — host by default, container-aware if we were
+        # given a scenario container.
+        shell = None
+        if self.container is not None:
+            from common.shell import ContainerShellRunner
+            shell = ContainerShellRunner(self.container)
+
         # Initialize components with Phase 1 context
         self.supervisor = SupervisorAgent(
             llm=self.llm,
@@ -103,6 +112,7 @@ class Phase2Orchestrator:
             output_dir=str(self.output_dir),
             reuse_phase1_actions=reuse_phase1_actions,
             llm_config=self.llm_config,
+            shell=shell,
         )
         self.merger = MergerAgent(llm=self.llm)
         self.validator = PDDLValidator()
@@ -236,11 +246,19 @@ class Phase2Orchestrator:
             domain_path.write_text(self.unified_domain)
             print(f"\n  → Domain saved to: {domain_path}")
 
-            # Save partial domains for debugging
+            # Save partial domains for debugging. Reused Phase 1 actions carry
+            # PDDLType enums; coerce them, and never let a debug-artifact dump
+            # fail the whole phase (the real domain is already saved above).
             partials_path = self.output_dir / "partial_domains.json"
-            partials_data = [d.to_dict() for d in self.partial_domains]
-            partials_path.write_text(json.dumps(partials_data, indent=2))
-            print(f"  → Partial domains saved to: {partials_path}")
+            try:
+                partials_data = [d.to_dict() for d in self.partial_domains]
+                partials_path.write_text(json.dumps(
+                    partials_data, indent=2,
+                    default=lambda o: getattr(o, "value", str(o)),
+                ))
+                print(f"  → Partial domains saved to: {partials_path}")
+            except Exception as e:
+                print(f"  ⚠ Skipped partial-domains debug dump ({e})")
 
             # Save merge log
             log_path = self.output_dir / "merge_log.txt"

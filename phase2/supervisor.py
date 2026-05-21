@@ -48,13 +48,14 @@ class SupervisorAgent:
         output_dir: str = "./pddl_output",
         reuse_phase1_actions: bool = True,
         llm_config: Optional["LLMConfig"] = None,
+        shell=None,
     ):
         self.llm = llm
         self.hardware = hardware_config
         self.phase1_state = phase1_state or Phase1State()
         self.phase1_actions = phase1_actions or []
         self.known_predicates = known_predicates or []
-        self.doc_extractor = DocumentationExtractor()
+        self.doc_extractor = DocumentationExtractor(shell=shell)
         self.partial_domains: list[PartialPDDLDomain] = []
         self.log_dir = Path(output_dir) / "llm_logs"
         self.reuse_phase1_actions = reuse_phase1_actions

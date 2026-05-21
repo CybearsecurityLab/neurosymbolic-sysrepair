@@ -102,7 +102,13 @@ def normalize_type(type_name: str) -> str:
     """
     if not type_name:
         return "object"
-    
+
+    # Reused Phase 1 action parameters carry PDDLType enums (or other
+    # non-str objects) rather than plain strings. Coerce to the string
+    # form before any string operations.
+    if not isinstance(type_name, str):
+        type_name = getattr(type_name, "value", None) or str(type_name)
+
     # Check if already valid
     if type_name in VALID_TYPES:
         return type_name

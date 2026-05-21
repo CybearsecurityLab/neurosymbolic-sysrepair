@@ -8,6 +8,7 @@ override YAML values (CLI > env > yaml > defaults).
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
@@ -17,8 +18,13 @@ import yaml
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_CONFIG_PATH = _PROJECT_ROOT / "config.yaml"
+_DEFAULT_ENV_PATH = _PROJECT_ROOT / ".env"
 
 _cached_config: Optional[dict] = None
+_env_loaded: bool = False
+
+# Matches ${VAR} or ${VAR:-default}
+_ENV_PATTERN = re.compile(r"\$\{([A-Z_][A-Z0-9_]*)(?::-([^}]*))?\}")
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -32,16 +38,52 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return merged
 
 
+def _load_dotenv(path: Path = _DEFAULT_ENV_PATH) -> None:
+    """Populate os.environ from a .env file. Existing env vars take precedence."""
+    global _env_loaded
+    if _env_loaded or not path.exists():
+        _env_loaded = True
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = val
+    _env_loaded = True
+
+
+def _expand_env(value: Any) -> Any:
+    """Recursively substitute ${VAR} / ${VAR:-default} in strings within a config tree."""
+    if isinstance(value, str):
+        def replace(match: re.Match) -> str:
+            var, default = match.group(1), match.group(2)
+            return os.environ.get(var, default if default is not None else match.group(0))
+        return _ENV_PATTERN.sub(replace, value)
+    if isinstance(value, dict):
+        return {k: _expand_env(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_expand_env(v) for v in value]
+    return value
+
+
 def load_raw(path: Path | str | None = None) -> dict:
     """Load config.yaml and return the raw dict (cached after first call)."""
     global _cached_config
     if _cached_config is not None:
         return _cached_config
 
+    _load_dotenv()
+
     cfg_path = Path(path) if path else _DEFAULT_CONFIG_PATH
     if cfg_path.exists():
         with open(cfg_path) as f:
-            _cached_config = yaml.safe_load(f) or {}
+            raw = yaml.safe_load(f) or {}
+        _cached_config = _expand_env(raw)
     else:
         _cached_config = {}
     return _cached_config
