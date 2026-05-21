@@ -649,6 +649,95 @@ class ActionConcretizer:
                 return line
         return ""
 
+    # Allowlist of bash commands the concretizer is willing to emit.
+    # Curated from coreutils, util-linux, and the standard sysadmin
+    # toolchain. If the LLM hallucinates a non-command (e.g. a PDDL
+    # parameter name like `output_format`) as the primary token, we
+    # refuse — EW would just burn a step on guaranteed `command not
+    # found`. This is defensible PDDL hygiene: a command we cannot
+    # name as a real binary should not be shipped to a sandbox.
+    _KNOWN_PRIMARY_COMMANDS: frozenset = frozenset({
+        # shell built-ins / control
+        "echo", "printf", "true", "false", "test", "[", ":", "exit",
+        "exec", "eval", "set", "unset", "export", "alias", "umask",
+        "cd", "pwd", "read", "shift", "trap",
+        # coreutils
+        "ls", "cat", "cp", "mv", "rm", "ln", "mkdir", "rmdir", "touch",
+        "chmod", "chown", "chgrp", "stat", "file", "find", "grep",
+        "egrep", "fgrep", "sed", "awk", "cut", "sort", "uniq", "wc",
+        "head", "tail", "tr", "tee", "xargs", "basename", "dirname",
+        "readlink", "realpath", "df", "du", "date", "time", "sleep",
+        "tac", "rev", "od", "hexdump", "sha256sum", "sha1sum", "md5sum",
+        "uname", "hostname", "id", "who", "w", "whoami", "tty",
+        # package management
+        "apt", "apt-get", "apt-cache", "apt-mark", "apt-key", "dpkg",
+        "dpkg-query", "dpkg-deb", "dpkg-reconfigure", "snap", "dnf",
+        "yum", "rpm",
+        # service / init
+        "systemctl", "service", "journalctl", "loginctl", "machinectl",
+        "hostnamectl", "timedatectl", "localectl", "busctl",
+        # users / groups
+        "useradd", "userdel", "usermod", "groupadd", "groupdel",
+        "groupmod", "passwd", "chage", "gpasswd", "newgrp", "newusers",
+        "vipw", "vigr", "chpasswd", "chfn", "chsh",
+        # privilege / login
+        "su", "sudo", "login", "logout",
+        # network
+        "ip", "ifconfig", "route", "iptables", "ip6tables", "nft",
+        "ufw", "firewall-cmd", "ss", "netstat", "ping", "ping6",
+        "traceroute", "tracepath", "dig", "host", "nslookup", "curl",
+        "wget", "nc", "ncat", "telnet", "scp", "sftp", "ssh", "rsync",
+        "nmcli", "networkctl", "resolvectl", "wg", "wg-quick", "tc",
+        # filesystem
+        "mount", "umount", "fdisk", "parted", "lsblk", "blkid", "fsck",
+        "mkfs", "mkswap", "swapon", "swapoff", "sync",
+        # processes
+        "ps", "top", "htop", "kill", "killall", "pgrep", "pkill",
+        "nice", "renice", "nohup", "jobs", "fg", "bg",
+        # text / config
+        "vi", "vim", "nano", "patch", "diff",
+        # SELinux / AppArmor / audit
+        "semanage", "audit2allow", "audit2why", "sealert",
+        "aa-status", "aa-enforce", "aa-complain", "aa-disable",
+        "apparmor_parser", "setenforce", "getenforce", "restorecon",
+        "chcon", "auditctl",
+        # cron / at / lp
+        "crontab", "at", "atq", "atrm", "batch",
+        "lpr", "lprm", "lpq", "lpstat", "cancel",
+        # tty
+        "mesg", "wall", "write",
+        # kernel modules
+        "modprobe", "insmod", "rmmod", "depmod", "lsmod",
+        # sysctl / kernel knobs
+        "sysctl", "ulimit",
+        # ACL / xattr / capabilities
+        "getfacl", "setfacl", "getcap", "setcap", "getfattr", "setfattr",
+        # encryption / certs
+        "openssl", "gpg", "gpg2", "ssh-keygen", "ssh-add", "ssh-copy-id",
+        # archives
+        "tar", "gzip", "gunzip", "bzip2", "bunzip2", "xz", "unxz",
+        "zip", "unzip",
+        # misc admin
+        "update-grub", "grub-install", "shutdown", "reboot", "halt",
+        "poweroff", "init", "telinit", "logger", "fail2ban-client",
+        "netplan",
+    })
+
+    @staticmethod
+    def _primary_command(command: str) -> str:
+        """Extract the leading executable token from a bash one-liner.
+
+        Skips leading env-var assignments (FOO=bar cmd) and `sudo`/`env`.
+        Returns the empty string if nothing recognizable is found.
+        """
+        for tok in command.strip().split():
+            if "=" in tok and not tok.startswith("/") and "/" not in tok.split("=", 1)[0]:
+                continue  # FOO=bar prefix
+            if tok in ("sudo", "env"):
+                continue
+            return tok
+        return ""
+
     def _validate_command(self, command: str) -> bool:
         """Validate LLM-generated command for safety and format."""
         if not command or not command.strip():
@@ -667,6 +756,15 @@ class ActionConcretizer:
         # guaranteed failure that the refiner can't fix.
         if re.search(r"""(?:^|\s)(['"])\1(?=\s|$)""", command):
             return False
+        # Reject commands whose primary token isn't a recognized utility.
+        # The LLM occasionally treats a PDDL parameter / predicate name
+        # (e.g. `output_format`) as a shell command, which always exits
+        # "command not found" and uniformly fails the walk step.
+        primary = self._primary_command(command)
+        if primary and primary not in self._KNOWN_PRIMARY_COMMANDS:
+            # Tolerate absolute paths — `/usr/sbin/foo` is plausible.
+            if not primary.startswith("/"):
+                return False
         return True
 
     # ─── Template / Cache Helpers ────────────────────────────────────

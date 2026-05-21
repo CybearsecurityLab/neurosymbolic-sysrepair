@@ -171,6 +171,37 @@ CAPABILITIES: tuple[Capability, ...] = (
         probe="command -v tc >/dev/null 2>&1 && tc qdisc show >/dev/null 2>&1",
         commands=("tc",),
     ),
+    Capability(
+        # SELinux userspace utilities — appear in mined domains via the
+        # selinux/setools manpages; absent on stripped Ubuntu containers.
+        key="selinux_tools", predicate="selinux_tools_available",
+        probe="command -v semanage >/dev/null 2>&1",
+        commands=("semanage", "audit2allow", "audit2why", "sealert"),
+    ),
+    Capability(
+        # cron daemon + crontab CLI
+        key="cron", predicate="cron_available",
+        probe="command -v crontab >/dev/null 2>&1",
+        commands=("crontab",),
+    ),
+    Capability(
+        # at + batch jobs
+        key="at_jobs", predicate="at_available",
+        probe="command -v at >/dev/null 2>&1",
+        commands=("at", "atq", "atrm", "batch"),
+    ),
+    Capability(
+        # CUPS / print spooler client
+        key="printing", predicate="print_available",
+        probe="command -v lpr >/dev/null 2>&1",
+        commands=("lpr", "lprm", "lpq", "lpstat", "cancel"),
+    ),
+    Capability(
+        # write/mesg — needs a tty group writable; not in headless containers
+        key="terminal_messaging", predicate="tty_messaging_available",
+        probe="test -t 1 && command -v mesg >/dev/null 2>&1",
+        commands=("mesg", "wall", "write"),
+    ),
 )
 
 
