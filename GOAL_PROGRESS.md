@@ -342,3 +342,133 @@ Expected impact: removes the majority of concretization-error
 discrepancies (the dominant failure class in the old refinement log).
 The remaining failures should be true PDDL/effect mismatches that the
 refiner is designed to fix.
+
+### 2026-05-21: quick test — typed-grounding ALONE without enrichment
+
+To get a fast EW signal while the full pipeline was still in Phase 1, I
+ran `python -m phase3.main` against the **stale** Phase 2 domain
+`pddl_output/phase2/sysadmin.pddl` (from May 11 — predates enrichment).
+N=68 walks, depth 8, 1 iteration. Result:
+
+```
+EW Score: 0.227 (121/534 steps, 413 discrepancies)
+Top failing actions: nft_add_queue_rule(11), nft_add_rule_port(11),
+                     nft_add_sctp_rule(11), id_get_user_id(10),
+                     journalctl_read_user(10), ufw_limit(9)
+```
+
+The fix actually **dropped** the score from 0.499 → 0.227 because:
+- Without enrichment, `nft_*`, `iptables_*`, `journalctl_*`, `ufw_*`
+  actions are still applicable (their precondition is just `(and)`).
+- Typed grounding now produces *realistic* concretized commands (real
+  port numbers, real chain names) instead of bogus garbage that was
+  occasionally a no-op.
+- The container doesn't have nft/iptables/journalctl/ufw installed
+  → 411 `command not found` failures.
+
+This is *expected* and confirms the design: typed grounding lifts the
+ceiling **only when paired with capability enrichment** that gates out
+actions whose primary command is unavailable. The full pipeline run
+(in flight, pid 1458245) applies both, so its EW measurement is the
+real signal.
+
+### 2026-05-21: full pipeline result — EW 0.414 (target 0.9)
+
+Pipeline completed (12,642s / 3.5h total). Phase 2 ran with the 22
+capabilities including my new 6, so the probed map is:
+
+```
+{systemd_init: F, iptables: F, nftables: F, ufw: F, firewalld: F,
+ netplan: F, sudo: F, apt: T, dpkg: T, snap: F, auditd: F, fail2ban: F,
+ apparmor: F, selinux: F, docker: F, container_safe_reboot: F,
+ network_manager: F, kernel_modules: F, systemd_resolved: F,
+ systemd_networkd: F, wireguard: F, traffic_control: F}
+```
+
+Phase 3 report:
+```
+iter 1: score=0.378 disc=412 (eval 3364s, refine 31s)
+iter 2: score=0.414 disc=389 (eval 715s, refine 252s)
+```
+
+EW 0.414 ≠ 0.9. The typed-grounding + capability enrichment + new
+capabilities did NOT close the gap on the current domain. Where the
+389 discrepancies actually come from:
+
+| Bucket | Count | Cause |
+|---|---:|---|
+| command_not_found | 103 | mostly `semanage`, `crontab`, `lprm`, `mesg`, `atrm`, plus LLM-hallucinated tokens like `output_format`, `delay_interval`, `query_by_facility` treated as commands |
+| `no_systemd` | 21 | a few systemctl actions slipped past gating (need investigation) |
+| `no_such_file` | 20 | per-instance missing paths (`/etc/sysctl.conf`, `/etc/rsyslog.conf`) |
+| `exit1_empty` | 33 | tools running without args/options the model invented |
+| `other` | 212 | per-action semantic errors |
+
+Top failing actions (still ~10 each): `set_default_expire_date`,
+`set_output_format`, `create_user_group_pair`, `set_system_timezone`,
+`display_security_context`, `remove_subordinate_gids`, `top_enable_forest_view`.
+Concrete commands sampled:
+
+```
+passwd --expire tape         → user 'tape' does not exist     (exit 1)
+useradd -g sys -r -M -s /sbin/nologin list  → user exists    (exit 9)
+chage -d /etc/xattr.conf games → invalid date (file leaked into date slot) (exit 2)
+journalctl --list-fields     → unrecognized option (LLM hallucinated)
+```
+
+### Root-cause analysis of remaining EW gap
+
+The remaining ≥0.49 gap is not closable with surgical patches to the
+existing fix set. The structural issues are:
+
+1. **Bloated action pool** — Phase 2 produces 1049 actions (Phase 1
+   only mined 512; Phase 2 LLM map-reduce *added* 544). Many of the
+   new ones have hallucinated `command_template` values where the
+   LLM treated PDDL parameter names like `output_format` or
+   `delay_interval` as bash commands. Capability gating cannot tag
+   these because they don't start with a known utility.
+2. **Missing semantic preconditions** — `useradd_*` actions have no
+   `(not (user_exists ?u))` precondition, so EW samples a real
+   system user and the command exits 9 (already exists). The refiner
+   *could* add these but is capped at 20 repairs/iter for 2 iters →
+   40 of 1049 actions touched.
+3. **Capability list still incomplete** — `semanage`, `crontab`,
+   `lprm`, `mesg`, `atrm`, `at`, `lpr` aren't yet probed. Adding
+   them is straightforward (defensible) but Phase 1 + 2 must rerun
+   to apply them; cost is ~3.5h per cycle.
+4. **Type leakage for non-PDDL-declared types** — `chage -d` got
+   `/etc/xattr.conf` because the action's `?d` parameter is typed
+   `?d - object` (Phase 2 didn't infer a more specific type). The
+   simulator's typed-grounding only constrains within the declared
+   type; if the type IS `object`, the entire pool is fair game.
+   Fixing this means Phase 2 needs to detect "date" / "value" /
+   "number" parameter slots and emit a tighter type.
+5. **Two-iteration budget** — the auto-scale code (per constraint,
+   not to be touched) and `--max-refinement-iterations 2` mean the
+   refiner only gets to repair ~40 actions out of 1049. The original
+   May-11 run with 10 iterations capped at 0.499, so even unlimited
+   iterations wouldn't have hit 0.9 with this domain.
+
+### Blocker reached, per user directive
+
+The user's instruction: *"if you hit a blocker or task isnt making
+progress stoppe and report your finding keep an md file of your
+changes and mat you have done"*.
+
+I've reached a blocker — moving EW from 0.414 → 0.9 requires:
+
+- **Either** a much smaller, higher-quality action pool (Phase 2
+  dedup/quality gate), **or**
+- **Aggressive precondition synthesis** in Phase 3's refiner
+  (currently 20 actions/iter), **or**
+- **Allowing iterations to exceed 2** (forbidden by user constraint).
+
+None of these are surgical changes — each is a substantial Phase 2 or
+Phase 3 design change that goes beyond "defensible PDDL setup".
+
+### Net status
+
+- **Goal 1 (end-to-end remediation of ccdc-01): ACHIEVED.**
+  accuracy=1.000 via verify.sh PASS at commit `6a7346f`.
+- **Goal 2 (EW ≥ 0.9): NOT achieved.** Current best on goal branch is
+  EW=0.414 with the typed-grounding + enrichment + capability fixes
+  in place. Root causes for the residual gap are catalogued above.
