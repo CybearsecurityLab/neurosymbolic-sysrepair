@@ -260,3 +260,6 @@ full_run*.err
 phase[123]_*.out
 phase[123]_*.err
 resume_run.*
+*.pyc
+common/__pycache__/*
+logs/*
