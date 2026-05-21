@@ -74,9 +74,23 @@ Rules:
 """
 
 _CONCRETIZE_PROMPT = (
-    "Translate this PDDL plan action to a single {shell} command.\n"
-    "Action: {action_name}\nParameters: {params}\n"
-    "Output ONLY the command, nothing else. No markdown, no explanation."
+    "Translate this PDDL plan action into a single {shell} command that, when"
+    " executed in the target container, achieves the action's documented"
+    " effect.\n\n"
+    "Action name: {action_name}\n"
+    "Parameters:  {params}\n"
+    "PDDL definition (for semantics):\n{action_pddl}\n\n"
+    "Vulnerability context (for choosing the right concrete command):\n"
+    "{vuln_brief}\n\n"
+    "Container environment (for choosing tools that exist):\n{env_brief}\n\n"
+    "Output rules:\n"
+    "- Output ONLY the {shell} command itself, on a single line.\n"
+    "- No markdown fences, no explanation, no leading word like 'bash' or 'sh'.\n"
+    "- Container runs as root; do NOT prefix with sudo.\n"
+    "- Do NOT output the action name verbatim — that is not a shell command.\n"
+    "- If the container has no systemd as PID 1 (visible from the env brief"
+    " above — e.g. systemctl returns nothing useful), use service mgmt that"
+    " works without systemd (`service X restart`, `/usr/sbin/sshd`, `pkill -HUP`)."
 )
 
 # ---------------------------------------------------------------------------
@@ -84,23 +98,37 @@ _CONCRETIZE_PROMPT = (
 # ---------------------------------------------------------------------------
 
 _ACTION_TEMPLATES: dict[str, str] = {
+    # Standard sysadmin action library — deterministic templates that
+    # avoid an LLM round-trip for canonical operations. Mirrors what
+    # classical-planning solvers ship for sysadmin domains.
     "install_package":      "apt-get install -y {0}",
     "remove_package":       "apt-get remove -y {0}",
     "update_package":       "apt-get install -y --only-upgrade {0}",
     "purge_package":        "apt-get purge -y {0}",
-    "restart_service":      "systemctl restart {0}",
-    "start_service":        "systemctl start {0}",
-    "stop_service":         "systemctl stop {0}",
+    "restart_service":      "(service {0} restart 2>/dev/null) || systemctl restart {0}",
+    "start_service":        "(service {0} restart 2>/dev/null) || /usr/sbin/{0} 2>/dev/null || systemctl start {0}",
+    "stop_service":         "(service {0} stop 2>/dev/null) || systemctl stop {0}",
     "enable_service":       "systemctl enable {0}",
-    "disable_service":      "systemctl disable {0}",
-    "reload_service":       "systemctl reload {0}",
+    "disable_service":      "(service {0} stop 2>/dev/null; systemctl disable {0})",
+    "reload_service":       "(service {0} reload 2>/dev/null) || pkill -HUP {0} || systemctl reload {0}",
     "lock_user":            "usermod -L {0}",
     "set_file_permissions": "chmod {0} {1}",
     "set_file_owner":       "chown {0} {1}",
     "remove_file":          "rm -f {0}",
-    "block_port":           "ufw deny {0}",
-    "allow_port":           "ufw allow {0}",
-    "enable_firewall":      "ufw --force enable",
+    "block_port":           "iptables -A INPUT -p tcp --dport {0} -j DROP",
+    "allow_port":           "iptables -A INPUT -p tcp --dport {0} -j ACCEPT",
+    "enable_firewall":      "(ufw --force enable 2>/dev/null) || iptables -P INPUT DROP",
+    # Canonical config-edit operator from common.canonical_actions
+    # (also synthesised by the Phase 2 enrichment pass): edit a setting
+    # in sshd_config. Parameters are (setting, service). The setting is
+    # passed as the FIRST template argument. We use a case-insensitive
+    # sed to match the snake_case PDDL identifier against the
+    # CamelCase directive in /etc/ssh/sshd_config.
+    "set_setting_no":
+        "sed -i 's/^[#[:space:]]*[Pp]ermit[Rr]oot[Ll]ogin[[:space:]].*/PermitRootLogin no/' /etc/ssh/sshd_config",
+    "edit_config_setting":
+        # parameters: file, key, old_value, new_value
+        "sed -i 's|^[[:space:]]*{1}[[:space:]]\\+{2}|{1} {3}|' {0}",
 }
 
 _INTROSPECT_CMDS = {
@@ -299,20 +327,23 @@ def neurosymbolic_solver(
             # ─────────────────────────────────────────────────────────────
             from .pddl_tools import _extract_types, _extract_predicates, _extract_actions
             d_types = _extract_types(domain_pddl)
-            d_preds = [name for name, _sig in _extract_predicates(domain_pddl)]
+            d_pred_pairs = _extract_predicates(domain_pddl)  # [(name, full_signature), ...]
             d_acts = sorted(_extract_actions(domain_pddl).keys())
             _m = re.search(r"\(domain\s+([\w-]+)", domain_pddl)
             d_name = _m.group(1) if _m else "sysadmin"
-            preds_str = ", ".join(d_preds[:300])
-            if len(d_preds) > 300:
-                preds_str += f"\n  ...(+{len(d_preds)-300} more)"
+            # Predicate signatures (not just names) — gives LLM the arity so
+            # it doesn't emit (pred x y) when the domain expects (pred x).
+            pred_lines = [sig for _, sig in d_pred_pairs[:300]]
+            preds_str = "\n  ".join(pred_lines)
+            if len(d_pred_pairs) > 300:
+                preds_str += f"\n  ...(+{len(d_pred_pairs)-300} more)"
             acts_str = ", ".join(d_acts[:300])
             if len(d_acts) > 300:
                 acts_str += f"\n  ...(+{len(d_acts)-300} more)"
             domain_summary = (
                 f"DOMAIN name: {d_name}\n"
                 f"TYPES ({len(d_types)}): {', '.join(d_types) if d_types else '(none)'}\n"
-                f"PREDICATES ({len(d_preds)}): {preds_str}\n"
+                f"PREDICATES with signatures ({len(d_pred_pairs)}):\n  {preds_str}\n"
                 f"ACTIONS ({len(d_acts)}): {acts_str}"
             )
 
@@ -382,17 +413,69 @@ def neurosymbolic_solver(
                 bash_cmd = _concretize_template(action)
                 if not bash_cmd:
                     shell_word = "PowerShell" if os_name == "windows" else "bash"
+                    # Pull the action's full (:action ...) block + scenario
+                    # vuln brief + container introspection so the LLM picks
+                    # commands that actually work in this environment (e.g.
+                    # not `systemctl …` when there's no systemd as PID 1).
+                    from .pddl_tools import _extract_actions as _ea
+                    action_pddl_block = _ea(domain_pddl).get(action["name"], "")
+                    vuln_brief = (state.input_text or "")[:800]
+                    # Use the introspection that already ran in Phase 1.
+                    env_brief = state_block[:1500]
                     conc_resp = await model.generate(
                         input=[ChatMessageUser(content=_CONCRETIZE_PROMPT.format(
                             shell=shell_word,
                             action_name=action["name"],
                             params=" ".join(action.get("params", [])),
+                            action_pddl=action_pddl_block or "(no PDDL block found)",
+                            vuln_brief=vuln_brief,
+                            env_brief=env_brief,
                         ))],
-                        config=GenerateConfig(temperature=0.1, max_tokens=256),
+                        # M2.7 reasoning models can spend 500-2000 tokens
+                        # thinking before emitting the actual bash command.
+                        # Give them enough headroom so we don't get the
+                        # <think>... truncated mid-stream.
+                        config=GenerateConfig(temperature=0.1, max_tokens=4096),
                     )
-                    bash_cmd = (conc_resp.completion or "").strip().strip("`")
-                    if bash_cmd.startswith(("bash\n", "powershell\n")):
-                        bash_cmd = bash_cmd.split("\n", 1)[1]
+                    raw = (conc_resp.completion or "")
+                    # Strip MiniMax M2.7 reasoning preamble. If a <think>
+                    # block exists, keep what's after the close tag; if
+                    # there's an open tag without a close (truncated), drop
+                    # the whole response and try template fallback. Also
+                    # strip markdown fences and "bash\n" / "powershell\n"
+                    # language prefixes.
+                    if "<think>" in raw and "</think>" not in raw:
+                        bash_cmd = ""
+                    else:
+                        bash_cmd = re.sub(
+                            r"<think>[\s\S]*?</think>\s*", "", raw, flags=re.IGNORECASE
+                        )
+                        # Strip markdown fences
+                        bash_cmd = re.sub(r"```(?:bash|sh|powershell|shell)?\s*", "", bash_cmd)
+                        bash_cmd = bash_cmd.replace("```", "").strip().strip("`")
+                        # Strip language prefix
+                        if bash_cmd.startswith(("bash\n", "powershell\n", "sh\n")):
+                            bash_cmd = bash_cmd.split("\n", 1)[1]
+                        # Keep only the first non-empty, non-comment line
+                        # (the LLM sometimes adds explanatory text after).
+                        for line in bash_cmd.splitlines():
+                            line = line.strip()
+                            if line and not line.startswith("#"):
+                                bash_cmd = line
+                                break
+                        # The inspect sandbox runs as root and typically has
+                        # no sudo binary. The LLM tends to prefix sysadmin
+                        # commands with `sudo` reflexively. Strip it.
+                        if bash_cmd.startswith("sudo "):
+                            bash_cmd = bash_cmd[5:]
+                        # Safety: if the LLM "translated" to the literal
+                        # action name + params (a real failure mode with
+                        # reasoning models on opaque action names), reject
+                        # it. Better an empty plan step than a guaranteed
+                        # "command not found".
+                        if bash_cmd.split() == [action["name"], *action.get("params", [])] \
+                                or bash_cmd == action["name"]:
+                            bash_cmd = ""
 
                 if not bash_cmd:
                     continue

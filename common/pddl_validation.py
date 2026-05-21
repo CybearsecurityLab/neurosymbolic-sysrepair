@@ -51,14 +51,31 @@ def _safe_import_pddl():
 def _text_or_path(arg: str | Path) -> tuple[Path, bool]:
     """Return (path, is_tempfile). If arg is already a path on disk we use it
     directly; otherwise we materialise it as a tempfile so the pddl library
-    can read it (its parse_domain/problem APIs both take a file path)."""
-    p = Path(arg) if isinstance(arg, (str, Path)) and not isinstance(arg, str) else None
-    if isinstance(arg, Path) and arg.exists():
-        return arg, False
-    if isinstance(arg, str) and Path(arg).exists():
-        return Path(arg), False
-    # Treat arg as raw PDDL text
-    text = arg.read_text() if isinstance(arg, Path) else str(arg)
+    can read it.
+
+    Note: ``Path(huge_pddl_text).exists()`` raises ``OSError(36)`` on Linux
+    when the string contains a newline or exceeds PATH_MAX. Guard with a
+    length + newline check before calling ``.exists()``.
+    """
+    if isinstance(arg, Path):
+        if arg.exists():
+            return arg, False
+        text = arg.read_text() if arg.is_file() else str(arg)
+    elif isinstance(arg, str):
+        # Only treat short single-line strings as potential paths.
+        looks_like_path = (
+            len(arg) <= 4096 and "\n" not in arg and "(" not in arg
+        )
+        if looks_like_path:
+            try:
+                if Path(arg).exists():
+                    return Path(arg), False
+            except OSError:
+                pass
+        text = arg
+    else:
+        text = str(arg)
+
     tmp = Path(tempfile.NamedTemporaryFile(
         prefix="pddl-validate-", suffix=".pddl", delete=False
     ).name)
