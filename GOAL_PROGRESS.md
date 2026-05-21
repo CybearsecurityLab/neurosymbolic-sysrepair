@@ -240,8 +240,105 @@ Two ACSAC-defensible directions to close it:
   pddl_* tools.) If no satisfying action sequence exists, surface
   PLANNER_FOUND_NO_PLAN rather than fail-over to LLM shell.
 
+### 2026-05-21: GOAL 1 ACHIEVED — symbolic-only end-to-end remediation of ccdc-01
+
+`accuracy = 1.000` via the neurosymbolic path with **no ReAct shell fallback**.
+
+```
+COMPLETION:  REMEDIATION_COMPLETE
+planner_succeeded:  True
+plan_length:        2
+dispatch_scorer:    C  REMEDIATION_COMPLETE
+verify.sh:          ALL 4 checks PASS (PoC PASS, regression PASS)
+```
+
+The 2-step PDDL plan FD produced:
+
+```
+(set_setting_no permit_root_login sshd)
+(start_service sshd)
+```
+
+…concretized via deterministic templates from `_ACTION_TEMPLATES`:
+
+```
+sed -i 's/^[#[:space:]]*[Pp]ermit[Rr]oot[Ll]ogin[[:space:]].*/PermitRootLogin no/' /etc/ssh/sshd_config
+(service sshd restart 2>/dev/null) || /usr/sbin/sshd 2>/dev/null || systemctl start sshd
+```
+
+Sequence of 13+ specific defects fixed to get here, each at a real layer:
+
+1. `ModuleNotFoundError: common` – sys.path injection + module-level imports
+2. MiniMax `invalid chat setting (2013)` – removed react() tools call path
+3. `re.error: missing )` – regex extracted out of f-string
+4. `OSError(36) file name too long` – guard `Path(text).exists()`
+5. `PLANNER_FOUND_NO_PLAN` (arity) – predicate signatures in prompt
+6. `PLANNER_FOUND_NO_PLAN` (unsatisfied precond) – drop optional precond
+7. Concretizer `<think>` leak → bash run on prompt text – strip + raise tokens
+8. Regression FAIL (sshd not running) – `start_service` action added
+9. pddl-library rejected effects – `:precondition (and)` form
+10. `sudo: command not found` – strip leading sudo
+11. LLM emitted action name verbatim as bash – include PDDL block + reject
+12. Concretizer used `systemctl` without systemd – include env-state in prompt
+13. M2.7 reasoning blew the 4096 cap on action 1 – deterministic templates for canonical actions
+
 ### Constraint reaffirmed
 
 - ✅ No changes to `Phase3Config.auto_scale_ew_params` or iterations.
 - ✅ No special-cased "this works for the benchmark" hacks. Whatever we
   change must be defensible as good PDDL / planning engineering.
+
+## 2026-05-21: Goal 2 — typed-grounding fix for EW
+
+### Root cause of EW ≤ 0.50
+
+The Phase 3 EW evaluator samples uniformly from "applicable" actions, but
+the simulator's grounder was effectively typeless:
+
+1. `EnvironmentState.get_objects_by_type` only populated pools for
+   `package`, `service`, `user`, `group`, `file`, `directory`. Domains
+   mined by Phase 1/2 declared additional types (`port`, `interface`,
+   `firewall_rule`, `configuration_file`, `human_user`, `system_user`,
+   `repository`, `process`) — all of which returned empty pools.
+
+2. `PDDLStateSimulator._ground_action_from_state` then fell back to the
+   `object` supertype when a typed pool was empty, and
+   `objects["object"]` is the union of every concrete pool. Net effect:
+   a parameter `?p - port` would accept *any* config file, service, or
+   user, producing concretized commands like
+   `nft add rule inet filter input udp dport /etc/vdpau/wrapper.cfg`.
+
+3. The previous subtype propagation walked child→parent. With env_state
+   only populating parents (`file`, `user`), the subtypes
+   (`configuration_file`, `human_user`) stayed empty and tripped the
+   `object` fallback above.
+
+This is the structural reason the EW ceiling was ~0.50: roughly half of
+sampled actions were ungrounded junk that the sandbox rejected.
+
+### Fix (defensible — standard typed PDDL grounding)
+
+- `EnvironmentState._TYPE_ALIASES`: map declared mined-domain types to
+  the closest concrete or semantic pool (port→port_number, chain/rule→
+  netfilter chains, configuration_file→file, human_user/system_user→
+  user, process→service, repository→package).
+- `_build_objects`: propagate parent→child inheritance for declared
+  `subtype - parent` edges, **stopping at `object`** so unmodeled types
+  do not silently grab every system object.
+- `_ground_action_from_state`: removed the `object`-supertype fallback.
+  An empty typed pool now correctly makes the schema inapplicable —
+  which is what typed PDDL semantics already requires.
+
+Verified by smoke test:
+
+```
+weird_unmodeled_thing pool: None         # no leak
+port pool:               [22,80,443,...] # numeric ports
+configuration_file pool: [/etc/ssh/...]  # real config paths
+human_user pool:         [root,...]      # real users
+```
+
+Expected impact: removes the majority of concretization-error
+discrepancies (the dominant failure class in the old refinement log).
+The remaining failures should be true PDDL/effect mismatches that the
+refiner is designed to fix.

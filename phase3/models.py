@@ -211,6 +211,32 @@ class EnvironmentState:
         "home_directory": ["/home/testuser", "/tmp"],
     }
 
+    # PDDL types that frequently appear in mined domains but have no direct
+    # env_state pool. Map each to the closest existing pool or to a small,
+    # representative semantic pool so EW grounding stays type-correct.
+    _TYPE_ALIASES = {
+        # Filesystem subtypes — inherit file pool by default
+        "configuration_file": "file",
+        "filesystem_object": "file",
+        # User subtypes — inherit user pool
+        "human_user": "user",
+        "system_user": "user",
+        # Service-like
+        "process": "service",
+        "daemon": "service",
+        "unit": "service",
+        # Package-like
+        "repository": "package",
+        # Network primitives — semantic pools
+        "port": "port_number",
+        "ip_port": "port_number",
+        # Firewall objects — semantic pools
+        "firewall_rule": "chain",
+        "rule": "chain",
+        # Misc
+        "namespace": "user",  # closest typed identifiers we have
+    }
+
     def get_objects_by_type(self, type_name: str) -> list[str]:
         """Get object names for a given PDDL type."""
         type_map = {
@@ -230,7 +256,19 @@ class EnvironmentState:
         if semantic is not None:
             return semantic
 
-        # "object" is the PDDL supertype — return all available objects
+        # Aliased types fall back to their closest sibling pool (still typed).
+        alias = self._TYPE_ALIASES.get(type_name)
+        if alias is not None:
+            aliased = type_map.get(alias)
+            if aliased is not None:
+                return aliased
+            aliased = self._SEMANTIC_TYPES.get(alias)
+            if aliased is not None:
+                return aliased
+
+        # "object" is the PDDL supertype — return all available objects.
+        # Kept only for top-level grounding; the simulator itself no longer
+        # uses this as an indirect fallback (see _ground_action_from_state).
         if type_name == "object":
             all_objects = []
             for key in ("user", "package", "service", "group", "file"):
