@@ -661,6 +661,12 @@ class ActionConcretizer:
         # Reject obvious non-commands
         if command.startswith("#") or command.startswith("//"):
             return False
+        # Reject commands containing empty-string args — they almost always
+        # come from an unbound placeholder leaking through (e.g.
+        # `mkdir -m 755 ""`). Running such commands burns an EW step on a
+        # guaranteed failure that the refiner can't fix.
+        if re.search(r"""(?:^|\s)(['"])\1(?=\s|$)""", command):
+            return False
         return True
 
     # ─── Template / Cache Helpers ────────────────────────────────────
