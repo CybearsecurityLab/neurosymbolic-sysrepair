@@ -17,8 +17,17 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import sys as _sys
 import tempfile
 from pathlib import Path
+
+# When this module is loaded by `inspect eval` via importlib.load_module(),
+# the auto-sysrepair project root is NOT on sys.path, so `from common.*`
+# imports inside solve() fail with ModuleNotFoundError. Insert the root
+# eagerly so all our shared modules (common/, phase3/, etc.) are reachable.
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_PROJECT_ROOT))
 
 from inspect_ai.agent import AgentState, react
 from inspect_ai.model import (
