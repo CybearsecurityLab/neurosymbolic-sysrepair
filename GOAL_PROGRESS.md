@@ -198,6 +198,48 @@ sudo, …) implicitly false. Enrichment added precondition predicates to
 **313 of 836** actions in `sysadmin.pddl`. PDDL library parses both
 domain and problem cleanly post-enrichment.
 
+### 2026-05-21: Fast Downward sanity test — architecture works, action coverage is the gap
+
+To isolate whether Fast Downward + the new tool-using problem generator
+*could* solve ccdc-01 if the domain had the right actions, wrote a minimal
+handcrafted PDDL (3 types, 4 predicates, 2 actions) at
+`/tmp/ccdc01_handcrafted/`:
+
+```pddl
+(:action set_setting_no
+  :parameters (?s - setting)
+  :precondition (and (setting_value_yes ?s) (sshd_writable_config_path))
+  :effect (and (setting_value_no ?s) (not (setting_value_yes ?s))))
+```
+
+Fast Downward produced the expected plan in **1 ms**:
+
+```
+(set_setting_no permit_root_login)
+```
+
+So the planning architecture is fine. The reason the original 2026-05-20
+run fell back to ReAct shell is that **the auto-generated Phase 2 domain
+doesn't contain an action whose precondition/effect semantics model
+"edit a setting in a config file"**. The 836-action mined domain has
+generic file ops (`change_file_mode`, `chmod_set_permissions`, …) and
+service-management actions (`disable_service`, `edit_service_unit`), but
+no concrete `edit_setting_in_file(?file, ?key, ?value)` action with the
+matching effect predicate.
+
+This is the real defect for ACSAC defensibility:
+**action-coverage gap in the synthesizer, not a planner or harness bug.**
+
+Two ACSAC-defensible directions to close it:
+- **Domain-side**: add a small "canonical sysadmin actions" library to the
+  Phase 2 prompt or merger that ensures coverage of common remediation
+  operations (edit-config-setting, reload-service-via-sighup, …). Each
+  action is plain STRIPS — no hacks.
+- **Problem-side**: have the problem generator produce a goal in terms
+  of predicates the domain demonstrably supports. (Discoverable via the
+  pddl_* tools.) If no satisfying action sequence exists, surface
+  PLANNER_FOUND_NO_PLAN rather than fail-over to LLM shell.
+
 ### Constraint reaffirmed
 
 - ✅ No changes to `Phase3Config.auto_scale_ew_params` or iterations.
