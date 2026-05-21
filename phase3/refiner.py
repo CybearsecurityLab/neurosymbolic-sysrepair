@@ -893,9 +893,13 @@ class DomainRefiner:
             logger.info("No actionable discrepancies to repair")
             return original_domain
 
-        # Prioritize: repair actions with the most discrepancies first,
-        # cap at 5 per iteration to avoid spending hours on LLM calls
-        max_repairs_per_iter = 20
+        # Prioritize: repair actions with the most discrepancies first.
+        # Cap matters because each repair is a separate LLM call; under a
+        # 2-iteration budget (as set by the user's constraint), only
+        # ~20 actions were ever getting touched out of 1000+. Raise to
+        # 100/iter — still bounded LLM cost, but enough breadth to make
+        # repair-driven EW lift visible within 2 iterations.
+        max_repairs_per_iter = 100
         if len(action_errors) > max_repairs_per_iter:
             sorted_actions = sorted(
                 action_errors.items(), key=lambda x: -len(x[1])
