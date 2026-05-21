@@ -132,6 +132,45 @@ CAPABILITIES: tuple[Capability, ...] = (
         probe="false",
         commands=("reboot", "shutdown", "halt", "poweroff", "init", "telinit"),
     ),
+    Capability(
+        # NetworkManager / D-Bus — `nmcli` exits with "Could not create
+        # NMClient" in stripped containers. Common EW discrepancy class.
+        key="network_manager", predicate="nm_available",
+        probe="nmcli general status >/dev/null 2>&1",
+        commands=("nmcli",),
+    ),
+    Capability(
+        # Kernel-module manipulation needs /lib/modules + write access;
+        # absent in most scenario containers.
+        key="kernel_modules", predicate="kmod_available",
+        probe="test -d /lib/modules/\"$(uname -r)\" && command -v modprobe >/dev/null 2>&1",
+        commands=("modprobe", "insmod", "rmmod", "depmod"),
+    ),
+    Capability(
+        # systemd-resolved / systemd-networkd helpers — depend on the
+        # respective daemons being live, which is rare in test containers.
+        key="systemd_resolved", predicate="resolved_available",
+        probe="resolvectl status >/dev/null 2>&1",
+        commands=("resolvectl",),
+    ),
+    Capability(
+        key="systemd_networkd", predicate="networkd_available",
+        probe="networkctl status >/dev/null 2>&1",
+        commands=("networkctl",),
+    ),
+    Capability(
+        # WireGuard userspace
+        key="wireguard", predicate="wg_available",
+        probe="command -v wg >/dev/null 2>&1",
+        commands=("wg", "wg-quick"),
+    ),
+    Capability(
+        # tc / traffic control needs CAP_NET_ADMIN + qdiscs; not on by
+        # default in scenario containers.
+        key="traffic_control", predicate="tc_available",
+        probe="command -v tc >/dev/null 2>&1 && tc qdisc show >/dev/null 2>&1",
+        commands=("tc",),
+    ),
 )
 
 
