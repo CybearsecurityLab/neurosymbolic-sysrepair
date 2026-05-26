@@ -20,9 +20,6 @@ from common.predicates import get_base_predicates as _get_base_predicates
 # Global Configuration
 # =============================================================================
 
-# 256K token context ≈ ~1M chars; no man page will exceed this
-LLM_MAX_CONTEXT_CHARS = 1_000_000
-
 # Critical paths to scan for file system objects
 CRITICAL_FILE_PATHS = [
     "/etc",

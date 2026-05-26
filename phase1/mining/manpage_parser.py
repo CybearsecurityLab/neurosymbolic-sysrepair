@@ -4,7 +4,6 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Any
 
-from phase1.common.config import LLM_MAX_CONTEXT_CHARS
 from phase1.common.config import get_base_predicates
 from phase1.common.logger import log
 from common.models import (
@@ -40,6 +39,87 @@ def _infer_type_for_variable(var_name: str) -> PDDLType:
         if hint in lower:
             return pddl_type
     return PDDLType.OBJECT
+
+
+def _is_minimax_model(model_id: str) -> bool:
+    """MiniMax models emit <think> reasoning + fenced JSON that defeats
+    langextract's parser ordering. Other models don't, so the sanitizer
+    is gated on this check."""
+    return "minimax" in (model_id or "").lower()
+
+
+_THINK_CLOSE_RE = re.compile(r"</think\s*>", re.IGNORECASE)
+_THINK_OPEN_RE = re.compile(r"<think\s*>", re.IGNORECASE)
+_FENCE_RE = re.compile(r"```(?:json|yaml)?\s*([\s\S]*?)```", re.IGNORECASE)
+_CTRL_TOKEN_RE = re.compile(
+    r"<\|?\s*(?:end_turn|begin(?:ning)?_of_sentence|end_of_sentence|eot_id|im_end|im_start)\s*\|?>",
+    re.IGNORECASE,
+)
+
+
+def _sanitize_minimax_output(raw: str) -> str:
+    """Strip <think> reasoning, markdown fences, and stray control tokens so
+    only the JSON payload remains for langextract to parse.
+
+    langextract strips fences *before* think-tags, so a ```json fence that
+    follows a <think> block survives into json.loads(). We pre-clean here.
+    """
+    if not raw:
+        return raw
+    s = raw
+
+    # 1. Drop reasoning. Prefer everything after the final </think>; if the
+    #    block was never closed, keep whatever precedes the dangling <think>.
+    m = None
+    for m in _THINK_CLOSE_RE.finditer(s):
+        pass
+    if m:
+        s = s[m.end():]
+    elif _THINK_OPEN_RE.search(s):
+        s = _THINK_OPEN_RE.split(s, 1)[0]
+
+    # 2. Unwrap a ```json ... ``` (or bare ```) fence if present.
+    fence = _FENCE_RE.search(s)
+    if fence:
+        s = fence.group(1)
+
+    # 3. Remove leftover chat-template control tokens.
+    s = _CTRL_TOKEN_RE.sub("", s).strip()
+
+    # 4. Last resort: clip to the outermost JSON object/array.
+    if s and s[0] not in "{[":
+        starts = [i for i in (s.find("{"), s.find("[")) if i != -1]
+        if starts:
+            s = s[min(starts):]
+    if s and s[-1] not in "}]":
+        end = max(s.rfind("}"), s.rfind("]"))
+        if end != -1:
+            s = s[: end + 1]
+    return s.strip()
+
+
+class _SanitizingModel:
+    """Wraps a langextract language model, cleaning each raw output before
+    langextract's resolver parses it. Delegates everything else to the inner
+    model. Only used for MiniMax (see _is_minimax_model)."""
+
+    def __init__(self, inner):
+        self._inner = inner
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+    def infer(self, batch_prompts, **kwargs):
+        for batch in self._inner.infer(batch_prompts=batch_prompts, **kwargs):
+            cleaned = []
+            for scored in batch:
+                if getattr(scored, "output", None):
+                    scored = type(scored)(
+                        score=scored.score,
+                        output=_sanitize_minimax_output(scored.output),
+                    )
+                cleaned.append(scored)
+            yield cleaned
 
 
 class ManPageParser:
@@ -134,6 +214,7 @@ Skip read-only or query commands.
         self,
         llm_config: Optional[LLMExtractionConfig] = None,
         known_predicates: Optional[list[str]] = None,
+        shell=None,
     ):
         self.cached_manpages: dict[str, str] = {}
         self.detected_variants: dict[str, str] = {}
@@ -141,6 +222,12 @@ Skip read-only or query commands.
         self._llm_available = self._check_llm_availability()
         self.examples = self._build_examples()  # Build LangExtract objects
         self.known_predicates = known_predicates or get_base_predicates()
+        # Shell runner: defaults to the host (legacy). Pass a ContainerShellRunner
+        # to fetch man pages / --help from inside a scenario container.
+        if shell is None:
+            from common.shell import HostShellRunner
+            shell = HostShellRunner()
+        self.shell = shell
 
     def _check_llm_availability(self) -> bool:
         """Check if LLM server is available via OpenAI-compatible API."""
@@ -149,22 +236,23 @@ Skip read-only or query commands.
 
         try:
             import langextract
-            import urllib.request
-
-            # Check if vLLM server is reachable via /health endpoint
-            base_url = self.llm_config.model_url.replace("/v1", "")
-            urllib.request.urlopen(f"{base_url}/health", timeout=5)
-
-            model_name = self.llm_config.model_id
-            log(f"  LLM: Using model '{model_name}' at {self.llm_config.model_url}")
-            return True
-
         except ImportError:
             log("  LLM: langextract not installed (pip install langextract)")
             return False
-        except Exception as e:
-            log(f"  LLM extraction disabled: {e}")
-            return False
+
+        # Only probe /health for local vLLM servers. Remote OpenAI-compatible
+        # APIs (MiniMax, OpenAI, etc.) don't expose it.
+        base_url = self.llm_config.model_url.replace("/v1", "")
+        if "localhost" in base_url or "127.0.0.1" in base_url:
+            try:
+                import urllib.request
+                urllib.request.urlopen(f"{base_url}/health", timeout=5)
+            except Exception as e:
+                log(f"  LLM extraction disabled: {e}")
+                return False
+
+        log(f"  LLM: Using model '{self.llm_config.model_id}' at {self.llm_config.model_url}")
+        return True
 
     # 3. REPLACE _build_examples method
     def _build_examples(self):
@@ -238,15 +326,7 @@ Skip read-only or query commands.
 
         try:
             import langextract as lx
-            from langextract.providers.openai import OpenAILanguageModel
-
-            max_chars = LLM_MAX_CONTEXT_CHARS
-            if len(text) > max_chars:
-                text = (
-                    text[: max_chars // 2]
-                    + "\n...[content truncated]...\n"
-                    + text[-max_chars // 2 :]
-                )
+            from langextract.factory import ModelConfig
 
             log(f"    [DEBUG] {utility}: Sending {len(text)} chars to LLM...")
 
@@ -281,23 +361,43 @@ CRITICAL RULES:
 - The "action_attributes" value MUST be a dict with string key-value pairs, NOT a list.
 - Extract only actions that modify system state (skip read-only/query commands)."""
 
-            # 3. CREATE MODEL INSTANCE via OpenAI-compatible API (vLLM)
-            model_instance = OpenAILanguageModel(
+            # 3. CONFIGURE MODEL via langextract's factory.
+            # Using ModelConfig with explicit provider="openai" routes through
+            # the OpenAI-compatible code path without GPT-specific auto-routing
+            # (required for OpenAI-compatible servers like MiniMax / vLLM).
+            # 0 means "no cap" — let reasoning models think as long as they need.
+            provider_kwargs = {
+                "api_key": self.llm_config.api_key,
+                "base_url": self.llm_config.model_url,
+                "temperature": self.llm_config.temperature,
+            }
+            cap = getattr(self.llm_config, "max_tokens", 0)
+            if cap and cap > 0:
+                provider_kwargs["max_tokens"] = cap
+
+            model_config = ModelConfig(
                 model_id=self.llm_config.model_id,
-                base_url=self.llm_config.model_url,
-                api_key=self.llm_config.api_key,
-                temperature=self.llm_config.temperature,
+                provider="openai",
+                provider_kwargs=provider_kwargs,
             )
 
             # 4. EXECUTE EXTRACTION
-            result = lx.extract(
+            extract_kwargs = dict(
                 text_or_documents=text,
                 prompt_description=prompt,
                 examples=self.examples,
-                model=model_instance,
                 show_progress=True,
                 use_schema_constraints=False,
             )
+            if _is_minimax_model(self.llm_config.model_id):
+                # MiniMax wraps JSON in fences after a <think> block, which
+                # langextract can't unwrap. Build the model ourselves and
+                # wrap it so we sanitize raw output before parsing.
+                from langextract.factory import create_model
+                model = _SanitizingModel(create_model(model_config))
+                result = lx.extract(model=model, **extract_kwargs)
+            else:
+                result = lx.extract(config=model_config, **extract_kwargs)
 
             # 5. DEBUG: Check what we got back
             if not result or not hasattr(result, "extractions"):
@@ -584,18 +684,11 @@ CRITICAL RULES:
         if utility in self.cached_manpages:
             return self.cached_manpages[utility]
         try:
-            process = subprocess.Popen(
-                f"man {utility} 2>/dev/null | col -b",
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            stdout, _ = process.communicate(timeout=30)
-            if process.returncode == 0 and stdout:
-                content = stdout.decode("utf-8", errors="replace")
-                self.cached_manpages[utility] = content
-                self._detect_variants(utility, content)
-                return content
+            res = self.shell.run(f"man {utility} 2>/dev/null | col -b", timeout=30)
+            if res.ok and res.stdout:
+                self.cached_manpages[utility] = res.stdout
+                self._detect_variants(utility, res.stdout)
+                return res.stdout
         except Exception:
             pass
         return None
@@ -608,10 +701,8 @@ CRITICAL RULES:
 
     def fetch_help_output(self, utility: str) -> Optional[str]:
         try:
-            cmd = (
-                [utility, "help", "--all"] if utility == "snap" else [utility, "--help"]
-            )
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            cmd = f"{utility} help --all" if utility == "snap" else f"{utility} --help"
+            res = self.shell.run(cmd, timeout=10)
             return res.stdout or res.stderr
         except Exception:
             return None
@@ -1364,6 +1455,7 @@ def create_hybrid_parser(
     temperature: float = 0.0,
     known_predicates: list[str] = None,
     max_workers: int = 1,
+    shell=None,
 ) -> ManPageParser:
     """
     Create a HybridManPageParser with the specified configuration.
@@ -1371,6 +1463,8 @@ def create_hybrid_parser(
     Args:
         max_workers: Number of parallel LLM extraction workers.
                      Increase based on GPU count and model size.
+        shell: Optional ShellRunner; when None, uses the host. Pass a
+               ContainerShellRunner to fetch docs from inside a container.
     """
     config = LLMExtractionConfig(
         model_id=model_id,
@@ -1380,5 +1474,8 @@ def create_hybrid_parser(
         temperature=temperature,
         max_workers=max_workers,
     )
-    # Pass known_predicates to constructor
-    return ManPageParser(llm_config=config, known_predicates=known_predicates)
+    return ManPageParser(
+        llm_config=config,
+        known_predicates=known_predicates,
+        shell=shell,
+    )

@@ -24,11 +24,13 @@ import sys
 import os
 import time
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from datetime import datetime
 from collections import defaultdict
 
-from .config import Phase3Config, LLMRefinementConfig
+from .config import Phase3Config, LLMRefinementConfig, LLM_CONCURRENCY_GATE
 from .models import (
     EWScore,
     ExplorationWalk,
@@ -131,13 +133,20 @@ class DomainRefiner:
         logger.info("DomainRefiner initialized")
 
     def _initialize_llm(self):
-        """Initialize LLM client for domain refinement."""
+        """Initialize LLM client for domain refinement.
+
+        Generous timeout + retries because reasoning models (e.g. MiniMax M2.7)
+        emit long <think> blocks before answering. A short 120s cap surfaced
+        as opaque "Connection error" (actually read-timeout) on the concretizer
+        path and tanked Phase 3 EW scores even though MiniMax was healthy.
+        """
         try:
             from openai import OpenAI
             self.llm = OpenAI(
                 base_url=self.config.llm.base_url,
                 api_key=self.config.llm.api_key,
-                timeout=120.0,
+                timeout=600.0,    # 10 min per call
+                max_retries=5,    # default is 2; absorb transient hiccups
             )
         except ImportError:
             logger.warning("OpenAI package not installed, LLM refinement disabled")
@@ -535,11 +544,31 @@ class DomainRefiner:
             "Your entire response must be a single (:action ...) block."
         )
 
+        # Pattern hint: most "fixable" execution-failure discrepancies are
+        # really missing preconditions, not malformed effects. Steer the
+        # LLM toward adding a guarding :precondition rather than rewriting
+        # effects, since the exploration walk only fails when the action
+        # was *legal* in PDDL but the actual command exited nonzero.
+        fix_hint = (
+            "GUIDANCE — most failures here mean the action's :precondition "
+            "is missing a guard. Examples:\n"
+            "- 'user X already exists' (useradd) → add (not (user_exists ?u))\n"
+            "- 'user X does not exist' (passwd/usermod/chage/userdel) → add (user_exists ?u)\n"
+            "- 'group X already exists' (groupadd) → add (not (group_exists ?g))\n"
+            "- 'group X does not exist' (groupdel/gpasswd) → add (group_exists ?g)\n"
+            "- 'file/path does not exist' → add (file_exists ?f) or (directory_exists ?d)\n"
+            "- 'invalid date' / 'invalid number' / 'invalid argument' → the "
+            "parameter is bound to the wrong type; tighten the :parameters "
+            "type from `?x - object` to a more specific declared type if one "
+            "exists in the domain.\n"
+            "Prefer adding a small :precondition over rewriting effects.\n"
+        )
         prompt = (
             f"Fix this PDDL action based on the discrepancies below.\n\n"
             f"ERRORS:\n{errors_str}\n\n"
             f"ACTION:\n{action_pddl}\n\n"
             f"PDDL SYNTAX RULES:\n{PDDL_SYNTAX_GUIDE}\n\n"
+            f"{fix_hint}\n"
             f"RULES:\n"
             f"- Keep the action name '{action_name}' unchanged.\n"
             f"- Declare all variables used in :precondition/:effect in :parameters.\n"
@@ -577,12 +606,14 @@ class DomainRefiner:
 
             content = None
             for variant_idx, msg_variant in enumerate(messages_variants):
-                response = self.llm.chat.completions.create(
-                    model=self.config.llm.model_name,
-                    messages=msg_variant,
-                    max_tokens=self.config.llm.max_tokens,
-                    temperature=self.config.llm.temperature,
-                )
+                # Throttle alongside the concretizer (shared gate).
+                with LLM_CONCURRENCY_GATE:
+                    response = self.llm.chat.completions.create(
+                        model=self.config.llm.model_name,
+                        messages=msg_variant,
+                        max_tokens=self.config.llm.max_tokens or None,
+                        temperature=self.config.llm.temperature,
+                    )
 
                 # Try multiple ways to extract content from the response
                 content = None
@@ -745,6 +776,45 @@ class DomainRefiner:
                 )
                 return None
 
+            # No-shrink guard: the LLM occasionally returns a degenerate
+            # stub for a complex action — e.g. drops the :parameters and
+            # :effect blocks, leaving an empty schema that is technically
+            # parseable but useless. Reject any repair that:
+            #   * shrinks the action by more than 40% in characters
+            #   * loses the original :parameters list
+            #   * loses the :effect block
+            if len(content) < max(80, int(len(action_pddl) * 0.6)):
+                logger.warning(
+                    f"  LLM repair for '{action_name}' shrank "
+                    f"{len(action_pddl)}→{len(content)} chars (>40% loss), "
+                    f"keeping original"
+                )
+                return None
+            orig_params = re.search(r":parameters\s*\(([^)]*)\)", action_pddl)
+            new_params = re.search(r":parameters\s*\(([^)]*)\)", content)
+            if orig_params and not new_params:
+                logger.warning(
+                    f"  LLM repair for '{action_name}' lost :parameters, "
+                    f"keeping original"
+                )
+                return None
+            if ":effect" in action_pddl and ":effect" not in content:
+                logger.warning(
+                    f"  LLM repair for '{action_name}' lost :effect, "
+                    f"keeping original"
+                )
+                return None
+            if orig_params and new_params:
+                # Variable set must be preserved (no quietly-dropped params).
+                orig_vars = set(re.findall(r"\?[\w-]+", orig_params.group(1)))
+                new_vars = set(re.findall(r"\?[\w-]+", new_params.group(1)))
+                if not orig_vars.issubset(new_vars):
+                    logger.warning(
+                        f"  LLM repair for '{action_name}' dropped vars "
+                        f"{orig_vars - new_vars}, keeping original"
+                    )
+                    return None
+
             # Validate repaired action parses as valid PDDL
             if not self._validate_single_action_pddl(content):
                 logger.warning(
@@ -884,9 +954,13 @@ class DomainRefiner:
             logger.info("No actionable discrepancies to repair")
             return original_domain
 
-        # Prioritize: repair actions with the most discrepancies first,
-        # cap at 5 per iteration to avoid spending hours on LLM calls
-        max_repairs_per_iter = 20
+        # Prioritize: repair actions with the most discrepancies first.
+        # Cap matters because each repair is a separate LLM call; under a
+        # 2-iteration budget (as set by the user's constraint), only
+        # ~20 actions were ever getting touched out of 1000+. Raise to
+        # 100/iter — still bounded LLM cost, but enough breadth to make
+        # repair-driven EW lift visible within 2 iterations.
+        max_repairs_per_iter = 100
         if len(action_errors) > max_repairs_per_iter:
             sorted_actions = sorted(
                 action_errors.items(), key=lambda x: -len(x[1])
@@ -905,39 +979,65 @@ class DomainRefiner:
             f"out of {len(action_blocks)} total"
         )
 
-        # Repair each broken action individually
+        # Repair each broken action individually. We parallelize across
+        # actions with a hard cap of 5 in-flight LLM calls — each call
+        # takes 8-15 s on MiniMax-M2.7, so a sequential 100-action repair
+        # is ≈ 25 minutes; 5-way parallel brings it to ≈ 5 minutes and
+        # restores the user's iteration budget. LLM_CONCURRENCY_GATE
+        # (semaphore=8) is still respected inside each worker so the
+        # concretizer's parallel calls aren't starved.
         updated_domain = original_domain
         repaired_count = 0
         failed_count = 0
+        repaired_blocks: dict[str, str] = {}
+        repaired_lock = threading.Lock()
 
-        for action_name, errors in action_errors.items():
-            if action_name not in action_blocks:
+        def _worker(item: tuple[str, list[str]]) -> tuple[str, Optional[str]]:
+            action_name_, errors_ = item
+            if action_name_ not in action_blocks:
                 logger.warning(
-                    f"  Action '{action_name}' not found in domain, skipping"
+                    f"  Action '{action_name_}' not found in domain, skipping"
                 )
-                continue
-
-            action_pddl = action_blocks[action_name]
+                return (action_name_, None)
+            action_pddl_ = action_blocks[action_name_]
             logger.info(
-                f"  Repairing '{action_name}' "
-                f"({len(errors)} discrepancies, "
-                f"{len(action_pddl)} chars)..."
+                f"  Repairing '{action_name_}' "
+                f"({len(errors_)} discrepancies, "
+                f"{len(action_pddl_)} chars)..."
+            )
+            return (
+                action_name_,
+                self._repair_single_action_with_llm(
+                    action_name_, action_pddl_, errors_
+                ),
             )
 
-            repaired = self._repair_single_action_with_llm(
-                action_name, action_pddl, errors
-            )
+        max_workers = max(1, min(5, len(action_errors)))
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = [pool.submit(_worker, item) for item in action_errors.items()]
+            for fut in as_completed(futures):
+                try:
+                    action_name, repaired = fut.result()
+                except Exception as e:
+                    logger.error(f"  Repair worker crashed: {e}")
+                    failed_count += 1
+                    continue
+                if repaired:
+                    with repaired_lock:
+                        repaired_blocks[action_name] = repaired
+                    repaired_count += 1
+                else:
+                    failed_count += 1
+                    logger.warning(
+                        f"  Could not repair '{action_name}', keeping original"
+                    )
 
-            if repaired:
-                updated_domain = self._replace_action_block(
-                    updated_domain, action_name, repaired
-                )
-                repaired_count += 1
-            else:
-                failed_count += 1
-                logger.warning(
-                    f"  Could not repair '{action_name}', keeping original"
-                )
+        # Apply all successful repairs to the domain in one pass so the
+        # update is deterministic regardless of completion order.
+        for action_name, block in repaired_blocks.items():
+            updated_domain = self._replace_action_block(
+                updated_domain, action_name, block
+            )
 
         logger.info(
             f"Targeted repair complete: "

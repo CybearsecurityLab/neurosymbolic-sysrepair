@@ -357,25 +357,59 @@ class PDDLStateSimulator:
                         if n not in objects[type_name]:
                             objects[type_name].append(n)
 
-        # Build supertype mappings: subtypes inherit from parent
-        # Parse "subtype - supertype" from :types
+        # PDDL inheritance: a parameter declared `?x - subtype` is satisfied
+        # by any object of `subtype` OR its subtypes. The previous code
+        # propagated child→parent, which produced empty pools for
+        # subtypes like `configuration_file - file` because env_state only
+        # populates the parent. Walk the declared :types twice:
+        #   pass 1 — record (child, parent) edges
+        #   pass 2 — for any subtype without its own objects, inherit the
+        #            closest non-empty ancestor's pool. Standard typed-PDDL
+        #            grounding behavior.
+        parent_of: dict[str, str] = {}
         if types_match:
             for m in re.finditer(r'((?:[\w-]+\s+)+)-\s+([\w-]+)', types_match.group(1)):
                 parent = m.group(2)
-                children = m.group(1).split()
-                if parent not in objects:
-                    objects[parent] = []
-                for child in children:
-                    for obj in objects.get(child, []):
-                        if obj not in objects[parent]:
-                            objects[parent].append(obj)
+                for child in m.group(1).split():
+                    parent_of[child] = parent
+        # Resolve ancestors transitively. We deliberately STOP at `object`
+        # because `objects["object"]` is the union of every concrete pool,
+        # and inheriting from it would re-introduce the same supertype leak
+        # we just removed (e.g. a `?x - some_unmodeled_type` declared as
+        # `some_unmodeled_type - object` would silently grab every system
+        # object). Only inherit from a named intermediate ancestor that
+        # already has a concrete pool (e.g. `configuration_file - file`).
+        for subtype in list(parent_of.keys()):
+            if objects.get(subtype):
+                continue
+            cur = parent_of.get(subtype)
+            visited = {subtype}
+            while cur and cur != "object" and cur not in visited:
+                visited.add(cur)
+                pool = objects.get(cur)
+                if pool:
+                    objects[subtype] = list(pool)
+                    break
+                cur = parent_of.get(cur)
 
-        # "object" supertype gets everything
-        all_objs = set()
-        for t, objs in objects.items():
-            if t != "object":
-                all_objs.update(objs)
-        objects["object"] = list(all_objs)
+        # Deliberately set `objects["object"]` to the EMPTY pool.
+        #
+        # PDDL treats `object` as the root supertype, but a *parameter*
+        # declared `?x - object` means the action's type was never
+        # inferred — there is no concrete pool that's semantically
+        # right for it. Previously this pool was the union of every
+        # concrete pool, which let actions like
+        #   (:action set_default_expire_date
+        #     :parameters (?expiredate - object) ...)
+        # ground `?expiredate` to a username, group name, file path, etc.
+        # The resulting concretized command (`passwd --expire tape`) was
+        # always going to fail.
+        #
+        # Empty pool ⇒ such actions are inapplicable in EW, which is the
+        # correct PDDL-grounded outcome: the *domain* is under-specified
+        # for that action and the refiner should be the one that tightens
+        # the parameter type. Standard typed-PDDL behavior.
+        objects["object"] = []
 
         return objects
 
@@ -470,13 +504,17 @@ class PDDLStateSimulator:
         # For each variable, collect the set of possible values
         var_candidates: dict[str, set[str]] = {}
 
-        # Initialize from type-based objects
+        # Initialize from type-based objects. We deliberately do NOT fall
+        # back to the `object` supertype when a declared type has no pool:
+        # that fallback let configuration-file paths bind to `?p - port`
+        # and produced bogus commands (e.g. `nft add rule ... udp dport
+        # /etc/vdpau/wrapper.cfg`) that dominated the EW discrepancy log.
+        # Empty typed pool ⇒ no valid grounding, which is correct PDDL.
         for var, ptype in action.parameters:
             type_objs = self.objects.get(ptype, [])
-            if not type_objs:
-                # Try "object" supertype
-                type_objs = self.objects.get("object", [])
             var_candidates[var] = set(type_objs) if type_objs else set()
+            if not type_objs:
+                return []
 
         # Constrain using positive preconditions from state
         for precond in action.pos_preconditions:

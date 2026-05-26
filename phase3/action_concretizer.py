@@ -12,10 +12,11 @@ Also contains EffectVerifier for post-execution effect checking.
 import json
 import re
 import logging
+import time
 from pathlib import Path
 from typing import Optional
 
-from .config import PREDICATE_CHECKS
+from .config import PREDICATE_CHECKS, LLM_CONCURRENCY_GATE
 from .models import GroundedAction
 
 logger = logging.getLogger("Phase3.ActionConcretizer")
@@ -515,15 +516,48 @@ class ActionConcretizer:
         prompt = self._build_llm_prompt(action_name, action, normalized_bindings)
 
         try:
-            response = self._llm.chat.completions.create(
-                model=self._llm_model,
-                messages=[
-                    {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=self._llm_max_tokens,
-                temperature=self._llm_temperature,
-            )
+            # App-level retry around the LLM call. The OpenAI SDK's internal
+            # max_retries already handles fast transient errors, but MiniMax
+            # occasionally drops connections under burst load that exhaust
+            # the SDK's retries. Sleep longer here so the burst clears, and
+            # log the underlying exception class so 'Connection error' is no
+            # longer opaque (__cause__ holds the wrapped httpx exception).
+            response = None
+            last_exc: Optional[BaseException] = None
+            for attempt in range(3):
+                try:
+                    # Throttle concurrent in-flight calls to MiniMax (undocumented
+                    # per-IP concurrent-connection cap; refused TCP otherwise).
+                    with LLM_CONCURRENCY_GATE:
+                        response = self._llm.chat.completions.create(
+                            model=self._llm_model,
+                            messages=[
+                                {"role": "system", "content": CONCRETIZE_SYSTEM_MSG},
+                                {"role": "user", "content": prompt},
+                            ],
+                            max_tokens=self._llm_max_tokens or None,
+                            temperature=self._llm_temperature,
+                        )
+                    break
+                except Exception as e:
+                    last_exc = e
+                    cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+                    logger.warning(
+                        f"LLM concretize attempt {attempt+1}/3 failed for "
+                        f"{action_name}: {type(e).__name__}: {e} | "
+                        f"cause={type(cause).__name__ if cause else 'None'}: {cause}"
+                    )
+                    if attempt < 2:
+                        # ECONNREFUSED = MiniMax LB throttle; observed windows
+                        # exceed 30s, so sleep 60s. Other transient errors get
+                        # the shorter exponential backoff.
+                        msg = f"{cause}"
+                        if "Connection refused" in msg or "Errno 111" in msg:
+                            time.sleep(60)
+                        else:
+                            time.sleep(5 * (2 ** attempt))  # 5s, 10s
+            if response is None:
+                raise last_exc if last_exc else RuntimeError("LLM call returned no response")
 
             content = ""
             if response.choices:
@@ -615,6 +649,95 @@ class ActionConcretizer:
                 return line
         return ""
 
+    # Allowlist of bash commands the concretizer is willing to emit.
+    # Curated from coreutils, util-linux, and the standard sysadmin
+    # toolchain. If the LLM hallucinates a non-command (e.g. a PDDL
+    # parameter name like `output_format`) as the primary token, we
+    # refuse — EW would just burn a step on guaranteed `command not
+    # found`. This is defensible PDDL hygiene: a command we cannot
+    # name as a real binary should not be shipped to a sandbox.
+    _KNOWN_PRIMARY_COMMANDS: frozenset = frozenset({
+        # shell built-ins / control
+        "echo", "printf", "true", "false", "test", "[", ":", "exit",
+        "exec", "eval", "set", "unset", "export", "alias", "umask",
+        "cd", "pwd", "read", "shift", "trap",
+        # coreutils
+        "ls", "cat", "cp", "mv", "rm", "ln", "mkdir", "rmdir", "touch",
+        "chmod", "chown", "chgrp", "stat", "file", "find", "grep",
+        "egrep", "fgrep", "sed", "awk", "cut", "sort", "uniq", "wc",
+        "head", "tail", "tr", "tee", "xargs", "basename", "dirname",
+        "readlink", "realpath", "df", "du", "date", "time", "sleep",
+        "tac", "rev", "od", "hexdump", "sha256sum", "sha1sum", "md5sum",
+        "uname", "hostname", "id", "who", "w", "whoami", "tty",
+        # package management
+        "apt", "apt-get", "apt-cache", "apt-mark", "apt-key", "dpkg",
+        "dpkg-query", "dpkg-deb", "dpkg-reconfigure", "snap", "dnf",
+        "yum", "rpm",
+        # service / init
+        "systemctl", "service", "journalctl", "loginctl", "machinectl",
+        "hostnamectl", "timedatectl", "localectl", "busctl",
+        # users / groups
+        "useradd", "userdel", "usermod", "groupadd", "groupdel",
+        "groupmod", "passwd", "chage", "gpasswd", "newgrp", "newusers",
+        "vipw", "vigr", "chpasswd", "chfn", "chsh",
+        # privilege / login
+        "su", "sudo", "login", "logout",
+        # network
+        "ip", "ifconfig", "route", "iptables", "ip6tables", "nft",
+        "ufw", "firewall-cmd", "ss", "netstat", "ping", "ping6",
+        "traceroute", "tracepath", "dig", "host", "nslookup", "curl",
+        "wget", "nc", "ncat", "telnet", "scp", "sftp", "ssh", "rsync",
+        "nmcli", "networkctl", "resolvectl", "wg", "wg-quick", "tc",
+        # filesystem
+        "mount", "umount", "fdisk", "parted", "lsblk", "blkid", "fsck",
+        "mkfs", "mkswap", "swapon", "swapoff", "sync",
+        # processes
+        "ps", "top", "htop", "kill", "killall", "pgrep", "pkill",
+        "nice", "renice", "nohup", "jobs", "fg", "bg",
+        # text / config
+        "vi", "vim", "nano", "patch", "diff",
+        # SELinux / AppArmor / audit
+        "semanage", "audit2allow", "audit2why", "sealert",
+        "aa-status", "aa-enforce", "aa-complain", "aa-disable",
+        "apparmor_parser", "setenforce", "getenforce", "restorecon",
+        "chcon", "auditctl",
+        # cron / at / lp
+        "crontab", "at", "atq", "atrm", "batch",
+        "lpr", "lprm", "lpq", "lpstat", "cancel",
+        # tty
+        "mesg", "wall", "write",
+        # kernel modules
+        "modprobe", "insmod", "rmmod", "depmod", "lsmod",
+        # sysctl / kernel knobs
+        "sysctl", "ulimit",
+        # ACL / xattr / capabilities
+        "getfacl", "setfacl", "getcap", "setcap", "getfattr", "setfattr",
+        # encryption / certs
+        "openssl", "gpg", "gpg2", "ssh-keygen", "ssh-add", "ssh-copy-id",
+        # archives
+        "tar", "gzip", "gunzip", "bzip2", "bunzip2", "xz", "unxz",
+        "zip", "unzip",
+        # misc admin
+        "update-grub", "grub-install", "shutdown", "reboot", "halt",
+        "poweroff", "init", "telinit", "logger", "fail2ban-client",
+        "netplan",
+    })
+
+    @staticmethod
+    def _primary_command(command: str) -> str:
+        """Extract the leading executable token from a bash one-liner.
+
+        Skips leading env-var assignments (FOO=bar cmd) and `sudo`/`env`.
+        Returns the empty string if nothing recognizable is found.
+        """
+        for tok in command.strip().split():
+            if "=" in tok and not tok.startswith("/") and "/" not in tok.split("=", 1)[0]:
+                continue  # FOO=bar prefix
+            if tok in ("sudo", "env"):
+                continue
+            return tok
+        return ""
+
     def _validate_command(self, command: str) -> bool:
         """Validate LLM-generated command for safety and format."""
         if not command or not command.strip():
@@ -627,6 +750,21 @@ class ActionConcretizer:
         # Reject obvious non-commands
         if command.startswith("#") or command.startswith("//"):
             return False
+        # Reject commands containing empty-string args — they almost always
+        # come from an unbound placeholder leaking through (e.g.
+        # `mkdir -m 755 ""`). Running such commands burns an EW step on a
+        # guaranteed failure that the refiner can't fix.
+        if re.search(r"""(?:^|\s)(['"])\1(?=\s|$)""", command):
+            return False
+        # Reject commands whose primary token isn't a recognized utility.
+        # The LLM occasionally treats a PDDL parameter / predicate name
+        # (e.g. `output_format`) as a shell command, which always exits
+        # "command not found" and uniformly fails the walk step.
+        primary = self._primary_command(command)
+        if primary and primary not in self._KNOWN_PRIMARY_COMMANDS:
+            # Tolerate absolute paths — `/usr/sbin/foo` is plausible.
+            if not primary.startswith("/"):
+                return False
         return True
 
     # ─── Template / Cache Helpers ────────────────────────────────────
@@ -666,15 +804,66 @@ class ActionConcretizer:
                 template = template.replace(value, f"{{{key}}}", 1)
         return template
 
+    # Cache pollution heuristics: any cached template containing one of
+    # these substrings is the LLM's "I don't know" answer and should be
+    # discarded on load — caching it locks us into the failure forever.
+    _CACHE_POLLUTION_SUBSTRS = (
+        "Error:",
+        "error:",
+        "no available command in toolkit",
+        "parameter is required",
+        "parameter required but not provided",
+        "I don't know",
+        "I cannot",
+        "not applicable",
+    )
+
     def _load_cache(self, path: str) -> dict[str, str]:
-        """Load cache from disk."""
+        """Load cache from disk, dropping polluted entries.
+
+        The concretizer cache is a runtime artifact filled by an LLM
+        during EW walks. Three classes of pollution accumulate over
+        repeated runs and silently re-introduce failures:
+
+        1. **Error literals** — the LLM returned ``echo "Error: arch
+           parameter is required"`` instead of a real bash command.
+        2. **Hardcoded user/group names** — the LLM substituted the
+           binding value back as a literal (e.g. cached
+           ``usermod -l {user} lp``) so every later binding fights
+           the cache.
+        3. **Stale entries** for actions that no longer exist in the
+           current domain (template validator may have dropped them).
+
+        We can't fix (3) here because the cache loader doesn't see the
+        domain, but (1) is a string-match drop and the cache miss is
+        always safe — the concretizer falls back to Tier 1 (Phase 1
+        template) or Tier 2 (fresh LLM call).
+        """
         try:
-            if Path(path).exists():
-                with open(path) as f:
-                    return json.load(f)
+            if not Path(path).exists():
+                return {}
+            with open(path) as f:
+                raw = json.load(f)
         except (json.JSONDecodeError, OSError) as e:
             logger.warning(f"Failed to load concretizer cache: {e}")
-        return {}
+            return {}
+
+        clean: dict[str, str] = {}
+        dropped = 0
+        for k, v in raw.items():
+            cmd = v.get("command") if isinstance(v, dict) else v
+            if not isinstance(cmd, str) or not cmd.strip():
+                dropped += 1
+                continue
+            if any(p in cmd for p in self._CACHE_POLLUTION_SUBSTRS):
+                dropped += 1
+                continue
+            clean[k] = cmd
+        if dropped:
+            logger.info(
+                f"Concretizer cache: dropped {dropped} polluted entries on load"
+            )
+        return clean
 
     def _save_cache(self):
         """Save cache to disk."""

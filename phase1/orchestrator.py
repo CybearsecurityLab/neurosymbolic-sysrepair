@@ -1,14 +1,4 @@
-"""
-phase1/orchestrator.py
-
-Main orchestrator for Phase 1: System Introspection.
-Coordinates extraction, action mining, and PDDL generation.
-
-Updated to:
-- Serialize actions properly for Phase 2 consumption
-- Use shared common modules
-- Output complete Phase1State for integration
-"""
+"""Phase 1 orchestrator: coordinates extraction, action mining, and PDDL generation."""
 
 import json
 import os
@@ -56,6 +46,7 @@ class Phase1Orchestrator:
         llm_api_key: str = "vllm",
         enable_llm: bool = True,
         max_llm_workers: int = 1,
+        container=None,
     ):
         self.output_dir = output_dir
         self.osquery_socket = osquery_socket
@@ -72,6 +63,7 @@ class Phase1Orchestrator:
         self.llm_api_key = llm_api_key
         self.enable_llm = enable_llm
         self.max_llm_workers = max_llm_workers
+        self.container = container
 
     def run(self) -> dict:
         """
@@ -109,13 +101,21 @@ class Phase1Orchestrator:
 
         try:
             self.extractor = SystemStateExtractor(
-                socket_path=self.osquery_socket, scoping_mode=self.scoping_mode
+                socket_path=self.osquery_socket,
+                scoping_mode=self.scoping_mode,
+                container=self.container,
             )
-            log("  ✓ Connected to osquery")
+            if self.container is not None and not self.extractor.osquery.is_available():
+                log("  ⚠ osqueryi not available inside scenario container; objects/predicates will be empty")
+            else:
+                log("  ✓ Connected to osquery")
         except Exception as e:
             results["errors"].append(f"Failed to initialize osquery: {e}")
             log(f"  ✗ Failed: {e}")
-            log("  Hint: pip install osquery==3.1.1")
+            if self.container is None:
+                log("  Hint: pip install osquery==3.1.1")
+            else:
+                log("  Hint: rebuild scenario image with --install-osquery or install osquery in its Dockerfile")
 
         # Step 2: Extract system state
         log(f"\n[2/4] Extracting system state (scoping: {self.scoping_mode})...")
@@ -154,6 +154,10 @@ class Phase1Orchestrator:
         known_preds = get_base_predicates()
 
         try:
+            shell = None
+            if self.container is not None:
+                from common.shell import ContainerShellRunner
+                shell = ContainerShellRunner(self.container)
             self.parser = create_hybrid_parser(
                 model_id=self.llm_model,
                 model_url=self.llm_url,
@@ -161,6 +165,7 @@ class Phase1Orchestrator:
                 enable_llm=self.enable_llm,
                 known_predicates=known_preds,
                 max_workers=self.max_llm_workers,
+                shell=shell,
             )
             self.actions = self.parser.extract_all_actions()
             results["actions_mined"] = True
@@ -234,6 +239,24 @@ class Phase1Orchestrator:
         results["actions"] = serialized_actions
         results["statistics"]["serialized_actions"] = len(serialized_actions)
 
+        # Probe the scenario container for runtime capabilities (does
+        # systemd run as PID 1, is iptables installed, …). These will be
+        # baked into the problem :init by the Phase 3 enrichment pass so
+        # the planner naturally avoids infeasible actions.
+        capabilities: dict[str, bool] = {}
+        if self.container is not None:
+            try:
+                from common.env_capabilities import probe_capabilities
+                from common.container import ScenarioContainerManager
+                def _run(cmd: str) -> int:
+                    res = ScenarioContainerManager.exec(self.container, cmd, timeout=15)
+                    return res.exit_code
+                capabilities = probe_capabilities(_run)
+                avail = [k for k, v in capabilities.items() if v]
+                log(f"\n  ✓ Container capabilities: {', '.join(avail) if avail else '(none detected)'}")
+            except Exception as e:
+                log(f"  ⚠ Capability probe failed: {e}")
+
         # Create complete Phase1State
         phase1_state = Phase1State(
             objects=self.state.get("objects", {}),
@@ -246,6 +269,7 @@ class Phase1Orchestrator:
                 "llm_model": self.llm_model,
                 "action_count": len(self.actions),
                 "detected_variants": getattr(self.parser, "detected_variants", {}),
+                "capabilities": capabilities,
             },
         )
 

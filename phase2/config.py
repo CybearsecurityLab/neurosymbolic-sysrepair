@@ -19,11 +19,7 @@ from typing import Optional, TYPE_CHECKING, Set
 if TYPE_CHECKING:
     from common.models import Phase1State
 
-# =============================================================================
-# Utility Group Definitions (Templates)
-# =============================================================================
-# These define the logical groups and the regex patterns to find their tools.
-# Actual utilities are populated at runtime by scanning the system.
+"""Logical groups and regex patterns used to discover system tools at runtime."""
 
 UTILITY_TEMPLATES = {
     "package_management": {
@@ -79,11 +75,6 @@ UTILITY_TEMPLATES = {
         "osquery_candidates": ["sudoers"],
     },
 }
-
-# =============================================================================
-# Dynamic Discovery Functions
-# =============================================================================
-
 
 def _get_search_paths() -> list[Path]:
     """Get list of standard binary directories to scan."""
@@ -152,11 +143,6 @@ def check_osquery_tables() -> Set[str]:
     return set()
 
 
-# =============================================================================
-# Build VALIDATED Utility Groups at Runtime
-# =============================================================================
-
-
 def build_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
     """
     Build utility groups by matching installed binaries against regex patterns.
@@ -210,11 +196,6 @@ def build_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
 def get_utility_groups(phase1_state: Optional["Phase1State"] = None) -> dict:
     """Get validated utility groups. Call this instead of using constants directly."""
     return build_utility_groups(phase1_state)
-
-
-# =============================================================================
-# Hardware Configuration
-# =============================================================================
 
 
 @dataclass
@@ -277,11 +258,6 @@ class HardwareConfig:
             config.max_parallel_workers = max(1, min(workers_by_ram, workers_by_cpu, 4))
 
         return config
-
-
-# =============================================================================
-# LLM Configuration
-# =============================================================================
 
 
 @dataclass

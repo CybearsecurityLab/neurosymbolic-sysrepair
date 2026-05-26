@@ -31,6 +31,7 @@ class SystemStateExtractor:
         osquery_interface: Optional[OSQueryInterface] = None,
         socket_path: Optional[str] = None,
         scoping_mode: str = "dynamic",
+        container=None,
     ):
         """
         Initialize extractor with osquery interface.
@@ -39,10 +40,16 @@ class SystemStateExtractor:
             osquery_interface: Pre-configured interface (for testing)
             socket_path: Socket path for osqueryd connection
             scoping_mode: "dynamic" for graph-based, "static" for legacy caps
+            container: Optional Docker container to run osqueryi inside. If provided
+                and ``osquery_interface`` is None, a container-aware client is used.
         """
-        self.osquery = osquery_interface or get_osquery_interface(
-            prefer_thrift=True, socket_path=socket_path
-        )
+        if osquery_interface is None and container is not None:
+            from phase1.introspection.client import OSQueryContainerInterface
+            self.osquery = OSQueryContainerInterface(container)
+        else:
+            self.osquery = osquery_interface or get_osquery_interface(
+                prefer_thrift=True, socket_path=socket_path
+            )
         self.scoping_mode = scoping_mode
         self.scope_analyzer = None
         self.extracted_objects: list[ExtractedObject] = []

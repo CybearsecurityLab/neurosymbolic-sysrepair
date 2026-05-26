@@ -138,7 +138,6 @@ def main():
         logging.Formatter("%(asctime)s %(levelname)s %(message)s")
     )
 
-    # File handler — always at DEBUG level so we capture everything
     log_file = args.log_file or (args.output.parent / "eval_run.log")
     log_file.parent.mkdir(parents=True, exist_ok=True)
     file_handler = logging.FileHandler(str(log_file), mode="a")

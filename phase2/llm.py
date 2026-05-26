@@ -53,7 +53,7 @@ class LLMInterface:
             response = client.chat.completions.create(
                 model=self.config.model_name,
                 messages=messages,
-                max_tokens=self.config.max_tokens,
+                max_tokens=self.config.max_tokens or None,
                 temperature=temp,
             )
             elapsed = time.time() - start
@@ -66,11 +66,16 @@ class LLMInterface:
             raise
 
     def is_available(self) -> bool:
-        """Check if the LLM server is reachable."""
+        """Check if the LLM server is reachable.
+
+        Remote OpenAI-compatible APIs (MiniMax, OpenAI, etc.) don't expose
+        ``/health``, so for non-localhost URLs we trust the config.
+        """
+        base_url = self.config.base_url.replace("/v1", "")
+        if "localhost" not in base_url and "127.0.0.1" not in base_url:
+            return True
         try:
             import urllib.request
-
-            base_url = self.config.base_url.replace("/v1", "")
             urllib.request.urlopen(f"{base_url}/health", timeout=5)
             return True
         except Exception:

@@ -30,7 +30,16 @@ from sysrepair_bench.task import _build_sample, _discover_scenarios, REPO_ROOT  
 from sysrepair_bench.scorer import dispatch_scorer  # noqa: E402
 from sysrepair_bench.rate_limiter import init_rate_limiter  # noqa: E402
 
-from .solver import neurosymbolic_solver
+# Inspect AI loads this file via importlib (file path) without package context,
+# so relative imports break under `inspect eval`. The package import path
+# (`python -m neurosymbolic.run`) still works. Try both.
+try:
+    from .solver import neurosymbolic_solver
+except ImportError:
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+    from neurosymbolic.solver import neurosymbolic_solver
 
 
 @task

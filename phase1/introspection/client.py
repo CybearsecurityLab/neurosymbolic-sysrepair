@@ -217,6 +217,58 @@ class OSQueryThriftInterface(OSQueryInterface):
 
 
 # =============================================================================
+# Container Shell Interface
+# =============================================================================
+
+
+class OSQueryContainerInterface(OSQueryInterface):
+    """Runs osqueryi inside a Docker container via exec.
+
+    Requires osqueryi to be installed in the container image. If it isn't,
+    `is_available()` returns False and the caller is expected to fall back to
+    an empty state extraction.
+    """
+
+    def __init__(self, container, osqueryi_path: str = "osqueryi") -> None:
+        self.container = container
+        self.osqueryi_path = osqueryi_path
+        self._available = False
+        self.version: Optional[str] = None
+        self._check_availability()
+
+    def _check_availability(self) -> None:
+        from common.container import ScenarioContainerManager
+        res = ScenarioContainerManager.exec(
+            self.container, [self.osqueryi_path, "--version"], timeout=10
+        )
+        self._available = res.ok and bool(res.stdout.strip())
+        self.version = res.stdout.strip() if self._available else None
+
+    def is_available(self) -> bool:
+        return self._available
+
+    def execute_query(self, sql: str) -> List[dict]:
+        if not self._available:
+            raise RuntimeError("osqueryi is not available in the scenario container")
+        from common.container import ScenarioContainerManager
+        # osqueryi accepts the SQL as an argument; use list form to avoid shell quoting headaches
+        res = ScenarioContainerManager.exec(
+            self.container,
+            [self.osqueryi_path, "--json", sql],
+            timeout=60,
+        )
+        if not res.ok:
+            raise RuntimeError(f"osqueryi failed: {res.stderr.strip() or res.stdout.strip()}")
+        out = res.stdout.strip()
+        if not out:
+            return []
+        try:
+            return json.loads(out)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse osquery JSON output: {e}")
+
+
+# =============================================================================
 # Factory
 # =============================================================================
 

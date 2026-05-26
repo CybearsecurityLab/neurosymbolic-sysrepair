@@ -4,9 +4,13 @@ Configuration for Phase 3: Iterative Refinement via Exploration Walks
 
 import os
 import logging
+import threading
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("Phase3.Config")
+
+# concurrency cap for Phase 3 LLM calls.
+LLM_CONCURRENCY_GATE = threading.Semaphore(8)
 
 
 @dataclass

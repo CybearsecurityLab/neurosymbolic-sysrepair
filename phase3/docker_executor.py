@@ -6,6 +6,7 @@ and observing their effects on the environment.
 """
 
 import logging
+import shlex
 import time
 from typing import Optional
 from dataclasses import dataclass
@@ -67,10 +68,7 @@ class DockerExecutor:
                 logger.info(f"Pulling image: {self.config.image}")
                 self.client.images.pull(self.config.image)
 
-            # Start container
-            self.container = self.client.containers.run(
-                **self.config.to_docker_kwargs()
-            )
+            self.container = self.client.containers.run(**self._run_kwargs_with_keepalive())
 
             # Wait for container to be ready
             deadline = time.time() + self.config.startup_timeout
@@ -98,6 +96,36 @@ class DockerExecutor:
         except Exception as e:
             logger.exception(f"Failed to start container: {e}")
             return False
+
+    def _run_kwargs_with_keepalive(self) -> dict:
+        """Build containers.run() kwargs with a keep-alive PID 1.
+
+        The scenario image's CMD (e.g. ``sshd -D`` against a tmpfs /run) often
+        exits immediately, leaving the container dead and every exec returning
+        409. Wrap with a bash loop that reaps zombies and stays alive, after
+        backgrounding the image's original CMD so services still try to start.
+
+        Used by BOTH start_container() AND _recreate_container() — both paths
+        need the wrapper or the container dies on the very next exec.
+        """
+        run_kwargs = self.config.to_docker_kwargs()
+        keepalive = (
+            'trap "wait" SIGCHLD; '
+            "while true; do wait -n 2>/dev/null || sleep 1; done"
+        )
+        try:
+            img = self.client.images.get(self.config.image)
+            original_cmd = img.attrs.get("Config", {}).get("Cmd") or []
+        except Exception:
+            original_cmd = []
+        if original_cmd:
+            cmd_str = " ".join(shlex.quote(c) for c in original_cmd)
+            wrapper = f"{cmd_str} & {keepalive}"
+        else:
+            wrapper = keepalive
+        run_kwargs["entrypoint"] = ["/bin/bash", "-c"]
+        run_kwargs["command"] = [wrapper]
+        return run_kwargs
 
     def _cleanup_existing(self):
         """Remove any existing container with the same name."""
@@ -371,10 +399,10 @@ class DockerExecutor:
                     pass
                 self.container = None
 
-            # Start a fresh container
-            self.container = self.client.containers.run(
-                **self.config.to_docker_kwargs()
-            )
+            # Start a fresh container WITH the keep-alive wrapper. Without it,
+            # the scenario image's own CMD (e.g. sshd -D against tmpfs:/run)
+            # exits immediately and every subsequent exec gets 409.
+            self.container = self.client.containers.run(**self._run_kwargs_with_keepalive())
 
             # Wait for container to be ready
             deadline = time.time() + self.config.startup_timeout
