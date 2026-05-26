@@ -178,8 +178,30 @@ def merge_canonical_into_domain(domain_path) -> dict:
 
     preds_to_add = _missing_predicates(text, CANONICAL_PREDICATES)
     acts_to_add = _missing_actions(text, CANONICAL_ACTIONS)
-    if not preds_to_add and not acts_to_add:
-        return {"predicates_added": [], "actions_added": []}
+
+    # Ensure the types referenced by the canonical predicates / actions are
+    # declared in (:types ...). Phase 2's auto-generated domain typically
+    # has `file`, `service`, etc., but not `setting` or `value` — those
+    # come ONLY from the canonical config-edit predicates. Without them
+    # declared, Fast Downward's translator rejects the domain with
+    # `KeyError: 'setting'` and the planner cannot run. This is the
+    # symmetric fix to canonical predicates: if you add a typed predicate,
+    # the type must also exist. We check this BEFORE the early-return so
+    # an already-merged-but-missing-type domain still gets repaired.
+    types_added: list[str] = []
+    types_needed = {"setting", "value"}
+    m_types = re.search(r"\(:types\b([\s\S]*?)\)", text)
+    if m_types:
+        existing_types = set(re.findall(r"[A-Za-z_][\w-]*", m_types.group(1)))
+        missing = sorted(t for t in types_needed if t not in existing_types)
+        if missing:
+            close = m_types.end() - 1
+            insertion = f"\n    ; Config-edit primitive types (canonical)\n    {' '.join(missing)} - object"
+            text = text[:close] + insertion + "\n  " + text[close:]
+            types_added = missing
+
+    if not preds_to_add and not acts_to_add and not types_added:
+        return {"predicates_added": [], "actions_added": [], "types_added": []}
 
     # Insert new predicates into (:predicates ...) — extend, don't replace.
     if preds_to_add:
@@ -220,7 +242,12 @@ def merge_canonical_into_domain(domain_path) -> dict:
         text = text[:last_close] + action_blocks + text[last_close:]
 
     p.write_text(text)
+    # Also write types_added to the result if any were added.
+    if types_added:
+        # Continue building the standard return below; just attach types.
+        pass
     return {
+        "types_added": types_added,
         "predicates_added": preds_to_add,
         "actions_added": [a["name"] for a in acts_to_add],
     }

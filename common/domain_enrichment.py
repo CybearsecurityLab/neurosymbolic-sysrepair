@@ -62,9 +62,23 @@ def _primary_command(template: str) -> str | None:
 def action_capabilities(
     phase1_metadata: Path | str,
     concretizer_cache: Path | str | None = None,
+    partial_domains: Path | str | None = None,
 ) -> dict[str, str]:
     """Returns ``{action_name: capability_key}`` for every action whose
-    template's primary command maps to a known Capability."""
+    template's primary command maps to a known Capability.
+
+    Sources, in order of preference:
+
+    * ``phase1_metadata`` — the canonical Phase 1 mined action list.
+    * ``partial_domains`` — Phase 2's LLM-synthesised actions, before
+      they're merged into the unified domain. Many actions only exist
+      here (their ``command_template`` was never round-tripped through
+      the concretizer cache), so without this pass the capability
+      enrichment misses iptables/systemctl-using LLM-synth actions and
+      they leak into the EW walks as ``command not found`` discrepancies.
+    * ``concretizer_cache`` — actions whose templates were filled in at
+      EW time. Useful for second-and-later pipeline cycles.
+    """
     cmd_to_cap = command_to_capability()
     out: dict[str, str] = {}
 
@@ -81,6 +95,19 @@ def action_capabilities(
                 _consider(a.get("name", ""), a.get("command_template", "") or "")
         except (OSError, json.JSONDecodeError) as e:
             logger.warning(f"could not read {p1}: {e}")
+
+    if partial_domains:
+        pd = Path(partial_domains)
+        if pd.exists():
+            try:
+                workers = json.loads(pd.read_text())
+                if isinstance(workers, list):
+                    for w in workers:
+                        for a in w.get("actions", []) or []:
+                            _consider(a.get("name", ""),
+                                      a.get("command_template", "") or "")
+            except (OSError, json.JSONDecodeError) as e:
+                logger.warning(f"could not read {pd}: {e}")
 
     if concretizer_cache:
         c = Path(concretizer_cache)
@@ -265,6 +292,7 @@ def enrich_in_place(
     phase1_metadata: Path,
     capabilities: dict[str, bool],
     concretizer_cache: Path | None = None,
+    partial_domains: Path | None = None,
     backup_suffix: str = ".pre-enrich.pddl",
 ) -> dict:
     """Add capability-based preconditions to ``domain_path`` and capability
@@ -277,7 +305,11 @@ def enrich_in_place(
     domain_path.with_suffix(backup_suffix).write_text(domain_path.read_text())
 
     cap_to_pred = capability_to_predicate()
-    act_to_cap = action_capabilities(phase1_metadata, concretizer_cache)
+    act_to_cap = action_capabilities(
+        phase1_metadata,
+        concretizer_cache=concretizer_cache,
+        partial_domains=partial_domains,
+    )
     new_domain, added_preds = enrich_domain_text(domain_path.read_text(), act_to_cap)
     domain_path.write_text(new_domain)
 

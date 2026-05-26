@@ -57,10 +57,6 @@ def print_banner():
 """)
 
 
-# ---------------------------------------------------------------------------
-# Phase runners
-# ---------------------------------------------------------------------------
-
 def run_phase1(output_dir: Path, container, llm_settings) -> dict:
     print("\n" + "=" * 70)
     print("PHASE 1: SYSTEM INTROSPECTION (scenario container)")
@@ -173,6 +169,10 @@ def run_phase3(
     config.output_dir = str(output_dir / "phase3")
     config.ew_target_score = target_score
     config.max_refinement_iterations = max_iterations
+    # Override planner path from config.yaml (default is a foreign absolute path).
+    fd_path = config_loader.get("planner.fast_downward_path")
+    if fd_path:
+        config.planner.fast_downward_path = fd_path
     # Point the action concretizer at THIS scenario's Phase 1 metadata
     # (command templates). The default is a static, scenario-unaware path
     # that ends up reading stale data from earlier runs.
@@ -193,10 +193,6 @@ def run_phase3(
     orchestrator = Phase3Orchestrator(config=config, scenario_image=scenario_image)
     return orchestrator.run()
 
-
-# ---------------------------------------------------------------------------
-# Reporting
-# ---------------------------------------------------------------------------
 
 def generate_report(
     output_dir: Path,
@@ -261,9 +257,6 @@ def validate_final_pddl(domain_path: Path) -> tuple:
         return False, f"Parse error: {msg[:300]}"
 
 
-# ---------------------------------------------------------------------------
-# Scenario selection
-# ---------------------------------------------------------------------------
 
 def resolve_scenarios(args, default_bench: str) -> list[Scenario]:
     bench = Path(args.bench or default_bench)
@@ -291,9 +284,6 @@ def resolve_scenarios(args, default_bench: str) -> list[Scenario]:
     return scenarios
 
 
-# ---------------------------------------------------------------------------
-# Per-scenario pipeline
-# ---------------------------------------------------------------------------
 
 def run_one_scenario(
     scenario: Scenario,
@@ -344,34 +334,9 @@ def run_one_scenario(
             phase2_results = run_phase2(output_dir, phase1_results, c, llm_settings,
                                         reuse_phase1_actions=args.reuse_phase1_actions)
 
-    # ----- Environment-aware domain enrichment (between Phase 2 and Phase 3) -----
-    # Add capability-based preconditions to actions and matching :init facts to
-    # the problem so the planner avoids infeasible actions. Pure PDDL move:
-    # better preconditions + correct init state. No pruning, no special-cases.
-    if phase2_results.get("success") and domain_path.exists():
-        try:
-            from common.domain_enrichment import enrich_in_place
-            from common.pddl_validation import assert_valid_domain, assert_valid_problem
-            # Pull container-probed capabilities out of phase1 state
-            state = phase1_results.get("_state") or phase1_results.get("phase1_state") or {}
-            caps = (state.get("metadata") or {}).get("capabilities") or {}
-            report = enrich_in_place(
-                domain_path=domain_path,
-                problem_path=problem_path if problem_path.exists() else None,
-                phase1_metadata=output_dir / "phase1_statep2.json",
-                capabilities=caps,
-                concretizer_cache=output_dir / "phase3" / "concretizer_cache.json",
-            )
-            print(f"[*] Domain enrichment: tagged "
-                  f"{report['actions_with_capability_preconds']} actions, "
-                  f"added {len(report['predicates_added'])} predicates, "
-                  f"wrote {len(report['init_facts_added'])} init facts")
-            # Validate enriched artifacts immediately.
-            assert_valid_domain(domain_path, source="enriched.domain")
-            if problem_path.exists():
-                assert_valid_problem(domain_path, problem_path, source="enriched.problem")
-        except Exception as e:
-            print(f"[!] Domain enrichment skipped due to error: {e}")
+    # Phase 2's orchestrator now runs the environment-enrichment pass
+    # internally (so single-phase runs and the full pipeline both benefit).
+    # No explicit enrichment call needed here.
 
     # -------- Phase 3 (its own container, built from the scenario image) --------
     phase3_results = None
@@ -408,9 +373,6 @@ def run_one_scenario(
     return 0
 
 
-# ---------------------------------------------------------------------------
-# Entrypoint
-# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(

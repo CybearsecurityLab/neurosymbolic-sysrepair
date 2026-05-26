@@ -804,15 +804,66 @@ class ActionConcretizer:
                 template = template.replace(value, f"{{{key}}}", 1)
         return template
 
+    # Cache pollution heuristics: any cached template containing one of
+    # these substrings is the LLM's "I don't know" answer and should be
+    # discarded on load — caching it locks us into the failure forever.
+    _CACHE_POLLUTION_SUBSTRS = (
+        "Error:",
+        "error:",
+        "no available command in toolkit",
+        "parameter is required",
+        "parameter required but not provided",
+        "I don't know",
+        "I cannot",
+        "not applicable",
+    )
+
     def _load_cache(self, path: str) -> dict[str, str]:
-        """Load cache from disk."""
+        """Load cache from disk, dropping polluted entries.
+
+        The concretizer cache is a runtime artifact filled by an LLM
+        during EW walks. Three classes of pollution accumulate over
+        repeated runs and silently re-introduce failures:
+
+        1. **Error literals** — the LLM returned ``echo "Error: arch
+           parameter is required"`` instead of a real bash command.
+        2. **Hardcoded user/group names** — the LLM substituted the
+           binding value back as a literal (e.g. cached
+           ``usermod -l {user} lp``) so every later binding fights
+           the cache.
+        3. **Stale entries** for actions that no longer exist in the
+           current domain (template validator may have dropped them).
+
+        We can't fix (3) here because the cache loader doesn't see the
+        domain, but (1) is a string-match drop and the cache miss is
+        always safe — the concretizer falls back to Tier 1 (Phase 1
+        template) or Tier 2 (fresh LLM call).
+        """
         try:
-            if Path(path).exists():
-                with open(path) as f:
-                    return json.load(f)
+            if not Path(path).exists():
+                return {}
+            with open(path) as f:
+                raw = json.load(f)
         except (json.JSONDecodeError, OSError) as e:
             logger.warning(f"Failed to load concretizer cache: {e}")
-        return {}
+            return {}
+
+        clean: dict[str, str] = {}
+        dropped = 0
+        for k, v in raw.items():
+            cmd = v.get("command") if isinstance(v, dict) else v
+            if not isinstance(cmd, str) or not cmd.strip():
+                dropped += 1
+                continue
+            if any(p in cmd for p in self._CACHE_POLLUTION_SUBSTRS):
+                dropped += 1
+                continue
+            clean[k] = cmd
+        if dropped:
+            logger.info(
+                f"Concretizer cache: dropped {dropped} polluted entries on load"
+            )
+        return clean
 
     def _save_cache(self):
         """Save cache to disk."""

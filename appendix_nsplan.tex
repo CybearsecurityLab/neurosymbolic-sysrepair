@@ -1,0 +1,197 @@
+% =====================================================================
+\appendix
+\section{\nsplan Implementation in Detail}
+\label{app:nsplan}
+% =====================================================================
+
+This appendix expands the six-stage pipeline of Section~\ref{subsec:nsplan} into the engineering specification needed to reproduce \nsplan. We describe, in order, how the live host is lifted into a typed state model (\ref{app:introspection}), how the domain is mined and merged from \texttt{man(1)} pages (\ref{app:domain}), how preconditions are tightened by rule synthesis and capability enrichment (\ref{app:enrich}), the type and predicate vocabulary the planner reasons over (\ref{app:vocab}), how each scenario is lifted into a PDDL problem (\ref{app:problem}), the classical planner configuration (\ref{app:planner}), how planned operators are lowered to shell (\ref{app:lowering}), the exploration-walk refinement loop that closes the symbolic-empirical gap (\ref{app:ew}), and the end-to-end orchestration and validation surfaces (\ref{app:orchestration}, \ref{app:validation}). All file paths refer to the released artifact at the URL in Section~\ref{sec:intro}.
+
+\subsection{State Introspection and Anchor-and-Propagate Scoping}
+\label{app:introspection}
+
+State introspection is performed by an osquery~3.1.1 extension started by \nsplan over Thrift, exposing the standard SQL tables (\texttt{packages}, \texttt{services}, \texttt{listening\_ports}, \texttt{users}, \texttt{groups}, \texttt{processes}, \texttt{file}, \texttt{interface\_addresses}). A shell-mode fallback (\texttt{osqueryi --json}) is retained for container builds without the Thrift socket. The introspection module (\texttt{phase1/introspection/client.py}, classes \texttt{OSQueryThriftInterface} and \texttt{OSQueryShellInterface}) emits a stream of typed records that are converted into ground predicates by \texttt{phase1/introspection/extractor.py}.
+
+The raw snapshot of a real host is too large to ground into a PDDL problem efficiently: an Ubuntu image with a single workload exposes on the order of $10^3$ installed packages, several hundred files matching scoped paths, and dozens of system accounts the operator never reasons about. \nsplan therefore applies an \emph{Anchor-and-Propagate} reduction (\texttt{phase1/introspection/scoping.py}, class \texttt{ScopeAnalyzer}) before the state is emitted to disk:
+
+\begin{enumerate}
+  \item \emph{Anchor selection.} The set of user-facing entities is designated as anchors: every socket reported in \texttt{listening\_ports}, every \texttt{service} that is currently active, every \texttt{human\_user} (non-system UID), and a root anchor.
+  \item \emph{Dependency-graph construction.} Edges are emitted for ownership (\texttt{file\_owned\_by}, \texttt{process\_owned\_by}), control (\texttt{service\_depends\_on\_package}, \texttt{configures}), and membership (\texttt{member\_of}), giving a directed graph over the typed entity set.
+  \item \emph{Reachability propagation.} A breadth-first sweep from the anchor set marks every entity reachable along ownership, control, or configuration edges.
+  \item \emph{Pruning.} Entities not marked are discarded from the lifted state. The pre- and post-reduction counts are logged in the metadata block (\texttt{scoping\_method}, \texttt{anchor\_count}, \texttt{reachable\_count}, \texttt{pruned\_count}).
+\end{enumerate}
+
+The output is a \texttt{Phase1State} (\texttt{common/models.py}) with three fields: \texttt{objects} (a map from type name to the list of surviving identifiers), \texttt{predicates} (ground facts, one per row), and \texttt{relationships} (the typed edges retained for downstream enrichment). The same module also exports a \emph{legacy} scoping mode using static per-type caps, which we retain only as a baseline for the ablation in Table~\ref{tab:headline}.
+
+\subsection{Domain Generation: Map--Reduce Mining and Merging}
+\label{app:domain}
+
+The PDDL domain is constructed in two LLM stages, each of which is required to emit text that parses against the \texttt{pddl} reference grammar~\cite{pddllib} before it is admitted.
+
+\paragraph{Phase~1: per-utility extraction.}
+The man-page parser (\texttt{phase1/mining/manpage\_parser.py}, \texttt{ManPageParser.create\_hybrid\_parser}) reads the \texttt{man(1)} entries for the system-administration utilities partitioned into six groups: \emph{package management} (\texttt{apt-get}, \texttt{dpkg}), \emph{service management} (\texttt{systemctl}, \texttt{service}), \emph{file operations} (\texttt{chmod}, \texttt{chown}, \texttt{touch}, \texttt{rm}), \emph{network} (\texttt{iptables}, \texttt{ip}), \emph{privilege} (\texttt{sudo}, \texttt{su}), and \emph{user management} (\texttt{useradd}, \texttt{usermod}, \texttt{passwd}, \texttt{groupadd}). Extraction uses the \texttt{langextract} library backed by the configured LLM (Section~\ref{sec:setup}). For MiniMax models the parser strips \texttt{<think>} reasoning blocks before JSON parsing (\texttt{\_sanitize\_minimax\_output}). Each extracted record is an \texttt{ActionSchema} with a typed parameter list, a positive precondition set, an effect set, and a shell-command template harvested from the SYNOPSIS section of the man page.
+
+\paragraph{Phase~2: parallel workers and merger.}
+Phase~2 spawns one worker per utility group (\texttt{phase2/supervisor.py}, \texttt{phase2/worker.py}). Each worker is given the \texttt{PDDL\_SYNTAX\_GUIDE} from \texttt{common/pddl\_rules.py} and the canonical type set from \texttt{common/type\_hierarchy.py}, and is constrained to produce a \texttt{PartialPDDLDomain} drawing only from the approved types and predicate signatures; invalid constructs (\texttt{(assert\dots)}, \texttt{(equal\dots)}, quantifiers, implications) are blocked at the prompt level and re-checked at parse time. Each worker may reuse the Phase~1 \texttt{ActionSchema} list as a seed.
+
+The merger (\texttt{phase2/merger.py}, \texttt{MergerAgent}) executes the reduce step:
+
+\begin{enumerate}
+  \item Repair LLM-emitted syntax via \texttt{PDDLSanitizer.repair} (reserved-keyword substitution, balanced-paren reconstruction; see~\ref{app:validation}).
+  \item Unify types against \texttt{CORE\_TYPE\_HIERARCHY}; coerce hallucinated type names (\texttt{normalize\_type}).
+  \item Deduplicate predicates by signature, dropping any predicate whose argument types are not declared in the unified hierarchy.
+  \item Merge operators: a signature collision is resolved by intersecting the precondition sets (the conservative direction, which never \emph{loosens} an operator) and unioning the effect sets, then re-validating.
+  \item Inject the hand-engineered \emph{canonical actions} from \texttt{common/canonical\_actions.py} (e.g.\ \texttt{edit\_config\_setting}, \texttt{reload\_sshd\_no\_systemd}), which encode primitives that recur across scenarios but are not surfaced cleanly by any single man page.
+  \item Validate the merged domain end-to-end with \texttt{pddl.parse\_domain}; an unparseable merge is repaired by per-operator regeneration up to a fixed bound, after which the offending operator is dropped and the failure is logged.
+\end{enumerate}
+
+The result is a single \texttt{sysadmin.pddl} file whose operators are typed, deduplicated, and grammar-clean before any enrichment is applied.
+
+\subsection{Enrichment and Precondition Synthesis}
+\label{app:enrich}
+
+The merged domain is then tightened in two passes that consume no further LLM tokens.
+
+\paragraph{Environment enrichment.}
+\texttt{common/domain\_enrichment.py} probes the scenario container for the system-administration capabilities the merged operators implicitly assume (presence of systemd, \texttt{iptables}, \texttt{apt}, \texttt{snap}, an active firewall, MAC enforcement) and maps each operator's primary command (the leading token of its \texttt{command\_template}) to a \texttt{Capability} from \texttt{common/env\_capabilities.py}. The corresponding capability predicate (e.g.\ \texttt{systemd\_init\_present}, \texttt{apt\_available}) is then conjoined into the operator's \texttt{:precondition} block. The original domain is preserved as \texttt{sysadmin.pre-enrich.pddl} for auditability. The enrichment step is what prevents \nsplan from emitting, say, a \texttt{systemctl}-bearing plan against a container booted under \texttt{sysvinit}: the planner refuses the operator outright rather than the harness failing the action at runtime.
+
+\paragraph{Rule-based precondition synthesis.}
+\texttt{common/precondition\_synthesis.py} encodes a closed rule table for the canonical sysadmin actions where the man-page mining is known to under-specify the precondition set:
+\texttt{useradd} requires the named user \emph{not} to exist;
+\texttt{passwd}, \texttt{chage}, and \texttt{usermod} require the user to exist and not be \texttt{user\_critical};
+\texttt{su} requires the target user to exist and to satisfy \texttt{can\_login};
+\texttt{rm} and \texttt{chmod} require \texttt{file\_exists};
+\texttt{touch} requires the file \emph{not} to exist;
+\texttt{groupadd} requires the group \emph{not} to exist.
+The rule table is matched against the operator's command token and parameter signature in a single static pass; no LLM is invoked. These rules are essential because the man pages document the \emph{flags}, not the \emph{state} the operator assumes, and the planner cannot enforce what the operator never asserts.
+
+\subsection{Type Hierarchy and Predicate Vocabulary}
+\label{app:vocab}
+
+The type hierarchy that all operators are typed against is fixed in \texttt{common/type\_hierarchy.py}:
+
+\begin{verbatim}
+object
+  filesystem_object
+    file
+    directory
+      configuration_file
+  service
+  process
+  package
+  repository
+  user
+    system_user
+    human_user
+  group
+  port
+  interface
+  firewall_rule
+\end{verbatim}
+
+\noindent The predicate vocabulary (\texttt{common/predicates.py}) is partitioned into:
+
+\begin{itemize}
+  \item \emph{Static relations} (set at introspection and never rewritten by an action):
+    \texttt{depends\_on(service, package)}, \texttt{configures(configuration\_file, service)},
+    \texttt{file\_owned\_by(file, user)}, \texttt{member\_of(user, group)}.
+  \item \emph{Dynamic state} (the targets of operator effects): per-type \texttt{package\_installed}, \texttt{package\_outdated}, \texttt{vulnerable}, \texttt{service\_running}, \texttt{service\_enabled}, \texttt{service\_failed}, \texttt{config\_applied}, \texttt{file\_exists}, \texttt{file\_readable}, \texttt{file\_writable}, \texttt{file\_permissions}, \texttt{user\_exists}, \texttt{user\_critical}, \texttt{can\_login}, \texttt{group\_exists}, \texttt{setting\_value\_is}.
+  \item \emph{Environment capabilities} (0-arity, set by enrichment from a container probe): \texttt{systemd\_init\_present}, \texttt{iptables\_available}, \texttt{apt\_available}, etc.
+\end{itemize}
+
+The split matters for the verifiability contract of Section~\ref{subsec:nsplan}: static relations are evidence, dynamic state is the surface the plan must traverse, and capability predicates close the domain over what the host actually supports.
+
+\subsection{Problem Generation}
+\label{app:problem}
+
+For each scenario, \nsplan synthesises a PDDL problem from the lifted state plus the scenario brief (\texttt{neurosymbolic/solver.py}, \texttt{\_PROBLEM\_GEN\_SYSTEM}). The prompt receives a compact domain summary (declared types, predicate signatures with arity, operator signatures with truncated \texttt{:precondition} and \texttt{:effect} bodies) together with the scenario's vulnerability description and the current system snapshot (a fixed osquery probe set \texttt{\_INTROSPECT\_CMDS}). The LLM is asked to emit only the \texttt{:objects}, \texttt{:init}, and \texttt{:goal} blocks; the domain itself is fixed:
+
+\begin{enumerate}
+  \item \texttt{:objects} declares the constants the goal references (e.g.\ \texttt{sshd\_config~--~file}, \texttt{PermitRootLogin~--~setting}, \texttt{yes no~--~value}). Identifiers are restricted to the type set of~\ref{app:vocab}.
+  \item \texttt{:init} is a list of ground facts asserting the predicates that hold in the introspected state, plus any prerequisites for the goal predicates (so that the planner has a satisfiable starting point).
+  \item \texttt{:goal} is a conjunction of (i) the \emph{negated exploit predicate} corresponding to the scenario (e.g.\ \texttt{(setting\_value\_is PermitRootLogin no)} for an SSH \texttt{PermitRootLogin yes} vulnerability) and (ii) an \emph{availability predicate} for every service operational in the pre-state (e.g.\ \texttt{(service\_running sshd)}). The second conjunct is what makes the planner refuse the obvious-but-destructive remediations (e.g.\ stop the service to satisfy the security predicate); the goal is not reachable unless the service is up at termination.
+\end{enumerate}
+
+The emitted problem is parsed with \texttt{pddl.parse\_problem} against the unified domain. On a parse failure, the parser error is appended to the prompt and a single regeneration attempt is permitted; a second failure halts \nsplan with the structured outcome \texttt{PROBLEM\_GENERATION\_FAILED}.
+
+\subsection{Classical Planner Configuration}
+\label{app:planner}
+
+Planning is performed by Fast Downward~\cite{helmert2006fastdownward} invoked as a sub-process (\texttt{neurosymbolic/solver.py}, \texttt{\_run\_fast\_downward}). The search configuration is \texttt{eager\_greedy([ff()])}: eager greedy best-first search guided by the FF relaxed-plan heuristic. The default planner budget is 120~s of wall-clock; the per-scenario harness budget of \ref{subsec:harness} bounds the call from above. Fast Downward writes a sequence of \texttt{sas\_plan*} files; \nsplan parses the last (lowest-cost) one into a list of grounded operator invocations and proceeds to lowering. A failure of the planner to find any plan within the budget terminates with the outcome \texttt{PLANNER\_FOUND\_NO\_PLAN}. Inadmissibility of the heuristic is acceptable because the plan is in any case validated by execution against the oracle of~\ref{subsec:oracle}; we are not searching for an optimal plan, only a satisfiable one.
+
+\subsection{Plan-to-Shell Lowering}
+\label{app:lowering}
+
+Each grounded operator is lowered to one or more shell invocations through a two-tier dispatcher (\texttt{neurosymbolic/solver.py}, lines~146--189; \texttt{phase3/action\_concretizer.py}).
+
+\begin{itemize}
+  \item \emph{Tier 0: Phase~1 command-template cache.} The \texttt{ActionSchema} entries harvested from man pages carry a verbatim \texttt{command\_template} which is reused when the operator's signature matches by name and arity.
+  \item \emph{Tier 1: \texttt{\_ACTION\_TEMPLATES} dictionary.} A static table of $\sim$20 canonical lowerings covers the high-frequency operators: \texttt{install\_package} $\mapsto$ \texttt{apt-get install -y \{0\}}; \texttt{restart\_service} $\mapsto$ \texttt{(service \{0\} restart 2>/dev/null) || systemctl restart \{0\}}; \texttt{set\_setting\_no} $\mapsto$ the canonical \texttt{sed} rewrite of \texttt{PermitRootLogin no} in \texttt{sshd\_config}; \texttt{edit\_config\_setting} $\mapsto$ a parameterised \texttt{sed -i} on the resolved config path. Identifiers are passed through type-aware normalisers (\texttt{\_CONFIG\_PATH\_ALIASES} resolves \texttt{sshd\_config} to \texttt{/etc/ssh/sshd\_config}; setting keys are case-folded and stripped of PDDL separators before substitution).
+  \item \emph{Tier 2: LLM concretiser fallback.} For operators with no template entry, a one-shot LLM call (\texttt{phase3} concretiser, slightly higher temperature than the planning calls) is issued with the operator's PDDL definition, the bound parameters, the vulnerability brief, and an environment probe. The response is sanitised: \texttt{<think>} blocks, markdown code fences, and language tags are stripped; a reflexive \texttt{sudo} prefix is removed (the harness already runs as \texttt{root} inside the container); and the result is rejected if it is the literal operator name (a safety check against a degenerate completion). Successful lowerings are cached against the operator signature.
+\end{itemize}
+
+\subsection{Exploration-Walk Refinement of the Domain}
+\label{app:ew}
+
+A typed precondition model is necessary but not sufficient for live remediation: an operator can satisfy every symbolic precondition and still produce a regression at runtime through init-script timing, resource contention, or a configuration reload that drops in-flight connections. \nsplan closes this gap with an \emph{exploration-walk} (EW) refinement loop~\cite{ewpaper} that runs once per domain, \emph{offline}, before any scenario is executed.
+
+\paragraph{Simulator.}
+The PDDL simulator (\texttt{phase3/pddl\_simulator.py}, \texttt{PDDLStateSimulator}) maintains a closed-world set of ground facts and a per-type object pool drawn from the lifted state. At each step it applies a three-tier filter to the operator library:
+
+\begin{enumerate}
+  \item \emph{Tier 1 (legal-action filter).} Drop operators whose positive precondition predicates are absent from the state index.
+  \item \emph{Tier 2 (grounding filter).} For each surviving operator, attempt to ground its variables against the type pools.
+  \item \emph{Tier 3 (precondition evaluation).} For each successful grounding, verify the full precondition conjunction in the current state.
+\end{enumerate}
+
+A fully applicable grounded operator is sampled uniformly, lowered through~\ref{app:lowering}, executed in the live container, and the state is updated by applying the operator's add/delete effects.
+
+\paragraph{Discrepancy detection.}
+After execution, the simulator compares the predicted post-state to the post-state observed by a follow-up osquery probe. An operator whose execution \emph{fails} despite satisfying its preconditions (non-zero exit, expected effect not observed) is logged as a \emph{discrepancy} against the action name and a structured failure mode (exit code, stderr pattern, missing effect predicate).
+
+\paragraph{EW score and repair loop.}
+The refiner (\texttt{phase3/refiner.py}, \texttt{calculate\_ew\_score}) runs $N$ walks of depth $T_{\max}$ ($N$ and $T_{\max}$ are auto-scaled to domain size or read from \texttt{config.yaml}). The EW score is the fraction of PDDL-legal grounded operators that succeeded in the container. An operator with persistent discrepancies is targeted by a per-action repair LLM call (max 100 per iteration), the repaired domain is re-validated against the \texttt{pddl} grammar, and the loop iterates until the EW score crosses a configurable threshold (default 0.9) or a fixed iteration budget is exhausted. On a catastrophic regression the refiner rolls back to the highest-scoring domain seen so far.
+
+The refined domain is then frozen for scenario evaluation: at scenario time the planner is invoked against the post-refinement \texttt{sysadmin\_refined.pddl} without further offline adaptation.
+
+\subsection{End-to-End Orchestration}
+\label{app:orchestration}
+
+\texttt{run\_pipeline.py} executes the three phases in disposable containers:
+
+\begin{enumerate}
+  \item \emph{Phase~1 (container A, fresh base image).} osquery introspection, man-page mining, initial \texttt{Phase1State} and seed \texttt{ActionSchema} list. Output: \texttt{phase1\_state.json}.
+  \item \emph{Phase~2 (container B, fresh base image).} Parallel utility-group workers, merge, canonical-action injection, environment enrichment, rule-based precondition synthesis. Output: \texttt{sysadmin.pddl}.
+  \item \emph{Phase~3 (container C, scenario image).} Exploration-walk refinement loop driven by the live container, terminating on EW threshold or iteration cap. Output: \texttt{sysadmin\_refined.pddl}.
+\end{enumerate}
+
+The neurosymbolic solver (\texttt{neurosymbolic/solver.py}, \texttt{neurosymbolic\_solver}) is registered as an Inspect~AI~\cite{UKAISI2024Inspect} \texttt{@solver}, so the per-scenario call signature \texttt{solve(state, generate)} is identical to the four LLM baselines of~\ref{subsec:llm_solvers}. The solver loads the refined domain, runs the fixed introspection probe set, generates the problem (\ref{app:problem}), invokes the planner (\ref{app:planner}), reorders the plan once to push configuration edits before service restarts (an operational dependency that STRIPS does not capture), and executes up to 20 lowered actions through the same \texttt{bash} channel as the LLM baselines. Verification is delegated to the scenario's \texttt{verify.sh}, and the run terminates with one of the structured outcomes \texttt{NO\_DOMAIN}, \texttt{PROBLEM\_GENERATION\_FAILED}, \texttt{PLANNER\_FOUND\_NO\_PLAN}, \texttt{PLAN\_DID\_NOT\_REMEDIATE}, or \texttt{REMEDIATED}.
+
+The Inspect task wrapper (\texttt{neurosymbolic/task.py}, \texttt{neurosymbolic\_bench}) reuses the sample loader, scorer, and rate limiter of the LLM baselines, so the harness, budget, and scoring oracle of \ref{subsec:harness} and \ref{subsec:oracle} apply unchanged. The full evaluation reduces to one command, \texttt{inspect eval neurosymbolic/task.py:neurosymbolic\_bench --model M}, holding the comparison to the LLM solvers under one protocol.
+
+\subsection{PDDL Sanitisation and Validation}
+\label{app:validation}
+
+LLM-emitted PDDL fails parsing in well-known ways. \texttt{common/pddl\_sanitizer.py} (\texttt{PDDLSanitizer.repair}) applies the following deterministic rewrites before any text is sent to the parser:
+
+\begin{itemize}
+  \item Reserved-keyword substitution: \texttt{(exists\dots)} $\mapsto$ \texttt{(file\_exists\dots)}, \texttt{(start\dots)} $\mapsto$ \texttt{(is\_started\dots)}, and similar cases for tokens that PDDL reserves for quantification or temporal markers.
+  \item Identifier normalisation: filesystem paths (\texttt{/etc/passwd}) are converted to legal identifiers (\texttt{etc\_passwd}); special characters are mapped to underscores; case is preserved on user-named constants and folded on type names.
+  \item Type repair: hallucinated types (\texttt{string}, \texttt{boolean}, \texttt{integer}, CamelCase variants of valid names) are mapped through \texttt{TYPE\_MAPPINGS} to the type set of \ref{app:vocab}.
+  \item Predicate repair: paren-balanced extraction, variable scope validation (every \texttt{?x} in a body is declared in the operator parameters), and removal of malformed effect clauses.
+\end{itemize}
+
+Final validation is performed by the \texttt{pddl} library (\texttt{common/pddl\_validation.py}; \texttt{validate\_domain} and \texttt{validate\_problem} return a structured \texttt{PDDLValidationResult} with detected types, predicates, and operator names). The validator is deliberately defensive: an empty types or predicates list is treated as a silent parse failure (the parser would otherwise accept a fragment that lifts no facts), and the result is propagated as a structured failure rather than as a soft warning. The combination of sanitiser plus validator is what allows the merger of~\ref{app:domain} to recover from per-worker LLM noise without inheriting it into the planning surface.
+
+\subsection{Summary of Verifiability Guarantees}
+\label{app:summary}
+
+The verifiability contract of Section~\ref{subsec:nsplan} decomposes, concretely, into the following obligations enforced at the stages above:
+
+\begin{enumerate}
+  \item Every operator in the emitted plan satisfies a typed precondition conjunction tightened by both man-page mining (\ref{app:domain}), capability enrichment (\ref{app:enrich}), and rule-based synthesis (\ref{app:enrich}). Orderings that violate a precondition are refused by Fast Downward (\ref{app:planner}) and never reach the harness.
+  \item The domain and problem are statically validated against the \texttt{pddl} grammar (\ref{app:validation}) before planning; an unparseable artifact terminates the run with a structured outcome rather than a silent skip.
+  \item The operator library is empirically validated against the live host by the exploration-walk loop (\ref{app:ew}) before any scenario evaluation, so the precondition model and the runtime semantics are reconciled offline.
+  \item The post-execution state is scored by the same three-phase oracle (\ref{subsec:oracle}) that scores every LLM baseline, closing the loop with the same evidence the benchmark applies to every solver.
+\end{enumerate}
+
+The artifact released with \sysrepair contains, for every \nsplan run, the lifted state (\texttt{phase1\_state.json}), the refined domain (\texttt{sysadmin\_refined.pddl}), the generated problem, the Fast~Downward plan, the lowered command stream, and the oracle verdict, so that every link of the chain above is auditable post hoc.

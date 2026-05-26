@@ -57,11 +57,42 @@ _RULES: tuple[PrecondRule, ...] = (
         clauses=(("?u", "user", "user_exists", False),),  # must NOT exist
     ),
     PrecondRule(
-        primary_cmds=(
-            "passwd", "chage", "chfn", "chsh", "usermod", "userdel",
-            "gpasswd", "chpasswd",
+        primary_cmds=("chfn", "chsh", "chpasswd"),
+        clauses=(("?u", "user", "user_exists", True),),
+    ),
+    # ── Destructive / identity-mutating user ops (require non-critical) ──
+    # Canonical sysadmin invariant: removing, renaming, repassword-ing,
+    # or repointing the UID/GID of a *critical* user (root, sshd, sync,
+    # nobody, mail, …) is forbidden. Such operations on system users
+    # either fail outright (e.g., usermod refuses if pid 1 holds the
+    # uid) or destroy the system. Phase 1 already emits
+    # (user_critical ?u) facts for the system users it identifies;
+    # without this precondition the EW walks sample these against
+    # critical users and every command exits nonzero. Adding the
+    # guard is plain STRIPS preconditioning — the action is simply
+    # made inapplicable in states that the operator would reject.
+    PrecondRule(
+        primary_cmds=("userdel", "usermod", "passwd", "chage", "gpasswd"),
+        clauses=(
+            ("?u", "user", "user_exists", True),
+            ("?u", "user", "user_critical", False),
         ),
-        clauses=(("?u", "user", "user_exists", True),),  # must exist
+    ),
+    # ── Interactive shell switching requires a loginable user ──────
+    # `su -l <user>` / `su -p <user>` only work when the user has a
+    # real login shell and a valid password; system users like sync,
+    # backup, lp default to /usr/sbin/nologin and have no password →
+    # exit 1 ("Authentication failure" / "account has expired").
+    # `can_login` is a derived predicate that has to be set in init
+    # by Phase 1's introspection. If Phase 1 hasn't emitted it, the
+    # rule degrades gracefully (no parameter of type `can_login` →
+    # precondition simply not added).
+    PrecondRule(
+        primary_cmds=("su",),
+        clauses=(
+            ("?u", "user", "user_exists", True),
+            ("?u", "user", "can_login", True),
+        ),
     ),
     # ── Group existence ─────────────────────────────────────────────
     PrecondRule(
@@ -150,6 +181,7 @@ def _add_predicate_if_missing(text: str, pred: str) -> str:
         "user_exists": "user", "group_exists": "group",
         "file_exists": "file", "directory_exists": "directory",
         "package_installed": "package",
+        "user_critical": "user", "can_login": "user",
     }.get(pred, "object")
     decl = f"({pred} ?x - {type_guess})"
     m = _PREDICATES_HEAD.search(text)
@@ -166,6 +198,7 @@ def _rewrite_precondition(action_block: str, vars_by_var: dict[str, str],
                           clauses: Iterable[tuple[str, str, str, bool]]) -> str:
     """Append `clauses` to the action's :precondition `(and ...)`."""
     applicable: list[str] = []
+    flips: list[tuple[str, str]] = []  # (existing, replacement) to swap in-place
     for var, type_, pred, polarity in clauses:
         # Find a parameter of the required type
         bound_var: str | None = None
@@ -177,14 +210,22 @@ def _rewrite_precondition(action_block: str, vars_by_var: dict[str, str],
             continue
         literal = f"({pred} {bound_var})"
         neg_literal = f"(not {literal})"
-        # If either polarity already exists in the action's text, the
-        # action author already had an opinion — don't override. Adding
-        # the opposite polarity would make the action infeasible.
-        if literal in action_block or neg_literal in action_block:
+        wanted = literal if polarity else neg_literal
+        unwanted = neg_literal if polarity else literal
+
+        # Already correct → nothing to do
+        if wanted in action_block:
             continue
-        if not polarity:
-            literal = neg_literal
-        applicable.append(literal)
+        # Wrong polarity present → flip in place. This catches the
+        # common Phase-2 mining bug where a `create_*` action ends up
+        # with `(user_exists ?u)` instead of `(not (user_exists ?u))`.
+        if unwanted in action_block:
+            flips.append((unwanted, wanted))
+            continue
+        applicable.append(wanted)
+    # Apply flips first so the precondition stays well-formed.
+    for old, new in flips:
+        action_block = action_block.replace(old, new, 1)
     if not applicable:
         return action_block
 

@@ -312,6 +312,11 @@ class Phase2Orchestrator:
                 # so without this pass-through the enrichment misses
                 # gating predicates for systemctl/timedatectl/etc.
                 concretizer_cache = self.output_dir / "phase3" / "concretizer_cache.json"
+                # Phase 2's LLM-synthesised actions live in partial_domains.json
+                # with their command_templates intact; without this source the
+                # enrichment misses ~430 newly-minted actions that the merger
+                # then carries into the playable domain unguarded.
+                partial_domains = self.output_dir / "partial_domains.json"
                 if phase1_meta.exists():
                     er = enrich_in_place(
                         domain_path=domain_path,
@@ -320,6 +325,7 @@ class Phase2Orchestrator:
                         phase1_metadata=phase1_meta,
                         capabilities=caps,
                         concretizer_cache=concretizer_cache if concretizer_cache.exists() else None,
+                        partial_domains=partial_domains if partial_domains.exists() else None,
                     )
                     print(
                         f"  → Environment enrichment: "
@@ -332,6 +338,105 @@ class Phase2Orchestrator:
                     self.unified_domain = domain_path.read_text()
             except Exception as e:
                 logger.warning(f"domain enrichment skipped: {e}")
+
+            # ─── Rule-based precondition synthesis (defensible PDDL) ───
+            # Capability enrichment guards against "tool not installed" but
+            # not against "useradd on existing user" / "passwd on missing
+            # user" style failures, which are by far the highest-frequency
+            # bucket in the EW discrepancy log. We apply a small rule table
+            # of canonical sysadmin operator existence-guards (every
+            # `useradd` requires `(not (user_exists ?u))`, etc.). Same
+            # source-of-truth as enrichment: phase1 metadata, partial
+            # domains, and the concretizer cache.
+            try:
+                from common.precondition_synthesis import synthesize_in_place
+                templates: dict[str, str] = {}
+                # Phase 1 mined actions
+                p1m = self.output_dir / "phase1_statep2.json"
+                if p1m.exists():
+                    try:
+                        for a in json.loads(p1m.read_text()).get("actions", []):
+                            n = a.get("name", "")
+                            t = a.get("command_template", "") or ""
+                            if n and t and n not in templates:
+                                templates[n] = t
+                    except (OSError, json.JSONDecodeError):
+                        pass
+                # Phase 2 LLM-synthesised actions
+                pd = self.output_dir / "partial_domains.json"
+                if pd.exists():
+                    try:
+                        workers = json.loads(pd.read_text())
+                        if isinstance(workers, list):
+                            for w in workers:
+                                for a in w.get("actions", []) or []:
+                                    n = a.get("name", "")
+                                    t = a.get("command_template", "") or ""
+                                    if n and t and n not in templates:
+                                        templates[n] = t
+                    except (OSError, json.JSONDecodeError):
+                        pass
+                # Concretizer cache (later pipeline cycles)
+                cc = self.output_dir / "phase3" / "concretizer_cache.json"
+                if cc.exists():
+                    try:
+                        cache = json.loads(cc.read_text())
+                        for k, v in cache.items():
+                            cmd = v.get("command") if isinstance(v, dict) else v
+                            import re as _re
+                            m = _re.match(r"^[A-Za-z][A-Za-z0-9_]*", k)
+                            if m and cmd and m.group(0) not in templates:
+                                templates[m.group(0)] = cmd
+                    except (OSError, json.JSONDecodeError):
+                        pass
+
+                psr = synthesize_in_place(domain_path, templates)
+                print(
+                    f"  → Precondition synthesis: "
+                    f"{psr['actions_patched']} actions patched, "
+                    f"{len(psr['predicates_added'])} predicates declared"
+                )
+                results["precondition_synthesis"] = psr
+                self.unified_domain = domain_path.read_text()
+            except Exception as e:
+                logger.warning(f"precondition synthesis skipped: {e}")
+
+            # ─── Template-validity quality gate (Phase 2 ↔ Phase 3 contract) ───
+            # Drop schemas whose bash template is empty, references an
+            # unknown primary command, or uses a known-invalid flag combo.
+            # These can't be evaluated by EW; they consume the refiner's
+            # budget producing per-action repairs that never converge.
+            # Canonical operators are exempt (correct by construction).
+            try:
+                from common.template_validator import (
+                    validate_and_filter_domain,
+                    collect_templates_for_validation,
+                )
+                from common.canonical_actions import CANONICAL_ACTIONS
+                tmpls = collect_templates_for_validation(
+                    phase1_metadata=p1m if p1m.exists() else None,
+                    partial_domains=pd if pd.exists() else None,
+                    concretizer_cache=cc if cc.exists() else None,
+                )
+                tv_report = validate_and_filter_domain(
+                    domain_path=domain_path,
+                    action_templates=tmpls,
+                    canonical_names=[a["name"] for a in CANONICAL_ACTIONS],
+                )
+                print(
+                    f"  → Template validator: kept {tv_report.actions_kept}/"
+                    f"{tv_report.actions_total}, "
+                    f"dropped {tv_report.actions_dropped} "
+                    f"({tv_report.drops_by_reason})"
+                )
+                results["template_validation"] = {
+                    "kept": tv_report.actions_kept,
+                    "dropped": tv_report.actions_dropped,
+                    "drops_by_reason": tv_report.drops_by_reason,
+                }
+                self.unified_domain = domain_path.read_text()
+            except Exception as e:
+                logger.warning(f"template validation skipped: {e}")
 
             # Validate via the pddl library at the artifact boundary so
             # any structural defect surfaces here, not at planning time.

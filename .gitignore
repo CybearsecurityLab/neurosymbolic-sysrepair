@@ -238,20 +238,18 @@ __marimo__/
 # Virtual environments
 .venv
 /.idea
+
+# Claude / editor local state
+.claude/
+.claude.json
+.claude.local.json
+
+# Project-specific data / outputs
 data/wadi
-phase1/introspection/__pycache__/*
-*__pycache__*
-pddl_output/phase2/llm_logs/
-eval/results/traces
-!README.md
-*.md
-eval/results/eval_run.log
-eval/results/eval_results.db
-eval/results/eval_results.db
-eval/results/home/resbears/projects/auto-sysrepair/eval/results/*
-*.log
-pddl_output/*
-eval/*
+pddl_output/
+eval/
+logs/
+
 # Run output artifacts (created by run_pipeline.py launches)
 phase3_run.out
 phase3_run.err
@@ -260,6 +258,12 @@ full_run*.err
 phase[123]_*.out
 phase[123]_*.err
 resume_run.*
+inspect_handcrafted.err
+inspect_handcrafted.out
+sas_plan
+*.log
 *.pyc
-common/__pycache__/*
-logs/*
+
+# Ignore all Markdown except README.md (last match wins)
+*.md
+!README.md

@@ -1,9 +1,4 @@
-"""
-phase2/main.py
-
-Main entry point for Phase 2: Parallel Synthesis.
-Updated to accept the full Phase 1 state including actions, predicates, and relationships.
-"""
+"""Phase 2: Parallel Synthesis entry point."""
 
 import argparse
 import json
@@ -12,7 +7,7 @@ import sys
 import os
 from datetime import datetime
 
-# Add parent directory to path for common imports
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common.models import Phase1State
@@ -155,17 +150,10 @@ def main():
 
     args = parser.parse_args()
 
-    # =================================================================
-    # Set up logging to both console and file
-    # =================================================================
     os.makedirs(args.output_dir, exist_ok=True)
     log_file_path = setup_logging(args.output_dir, "phase2.log")
     logger.info(f"Output directory: {args.output_dir}")
     logger.info(f"Log file: {log_file_path}")
-
-    # =================================================================
-    # Load Phase 1 state - now loading FULL state, not just objects
-    # =================================================================
 
     phase1_state = None
 
@@ -226,14 +214,10 @@ def main():
         else:
             logger.info("Will generate actions from scratch")
 
-        # =================================================================
-        # Run orchestrator with full Phase 1 state
-        # =================================================================
-
         orchestrator = Phase2Orchestrator(
             hardware_config=hardware,
             llm_config=llm_config,
-            phase1_state=phase1_state,  # Pass full state
+            phase1_state=phase1_state,
             output_dir=args.output_dir,
             reuse_phase1_actions=reuse_actions,
         )

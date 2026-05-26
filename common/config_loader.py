@@ -120,10 +120,6 @@ def get(dotpath: str, default: Any = None, *, config: dict | None = None) -> Any
     return node
 
 
-# ------------------------------------------------------------------
-# Typed accessors for common subsections
-# ------------------------------------------------------------------
-
 @dataclass
 class LLMSettings:
     model: str = "gemma-4-31b"

@@ -24,6 +24,8 @@ import sys
 import os
 import time
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from datetime import datetime
 from collections import defaultdict
@@ -774,6 +776,45 @@ class DomainRefiner:
                 )
                 return None
 
+            # No-shrink guard: the LLM occasionally returns a degenerate
+            # stub for a complex action — e.g. drops the :parameters and
+            # :effect blocks, leaving an empty schema that is technically
+            # parseable but useless. Reject any repair that:
+            #   * shrinks the action by more than 40% in characters
+            #   * loses the original :parameters list
+            #   * loses the :effect block
+            if len(content) < max(80, int(len(action_pddl) * 0.6)):
+                logger.warning(
+                    f"  LLM repair for '{action_name}' shrank "
+                    f"{len(action_pddl)}→{len(content)} chars (>40% loss), "
+                    f"keeping original"
+                )
+                return None
+            orig_params = re.search(r":parameters\s*\(([^)]*)\)", action_pddl)
+            new_params = re.search(r":parameters\s*\(([^)]*)\)", content)
+            if orig_params and not new_params:
+                logger.warning(
+                    f"  LLM repair for '{action_name}' lost :parameters, "
+                    f"keeping original"
+                )
+                return None
+            if ":effect" in action_pddl and ":effect" not in content:
+                logger.warning(
+                    f"  LLM repair for '{action_name}' lost :effect, "
+                    f"keeping original"
+                )
+                return None
+            if orig_params and new_params:
+                # Variable set must be preserved (no quietly-dropped params).
+                orig_vars = set(re.findall(r"\?[\w-]+", orig_params.group(1)))
+                new_vars = set(re.findall(r"\?[\w-]+", new_params.group(1)))
+                if not orig_vars.issubset(new_vars):
+                    logger.warning(
+                        f"  LLM repair for '{action_name}' dropped vars "
+                        f"{orig_vars - new_vars}, keeping original"
+                    )
+                    return None
+
             # Validate repaired action parses as valid PDDL
             if not self._validate_single_action_pddl(content):
                 logger.warning(
@@ -938,39 +979,65 @@ class DomainRefiner:
             f"out of {len(action_blocks)} total"
         )
 
-        # Repair each broken action individually
+        # Repair each broken action individually. We parallelize across
+        # actions with a hard cap of 5 in-flight LLM calls — each call
+        # takes 8-15 s on MiniMax-M2.7, so a sequential 100-action repair
+        # is ≈ 25 minutes; 5-way parallel brings it to ≈ 5 minutes and
+        # restores the user's iteration budget. LLM_CONCURRENCY_GATE
+        # (semaphore=8) is still respected inside each worker so the
+        # concretizer's parallel calls aren't starved.
         updated_domain = original_domain
         repaired_count = 0
         failed_count = 0
+        repaired_blocks: dict[str, str] = {}
+        repaired_lock = threading.Lock()
 
-        for action_name, errors in action_errors.items():
-            if action_name not in action_blocks:
+        def _worker(item: tuple[str, list[str]]) -> tuple[str, Optional[str]]:
+            action_name_, errors_ = item
+            if action_name_ not in action_blocks:
                 logger.warning(
-                    f"  Action '{action_name}' not found in domain, skipping"
+                    f"  Action '{action_name_}' not found in domain, skipping"
                 )
-                continue
-
-            action_pddl = action_blocks[action_name]
+                return (action_name_, None)
+            action_pddl_ = action_blocks[action_name_]
             logger.info(
-                f"  Repairing '{action_name}' "
-                f"({len(errors)} discrepancies, "
-                f"{len(action_pddl)} chars)..."
+                f"  Repairing '{action_name_}' "
+                f"({len(errors_)} discrepancies, "
+                f"{len(action_pddl_)} chars)..."
+            )
+            return (
+                action_name_,
+                self._repair_single_action_with_llm(
+                    action_name_, action_pddl_, errors_
+                ),
             )
 
-            repaired = self._repair_single_action_with_llm(
-                action_name, action_pddl, errors
-            )
+        max_workers = max(1, min(5, len(action_errors)))
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = [pool.submit(_worker, item) for item in action_errors.items()]
+            for fut in as_completed(futures):
+                try:
+                    action_name, repaired = fut.result()
+                except Exception as e:
+                    logger.error(f"  Repair worker crashed: {e}")
+                    failed_count += 1
+                    continue
+                if repaired:
+                    with repaired_lock:
+                        repaired_blocks[action_name] = repaired
+                    repaired_count += 1
+                else:
+                    failed_count += 1
+                    logger.warning(
+                        f"  Could not repair '{action_name}', keeping original"
+                    )
 
-            if repaired:
-                updated_domain = self._replace_action_block(
-                    updated_domain, action_name, repaired
-                )
-                repaired_count += 1
-            else:
-                failed_count += 1
-                logger.warning(
-                    f"  Could not repair '{action_name}', keeping original"
-                )
+        # Apply all successful repairs to the domain in one pass so the
+        # update is deterministic regardless of completion order.
+        for action_name, block in repaired_blocks.items():
+            updated_domain = self._replace_action_block(
+                updated_domain, action_name, block
+            )
 
         logger.info(
             f"Targeted repair complete: "

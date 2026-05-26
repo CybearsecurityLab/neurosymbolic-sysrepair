@@ -51,7 +51,6 @@ class ScenarioContainerManager:
         self.install_osquery = install_osquery
         self._built: dict[str, str] = {}  # scenario.id -> image tag
 
-    # ----- image build --------------------------------------------------
     def build_image(self, scenario: Scenario) -> str:
         """Build the scenario image and append a layer with helper packages.
 
@@ -116,7 +115,6 @@ class ScenarioContainerManager:
         self._built[scenario.id] = final_tag
         return final_tag
 
-    # ----- container lifecycle ------------------------------------------
     def _spawn(self, image_tag: str, name: str, mem_limit: str = "2g") -> "docker.models.containers.Container":
         # Keep-alive wrapper that reaps zombies (same idea as eval/docker_manager).
         keepalive = 'trap "wait" SIGCHLD; while true; do wait -n 2>/dev/null || sleep 1; done'
@@ -173,7 +171,6 @@ class ScenarioContainerManager:
                 pass
             logger.info(f"[{scenario.id}/{phase}] container destroyed")
 
-    # ----- exec helper used by other modules ----------------------------
     @staticmethod
     def exec(container, cmd: list[str] | str, timeout: int = 30, user: str = "root") -> ExecResult:
         """Run a command in the container. Returns (exit_code, stdout, stderr)."""

@@ -1,14 +1,4 @@
-"""
-phase1/orchestrator.py
-
-Main orchestrator for Phase 1: System Introspection.
-Coordinates extraction, action mining, and PDDL generation.
-
-Updated to:
-- Serialize actions properly for Phase 2 consumption
-- Use shared common modules
-- Output complete Phase1State for integration
-"""
+"""Phase 1 orchestrator: coordinates extraction, action mining, and PDDL generation."""
 
 import json
 import os
