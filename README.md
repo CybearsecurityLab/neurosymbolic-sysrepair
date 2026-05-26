@@ -1,4 +1,4 @@
-# Ac
+# Neurosymbolic Sysrepair
 
 A neurosymbolic pipeline that learns a PDDL domain of system-administration
 actions from a live host, then uses Fast Downward + an LLM fallback to repair
