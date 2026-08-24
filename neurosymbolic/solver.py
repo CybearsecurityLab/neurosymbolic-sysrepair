@@ -328,12 +328,83 @@ _CONFIG_PATH_ALIASES: dict[str, str] = {
 }
 
 
-def _resolve_config_path(pddl_name: str) -> str:
+# Generic tokens that carry no discriminating signal when matching an
+# invented config identifier to a real file (e.g. "default_ssl_conf").
+_CONFIG_GENERIC_TOKENS = frozenset({
+    "config", "conf", "cfg", "file", "default", "etc", "settings",
+    "configuration", "cnf", "d", "main",
+})
+
+
+def _config_tokens(s: str) -> set[str]:
+    """Discriminating tokens of a config identifier or path basename."""
+    base = s.rsplit("/", 1)[-1]
+    parts = re.split(r"[^a-z0-9]+", base.lower())
+    return {p for p in parts if p and p not in _CONFIG_GENERIC_TOKENS}
+
+
+def _load_scenario_config_map(domain_path: str) -> dict[str, str]:
+    """Build a per-scenario {identifier -> real path} map from the Phase 1
+    introspection that sits beside the domain (``phase1_state.json``).
+
+    Phase 1 records every discovered ``configuration_file`` object with its
+    real ``path`` and ``original_name`` (e.g. ``/etc/apache2/mods-enabled/
+    ssl.conf``). Keying on the PDDL-safe name, the original path, and the
+    bare/normalized basename lets the concretizer resolve nested service
+    configs the static alias map never enumerates, which is the general
+    PDDL-identifier <-> real-path grounding gap.
+    """
+    mapping: dict[str, str] = {}
+    if not domain_path:
+        return mapping
+    state_file = Path(domain_path).parent / "phase1_state.json"
+    if not state_file.exists():
+        return mapping
+    try:
+        state = json.loads(state_file.read_text())
+    except Exception:
+        return mapping
+    cfgs = (state.get("objects", {}) or {}).get("configuration_file", []) or []
+    for obj in cfgs:
+        props = obj.get("properties", {}) or {}
+        path = props.get("path") or obj.get("original_name")
+        if not path:
+            continue
+        for key in (obj.get("name"), obj.get("original_name"),
+                    props.get("filename"), path):
+            if key:
+                mapping[key] = path
+                mapping[_normalize_setting_key(str(key))] = path
+    return mapping
+
+
+def _resolve_config_path(pddl_name: str,
+                         scenario_map: dict[str, str] | None = None) -> str:
     """Translate a PDDL identifier for a config file to its real path.
 
-    Falls back to the raw name if no mapping exists — the bash command
-    will then fail visibly rather than silently misbehave.
+    Resolution order: static alias map (common system files) -> per-scenario
+    discovered configs (exact, then normalized) -> best token-overlap match
+    against discovered configs (recovers invented identifiers like
+    ``default_ssl_conf`` for ``/etc/apache2/mods-enabled/ssl.conf``) -> raw
+    name (the bash command then fails visibly rather than silently).
     """
+    if pddl_name in _CONFIG_PATH_ALIASES:
+        return _CONFIG_PATH_ALIASES[pddl_name]
+    if scenario_map:
+        if pddl_name in scenario_map:
+            return scenario_map[pddl_name]
+        norm = _normalize_setting_key(pddl_name)
+        if norm in scenario_map:
+            return scenario_map[norm]
+        want = _config_tokens(pddl_name)
+        if want:
+            best, best_score = None, 0
+            for key, path in scenario_map.items():
+                score = len(want & _config_tokens(path))
+                if score > best_score:
+                    best, best_score = path, score
+            if best is not None:
+                return best
     return _CONFIG_PATH_ALIASES.get(pddl_name, pddl_name)
 
 
@@ -349,7 +420,8 @@ def _normalize_setting_key(s: str) -> str:
     return re.sub(r"[-_]", "", s)
 
 
-def _concretize_template(action: dict) -> str | None:
+def _concretize_template(action: dict,
+                         scenario_map: dict[str, str] | None = None) -> str | None:
     name = action["name"]
     params = action.get("params", []) or []
     tmpl = _ACTION_TEMPLATES.get(name) or _ACTION_TEMPLATES.get(
@@ -360,7 +432,7 @@ def _concretize_template(action: dict) -> str | None:
         # For canonical config-edit operators, the first param is a
         # PDDL file identifier that must be resolved to a real path.
         if name in ("edit_config_setting", "set_setting_no"):
-            params[0] = _resolve_config_path(params[0])
+            params[0] = _resolve_config_path(params[0], scenario_map)
             # The second param is the setting key — strip separators
             # so sed can match the on-disk CamelCase directive name
             # case-insensitively.
@@ -451,6 +523,13 @@ def neurosymbolic_solver(
                     domain_pddl = ""  # don't ship a broken domain to FD
             except Exception as e:
                 state.metadata["domain_validation_error"] = str(e)[:200]
+
+        # Per-scenario config-path map from the Phase 1 introspection beside
+        # the domain: lets the concretizer ground nested service configs
+        # (e.g. /etc/apache2/mods-enabled/ssl.conf) the static alias map does
+        # not enumerate, including invented identifiers via token matching.
+        scenario_config_map = _load_scenario_config_map(domain_path)
+        state.metadata["scenario_config_files"] = len(scenario_config_map)
 
         # ── Phase 1: Introspect ──
         sb = sandbox()
@@ -622,7 +701,7 @@ def neurosymbolic_solver(
                 if executed >= message_limit:
                     break
 
-                bash_cmd = _concretize_template(action)
+                bash_cmd = _concretize_template(action, scenario_config_map)
                 if not bash_cmd:
                     shell_word = "PowerShell" if os_name == "windows" else "bash"
                     # Pull the action's full (:action ...) block + scenario
