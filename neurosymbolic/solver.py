@@ -243,12 +243,15 @@ _INTROSPECT_CMDS = {
     # sshd/mysqld. Feeds value-grounding so generated directives match the app's
     # real syntax + version.
     "app_versions": (
-        "for b in $(ss -tlnp 2>/dev/null | grep -oP 'users:\\(\\(\"\\K[^\"]+' | sort -u); do "
-        "p=$(command -v \"$b\" 2>/dev/null || ls /usr/sbin/\"$b\" /usr/bin/\"$b\" 2>/dev/null | head -1); "
-        "[ -n \"$p\" ] || continue; echo \"== $b\"; "
-        "{ \"$p\" -v 2>&1; \"$p\" -V 2>&1; } | head -3; "
-        "dpkg -S \"$p\" 2>/dev/null | cut -d: -f1 | sort -u | xargs -r dpkg-query -W -f='${Package} ${Version}\\n' 2>/dev/null; "
-        "done | head -40"
+        # Binaries of the currently-running daemons via /proc (portable: no ss /
+        # netstat / lsof dependency), each with its version banner and owning
+        # package. Process-driven, keyed on no application name.
+        "for l in /proc/[0-9]*/exe; do readlink \"$l\" 2>/dev/null; done "
+        "| grep -E '^/(usr/)?(s?bin)/' | sort -u | while read e; do "
+        "echo \"== $e\"; { \"$e\" -v 2>&1; \"$e\" -V 2>&1; } | head -2; "
+        "dpkg -S \"$e\" 2>/dev/null | cut -d: -f1 | sort -u "
+        "| xargs -r dpkg-query -W -f='${Package} ${Version}\\n' 2>/dev/null; "
+        "done | head -50"
     ),
 }
 
@@ -472,17 +475,32 @@ _VALUE_GROUND_PROMPT = (
     "You are grounding ONE configuration edit for a remediation plan.\n\n"
     "Applications on this host (name/version, from live introspection):\n{app_versions}\n\n"
     "Vulnerability being remediated:\n{vuln_brief}\n\n"
-    "File to edit: {path}\n"
+    "Default file to edit: {path}\n"
     "Directive/setting to set: {key}\n"
     "Symbolic target from the plan (an intent label, NOT literal syntax): {symbolic_value}\n\n"
     "Current contents of {path} (first lines):\n{current}\n\n"
+    "{effective}"
     "Return STRICT JSON only, no prose and no markdown fences:\n"
     '{{"line": "<one syntactically-valid configuration directive line for THIS '
     "application and version that achieves the symbolic target above>\", "
     '"validate": "<this application\'s own native configuration-check command, '
-    "which exits non-zero on a syntax error (its -t / configtest / -c mode)>\"}}\n"
-    "The directive line must be valid for the application and version shown "
-    "above. The validate command must be that application's own checker."
+    "which exits non-zero on a syntax error (its -t / configtest / -c mode)>\", "
+    '"target_path": "<the file the RUNNING daemon actually obeys for this '
+    "directive: if the evidence above shows the directive already set in an "
+    "active file, use THAT file; otherwise use the default file>\"}}\n"
+    "The directive line must be valid for the application and version shown. "
+    "The validate command must be that application's own checker. target_path "
+    "must be one of the active files listed in the evidence, or the default file."
+)
+
+_EFFECTIVE_PROBE_PROMPT = (
+    "A remediation must set directive '{key}' where the RUNNING daemon actually "
+    "reads it. Applications on this host:\n{app_versions}\n\n"
+    "Give the application's OWN read-only command that prints the FILE PATHS of "
+    "every configuration file the running daemon loads or includes (so we can "
+    "locate which file sets the directive). It must emit real /etc/... file "
+    "paths, not merely a syntax check. Return STRICT JSON only: "
+    '{{"dump": "<the command>"}}.'
 )
 
 
@@ -522,6 +540,106 @@ def _looks_safe_validator(cmd: str) -> bool:
     return True
 
 
+def _directive_grep_pattern(key: str) -> str:
+    """Separator-tolerant ERE for a directive key so it matches both the
+    CamelCase (Apache/sshd `SSLProtocol`) and snake_case (nginx `ssl_protocols`)
+    on-disk spellings regardless of how Fast Downward cased the PDDL token."""
+    toks = [t for t in re.split(r"[-_]", key) if t]
+    return "[-_]?".join(re.escape(t) for t in toks) or re.escape(key)
+
+
+async def _effective_config_probe(key, app_versions, model, sb, os_name, bash_timeout,
+                                  dbg=None, scenario_map=None):
+    """Locate the file the RUNNING daemon actually obeys for ``key``.
+
+    Symmetric to the native-validator idea: the model supplies the application's
+    OWN effective-config dump command (e.g. `apache2ctl -t -D DUMP_INCLUDES`,
+    `nginx -T`, `sshd -T`); the code guards its shape, runs it, harvests the
+    active files it names, keeps the ones that exist, and greps the directive
+    across them. Returns ``(evidence_text, candidate_files_set)`` — evidence for
+    the value-grounding prompt, and the set the model's target_path is confined
+    to. Any failure degrades to ``("", set())`` (caller keeps single-file
+    grounding), so a wrong/hallucinated dump never causes a wrong edit.
+    """
+    try:
+        resp = await model.generate(
+            input=[ChatMessageUser(content=_EFFECTIVE_PROBE_PROMPT.format(
+                key=key, app_versions=(app_versions or "(none)")[:1000]))],
+            config=GenerateConfig(temperature=0.0, max_tokens=4096))
+    except Exception:
+        return "", set()
+    if dbg is None:
+        dbg = {}
+    raw = resp.completion or ""
+    dump = str((_extract_first_json(raw) or {}).get("dump", "")).strip()
+    # Keep only the bare command + args: cut at the first shell metacharacter
+    # (pipe/redirect/chain). We capture stdout AND stderr ourselves, so the model
+    # never needs `2>&1` or a `| grep`, and the strict shape guard still applies.
+    dump = re.split(r"[|;&><`\n]|\$\(", dump)[0].strip()
+    dbg["dump_cmd"] = dump
+    dbg["raw_head"] = raw[:200]
+    if not dump or not _looks_safe_validator(dump):
+        dbg["fail"] = "no-dump-or-unsafe"
+        return "", set()
+    try:
+        dr = await sb.exec(_shell_exec_argv(os_name, dump), timeout=bash_timeout)
+        dump_out = ((dr.stdout or "") + "\n" + (dr.stderr or ""))[:4000]
+    except Exception as e:
+        dbg["fail"] = f"dump-exec:{str(e)[:60]}"
+        return "", set()
+    dbg["dump_out_len"] = len(dump_out)
+    dbg["dump_out_head"] = dump_out[:200]
+    cands = {c for c in re.findall(r"/[\w.@/+-]+", dump_out)
+             if "/" in c and not c.endswith("/")}
+    # Fallback / augmentation: also consider the config files Phase 1 already
+    # discovered for this scenario. This makes the mechanism robust when the
+    # app's dump reports a syntax check rather than a file list, and still lets
+    # the grep below reveal exactly which discovered file sets the directive.
+    if scenario_map:
+        cands |= {v for v in scenario_map.values() if isinstance(v, str) and v.startswith("/")}
+    dbg["n_candidates"] = len(cands)
+    if not cands:
+        dbg["fail"] = "no-candidates"
+        return "", set()
+    listing = " ".join(shlex.quote(c) for c in list(cands)[:120])
+    try:
+        lr = await sb.exec(_shell_exec_argv(
+            os_name, f"for f in {listing}; do [ -f \"$f\" ] && echo \"$f\"; done"),
+            timeout=bash_timeout)
+        existing = {l.strip() for l in (lr.stdout or "").splitlines() if l.strip()}
+    except Exception:
+        existing = set()
+    dbg["n_existing"] = len(existing)
+    if not existing:
+        dbg["fail"] = "no-existing-files"
+        return "", set()
+    pat = _directive_grep_pattern(key)
+    # grep -H forces filename prefixes even with a single file; follow symlinks
+    # (sites-enabled/*.conf are symlinks to sites-available).
+    files = " ".join(shlex.quote(f) for f in list(existing)[:120])
+    hits = ""
+    try:
+        gr = await sb.exec(_shell_exec_argv(
+            os_name, f"grep -HinE '^[[:space:]]*{pat}([[:space:]]|=)' {files} 2>/dev/null | head -20"),
+            timeout=bash_timeout)
+        hits = (gr.stdout or "").strip()
+    except Exception:
+        hits = ""
+    # Files that actually set the directive are the best edit targets; confine
+    # the model's target_path to them (fall back to all active files if none).
+    hit_files = {ln.split(":", 1)[0].strip() for ln in hits.splitlines() if ":" in ln}
+    hit_files = {f for f in hit_files if f in existing} or existing
+    dbg["n_hit_files"] = len(hit_files)
+    ev = ("Effective configuration (from the application's own tools and the "
+          "discovered config files):\n")
+    ev += (f"Directive '{key}' is currently set in these files (choose the one "
+           f"the running daemon actually obeys, e.g. a virtual-host/site file "
+           f"overrides a module default):\n{hits[:700]}\n\n" if hits
+           else f"Directive '{key}' is not set in any known file yet; add it to "
+                f"the file the daemon effectively uses.\n\n")
+    return ev, hit_files
+
+
 async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
                                  model, sb, os_name, bash_timeout):
     """Value-ground and apply an ``edit_config_setting`` action.
@@ -550,13 +668,25 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
     except Exception:
         current = ""
 
-    meta: dict = {"path": path, "key": key, "value_grounding_used": True}
+    # Effective-config introspection: find where the running daemon actually
+    # obeys this directive (multi-file include graphs: apache vhosts, nginx
+    # includes). The model may then target that file instead of the default.
+    _probe_dbg: dict = {}
+    effective, candidate_files = await _effective_config_probe(
+        key, app_versions, model, sb, os_name, bash_timeout, _probe_dbg,
+        scenario_map=scenario_map)
+
+    meta: dict = {"path": path, "key": key, "value_grounding_used": True,
+                  "effective_probe_used": bool(candidate_files),
+                  "candidate_files": len(candidate_files),
+                  "probe_debug": _probe_dbg}
     last_err = ""
     for attempt in range(3):
         prompt = _VALUE_GROUND_PROMPT.format(
             app_versions=(app_versions or "(none detected)")[:1200],
             vuln_brief=(vuln_brief or "")[:600], path=path, key=key,
-            symbolic_value=symbolic_value, current=current or "(empty/unreadable)")
+            symbolic_value=symbolic_value, current=current or "(empty/unreadable)",
+            effective=effective)
         if last_err:
             prompt += (f"\n\nA previous attempt failed the validator with:\n"
                        f"{last_err[:400]}\nReturn a corrected JSON line.")
@@ -572,16 +702,22 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
             continue
         line = str(obj["line"]).strip()
         validate = str(obj.get("validate", "")).strip()
+        # Retarget to the effective file only if the model named one the probe
+        # verified as active (evidence-gated: never trust a bare string).
+        target = str(obj.get("target_path", "")).strip()
+        edit_path = target if target in candidate_files else path
+        qpe = shlex.quote(edit_path)
         meta["value_line"] = line
         meta["validator_cmd"] = validate
         meta["validator_attempts"] = attempt + 1
+        meta["edit_path"] = edit_path
 
         ql = line.replace("'", "'\\''")
-        ekey = re.escape(key)
+        pat = _directive_grep_pattern(key)
         apply_cmd = (
-            f"cp {qp} {qp}.neuroplan.bak 2>/dev/null; "
-            f"sed -i -E 's|^([[:space:]]*{ekey}[[:space:]].*)$|# \\1|I' {qp} 2>/dev/null; "
-            f"printf '%s\\n' '{ql}' >> {qp}"
+            f"cp {qpe} {qpe}.neuroplan.bak 2>/dev/null; "
+            f"sed -i -E 's|^([[:space:]]*{pat}[[:space:]].*)$|# \\1|I' {qpe} 2>/dev/null; "
+            f"printf '%s\\n' '{ql}' >> {qpe}"
         )
         try:
             await sb.exec(_shell_exec_argv(os_name, apply_cmd), timeout=bash_timeout)
@@ -598,8 +734,8 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
                 return apply_cmd, meta
             last_err = (getattr(vr, "stderr", "") or getattr(vr, "stdout", "") or "")[:400]
             meta["validator_passed"] = False
-            # roll back before retrying
-            await sb.exec(_shell_exec_argv(os_name, f"cp {qp}.neuroplan.bak {qp} 2>/dev/null"),
+            # roll back the edited file before retrying
+            await sb.exec(_shell_exec_argv(os_name, f"cp {qpe}.neuroplan.bak {qpe} 2>/dev/null"),
                           timeout=bash_timeout)
             continue
         # No usable validator: keep the grounded edit but flag it unverified.
