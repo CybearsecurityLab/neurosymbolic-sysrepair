@@ -25,6 +25,7 @@ if str(_PROJECT_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_PROJECT_ROOT))
 
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -407,6 +408,8 @@ def _resolve_config_path(pddl_name: str,
     """
     if pddl_name in _CONFIG_PATH_ALIASES:
         return _CONFIG_PATH_ALIASES[pddl_name]
+    if os.environ.get("NEUROPLAN_DISABLE_GROUNDING") == "1":
+        return _CONFIG_PATH_ALIASES.get(pddl_name, pddl_name)
     if scenario_map:
         if pddl_name in scenario_map:
             return scenario_map[pddl_name]
@@ -1003,7 +1006,10 @@ def neurosymbolic_solver(
                 # Value grounding: a config-edit's value token is a symbolic
                 # goal, not literal syntax. Ground it against the live app +
                 # version and gate on the app's own validator before accepting.
-                if action["name"] == "edit_config_setting":
+                # NEUROPLAN_DISABLE_GROUNDING=1 bypasses all grounding fixes
+                # (baseline/ablation) -> static templates only.
+                if action["name"] == "edit_config_setting" and \
+                        os.environ.get("NEUROPLAN_DISABLE_GROUNDING") != "1":
                     applied, vmeta = await _ground_and_apply_edit(
                         action, scenario_config_map,
                         sys_state.get("app_versions", ""),
