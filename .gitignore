@@ -267,3 +267,9 @@ sas_plan
 # Ignore all Markdown except README.md (last match wins)
 *.md
 !README.md
+
+# live build outputs + scratch (session)
+pddl_domains*/
+logs_neuro*/
+*.bak.svcfix
+eval/results/

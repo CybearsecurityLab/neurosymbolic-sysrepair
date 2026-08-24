@@ -41,6 +41,23 @@ CANONICAL_PREDICATES: list[str] = [
     # self-contained if the merger discards near-duplicates).
     "(service_running ?svc - service)",
     "(service_supervised_by_systemd ?svc - service)",
+    # Existence/installation predicates. These are part of Phase 1's base
+    # vocabulary but the Phase 2 merger derives (:predicates) only from action
+    # bodies + partials, so on containers whose service-management man page is
+    # absent (e.g. `systemctl: command not found`) they are never declared,
+    # and an LLM-generated problem referencing (service_exists X) makes Fast
+    # Downward's translator abort. Declaring them canonically (merged
+    # idempotently into every domain) closes that gap uniformly.
+    "(service_exists ?svc - service)",
+    "(service_installed ?svc - service)",
+    # A running service applies its on-disk config only when (re)loaded. This
+    # predicate is the DISTINGUISHING effect of a reload: without it a reload
+    # action whose precondition and effect are both (service_running ?svc) is a
+    # STRIPS no-op the planner can never select, so a plan that edits a config
+    # file never reloads the daemon and the fix silently fails the live check.
+    # A repair that must take effect at runtime puts (config_applied ?svc) in
+    # the goal (and omits it from :init); the reload is then forced after the edit.
+    "(config_applied ?svc - service)",
 ]
 
 
@@ -94,14 +111,19 @@ CANONICAL_ACTIONS: list[dict] = [
         ],
         "preconditions": [
             "(service_running ?svc)",
-            "(not (service_supervised_by_systemd ?svc))",
         ],
         "effects": [
             "(service_running ?svc)",
+            # Distinguishing effect: the running daemon now serves the on-disk
+            # config. Without this the action was a STRIPS no-op the planner
+            # could never select, so an edited config never took effect.
+            "(config_applied ?svc)",
         ],
-        # pkill -HUP <name> sends SIGHUP to sshd (causes it to re-read its
-        # config). Works without any service manager.
-        "command_template": "pkill -HUP {svc}",
+        # SIGHUP the running daemon so it re-reads its config. Works for a bare
+        # process (no service manager) as well as under systemd/SysV, and is
+        # non-destructive (no downtime). Parameterised on the service name, so
+        # it applies to sshd, apache2, nginx, etc. — never hard-coded to sshd.
+        "command_template": "pkill -HUP {svc} 2>/dev/null || service {svc} reload 2>/dev/null || systemctl reload {svc} 2>/dev/null",
         "requires_root": True,
         "source_utility": "pkill",
         "extraction_method": "canonical",

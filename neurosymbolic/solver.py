@@ -81,17 +81,29 @@ Rules:
   ?k yes), then :init must declare these.
 - MINIMAL goal — include ONLY the predicate(s) directly addressing the
   vulnerability PLUS service-running predicates for any service whose
-  uptime is part of the remediation contract. For example, fixing a
-  PermitRootLogin setting in sshd_config also requires
-  (service_running sshd) in the goal so the resulting plan keeps the
-  service alive; otherwise the regression check fails.
-- If the goal requires (service_running ?svc) and the domain's
-  start_service action has (systemd_init_present) as a precondition,
-  declare (systemd_init_present) in :init. The shell-level concretizer
-  degrades gracefully on containers without systemd (tries
-  `service X restart` then `/usr/sbin/X` then `systemctl`), so this is
-  safe — the PDDL just needs to *believe* the capability is present so
-  the planner can produce a plan.
+  uptime is part of the remediation contract.
+- ONE VALUE PER SETTING. A setting holds a single value, so a goal must
+  name exactly one target value token per setting. NEVER assert two values
+  for the same setting at once (e.g. both (setting_value_is SSLProtocol
+  tlsv1_2) and (setting_value_is SSLProtocol tlsv1_3)) — that is an
+  unsatisfiable mutex and the task is provably unsolvable. If the fix is
+  "allow only modern protocols", encode it as one token, e.g.
+  (setting_value_is SSLProtocol tls12_plus).
+- RUNTIME EFFECT VIA RELOAD. When the remediation edits a config file that a
+  RUNNING service reads, the daemon must be reloaded for the change to take
+  effect, or the live check fails. Force the reload one of two ways:
+  (a) PREFERRED, if the domain declares (config_applied ?svc): put
+      (config_applied <svc>) in the GOAL and NOT in :init, and keep
+      (service_running <svc>) in BOTH :init and goal. Plan = edit-then-reload;
+      the reload action requires only (service_running <svc>) and works on a
+      bare-process daemon without systemd.
+  (b) FALLBACK, if the domain does NOT declare (config_applied): keep
+      (service_running <svc>) in the GOAL but OMIT it from :init, so the
+      planner must add a service action to re-establish it (run as a reload).
+  NEVER leave (service_running <svc>) in both :init and goal with no reload
+  path — that yields an edit-only plan that fails the live check.
+- systemd is optional: the reload path needs no (systemd_init_present). Only
+  declare it if you deliberately use start_service/restart_service.
 - EVERY symbol used in :init or :goal MUST be declared in :objects.
   This includes values like `yes` / `no` / `on` / `off` — declare them
   as `(yes no - value)` etc. Fast Downward rejects undefined objects.
@@ -110,10 +122,14 @@ Worked example for ccdc-01-style SSH PermitRootLogin scenarios:
       (setting PermitRootLogin sshd_config)
       (setting_value_is PermitRootLogin yes)
       (service_exists sshd)
-      (systemd_init_present))
+      (service_running sshd))
     (:goal (and
       (setting_value_is PermitRootLogin no)
-      (service_running sshd))))
+      (service_running sshd)
+      (config_applied sshd))))
+  This yields edit-then-reload: edit_config_setting sets PermitRootLogin no,
+  reload_sshd_no_systemd applies it (config_applied sshd) while keeping the
+  service up. The same shape works for apache2 SSL, nginx, etc.
 - If the listed actions cannot reach the goal state, the problem is still
   valid PDDL — but the planner will return no plan, which is the correct
   signal that the domain needs additional actions/predicates.
@@ -134,9 +150,14 @@ _CONCRETIZE_PROMPT = (
     "- No markdown fences, no explanation, no leading word like 'bash' or 'sh'.\n"
     "- Container runs as root; do NOT prefix with sudo.\n"
     "- Do NOT output the action name verbatim — that is not a shell command.\n"
-    "- If the container has no systemd as PID 1 (visible from the env brief"
-    " above — e.g. systemctl returns nothing useful), use service mgmt that"
-    " works without systemd (`service X restart`, `/usr/sbin/sshd`, `pkill -HUP`)."
+    "- To apply a config change to a RUNNING service, prefer a signal-based"
+    " reload of the live process — it is init-agnostic and non-destructive."
+    " If the container has no systemd as PID 1 and no /etc/init.d script for"
+    " the service (e.g. sshd started as a bare process), do NOT use"
+    " `service X restart` or `systemctl` — they will fail. Instead validate"
+    " then signal, e.g. `sshd -t && kill -HUP $(pgrep -x sshd | head -1)`"
+    " for sshd, or `kill -HUP $(pgrep -x <svc> | head -1)` generally; only if"
+    " the process is not running should you start it (`/usr/sbin/<svc>`)."
 )
 
 # ---------------------------------------------------------------------------
@@ -151,18 +172,33 @@ _ACTION_TEMPLATES: dict[str, str] = {
     "remove_package":       "apt-get remove -y {0}",
     "update_package":       "apt-get install -y --only-upgrade {0}",
     "purge_package":        "apt-get purge -y {0}",
-    "restart_service":      "(service {0} restart 2>/dev/null) || systemctl restart {0}",
-    "start_service":        "(service {0} restart 2>/dev/null) || /usr/sbin/{0} 2>/dev/null || systemctl start {0}",
+    # Applying a config change to a RUNNING service: prefer a signal-based
+    # reload (SIGHUP) of the live process. This is init-agnostic — it works
+    # whether the service is supervised by systemd, SysV init, or (as in the
+    # benchmark containers) started as a bare process with no init at all,
+    # where `service X restart` fails because there is no /etc/init.d/X. It
+    # is also NON-DESTRUCTIVE (no downtime), which matters for the
+    # availability objective. Falls back to service/systemctl/direct-exec
+    # only when the process is not already running.
+    "restart_service":      "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; fi",
+    "start_service":        "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
     # Phase-1 mined synonym for start_service in some domains
     # (e.g. ccdc-01's refined domain). Same semantic: ensure the
-    # service is running. The deterministic template tries the
-    # non-systemd path first so it succeeds on containers that
-    # boot with bash keepalive as pid 1.
-    "apply_unit_state":     "(service {0} restart 2>/dev/null) || /usr/sbin/{0} 2>/dev/null || systemctl start {0}",
+    # service is running with the current config. Reload-in-place if
+    # already up so it succeeds on containers that boot with a bash
+    # keepalive (or the service itself) as pid 1.
+    "apply_unit_state":     "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
     "stop_service":         "(service {0} stop 2>/dev/null) || systemctl stop {0}",
     "enable_service":       "systemctl enable {0}",
     "disable_service":      "(service {0} stop 2>/dev/null; systemctl disable {0})",
-    "reload_service":       "(service {0} reload 2>/dev/null) || pkill -HUP {0} || systemctl reload {0}",
+    "reload_service":       "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null; fi",
+    # No-systemd config reload (domain models this explicitly). SIGHUP the
+    # running daemon named {0} so it re-reads its config — works for a bare
+    # process (sshd, apache2, nginx, ...) and is non-destructive. Parameterised
+    # on the service, NOT hard-coded to sshd (a plan grounding this with apache2
+    # must never HUP sshd). Falls back to service/systemctl reload.
+    "reload_sshd_no_systemd":
+        "kill -HUP \"$(pgrep -x {0} 2>/dev/null | head -1)\" 2>/dev/null || service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null",
     "lock_user":            "usermod -L {0}",
     "set_file_permissions": "chmod {0} {1}",
     "set_file_owner":       "chown {0} {1}",

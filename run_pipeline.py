@@ -64,12 +64,20 @@ def run_phase1(output_dir: Path, container, llm_settings) -> dict:
 
     from phase1.orchestrator import Phase1Orchestrator, EnumEncoder
 
+    import os as _os
+    # Phase-1 man-page mining is LLM-bound and was serial (default 1 worker),
+    # pinning the account to concurrency 1 during its longest phase. Mine
+    # utilities in parallel up to the MiniMax per-account concurrent cap (~6).
+    # Chunk-level langextract workers are pinned to 1 (see manpage_parser), so
+    # total in-flight requests equals this worker count exactly.
+    phase1_workers = int(_os.environ.get("NEUROPLAN_PHASE1_WORKERS", "6"))
     orchestrator = Phase1Orchestrator(
         output_dir=str(output_dir),
         llm_model=llm_settings.model,
         llm_url=llm_settings.base_url,
         llm_api_key=llm_settings.api_key or "vllm",
         container=container,
+        max_llm_workers=phase1_workers,
     )
     results = orchestrator.run()
 
@@ -114,6 +122,17 @@ def run_phase2(output_dir: Path, phase1_results: dict, container, llm_settings,
     from common.models import Phase1State
 
     hardware = HardwareConfig.detect()
+    # Cap phase-2 map-reduce concurrency to the MiniMax Token-Plan limit (~4-5
+    # agents). The auto-detected worker count (CPU/GPU-based) hit ~7 and 429'd,
+    # dropping whole action groups from the synthesized domain. Overridable via
+    # NEUROPLAN_MAX_WORKERS.
+    import os as _os
+    # Phase-2 synthesis is LLM-API-bound, not CPU-bound: the binding limit is the
+    # MiniMax per-account concurrent cap (~6), not local cores/RAM. The hardware
+    # auto-detect caps at 4, so min()-ing with it throttled the API to 4 even when
+    # asked for more. Set the group-worker count directly from NEUROPLAN_MAX_WORKERS
+    # (default 6). Chunk-level workers stay at 1, so total in-flight == this count.
+    hardware.max_parallel_workers = int(_os.environ.get("NEUROPLAN_MAX_WORKERS", "6"))
     llm_config = LLMConfig(
         model_name=llm_settings.model,
         base_url=llm_settings.base_url,
@@ -398,7 +417,7 @@ Examples:
 
     parser.add_argument("--bench", default=None,
                         help=f"Benchmark root (default: {eval_cfg.get('bench_path')})")
-    parser.add_argument("--collection", choices=["ccdc", "meta2"], default=None,
+    parser.add_argument("--collection", choices=["ccdc", "meta2", "vulnhub"], default=None,
                         help="Restrict to a sub-folder of the bench")
     parser.add_argument("--scenarios", default=None,
                         help="Comma-separated scenario IDs (e.g. ccdc-01,meta2-16)")

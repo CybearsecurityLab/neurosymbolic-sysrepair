@@ -71,11 +71,19 @@ class ScenarioContainerManager:
         pkgs = self.DEFAULT_EXTRA_PKGS
         osquery_layer = ""
         if self.install_osquery:
+            # apt-key is removed in modern Ubuntu (25.10) and the osquery apt
+            # repo is unsigned without it, so the repo path silently fails.
+            # Install the release .deb directly instead; osqueryi lands at
+            # /usr/bin/osqueryi. Verified on ubuntu:25.10, debian:11, ubuntu:22.04.
+            _OSQUERY_DEB = (
+                "https://github.com/osquery/osquery/releases/download/"
+                "5.23.1/osquery_5.23.1-1.linux_amd64.deb"
+            )
             osquery_layer = (
-                "RUN (apt-get update -qq && apt-get install -y -qq wget gnupg ca-certificates >/dev/null 2>&1 && "
-                "wget -qO- https://pkg.osquery.io/deb/pubkey.gpg | apt-key add - >/dev/null 2>&1 && "
-                "echo 'deb [arch=amd64] https://pkg.osquery.io/deb deb main' > /etc/apt/sources.list.d/osquery.list && "
-                "apt-get update -qq && apt-get install -y -qq osquery >/dev/null 2>&1) || true\n"
+                "RUN (apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 && "
+                f"curl -fsSL {_OSQUERY_DEB} -o /tmp/osq.deb && "
+                "(dpkg -i /tmp/osq.deb >/dev/null 2>&1 || apt-get -y -f install >/dev/null 2>&1) && "
+                "rm -f /tmp/osq.deb && test -x /usr/bin/osqueryi) || true\n"
             )
 
         # The Docker ubuntu base is minimized in two layers:

@@ -9,8 +9,10 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger("Phase3.Config")
 
-# concurrency cap for Phase 3 LLM calls.
-LLM_CONCURRENCY_GATE = threading.Semaphore(8)
+# Concurrency cap for Phase 3 LLM calls. Bound to the MiniMax per-account
+# concurrent limit (~6), not a fixed 8, so a phase-3 refinement pass does not
+# 429 and drop repairs. Overridable via NEUROPLAN_MAX_WORKERS.
+LLM_CONCURRENCY_GATE = threading.Semaphore(int(os.environ.get("NEUROPLAN_MAX_WORKERS", "6")))
 
 
 @dataclass

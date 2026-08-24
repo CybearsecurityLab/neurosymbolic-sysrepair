@@ -110,7 +110,26 @@ class _SanitizingModel:
         return getattr(self._inner, name)
 
     def infer(self, batch_prompts, **kwargs):
-        for batch in self._inner.infer(batch_prompts=batch_prompts, **kwargs):
+        # Retry the whole batch on rate-limit (429) with exponential backoff and
+        # jitter. Without this, a MiniMax Token-Plan 429 propagates as a hard
+        # "extraction failed" and that utility is silently dropped to regex-only,
+        # degrading the domain. Materialize the inner generator so the API call's
+        # 429 surfaces here where we can retry it. Jitter avoids the parallel
+        # utility workers retrying in lockstep (thundering herd).
+        import time, random
+        attempts = 0
+        while True:
+            try:
+                batches = list(self._inner.infer(batch_prompts=batch_prompts, **kwargs))
+                break
+            except Exception as e:
+                msg = str(e).lower()
+                if ("429" in msg or "rate_limit" in msg or "rate limit" in msg) and attempts < 8:
+                    attempts += 1
+                    time.sleep(min(2 ** attempts, 45) + random.uniform(0, attempts))
+                    continue
+                raise
+        for batch in batches:
             cleaned = []
             for scored in batch:
                 if getattr(scored, "output", None):
@@ -388,6 +407,13 @@ CRITICAL RULES:
                 examples=self.examples,
                 show_progress=True,
                 use_schema_constraints=False,
+                # Pin langextract's internal chunk parallelism to 1. Utilities are
+                # mined in parallel one level up (extract_all_actions), so total
+                # in-flight requests = utility-worker count. Letting langextract
+                # also fan out chunks would multiply that and blow past the
+                # MiniMax per-account concurrent cap, 429-ing and silently
+                # dropping action groups.
+                max_workers=1,
             )
             if _is_minimax_model(self.llm_config.model_id):
                 # MiniMax wraps JSON in fences after a <think> block, which

@@ -175,10 +175,19 @@ class ScopeAnalyzer:
 
     def _extract_config_files(self):
         try:
+            # Recursive scan: osquery's `file` table LIKE is per-level, so a
+            # single '/etc/%' misses nested service configs like
+            # /etc/apache2/mods-enabled/ssl.conf or /etc/nginx/conf.d/*.conf.
+            # Enumerate several depths so daemon configs that a remediation
+            # must edit are actually in scope (the anchor-and-propagate pass
+            # then prunes back to the ones reachable from the vulnerability).
             results = self.osquery.execute_query(
-                """SELECT path, filename, uid, gid FROM file 
-                   WHERE path LIKE '/etc/%' AND type = 'regular'
-                   AND (path LIKE '%.conf' OR path LIKE '%.cfg')"""
+                """SELECT path, filename, uid, gid FROM file
+                   WHERE type = 'regular'
+                   AND (path LIKE '/etc/%.conf'     OR path LIKE '/etc/%.cfg'
+                     OR path LIKE '/etc/%/%.conf'   OR path LIKE '/etc/%/%.cfg'
+                     OR path LIKE '/etc/%/%/%.conf' OR path LIKE '/etc/%/%/%.cfg'
+                     OR path LIKE '/etc/%/%/%/%.conf')"""
             )
             for row in results:
                 path = row.get("path", "")

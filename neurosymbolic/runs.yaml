@@ -19,7 +19,7 @@ defaults:
 presets:
   # Quick smoke test
   smoke:
-    model: openai/gemma-4-31b
+    model: openai/MiniMax-M2.7
     scenarios: ["ccdc/scenario-01"]
     message_limit: 30
 
