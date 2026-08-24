@@ -58,6 +58,23 @@ CANONICAL_PREDICATES: list[str] = [
     # A repair that must take effect at runtime puts (config_applied ?svc) in
     # the goal (and omits it from :init); the reload is then forced after the edit.
     "(config_applied ?svc - service)",
+
+    # Filesystem-hardening vocabulary. Phase-1 man-page mining models chmod/setcap
+    # as "how the utility behaves on a file", not the intent-level "this file is
+    # in a dangerous permission state and must be hardened". These intent
+    # predicates let the problem-gen state a remediation GOAL a planner can
+    # reach, and are the symmetric analogue of the config-edit vocabulary above.
+    # Each pairs a vulnerable-state predicate (precondition) with a
+    # remediated-state predicate (goal/effect) — positive effects only, like
+    # config_applied, so the operator is never a STRIPS no-op.
+    "(has_suid ?f - file)",
+    "(suid_removed ?f - file)",
+    "(world_writable ?f - file)",
+    "(world_write_removed ?f - file)",
+    "(world_readable ?f - file)",
+    "(access_restricted ?f - file)",
+    "(has_dangerous_capability ?f - file)",
+    "(capability_removed ?f - file)",
 ]
 
 
@@ -126,6 +143,56 @@ CANONICAL_ACTIONS: list[dict] = [
         "command_template": "pkill -HUP {svc} 2>/dev/null || service {svc} reload 2>/dev/null || systemctl reload {svc} 2>/dev/null",
         "requires_root": True,
         "source_utility": "pkill",
+        "extraction_method": "canonical",
+    },
+    # --- Filesystem-hardening operators (intent-level STRIPS) -----------------
+    # File params are grounded to real paths by the concretizer (the same
+    # PDDL-identifier -> real-path mechanism used for config files), sourced
+    # from a standard permission-audit introspection and the threat report.
+    {
+        "name": "remove_suid_bit",
+        "parameters": [{"name": "f", "type": "file"}],
+        "preconditions": ["(has_suid ?f)"],
+        "effects": ["(suid_removed ?f)", "(not (has_suid ?f))"],
+        # Drop the setuid/setgid bits; a textbook privilege-escalation fix.
+        "command_template": "chmod u-s,g-s {f}",
+        "requires_root": True,
+        "source_utility": "chmod",
+        "extraction_method": "canonical",
+    },
+    {
+        "name": "remove_world_writable",
+        "parameters": [{"name": "f", "type": "file"}],
+        "preconditions": ["(world_writable ?f)"],
+        "effects": ["(world_write_removed ?f)", "(not (world_writable ?f))"],
+        # Remove the world-write bit (recursively for directories). Deliberately
+        # removes ONLY o-w, preserving o-x so e.g. a cgi-bin dir keeps serving.
+        "command_template": "chmod -R o-w {f}",
+        "requires_root": True,
+        "source_utility": "chmod",
+        "extraction_method": "canonical",
+    },
+    {
+        "name": "restrict_file_access",
+        "parameters": [{"name": "f", "type": "file"}],
+        "preconditions": ["(world_readable ?f)"],
+        "effects": ["(access_restricted ?f)", "(not (world_readable ?f))"],
+        # Remove all world access; for sensitive files (logs, key material) that
+        # must not be readable by unprivileged users.
+        "command_template": "chmod o-rwx {f}",
+        "requires_root": True,
+        "source_utility": "chmod",
+        "extraction_method": "canonical",
+    },
+    {
+        "name": "remove_file_capability",
+        "parameters": [{"name": "f", "type": "file"}],
+        "preconditions": ["(has_dangerous_capability ?f)"],
+        "effects": ["(capability_removed ?f)", "(not (has_dangerous_capability ?f))"],
+        # Strip file capabilities (e.g. cap_setuid+ep on an arbitrary binary).
+        "command_template": "setcap -r {f} 2>/dev/null || setcap -q -r {f}",
+        "requires_root": True,
+        "source_utility": "setcap",
         "extraction_method": "canonical",
     },
 ]
@@ -212,15 +279,35 @@ def merge_canonical_into_domain(domain_path) -> dict:
     # an already-merged-but-missing-type domain still gets repaired.
     types_added: list[str] = []
     types_needed = {"setting", "value"}
-    m_types = re.search(r"\(:types\b([\s\S]*?)\)", text)
+    m_types = re.search(r"\(:types\b", text)
     if m_types:
-        existing_types = set(re.findall(r"[A-Za-z_][\w-]*", m_types.group(1)))
-        missing = sorted(t for t in types_needed if t not in existing_types)
-        if missing:
-            close = m_types.end() - 1
-            insertion = f"\n    ; Config-edit primitive types (canonical)\n    {' '.join(missing)} - object"
-            text = text[:close] + insertion + "\n  " + text[close:]
-            types_added = missing
+        # Walk paren balance to the REAL close of the (:types ...) block, not the
+        # first ')' (which a comment like "(canonical)" would falsely provide).
+        # Comments (;... to EOL) are skipped so a '(' inside a comment does not
+        # perturb the balance. This makes the type-merge idempotent.
+        depth, close, i = 0, -1, m_types.start()
+        while i < len(text):
+            ch = text[i]
+            if ch == ";":
+                nl = text.find("\n", i)
+                i = len(text) if nl < 0 else nl
+                continue
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    close = i
+                    break
+            i += 1
+        if close >= 0:
+            body = text[m_types.start():close]
+            existing_types = set(re.findall(r"[A-Za-z_][\w-]*", body))
+            missing = sorted(t for t in types_needed if t not in existing_types)
+            if missing:
+                insertion = f"\n    {' '.join(missing)} - object"
+                text = text[:close] + insertion + "\n  " + text[close:]
+                types_added = missing
 
     if not preds_to_add and not acts_to_add and not types_added:
         return {"predicates_added": [], "actions_added": [], "types_added": []}

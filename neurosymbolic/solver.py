@@ -132,6 +132,26 @@ Worked example for ccdc-01-style SSH PermitRootLogin scenarios:
   This yields edit-then-reload: edit_config_setting sets PermitRootLogin no,
   reload_sshd_no_systemd applies it (config_applied sshd) while keeping the
   service up. The same shape works for apache2 SSL, nginx, etc.
+
+Worked example for filesystem-hardening scenarios (SUID binary, world-writable
+directory, sensitive log, dangerous capability). Name the file object after its
+real path; the concretizer resolves it. Pick the MINIMAL operator: use
+remove_world_writable (drops only o-w, preserving execute/serve) for a
+world-writable dir like /usr/lib/cgi-bin; use restrict_file_access (drops all
+world access) only for files that must not be world-readable at all (logs, keys):
+
+  (define (problem harden_X) (:domain sysadmin)
+    (:objects
+      usr_sbin_exim4 - file)
+    (:init
+      (has_suid usr_sbin_exim4))
+    (:goal (and
+      (suid_removed usr_sbin_exim4))))
+  This yields remove_suid_bit, which chmod u-s,g-s the real /usr/sbin/exim4.
+  For a world-writable cgi-bin: :init (world_writable usr_lib_cgi_bin),
+  :goal (world_write_removed usr_lib_cgi_bin) -> remove_world_writable.
+  For a dangerous capability: :init (has_dangerous_capability usr_bin_find),
+  :goal (capability_removed usr_bin_find) -> remove_file_capability.
 - If the listed actions cannot reach the goal state, the problem is still
   valid PDDL — but the planner will return no plan, which is the correct
   signal that the domain needs additional actions/predicates.
@@ -224,6 +244,12 @@ _ACTION_TEMPLATES: dict[str, str] = {
         # sshd-style configs. The replacement uses {1} as emitted
         # by FD — OpenSSH parses directives case-insensitively.
         "sed -i 's|^[[:space:]]*{1}[[:space:]]\\+.*|{1} {3}|I' {0}",
+    # Filesystem-hardening operators (canonical). Single file param {0},
+    # resolved to a real path by the concretizer's file grounding.
+    "remove_suid_bit":        "chmod u-s,g-s {0}",
+    "remove_world_writable":  "chmod -R o-w {0}",
+    "restrict_file_access":   "chmod o-rwx {0}",
+    "remove_file_capability": "setcap -r {0} 2>/dev/null || setcap -q -r {0}",
 }
 
 _INTROSPECT_CMDS = {
@@ -243,6 +269,19 @@ _INTROSPECT_CMDS = {
     # application name, so it works identically for apache2/nginx/vsftpd/exim/
     # sshd/mysqld. Feeds value-grounding so generated directives match the app's
     # real syntax + version.
+    # Standard filesystem-hardening audit: SUID/SGID binaries, file
+    # capabilities, and world-writable paths in common web/service roots. This
+    # is a textbook security audit (not benchmark-specific), and its real paths
+    # both inform the problem generator and ground the file-permission operators.
+    "perm_audit": (
+        "echo '# suid'; find / -xdev -type f -perm -4000 2>/dev/null | head -30; "
+        "echo '# sgid'; find / -xdev -type f -perm -2000 2>/dev/null | head -20; "
+        "echo '# caps'; getcap -r / 2>/dev/null | head -20; "
+        "echo '# world_writable'; find /var/www /usr/lib/cgi-bin /srv /opt -xdev "
+        "\\( -perm -0002 \\) 2>/dev/null | head -30; "
+        "echo '# world_readable_logs'; ls -l /var/log/auth.log /var/log/apache2/access.log "
+        "/var/log/syslog 2>/dev/null"
+    ),
     "app_versions": (
         # Binaries of the currently-running daemons via /proc (portable: no ss /
         # netstat / lsof dependency), each with its version banner and owning
@@ -441,7 +480,8 @@ def _normalize_setting_key(s: str) -> str:
 
 
 def _concretize_template(action: dict,
-                         scenario_map: dict[str, str] | None = None) -> str | None:
+                         scenario_map: dict[str, str] | None = None,
+                         file_map: dict[str, str] | None = None) -> str | None:
     name = action["name"]
     params = action.get("params", []) or []
     tmpl = _ACTION_TEMPLATES.get(name) or _ACTION_TEMPLATES.get(
@@ -453,6 +493,12 @@ def _concretize_template(action: dict,
         # PDDL file identifier that must be resolved to a real path.
         if name in ("edit_config_setting", "set_setting_no"):
             params[0] = _resolve_config_path(params[0], scenario_map)
+        # Filesystem-hardening operators: their single file param is a real
+        # path (SUID binary, world-writable dir, log). Resolve against the audit
+        # file-map first (falling back to config paths only if unmatched).
+        elif name in ("remove_suid_bit", "remove_world_writable",
+                      "restrict_file_access", "remove_file_capability"):
+            params[0] = _resolve_config_path(params[0], file_map or scenario_map)
             # The second param is the setting key — strip separators
             # so sed can match the on-disk CamelCase directive name
             # case-insensitively.
@@ -844,6 +890,23 @@ def neurosymbolic_solver(
                 sys_state[key] = ""
         state_block = "\n".join(f"[{k}]\n{v}" for k, v in sys_state.items() if v)
 
+        # Ground file-permission operator targets against a SEPARATE map built
+        # from the security audit (SUID binaries, world-writable dirs, sensitive
+        # logs) plus paths named in the threat report — kept distinct from the
+        # config-file map so a permission op never resolves to a same-named
+        # config file (e.g. remove_suid_bit exim4 must hit /usr/sbin/exim4, not
+        # /etc/exim4/...conf). Keyed by full path, basename, and normalized forms.
+        scenario_file_map: dict[str, str] = {}
+        audit_paths = re.findall(r"/[\w.@/+-]+",
+                                 (sys_state.get("perm_audit", "") or "") + "\n" +
+                                 (state.input_text or ""))
+        for pth in audit_paths:
+            if pth.count("/") >= 1 and not pth.endswith("/") and len(pth) > 3:
+                for key in (pth, pth.rsplit("/", 1)[-1]):
+                    scenario_file_map[key] = pth
+                    scenario_file_map[_normalize_setting_key(key)] = pth
+        state.metadata["scenario_audit_paths"] = len(scenario_file_map)
+
         # ── Phase 2: Translate → PDDL problem ──
         plan_actions: list[dict] = []
         planner_ok = False
@@ -1031,7 +1094,8 @@ def neurosymbolic_solver(
                         continue
                     # grounding produced nothing usable -> fall back to template
 
-                bash_cmd = _concretize_template(action, scenario_config_map)
+                bash_cmd = _concretize_template(action, scenario_config_map,
+                                                scenario_file_map)
                 if not bash_cmd:
                     shell_word = "PowerShell" if os_name == "windows" else "bash"
                     # Pull the action's full (:action ...) block + scenario
