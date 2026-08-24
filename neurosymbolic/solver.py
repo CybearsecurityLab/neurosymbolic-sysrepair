@@ -26,6 +26,7 @@ if str(_PROJECT_ROOT) not in _sys.path:
 
 import json
 import re
+import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -236,6 +237,19 @@ _INTROSPECT_CMDS = {
     "ports":      "ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null",
     "ssh_config": "cat /etc/ssh/sshd_config 2>/dev/null | head -60",
     "firewall":   "ufw status 2>/dev/null || iptables -L -n 2>/dev/null | head -30",
+    # Application name+version behind each listening socket, plus the owning
+    # package. Process-driven (whatever daemon holds a port), NOT keyed on any
+    # application name, so it works identically for apache2/nginx/vsftpd/exim/
+    # sshd/mysqld. Feeds value-grounding so generated directives match the app's
+    # real syntax + version.
+    "app_versions": (
+        "for b in $(ss -tlnp 2>/dev/null | grep -oP 'users:\\(\\(\"\\K[^\"]+' | sort -u); do "
+        "p=$(command -v \"$b\" 2>/dev/null || ls /usr/sbin/\"$b\" /usr/bin/\"$b\" 2>/dev/null | head -1); "
+        "[ -n \"$p\" ] || continue; echo \"== $b\"; "
+        "{ \"$p\" -v 2>&1; \"$p\" -V 2>&1; } | head -3; "
+        "dpkg -S \"$p\" 2>/dev/null | cut -d: -f1 | sort -u | xargs -r dpkg-query -W -f='${Package} ${Version}\\n' 2>/dev/null; "
+        "done | head -40"
+    ),
 }
 
 
@@ -443,6 +457,155 @@ def _concretize_template(action: dict,
         except (IndexError, KeyError):
             pass
     return None
+
+
+# ---------------------------------------------------------------------------
+# Value grounding: a PDDL value token (e.g. `tls12_plus`) is a symbolic goal,
+# not literal config syntax. For config-edit actions we ground it neurally
+# against the live application + version and the real file, then accept the
+# edit only if the application's OWN native validator passes. No application
+# names, directive strings, or scenario ids appear here — every app-specific
+# fact arrives at runtime through introspection and the app's own checker.
+# ---------------------------------------------------------------------------
+
+_VALUE_GROUND_PROMPT = (
+    "You are grounding ONE configuration edit for a remediation plan.\n\n"
+    "Applications on this host (name/version, from live introspection):\n{app_versions}\n\n"
+    "Vulnerability being remediated:\n{vuln_brief}\n\n"
+    "File to edit: {path}\n"
+    "Directive/setting to set: {key}\n"
+    "Symbolic target from the plan (an intent label, NOT literal syntax): {symbolic_value}\n\n"
+    "Current contents of {path} (first lines):\n{current}\n\n"
+    "Return STRICT JSON only, no prose and no markdown fences:\n"
+    '{{"line": "<one syntactically-valid configuration directive line for THIS '
+    "application and version that achieves the symbolic target above>\", "
+    '"validate": "<this application\'s own native configuration-check command, '
+    "which exits non-zero on a syntax error (its -t / configtest / -c mode)>\"}}\n"
+    "The directive line must be valid for the application and version shown "
+    "above. The validate command must be that application's own checker."
+)
+
+
+def _extract_first_json(text: str) -> dict | None:
+    """Pull the first JSON object out of an LLM reply (tolerates <think>
+    preambles and markdown fences)."""
+    if not text:
+        return None
+    text = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
+    depth, start = 0, -1
+    for i, ch in enumerate(text):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start >= 0:
+                try:
+                    obj = json.loads(text[start:i + 1])
+                    if isinstance(obj, dict):
+                        return obj
+                except Exception:
+                    start = -1
+    return None
+
+
+def _looks_safe_validator(cmd: str) -> bool:
+    """A native config-check is a simple read-only invocation. Reject anything
+    that could mutate the box or chain commands — a guard on SHAPE, not on any
+    application. Blocks redirection, pipes, chaining, subshells, deletion."""
+    if not cmd or len(cmd) > 200:
+        return False
+    if any(tok in cmd for tok in (">", "<", "|", ";", "&", "$(", "`", "\n",
+                                   " rm ", "rm -", "dd ", "mkfs", ":(){", "eval ")):
+        return False
+    return True
+
+
+async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
+                                 model, sb, os_name, bash_timeout):
+    """Value-ground and apply an ``edit_config_setting`` action.
+
+    Asks the model for the literal directive line + the application's native
+    validator (given the app+version and the real file), applies it with a
+    backup (comment old, append new), then gates on the validator: on failure
+    it rolls back and re-prompts with the validator's stderr (bounded retries).
+
+    Returns ``(applied_cmd_str | None, meta)``. ``None`` means grounding
+    produced nothing usable; the caller then falls back to the static template.
+    """
+    params = list(action.get("params", []) or [])
+    if len(params) < 2:
+        return None, {}
+    path = _resolve_config_path(params[0], scenario_map)
+    key = params[1]
+    # symbolic target: prefer the 4th param (new_value), else 3rd, else the key
+    symbolic_value = params[3] if len(params) > 3 else (
+        params[2] if len(params) > 2 else key)
+    qp = shlex.quote(path)
+    try:
+        r = await sb.exec(_shell_exec_argv(os_name, f"sed -n '1,120p' {qp} 2>/dev/null"),
+                          timeout=bash_timeout)
+        current = (r.stdout or "")[:2000]
+    except Exception:
+        current = ""
+
+    meta: dict = {"path": path, "key": key, "value_grounding_used": True}
+    last_err = ""
+    for attempt in range(3):
+        prompt = _VALUE_GROUND_PROMPT.format(
+            app_versions=(app_versions or "(none detected)")[:1200],
+            vuln_brief=(vuln_brief or "")[:600], path=path, key=key,
+            symbolic_value=symbolic_value, current=current or "(empty/unreadable)")
+        if last_err:
+            prompt += (f"\n\nA previous attempt failed the validator with:\n"
+                       f"{last_err[:400]}\nReturn a corrected JSON line.")
+        try:
+            resp = await model.generate(
+                input=[ChatMessageUser(content=prompt)],
+                config=GenerateConfig(temperature=0.0, max_tokens=2048))
+        except Exception as e:
+            meta["value_grounding_error"] = str(e)[:150]
+            return None, meta
+        obj = _extract_first_json(resp.completion or "")
+        if not obj or not obj.get("line"):
+            continue
+        line = str(obj["line"]).strip()
+        validate = str(obj.get("validate", "")).strip()
+        meta["value_line"] = line
+        meta["validator_cmd"] = validate
+        meta["validator_attempts"] = attempt + 1
+
+        ql = line.replace("'", "'\\''")
+        ekey = re.escape(key)
+        apply_cmd = (
+            f"cp {qp} {qp}.neuroplan.bak 2>/dev/null; "
+            f"sed -i -E 's|^([[:space:]]*{ekey}[[:space:]].*)$|# \\1|I' {qp} 2>/dev/null; "
+            f"printf '%s\\n' '{ql}' >> {qp}"
+        )
+        try:
+            await sb.exec(_shell_exec_argv(os_name, apply_cmd), timeout=bash_timeout)
+        except Exception:
+            return None, meta
+
+        if validate and _looks_safe_validator(validate):
+            try:
+                vr = await sb.exec(_shell_exec_argv(os_name, validate), timeout=bash_timeout)
+            except Exception:
+                vr = None
+            if vr is not None and vr.returncode == 0:
+                meta["validator_passed"] = True
+                return apply_cmd, meta
+            last_err = (getattr(vr, "stderr", "") or getattr(vr, "stdout", "") or "")[:400]
+            meta["validator_passed"] = False
+            # roll back before retrying
+            await sb.exec(_shell_exec_argv(os_name, f"cp {qp}.neuroplan.bak {qp} 2>/dev/null"),
+                          timeout=bash_timeout)
+            continue
+        # No usable validator: keep the grounded edit but flag it unverified.
+        meta["validator_passed"] = None
+        return apply_cmd, meta
+    return None, meta
 
 
 # ---------------------------------------------------------------------------
@@ -700,6 +863,31 @@ def neurosymbolic_solver(
             for action in plan_actions[:20]:
                 if executed >= message_limit:
                     break
+
+                # Value grounding: a config-edit's value token is a symbolic
+                # goal, not literal syntax. Ground it against the live app +
+                # version and gate on the app's own validator before accepting.
+                if action["name"] == "edit_config_setting":
+                    applied, vmeta = await _ground_and_apply_edit(
+                        action, scenario_config_map,
+                        sys_state.get("app_versions", ""),
+                        (state.input_text or "")[:800],
+                        model, sb, os_name, bash_timeout,
+                    )
+                    if applied:
+                        executed += 1
+                        state.metadata.setdefault("value_grounding", []).append(vmeta)
+                        state.messages.append(ChatMessageAssistant(content=(
+                            f"[neurosym:plan] $ {applied}\n"
+                            f"validator={vmeta.get('validator_cmd')} "
+                            f"passed={vmeta.get('validator_passed')} "
+                            f"attempts={vmeta.get('validator_attempts')}"
+                        )))
+                        if await _verify_in_sandbox(scenario_path, verify_timeout, os_name):
+                            state.output.completion = "REMEDIATION_COMPLETE"
+                            return state
+                        continue
+                    # grounding produced nothing usable -> fall back to template
 
                 bash_cmd = _concretize_template(action, scenario_config_map)
                 if not bash_cmd:
