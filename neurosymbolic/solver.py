@@ -202,25 +202,30 @@ _ACTION_TEMPLATES: dict[str, str] = {
     # is also NON-DESTRUCTIVE (no downtime), which matters for the
     # availability objective. Falls back to service/systemctl/direct-exec
     # only when the process is not already running.
-    "restart_service":      "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; fi",
-    "start_service":        "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
+    # Aliveness-checked reload: SIGHUP the live daemon, and if it did NOT
+    # survive (e.g. apache2, which treats SIGHUP as a hard restart and needs its
+    # envvars sourced) bring it back via its init wrapper, which does source
+    # them. sshd survives HUP so the restart branch never fires. General across
+    # daemons; non-destructive where possible, self-healing where not.
+    "restart_service":      "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\" 2>/dev/null; sleep 1; pgrep -x {0} >/dev/null 2>&1 || service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; else service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; fi",
+    "start_service":        "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\" 2>/dev/null; sleep 1; pgrep -x {0} >/dev/null 2>&1 || service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
     # Phase-1 mined synonym for start_service in some domains
     # (e.g. ccdc-01's refined domain). Same semantic: ensure the
     # service is running with the current config. Reload-in-place if
     # already up so it succeeds on containers that boot with a bash
     # keepalive (or the service itself) as pid 1.
-    "apply_unit_state":     "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
+    "apply_unit_state":     "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\" 2>/dev/null; sleep 1; pgrep -x {0} >/dev/null 2>&1 || service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; else service {0} start 2>/dev/null || /usr/sbin/{0} 2>/dev/null || systemctl start {0} 2>/dev/null; fi",
     "stop_service":         "(service {0} stop 2>/dev/null) || systemctl stop {0}",
     "enable_service":       "systemctl enable {0}",
     "disable_service":      "(service {0} stop 2>/dev/null; systemctl disable {0})",
-    "reload_service":       "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\"; else service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null; fi",
+    "reload_service":       "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\" 2>/dev/null; sleep 1; pgrep -x {0} >/dev/null 2>&1 || service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; else service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null; fi",
     # No-systemd config reload (domain models this explicitly). SIGHUP the
     # running daemon named {0} so it re-reads its config — works for a bare
     # process (sshd, apache2, nginx, ...) and is non-destructive. Parameterised
     # on the service, NOT hard-coded to sshd (a plan grounding this with apache2
     # must never HUP sshd). Falls back to service/systemctl reload.
     "reload_sshd_no_systemd":
-        "kill -HUP \"$(pgrep -x {0} 2>/dev/null | head -1)\" 2>/dev/null || service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null",
+        "pid=$(pgrep -x {0} 2>/dev/null | head -1); if [ -n \"$pid\" ]; then kill -HUP \"$pid\" 2>/dev/null; sleep 1; pgrep -x {0} >/dev/null 2>&1 || service {0} restart 2>/dev/null || systemctl restart {0} 2>/dev/null || /usr/sbin/{0} 2>/dev/null; else service {0} reload 2>/dev/null || systemctl reload {0} 2>/dev/null; fi",
     "lock_user":            "usermod -L {0}",
     "set_file_permissions": "chmod {0} {1}",
     "set_file_owner":       "chown {0} {1}",
