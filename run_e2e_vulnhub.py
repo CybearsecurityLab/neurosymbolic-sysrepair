@@ -26,8 +26,8 @@ for nn in nums:
         inspect_eval(
             neurosymbolic_bench(mode='day1', scenarios=[f'vulnhub/scenario-{nn}'],
                                 domain_path=dom, fd_path='/home/resbears/fast_downward/fast-downward.py',
-                                plan_timeout=120, time_limit=300),
-            model='openai/MiniMax-M2.7', log_dir='./logs_neuroplan_e2e', max_connections=4,
+                                plan_timeout=120, time_limit=900),
+            model='openai/MiniMax-M2.7', log_dir=os.environ.get('E2E_LOGDIR','./logs_neuroplan_e2e'), max_connections=4,
         )
     except Exception as e:
         print(f"=== vulnhub-{nn}: EVAL ERROR {str(e)[:120]} ===", flush=True)

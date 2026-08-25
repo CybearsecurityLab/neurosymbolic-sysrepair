@@ -284,8 +284,12 @@ _INTROSPECT_CMDS = {
         "echo '# caps'; getcap -r / 2>/dev/null | head -20; "
         "echo '# world_writable'; find /var/www /usr/lib/cgi-bin /srv /opt -xdev "
         "\\( -perm -0002 \\) 2>/dev/null | head -30; "
-        "echo '# world_readable_logs'; ls -l /var/log/auth.log /var/log/apache2/access.log "
-        "/var/log/syslog 2>/dev/null"
+        # World-accessible log files. The command MUST exit 0 even when some
+        # paths are absent, or the whole audit's stdout is discarded on
+        # returncode!=0 (which was dropping the SUID list and forcing grounding
+        # onto threat-report prose). find never errors on a missing path.
+        "echo '# world_readable_logs'; find /var/log -maxdepth 2 -type f "
+        "-perm -0004 2>/dev/null | head -20; true"
     ),
     "app_versions": (
         # Binaries of the currently-running daemons via /proc (portable: no ss /
@@ -486,17 +490,37 @@ def _normalize_setting_key(s: str) -> str:
 
 def _concretize_template(action: dict,
                          scenario_map: dict[str, str] | None = None,
-                         file_map: dict[str, str] | None = None) -> str | None:
+                         file_map: dict[str, str] | None = None,
+                         mined_templates: dict | None = None) -> str | None:
     name = action["name"]
     params = action.get("params", []) or []
-    tmpl = _ACTION_TEMPLATES.get(name) or _ACTION_TEMPLATES.get(
-        name.replace("-", "_")
-    )
+    # Prefer the operator's OWN mined command_template over a static one. FD plan
+    # actions carry only {name, params}, so without this the static
+    # _ACTION_TEMPLATES entry wins — e.g. a benign mined `service {svc} restart`
+    # gets shadowed by the destructive static `disable_service` (stop+disable).
+    mined = (mined_templates or {}).get(name)
+    tmpl = (mined.get("command_template") if mined else None) or \
+        _ACTION_TEMPLATES.get(name) or _ACTION_TEMPLATES.get(name.replace("-", "_"))
     if tmpl and params:
         params = list(params)
+        # Ground params by the mined operator's per-param grounding tags when
+        # present (config_path/audited_file resolve to real paths); else fall
+        # back to the canonical name-based resolution below.
+        grounding = (mined or {}).get("grounding") if mined else None
+        if grounding:
+            for i, p in enumerate(action.get("params", []) or []):
+                pname = None
+                schema_params = (mined or {}).get("parameters", [])
+                if i < len(schema_params):
+                    pname = schema_params[i].get("name")
+                tag = grounding.get(pname) if pname else None
+                if tag in ("config_path", "setting_key"):
+                    params[i] = _resolve_config_path(p, scenario_map)
+                elif tag in ("audited_file", "capability"):
+                    params[i] = _resolve_config_path(p, file_map or scenario_map)
         # For canonical config-edit operators, the first param is a
         # PDDL file identifier that must be resolved to a real path.
-        if name in ("edit_config_setting", "set_setting_no"):
+        elif name in ("edit_config_setting", "set_setting_no"):
             params[0] = _resolve_config_path(params[0], scenario_map)
         # Filesystem-hardening operators: their single file param is a real
         # path (SUID binary, world-writable dir, log). Resolve against the audit
@@ -1183,6 +1207,13 @@ def neurosymbolic_solver(
         state.metadata["planner_succeeded"] = planner_ok
         state.metadata["plan_length"] = len(plan_actions)
 
+        # Map mined operator name -> its schema (command_template + grounding),
+        # so the concretizer prefers the operator's own template over a static
+        # (possibly destructive) one.
+        _mined_tmpl_map = {a["name"]: a
+                           for a in (state.metadata.get("_mined_action_schemas") or [])
+                           if a.get("command_template")}
+
         # ── Phase 4: Execute plan ──
         if planner_ok:
             # Reorder the plan: configuration-editing actions must run
@@ -1242,7 +1273,7 @@ def neurosymbolic_solver(
                     # grounding produced nothing usable -> fall back to template
 
                 bash_cmd = _concretize_template(action, scenario_config_map,
-                                                scenario_file_map)
+                                                scenario_file_map, _mined_tmpl_map)
                 if not bash_cmd:
                     shell_word = "PowerShell" if os_name == "windows" else "bash"
                     # Pull the action's full (:action ...) block + scenario
