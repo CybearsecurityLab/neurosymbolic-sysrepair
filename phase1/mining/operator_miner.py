@@ -300,6 +300,12 @@ def mine_operator(intent: RemediationIntent, doc: str, vocabulary: list[str],
         return None
     op["extraction_method"] = "mined"
     op["source_utility"] = op.get("source_utility", intent.verb)
+    # Enforce `apt-get update &&` on package reinstall/upgrade commands: a stale
+    # or absent package index silently makes apt a no-op (exit 0, nothing done).
+    tmpl = op.get("command_template", "") or ""
+    if intent.verb in ("reinstall_package", "upgrade_package") and \
+            "apt-get" in tmpl and "apt-get update" not in tmpl:
+        op["command_template"] = "apt-get update && " + tmpl
     return op
 
 

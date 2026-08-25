@@ -282,8 +282,8 @@ _INTROSPECT_CMDS = {
         "echo '# suid'; find / -xdev -type f -perm -4000 2>/dev/null | head -30; "
         "echo '# sgid'; find / -xdev -type f -perm -2000 2>/dev/null | head -20; "
         "echo '# caps'; getcap -r / 2>/dev/null | head -20; "
-        "echo '# world_writable'; find /var/www /usr/lib/cgi-bin /srv /opt -xdev "
-        "\\( -perm -0002 \\) 2>/dev/null | head -30; "
+        "echo '# world_writable'; find /var/www /usr/lib/cgi-bin /srv /opt "
+        "/tmp /var/tmp /var/spool -xdev \\( -perm -0002 \\) 2>/dev/null | head -40; "
         # World-accessible log files. The command MUST exit 0 even when some
         # paths are absent, or the whole audit's stdout is discarded on
         # returncode!=0 (which was dropping the SUID list and forcing grounding
@@ -565,7 +565,10 @@ _VALUE_GROUND_PROMPT = (
     "which exits non-zero on a syntax error (its -t / configtest / -c mode)>\", "
     '"target_path": "<the file the RUNNING daemon actually obeys for this '
     "directive: if the evidence above shows the directive already set in an "
-    "active file, use THAT file; otherwise use the default file>\"}}\n"
+    "active file, use THAT file; otherwise use the default file>\", "
+    '"service": "<the exact process name (as `pgrep -x` would match, e.g. '
+    "apache2, nginx, sshd, smbd, exim4) of the daemon that must be reloaded for "
+    "this edit to take effect on its live socket; empty if none>\"}}\n"
     "The directive line must be valid for the application and version shown. "
     "The validate command must be that application's own checker. target_path "
     "must be one of the active files listed in the evidence, or the default file."
@@ -718,27 +721,90 @@ async def _effective_config_probe(key, app_versions, model, sb, os_name, bash_ti
     return ev, hit_files
 
 
-async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
-                                 model, sb, os_name, bash_timeout):
-    """Value-ground and apply an ``edit_config_setting`` action.
+def _config_edit_triple(action, mined_schema, scenario_map):
+    """Extract (path, key, symbolic_value) for a config-edit action.
 
-    Asks the model for the literal directive line + the application's native
-    validator (given the app+version and the real file), applies it with a
-    backup (comment old, append new), then gates on the validator: on failure
-    it rolls back and re-prompts with the validator's stderr (bounded retries).
-
-    Returns ``(applied_cmd_str | None, meta)``. ``None`` means grounding
-    produced nothing usable; the caller then falls back to the static template.
+    Canonical ``edit_config_setting`` uses positional params (file, key, old,
+    new). A mined config-edit operator (grounding tags include ``setting_key``
+    or ``value_token``) is mapped BY TAG instead. Returns None if the action is
+    not a config edit.
     """
     params = list(action.get("params", []) or [])
-    if len(params) < 2:
-        return None, {}
-    path = _resolve_config_path(params[0], scenario_map)
-    key = params[1]
-    # symbolic target: prefer the 4th param (new_value), else 3rd, else the key
-    symbolic_value = params[3] if len(params) > 3 else (
-        params[2] if len(params) > 2 else key)
-    qp = shlex.quote(path)
+    name = action["name"]
+    if name in ("edit_config_setting", "set_setting_no"):
+        if len(params) < 2:
+            return None
+        path = _resolve_config_path(params[0], scenario_map)
+        key = params[1]
+        value = params[3] if len(params) > 3 else (
+            params[2] if len(params) > 2 else key)
+        return path, key, value
+    # Mined operator: classify + map by its grounding tags.
+    grounding = (mined_schema or {}).get("grounding") or {}
+    tags = set(grounding.values())
+    if not ({"setting_key", "value_token"} & tags):
+        return None  # not a config edit
+    schema_params = (mined_schema or {}).get("parameters", [])
+    path = key = value = None
+    for i, sp in enumerate(schema_params):
+        if i >= len(params):
+            break
+        tag = grounding.get(sp.get("name"))
+        if tag == "config_path" and path is None:
+            path = _resolve_config_path(params[i], scenario_map)
+        elif tag == "setting_key" and key is None:
+            key = params[i]
+        elif tag == "value_token" and value is None:
+            value = params[i]
+    key = key or name
+    value = value or key
+    # path may be None -> the effective-config probe will supply it downstream.
+    return path, key, value
+
+
+async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
+                                 app_versions, vuln_brief,
+                                 model, sb, os_name, bash_timeout):
+    """Value-ground and apply a config edit given resolved (path, key, value).
+
+    Asks the model for the literal directive line + the application's native
+    validator + the daemon to reload (given the app+version and the real file),
+    applies it with backup (comment old, append new), gates on the validator
+    (rollback + re-prompt on failure), then reloads the owning daemon so a
+    live-socket/live-HTTP oracle sees the change.
+
+    Returns ``(applied_cmd_str | None, meta)``. ``None`` -> caller falls back.
+    """
+    if path is None:
+        path = ""  # effective-config probe below may still find the file
+    # If the path did not resolve to an absolute file (a bare PDDL identifier
+    # like `smb_conf`/`php_ini`), locate the real config file under /etc by its
+    # discriminating tokens. General config-file locator, no app names in code.
+    if not str(path).startswith("/"):
+        # Use the PATH identifier's tokens (e.g. smb_conf -> {smb}); only fall
+        # back to the key's tokens if the path identifier has none. Mixing them
+        # over-constrains the AND-chained grep (smb_conf + widelinks -> no hit).
+        disc = _config_tokens(str(path)) or _config_tokens(str(key))
+        found = ""
+        if disc:
+            # Match every discriminating token, order-independent, via chained
+            # greps (e.g. php_ini -> grep php | grep ini -> /etc/php/.../php.ini;
+            # smb_conf -> grep smb -> /etc/samba/smb.conf).
+            greps = " | ".join(f"grep -i {shlex.quote(t)}" for t in sorted(disc))
+            try:
+                fr = await sb.exec(_shell_exec_argv(
+                    os_name,
+                    f"find /etc -maxdepth 5 -type f \\( -iname '*.conf' -o -iname '*.cnf' "
+                    f"-o -iname '*.ini' -o -iname '*.cf' \\) 2>/dev/null "
+                    f"| {greps} | head -1"),
+                    timeout=bash_timeout)
+                out = (fr.stdout or "").strip()
+                found = out.splitlines()[0].strip() if out else ""
+            except Exception:
+                found = ""
+        if found.startswith("/"):
+            path = found
+    qp = shlex.quote(path) if path else "''"
     try:
         r = await sb.exec(_shell_exec_argv(os_name, f"sed -n '1,120p' {qp} 2>/dev/null"),
                           timeout=bash_timeout)
@@ -784,9 +850,24 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
         # verified as active (evidence-gated: never trust a bare string).
         target = str(obj.get("target_path", "")).strip()
         edit_path = target if target in candidate_files else path
+        if not edit_path:
+            # no default path and the probe named none the model trusts: skip
+            continue
         qpe = shlex.quote(edit_path)
+        # Daemon to reload so a live-socket/live-HTTP oracle sees the change.
+        # Evidence-gated: only reload a name pgrep confirms is running.
+        svc = re.sub(r"[^A-Za-z0-9_.-]", "", str(obj.get("service", "")).strip())[:40]
+        reload_suffix = ""
+        if svc:
+            qsv = shlex.quote(svc)
+            reload_suffix = (
+                f"; if pgrep -x {qsv} >/dev/null 2>&1; then "
+                f"pid=$(pgrep -x {qsv} | head -1); kill -HUP \"$pid\" 2>/dev/null; sleep 1; "
+                f"pgrep -x {qsv} >/dev/null 2>&1 || service {qsv} restart 2>/dev/null "
+                f"|| systemctl restart {qsv} 2>/dev/null || /usr/sbin/{qsv} 2>/dev/null; fi")
         meta["value_line"] = line
         meta["validator_cmd"] = validate
+        meta["reload_service"] = svc
         meta["validator_attempts"] = attempt + 1
         meta["edit_path"] = edit_path
 
@@ -802,6 +883,17 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
         except Exception:
             return None, meta
 
+        async def _reload_and_return():
+            # Reload the owning daemon AFTER the edit is accepted, so a live
+            # oracle sees the change; harmless HUP of a validator-blessed config.
+            if reload_suffix:
+                try:
+                    await sb.exec(_shell_exec_argv(os_name, "true" + reload_suffix),
+                                  timeout=bash_timeout)
+                except Exception:
+                    pass
+            return apply_cmd + reload_suffix
+
         if validate and _looks_safe_validator(validate):
             try:
                 vr = await sb.exec(_shell_exec_argv(os_name, validate), timeout=bash_timeout)
@@ -809,7 +901,7 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
                 vr = None
             if vr is not None and vr.returncode == 0:
                 meta["validator_passed"] = True
-                return apply_cmd, meta
+                return await _reload_and_return(), meta
             last_err = (getattr(vr, "stderr", "") or getattr(vr, "stdout", "") or "")[:400]
             meta["validator_passed"] = False
             # roll back the edited file before retrying
@@ -818,7 +910,7 @@ async def _ground_and_apply_edit(action, scenario_map, app_versions, vuln_brief,
             continue
         # No usable validator: keep the grounded edit but flag it unverified.
         meta["validator_passed"] = None
-        return apply_cmd, meta
+        return await _reload_and_return(), meta
     return None, meta
 
 
@@ -1221,11 +1313,13 @@ def neurosymbolic_solver(
         state.metadata["planner_succeeded"] = planner_ok
         state.metadata["plan_length"] = len(plan_actions)
 
-        # Map mined operator name -> its schema (command_template + grounding),
-        # so the concretizer prefers the operator's own template over a static
-        # (possibly destructive) one.
-        _mined_tmpl_map = {a["name"]: a
-                           for a in (state.metadata.get("_mined_action_schemas") or [])
+        # Map mined operator name -> its full schema (grounding + parameters +
+        # command_template). _mined_tmpl_map (concretizer template preference)
+        # keeps only ops WITH a template; _mined_schema_map keeps all, for the
+        # config-edit-routing classifier which needs the grounding tags.
+        _mined_schema_map = {a["name"]: a
+                             for a in (state.metadata.get("_mined_action_schemas") or [])}
+        _mined_tmpl_map = {n: a for n, a in _mined_schema_map.items()
                            if a.get("command_template")}
 
         # ── Phase 4: Execute plan ──
@@ -1263,10 +1357,15 @@ def neurosymbolic_solver(
                 # version and gate on the app's own validator before accepting.
                 # NEUROPLAN_DISABLE_GROUNDING=1 bypasses all grounding fixes
                 # (baseline/ablation) -> static templates only.
-                if action["name"] == "edit_config_setting" and \
-                        os.environ.get("NEUROPLAN_DISABLE_GROUNDING") != "1":
+                _cfg_triple = None
+                if os.environ.get("NEUROPLAN_DISABLE_GROUNDING") != "1":
+                    _cfg_triple = _config_edit_triple(
+                        action, _mined_schema_map.get(action["name"]),
+                        scenario_config_map)
+                if _cfg_triple is not None:
+                    _p, _k, _v = _cfg_triple
                     applied, vmeta = await _ground_and_apply_edit(
-                        action, scenario_config_map,
+                        _p, _k, _v, scenario_config_map,
                         sys_state.get("app_versions", ""),
                         (state.input_text or "")[:800],
                         model, sb, os_name, bash_timeout,
