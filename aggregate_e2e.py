@@ -26,8 +26,14 @@ for f in glob.glob(f"{logdir}/*.eval"):
         toks = 0
         try: toks = sum(u.total_tokens for u in (log.stats.model_usage or {}).values())
         except Exception: pass
+        # Execute = the AUTHORITATIVE oracle verdict. Use dispatch_scorer.value
+        # ('C' = correct) directly, NOT a reconstruction from components: PoC-only
+        # scenarios (reg_total==0) have regression_pass=None by design and the
+        # oracle scores them C on security alone, so `bool(secure) and bool(reg)`
+        # false-negatived them (bool(None) is False). Mirror the real scorer.
+        oracle_pass = (getattr(sc, "value", None) == "C") if sc else False
         rows[str(s.id)] = dict(comp=comp, val=comp in VALIDATE_OK, plan=comp in PLAN_OK,
-                               exe=comp in EXEC_OK, secure=secure, reg=reg, plen=plen, toks=toks)
+                               exe=oracle_pass, secure=secure, reg=reg, plen=plen, toks=toks)
 
 n = len(rows)
 if not n: print("no samples found in", logdir); sys.exit()
