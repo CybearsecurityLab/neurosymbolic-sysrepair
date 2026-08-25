@@ -841,6 +841,72 @@ async def _run_fast_downward(
     return await asyncio.get_event_loop().run_in_executor(None, _fd_sync)
 
 
+async def _mine_operators_async(threat_text, sb, os_name, bash_timeout, llm,
+                                vocabulary):
+    """Async wrapper around the operator miner: intent extraction (LLM) ->
+    tool-confirm + doc harvest (sb.exec) -> operator extraction (LLM) -> lint.
+    Mirrors operator_miner.mine_operators but uses the async sandbox."""
+    import asyncio
+    from phase1.mining import operator_miner as _om
+
+    async def _sh(cmd):
+        try:
+            r = await sb.exec(_shell_exec_argv(os_name, cmd), timeout=bash_timeout)
+            return (r.returncode, r.stdout or "")
+        except Exception:
+            return (1, "")
+
+    def _call_llm(system, user):
+        return llm.json(system, user)
+
+    # 1. intents (LLM, off-thread so we don't block the loop)
+    loop = asyncio.get_event_loop()
+    intents = await loop.run_in_executor(
+        None, _om.extract_intents, threat_text, llm)
+    vocab = list(vocabulary or [])
+    actions, predicates, rejected, seen = [], [], [], set()
+    for it in intents:
+        # 2. confirm tools via async shell
+        cands = list(dict.fromkeys(
+            [t for t in it.tool_candidates if t] + _om.REMEDIATION_ONTOLOGY[it.verb]))
+        present = []
+        for tool in cands:
+            base = tool.split()[0]
+            rc, out = await _sh(f"command -v {base} >/dev/null 2>&1 && echo yes")
+            if "yes" in out:
+                present.append(base)
+        if not present:
+            continue
+        # doc harvest
+        _, man = await _sh(f"man {present[0]} 2>/dev/null | col -bx 2>/dev/null | head -80")
+        if len((man or "").strip()) < 40:
+            _, man = await _sh(f"{present[0]} --help 2>&1 | head -40")
+        # 3. operator extraction (LLM off-thread)
+        op = await loop.run_in_executor(
+            None, _om.mine_operator, it, (man or "")[:2000], vocab, llm)
+        if not op:
+            rejected.append((it.verb, "extraction-empty"))
+            continue
+        ok, reason = _om.lint_operator(op)
+        if not ok:
+            rejected.append((op.get("name", it.verb), reason))
+            continue
+        if op["name"] in seen:
+            continue
+        seen.add(op["name"])
+        actions.append(op)
+        for pe in (op.get("preconditions", []) + op.get("effects", [])):
+            nm = _om._pred_name(pe)
+            if nm and nm != "not" and nm not in {_om._pred_name(v) for v in vocab}:
+                ptypes = {p["name"]: p["type"] for p in op["parameters"]}
+                m = re.match(r"\(\s*(?:not\s*\()?\s*[A-Za-z_][\w-]*\s+\?(\w+)", pe)
+                pv = m.group(1) if m else None
+                decl = f"({nm} ?{pv or 'x'} - {ptypes.get(pv, 'object') if pv else 'object'})"
+                predicates.append(decl)
+                vocab.append(decl)
+    return {"actions": actions, "predicates": predicates, "rejected": rejected}
+
+
 # ---------------------------------------------------------------------------
 # Solver
 # ---------------------------------------------------------------------------
@@ -911,6 +977,55 @@ def neurosymbolic_solver(
                     scenario_file_map[key] = pth
                     scenario_file_map[_normalize_setting_key(key)] = pth
         state.metadata["scenario_audit_paths"] = len(scenario_file_map)
+
+        # ── Phase 1.5: Mine remediation operators ──
+        # Discover the PDDL remediation operators this scenario needs from its
+        # own threat report + live container tool availability + man pages, and
+        # merge them into a per-scenario domain copy so Fast Downward can plan
+        # them. Suite-agnostic; the hand-authored canonical operators are the
+        # verified cache/seed. Env-gated (NEUROPLAN_DISABLE_MINER=1 to skip).
+        if domain_pddl and os.environ.get("NEUROPLAN_DISABLE_MINER") != "1":
+            try:
+                from phase1.mining.operator_miner import mine_operators, _LLM
+                from common.canonical_actions import (
+                    merge_actions_into_domain, canonical_predicates)
+                _ls = None
+                try:
+                    from common.config_loader import llm_settings as _lset
+                    _ls = _lset()
+                except Exception:
+                    pass
+                _model = getattr(_ls, "model", None) or os.environ.get(
+                    "SYSREPAIR_LLM_MODEL", "MiniMax-M2.7")
+                _base = getattr(_ls, "base_url", None) or os.environ.get(
+                    "SYSREPAIR_LLM_BASE_URL", "https://api.minimax.io/v1")
+                _key = (getattr(_ls, "api_key", None) or os.environ.get("MINIMAX_API_KEY")
+                        or os.environ.get("OPENAI_API_KEY") or "vllm")
+
+                # sb.exec is async and we're inside async solve(); mine via an
+                # async-capable adapter that runs the miner's tool-confirm/doc
+                # probes through sb.exec and its two LLM passes off-thread.
+                mined = await _mine_operators_async(
+                    state.input_text or "", sb, os_name, bash_timeout,
+                    _LLM(_model, _base, _key), canonical_predicates())
+                if mined.get("actions"):
+                    import tempfile as _tf
+                    _dcopy = Path(_tf.mkdtemp(prefix="neurosym_dom_")) / "sysadmin_mined.pddl"
+                    _dcopy.write_text(domain_pddl)
+                    rep = merge_actions_into_domain(
+                        str(_dcopy), mined["actions"], mined["predicates"])
+                    _new = _dcopy.read_text()
+                    dv = assert_valid_domain(_new, source="solver.mined")
+                    if dv.ok:
+                        domain_pddl = _new
+                        state.metadata["mined_operators"] = [
+                            a["name"] for a in mined["actions"]]
+                        state.metadata["mined_merge"] = rep
+                    else:
+                        state.metadata["mined_domain_invalid"] = (dv.detail or dv.error or "")[:150]
+                state.metadata["mined_rejected"] = mined.get("rejected", [])
+            except Exception as e:  # never let mining break the base pipeline
+                state.metadata["miner_error"] = str(e)[:200]
 
         # ── Phase 2: Translate → PDDL problem ──
         plan_actions: list[dict] = []

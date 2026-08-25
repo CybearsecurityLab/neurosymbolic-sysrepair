@@ -250,14 +250,39 @@ def _missing_actions(existing_text: str, candidates: list[dict]) -> list[dict]:
     return out
 
 
+def _types_of(actions: list[dict], predicates: list[str]) -> set[str]:
+    """Every parameter type used by the given actions + typed predicates."""
+    import re
+    types = set()
+    for a in actions:
+        for p in a.get("parameters", []):
+            t = p.get("type")
+            if t:
+                types.add(t)
+    for sig in predicates:
+        # e.g. "(has_suid ?f - file)" -> file
+        for m in re.finditer(r"-\s*([A-Za-z_][\w-]*)", sig):
+            types.add(m.group(1))
+    types.discard("object")
+    return types
+
+
 def merge_canonical_into_domain(domain_path) -> dict:
-    """Append canonical predicates + actions to ``domain_path`` (in place).
+    """Merge the canonical (verified-cache) operators. Thin wrapper over the
+    general merger — canonical_actions.py is the regression seed, not a special
+    case."""
+    return merge_actions_into_domain(domain_path, CANONICAL_ACTIONS, CANONICAL_PREDICATES)
 
-    Idempotent: only adds entries that aren't already present by name. The
-    domain remains a single ``(define (domain ...) ...)`` form — we splice
-    inside the trailing ``)``.
 
-    Returns a small report ``{"predicates_added": [...], "actions_added": [...]}``.
+def merge_actions_into_domain(domain_path, actions: list[dict],
+                              predicates: list[str]) -> dict:
+    """Append the given PDDL predicates + actions to ``domain_path`` (in place).
+
+    General, idempotent merge used for BOTH canonical-cache operators and mined
+    operators (Phase 1.5). Only adds entries absent by name; declares any
+    parameter/predicate types the domain lacks; repairs the (:types) block.
+
+    Returns ``{"predicates_added", "actions_added", "types_added"}``.
     """
     from pathlib import Path
     import re
@@ -265,20 +290,15 @@ def merge_canonical_into_domain(domain_path) -> dict:
     p = Path(domain_path)
     text = p.read_text()
 
-    preds_to_add = _missing_predicates(text, CANONICAL_PREDICATES)
-    acts_to_add = _missing_actions(text, CANONICAL_ACTIONS)
+    preds_to_add = _missing_predicates(text, predicates)
+    acts_to_add = _missing_actions(text, actions)
 
-    # Ensure the types referenced by the canonical predicates / actions are
-    # declared in (:types ...). Phase 2's auto-generated domain typically
-    # has `file`, `service`, etc., but not `setting` or `value` — those
-    # come ONLY from the canonical config-edit predicates. Without them
-    # declared, Fast Downward's translator rejects the domain with
-    # `KeyError: 'setting'` and the planner cannot run. This is the
-    # symmetric fix to canonical predicates: if you add a typed predicate,
-    # the type must also exist. We check this BEFORE the early-return so
-    # an already-merged-but-missing-type domain still gets repaired.
+    # Ensure every type referenced by the merged predicates/actions is declared
+    # in (:types ...). Derived from the actual actions/predicates being merged
+    # (was hardcoded {setting,value} for the canonical set). Without this, Fast
+    # Downward's translator rejects the domain with KeyError on the type.
     types_added: list[str] = []
-    types_needed = {"setting", "value"}
+    types_needed = _types_of(acts_to_add, preds_to_add)
     m_types = re.search(r"\(:types\b", text)
     if m_types:
         # Walk paren balance to the REAL close of the (:types ...) block, not the
