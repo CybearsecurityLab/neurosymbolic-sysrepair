@@ -1020,6 +1020,7 @@ def neurosymbolic_solver(
                         domain_pddl = _new
                         state.metadata["mined_operators"] = [
                             a["name"] for a in mined["actions"]]
+                        state.metadata["_mined_action_schemas"] = mined["actions"]
                         state.metadata["mined_merge"] = rep
                     else:
                         state.metadata["mined_domain_invalid"] = (dv.detail or dv.error or "")[:150]
@@ -1100,11 +1101,37 @@ def neurosymbolic_solver(
                 f"ACTIONS with effects ({len(d_acts)}):\n{act_str}"
             )
 
+            # If Phase 1.5 mined remediation operators for this scenario, direct
+            # the problem generator to include a goal for EACH mined operator's
+            # remediated-state effect (and its vulnerable precondition in :init).
+            # This is derived mechanically from the mined schemas — the general
+            # form of "goal = remediated state" — so no per-scenario authoring.
+            mined_hint = ""
+            _mined = state.metadata.get("mined_operators") or []
+            if _mined:
+                _digest = []
+                _mined_actions = (state.metadata.get("_mined_action_schemas") or [])
+                for _a in _mined_actions:
+                    if _a["name"] in _mined:
+                        _pos = [e for e in _a.get("effects", [])
+                                if not e.strip().lower().startswith("(not")]
+                        _digest.append(
+                            f"  {_a['name']}: init-pattern {_a.get('preconditions')} "
+                            f"-> goal-pattern {_pos}")
+                if _digest:
+                    mined_hint = (
+                        "\n## Required remediation goals (this scenario needs EACH "
+                        "of these operators; put its remediated-state predicate in "
+                        "the GOAL and its vulnerable-state predicate in :init, with "
+                        "the object named from the report/state):\n"
+                        + "\n".join(_digest) + "\n")
+
             problem_prompt = (
                 "## Domain vocabulary (USE ONLY these identifiers)\n"
                 f"{domain_summary}\n\n"
                 f"## Vulnerability Report\n{state.input_text[:3000]}\n\n"
-                f"## Current System State\n{state_block[:3000]}\n\n"
+                f"## Current System State\n{state_block[:3000]}\n"
+                f"{mined_hint}\n"
                 "Generate the PDDL problem file. Match the domain's casing"
                 " and punctuation exactly. Output ONLY the (define (problem"
                 " …) …) form, no markdown fences, no explanation."
