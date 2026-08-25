@@ -270,7 +270,11 @@ def _op_prompt(intent: RemediationIntent, doc: str, vocabulary: list[str]) -> st
         "HARD RULES: the positive effect predicate MUST NOT appear in "
         "preconditions (no STRIPS no-op). Effects MUST delete the vulnerable "
         "precondition. Template placeholders must be a subset of parameter "
-        "names. Prefer a vocabulary predicate over a synonym. No prose.\n"
+        "names. Prefer a vocabulary predicate over a synonym. No prose. "
+        "Only reference ?variables that are declared parameters (no free "
+        "variables). For a package reinstall/upgrade, prefix the command with "
+        "'apt-get update && ' so a stale/absent package index does not make it "
+        "a silent no-op.\n"
         "GROUNDING maps each PARAMETER NAME to a CATEGORY from the fixed set "
         "{config_path, audited_file, package, service, db_principal, "
         "setting_key, value_token, account, capability}. It is the KIND of "
@@ -326,15 +330,22 @@ def lint_operator(op: dict) -> tuple[bool, str]:
     neg_eff = [e for e in eff if e.strip().lower().startswith("(not")]
     if not pos_eff:
         return False, "no-positive-effect"
+    def _norm(s):  # normalize whitespace for full-atom comparison
+        return re.sub(r"\s+", " ", s.strip().lstrip("(").rstrip(")")).strip()
+    pre_atoms = {_norm(p) for p in pre}
+    pos_atoms = {_norm(e) for e in pos_eff}
+    # (i) no STRIPS no-op: a positive effect ATOM (predicate+args) identical to a
+    # precondition atom is a no-op. A same-NAME effect with DIFFERENT args (e.g.
+    # setting_value_is k vnew vs vold) is a legitimate value change, not a no-op.
+    if pos_atoms & pre_atoms:
+        return False, "noop-positive-effect-identical-to-precondition"
+    # (ii) effects delete a vulnerable precondition: either a (not <pre-atom>)
+    # OR a same-name effect that supersedes a precondition (value change).
     pre_names = {_pred_name(p) for p in pre}
-    pos_names = {_pred_name(e) for e in pos_eff}
-    # (i) no STRIPS no-op: positive effect predicate not in preconditions
-    if pos_names & pre_names:
-        return False, "noop-positive-effect-in-precondition"
-    # (ii) effects delete a vulnerable precondition
-    neg_names = {_pred_name(e) for e in neg_eff}
-    if not (neg_names & pre_names):
-        return False, "effects-do-not-delete-vulnerable-precondition"
+    neg_inner = {_norm(e[e.lower().find("(not") + 4:]) for e in neg_eff}
+    supersede = {_pred_name(e) for e in pos_eff} & pre_names
+    if not (neg_inner & pre_atoms) and not supersede:
+        return False, "effects-do-not-change-or-delete-vulnerable-precondition"
     # (iii) template placeholders subset of params
     tmpl = op.get("command_template", "") or ""
     ph = set(re.findall(r"\{(\w+)\}", tmpl))
@@ -346,6 +357,13 @@ def lint_operator(op: dict) -> tuple[bool, str]:
         return False, "param-missing-grounding"
     if any(g not in _VALID_GROUNDINGS for g in grounding.values()):
         return False, f"bad-grounding-tag:{set(grounding.values()) - _VALID_GROUNDINGS}"
+    # (v) variable closure: every ?var in preconditions/effects must be a
+    # declared parameter. A free variable (e.g. ?s never in :parameters) aborts
+    # Fast Downward's translator with exit 31 -> surfaces as a spurious NO_PLAN.
+    used_vars = set(re.findall(r"\?([A-Za-z_]\w*)", " ".join(pre + eff)))
+    free = used_vars - {p for p in pnames if p}
+    if free:
+        return False, f"free-variable-not-a-param:{free}"
     return True, "ok"
 
 

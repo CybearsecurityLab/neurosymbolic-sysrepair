@@ -1039,6 +1039,20 @@ def neurosymbolic_solver(
                     rep = merge_actions_into_domain(
                         str(_dcopy), mined["actions"], mined["predicates"])
                     _new = _dcopy.read_text()
+                    # Run the merged domain through the FD cleaner (forward-declare
+                    # predicates + fix undefined vars), so a mined operator can't
+                    # abort FD's translator -> spurious NO_PLAN.
+                    try:
+                        from phase3.planner_wrapper import RandomWalkGenerator as _RWG
+                        try:
+                            from phase3.planner_wrapper import PlannerConfig as _PC
+                            _cleaned = _RWG(_PC())._validate_pddl_for_fd(_new)
+                        except Exception:
+                            _cleaned = _RWG()._validate_pddl_for_fd(_new)
+                        if _cleaned and "(:action" in _cleaned:
+                            _new = _cleaned
+                    except Exception:
+                        pass
                     dv = assert_valid_domain(_new, source="solver.mined")
                     if dv.ok:
                         domain_pddl = _new
