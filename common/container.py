@@ -51,6 +51,83 @@ class ScenarioContainerManager:
         self.install_osquery = install_osquery
         self._built: dict[str, str] = {}  # scenario.id -> image tag
 
+    # osquery release assets. The .deb alone covers only Debian and Ubuntu,
+    # which is 13 of the corpus's 44 pullable Linux bases; the rest need a
+    # different route. Every asset is from the same 5.23.1 release, so the
+    # osqueryi that Phase 1 talks to is identical whichever path is taken.
+    _OSQUERY_VERSION = "5.23.1"
+    _OSQUERY_BASE = (
+        "https://github.com/osquery/osquery/releases/download/5.23.1"
+    )
+    _OSQUERY_DEB = f"{_OSQUERY_BASE}/osquery_5.23.1-1.linux_amd64.deb"
+    _OSQUERY_RPM = f"{_OSQUERY_BASE}/osquery-5.23.1-1.linux.x86_64.rpm"
+    # The tarball unpacks to usr/bin/osqueryi + opt/osquery and needs nothing
+    # but tar and glibc, so it is the fallback for every image whose package
+    # manager is absent, broken, or pointed at a dead mirror (centos:7's
+    # mirrorlist, Debian 9/10 after archival).
+    _OSQUERY_TGZ = f"{_OSQUERY_BASE}/osquery-5.23.1_1.linux_x86_64.tar.gz"
+    _OSQUERY_MSI = f"{_OSQUERY_BASE}/osquery-5.23.1.msi"
+
+    def _osquery_layer(self) -> str:
+        """A RUN layer that installs osqueryi on any glibc Linux base.
+
+        Tries, in order: the native package for whichever package manager the
+        image has, then the relocatable tarball. Ends by asserting
+        /usr/bin/osqueryi exists, but the whole layer is still `|| true`: a
+        base that genuinely cannot host osquery (musl, Windows) must not fail
+        the build, it must fall through to Phase 1's shell-only introspection.
+        """
+        sh = (
+            "set -e; "
+            # curl is not universal; wget is the other half of the corpus.
+            'fetch() { curl -fsSL "$1" -o "$2" 2>/dev/null '
+            '|| wget -q -O "$2" "$1" 2>/dev/null; }; '
+            "if command -v apt-get >/dev/null 2>&1; then "
+            #   Debian 9/10 are archived: deb.debian.org 404s and the Release
+            #   files are expired, so both have to be worked around or every
+            #   apt call fails before osquery is even fetched.
+            "  apt-get update -qq >/dev/null 2>&1 || { "
+            "    sed -i -e 's|deb.debian.org|archive.debian.org|g' "
+            "-e 's|security.debian.org|archive.debian.org|g' "
+            "-e '/-updates/d' /etc/apt/sources.list 2>/dev/null || true; "
+            "    apt-get -o Acquire::Check-Valid-Until=false update -qq >/dev/null 2>&1 || true; }; "
+            "  apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 || true; "
+            f"  fetch $DEB /tmp/osq.deb && "
+            "  (dpkg -i /tmp/osq.deb >/dev/null 2>&1 || apt-get -y -f install >/dev/null 2>&1) || true; "
+            "elif command -v dnf >/dev/null 2>&1 || command -v microdnf >/dev/null 2>&1; then "
+            "  M=$(command -v dnf || command -v microdnf); "
+            f"  $M install -y curl ca-certificates >/dev/null 2>&1 || true; "
+            f"  fetch $RPM /tmp/osq.rpm && rpm -i --nodeps /tmp/osq.rpm >/dev/null 2>&1 || true; "
+            "elif command -v yum >/dev/null 2>&1; then "
+            #   centos:7 is EOL and its mirrorlist is gone; vault.centos.org
+            #   still serves it. Without this yum cannot install curl.
+            "  sed -i -e 's|^mirrorlist=|#mirrorlist=|g' "
+            "-e 's|^#\\?baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' "
+            "/etc/yum.repos.d/CentOS-*.repo 2>/dev/null || true; "
+            "  yum install -y curl ca-certificates >/dev/null 2>&1 || true; "
+            f"  fetch $RPM /tmp/osq.rpm && rpm -i --nodeps /tmp/osq.rpm >/dev/null 2>&1 || true; "
+            "elif command -v zypper >/dev/null 2>&1; then "
+            "  zypper --non-interactive install curl >/dev/null 2>&1 || true; "
+            f"  fetch $RPM /tmp/osq.rpm && rpm -i --nodeps /tmp/osq.rpm >/dev/null 2>&1 || true; "
+            "elif command -v apk >/dev/null 2>&1; then "
+            #   Alpine is musl. osquery ships no musl build, so the only hope
+            #   is gcompat shimming the glibc tarball; where that fails the
+            #   base is genuinely unsupported and says so in the log.
+            "  apk add --no-cache curl tar gcompat libstdc++ >/dev/null 2>&1 || true; "
+            "fi; "
+            "if [ ! -x /usr/bin/osqueryi ]; then "
+            f"  fetch $TGZ /tmp/osq.tgz && tar -xzf /tmp/osq.tgz -C / usr opt >/dev/null 2>&1 || true; "
+            "fi; "
+            "rm -f /tmp/osq.deb /tmp/osq.rpm /tmp/osq.tgz; "
+            # Existing on disk is not the claim; answering a query is. An
+            # osqueryi that cannot open its tables yields empty introspection,
+            # which is the failure Phase 1 used to swallow silently.
+            '/usr/bin/osqueryi --json "SELECT name FROM os_version LIMIT 1" >/dev/null 2>&1'
+        )
+        sh = (f'DEB="{self._OSQUERY_DEB}"; RPM="{self._OSQUERY_RPM}"; '
+              f'TGZ="{self._OSQUERY_TGZ}"; ' + sh)
+        return f"RUN ({sh}) || true\n"
+
     def build_image(self, scenario: Scenario) -> str:
         """Build the scenario image and append a layer with helper packages.
 
@@ -71,20 +148,7 @@ class ScenarioContainerManager:
         pkgs = self.DEFAULT_EXTRA_PKGS
         osquery_layer = ""
         if self.install_osquery:
-            # apt-key is removed in modern Ubuntu (25.10) and the osquery apt
-            # repo is unsigned without it, so the repo path silently fails.
-            # Install the release .deb directly instead; osqueryi lands at
-            # /usr/bin/osqueryi. Verified on ubuntu:25.10, debian:11, ubuntu:22.04.
-            _OSQUERY_DEB = (
-                "https://github.com/osquery/osquery/releases/download/"
-                "5.23.1/osquery_5.23.1-1.linux_amd64.deb"
-            )
-            osquery_layer = (
-                "RUN (apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 && "
-                f"curl -fsSL {_OSQUERY_DEB} -o /tmp/osq.deb && "
-                "(dpkg -i /tmp/osq.deb >/dev/null 2>&1 || apt-get -y -f install >/dev/null 2>&1) && "
-                "rm -f /tmp/osq.deb && test -x /usr/bin/osqueryi) || true\n"
-            )
+            osquery_layer = self._osquery_layer()
 
         # The Docker ubuntu base is minimized in two layers:
         #   1. /etc/dpkg/dpkg.cfg.d/excludes -> path-exclude=/usr/share/man/*
@@ -107,12 +171,25 @@ class ScenarioContainerManager:
             ">/dev/null 2>&1 || true\n"
         )
 
+        # Many upstream bases drop privileges in their own Dockerfile
+        # (jenkins, jupyter, airflow, elasticsearch, ...). Every helper layer
+        # below writes to /usr, so it has to run as root; the image is then
+        # handed back to the scenario's own user so runtime behaviour is
+        # unchanged. Measured: this alone is the difference between osquery
+        # installing and not on 7 of the corpus's bases.
+        try:
+            orig_user = self.client.images.get(base_tag).attrs["Config"].get("User") or ""
+        except Exception:  # pragma: no cover - image config is always present
+            orig_user = ""
+
         final_tag = f"sysrepair-{scenario.id}:latest"
         addon = (
             f"FROM {base_tag}\n"
+            "USER root\n"
             f"{restore_manpages_layer}"
             f"{osquery_layer}"
             f"RUN rm -rf /var/lib/apt/lists/*\n"
+            + (f"USER {orig_user}\n" if orig_user else "")
         )
         self.client.images.build(
             fileobj=io.BytesIO(addon.encode()),
