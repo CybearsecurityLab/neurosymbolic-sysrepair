@@ -64,10 +64,25 @@ BUDGET = "BUDGET"                    # time or memory, not a capability statemen
 UNKNOWN = "UNINSTRUMENTED"
 
 
-def classify(completion: str, md: dict) -> tuple[str, str]:
-    """Return (verdict, detail)."""
+def classify(completion: str, md: dict, oracle: str | None = None) -> tuple[str, str]:
+    """Return (verdict, detail).
+
+    THE ORACLE IS CHECKED FIRST, AND IT OUTRANKS THE COMPLETION STRING.
+    They disagree. On ccdc/scenario-01 the solver ended with
+    `PLAN_DID_NOT_REMEDIATE`, because its own in-sandbox verify did not pass,
+    while `dispatch_scorer` returned `C` with both the security and the
+    regression gate satisfied. The dispatch scorer is the benchmark's arbiter
+    and is what `aggregate_e2e.py` counts, so classifying on the completion
+    alone would report a passing scenario as a model failure.
+    """
+    if oracle == "C":
+        return PASS, ("oracle passed"
+                      if completion == "REMEDIATION_COMPLETE"
+                      else f"oracle passed; solver self-report was {completion}")
     if completion == "REMEDIATION_COMPLETE":
-        return PASS, ""
+        # The reverse disagreement: the solver believes it finished and the
+        # oracle does not. The oracle wins.
+        return MODEL, "solver reported complete, oracle rejected it"
     if completion == "PLAN_DID_NOT_REMEDIATE":
         return MODEL, "plan executed, oracle rejected the result"
     if completion == "NO_DOMAIN_PROVIDED":
@@ -84,7 +99,10 @@ def classify(completion: str, md: dict) -> tuple[str, str]:
         if rc in (10, 11, 13):
             return NO_PLAN, f"proved unsolvable ({name})"
         if rc == 12:
-            return NO_PLAN, f"search finished without a plan ({name})"
+            # SEARCH_UNSOLVED_INCOMPLETE. The search gave up without proving
+            # anything, so it is not evidence that no plan exists. Only 10, 11
+            # and 13 are proofs.
+            return BUDGET, f"search gave up without a proof ({name})"
         if rc in (20, 21, 22, 23, 24):
             return BUDGET, name
         if rc in (30, 31, 32, 33, 34, 35, 36, 37):
@@ -109,8 +127,9 @@ def main() -> int:
         for s in (log.samples or []):
             comp = (s.output.completion if s.output else "") or ""
             md = s.metadata or {}
-            verdict, detail = classify(comp, md)
             sc = (s.scores or {}).get("dispatch_scorer")
+            verdict, detail = classify(
+                comp, md, getattr(sc, "value", None) if sc else None)
             rows.append({
                 "scenario": str(s.id),
                 "verdict": verdict,
