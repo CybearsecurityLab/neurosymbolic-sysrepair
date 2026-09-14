@@ -397,7 +397,13 @@ class RandomWalkGenerator:
         to the action's :parameters block.
 
         Example: (firewall_rule_modified ?chain) where declared arity is 3
-        → (firewall_rule_modified ?chain ?_pad_0 ?_pad_1)
+        → (firewall_rule_modified ?chain ?pad0 ?pad1)
+
+        Pad names must begin with a letter: the PDDL grammar is
+        /[a-zA-Z][a-zA-Z0-9-_]*/, so the earlier `?_pad_N` form was rejected by
+        the repo's own validator even though Fast Downward tolerated it.
+        Pads are shared per predicate within an action so that a precondition
+        and an effect on the same predicate refer to the same atom.
         """
         # Step 1: Extract declared predicates with their arities
         # Use balanced-paren extraction for robust parsing of the predicates block
@@ -534,6 +540,18 @@ class RandomWalkGenerator:
             replacements = []  # (start, end, new_text) within action_block
             pad_vars = []  # dummy vars to add to :parameters
             pad_counter = 0
+            # Padding variables are shared per predicate WITHIN an action, so
+            # that a predicate appearing in both the precondition and the
+            # effect refers to the same atom. A fresh variable per occurrence
+            # produced actions like
+            #
+            #     :precondition (and (connection_exists ?i ?pad0))
+            #     :effect       (and (not (connection_exists ?i ?pad1)))
+            #
+            # which check one fact and delete a different one, so the planner
+            # could apply the action without ever removing what it tested.
+            # Three actions in the refined global domain were split this way.
+            pads_for_pred: dict[str, list[str]] = {}
 
             for pred_ref in re.finditer(
                 r'\((\w+)((?:\s+\?\w+)*)\s*\)', action_block
@@ -552,12 +570,20 @@ class RandomWalkGenerator:
                         f"but declared with {declared_arity} → padding"
                     )
                     pad_count = declared_arity - len(args)
-                    new_vars = []
-                    for _ in range(pad_count):
-                        var_name = f"?_pad_{pad_counter}"
+                    shared = pads_for_pred.setdefault(pname, [])
+                    while len(shared) < pad_count:
+                        # A PDDL name must begin with a letter (the grammar is
+                        # /[a-zA-Z][a-zA-Z0-9-_]*/), so a leading underscore is
+                        # illegal. These were named `?_pad_N`, which Fast
+                        # Downward's tokenizer happened to accept while the
+                        # repo's own validator rejected the whole domain; the
+                        # solver then discarded the domain and every scenario
+                        # reported NO_DOMAIN_PROVIDED.
+                        var_name = f"?pad{pad_counter}"
                         pad_counter += 1
-                        new_vars.append(var_name)
+                        shared.append(var_name)
                         pad_vars.append(var_name)
+                    new_vars = shared[:pad_count]
 
                     all_args = " ".join(args + new_vars)
                     new_text = f"({pname} {all_args})"

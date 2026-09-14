@@ -11,7 +11,16 @@ def fd_clean(nn):
     base = f'pddl_domains_vulnhub_full/vulnhub-{nn}/'
     if not os.path.exists(base+'sysadmin.pddl'):
         return None
-    open(base+'sysadmin_fd.pddl','w').write(_gen._validate_pddl_for_fd(open(base+'sysadmin.pddl').read()))
+    cleaned = _gen._validate_pddl_for_fd(open(base+'sysadmin.pddl').read())
+    # Check the cleaner's output. Unchecked, a domain the parser rejects is
+    # silently discarded by the solver and the scenario is scored as a planning
+    # failure that says nothing about the planner.
+    from neurosymbolic.solver import assert_valid_domain
+    _v = assert_valid_domain(cleaned, source='run_e2e_vulnhub.fd_clean')
+    if not _v.ok:
+        raise SystemExit(f"FATAL: cleaned {base}sysadmin.pddl does not parse: "
+                         f"{(_v.detail or _v.error or '')[:200]}")
+    open(base+'sysadmin_fd.pddl','w').write(cleaned)
     return base+'sysadmin_fd.pddl'
 
 nums = sys.argv[1:] or ['01']

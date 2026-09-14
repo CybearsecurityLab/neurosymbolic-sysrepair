@@ -104,20 +104,22 @@ def fd_clean(src: Path, dst: Path) -> Path:
     cannot express this repair", and the two have opposite meanings for the
     failure triage, so the cleaner runs before any scenario does.
 
-    THE CLEANER CAN MAKE A DOMAIN WORSE. Its arity padder mints parameters
-    named `?_pad_0`, and a PDDL name may not begin with an underscore, so
-    `assert_valid_domain` rejects the result. `solver.py` responds by dropping
-    the domain entirely and every scenario returns NO_DOMAIN_PROVIDED, which
-    reads in the logs as a total planner failure rather than as a broken input.
-    The global refined domain hits this 105 times; the 30 per-scenario vulnhub
-    domains do not hit it at all, which is why it went unnoticed.
+    THE CLEANER CAN MAKE A DOMAIN WORSE, so its output is checked. It used to
+    mint parameters named `?_pad_0`; a PDDL name may not begin with an
+    underscore, so the cleaned global domain was rejected by the repo's own
+    validator (122 times across 105 lines) while the 30 per-scenario vulnhub
+    domains were untouched, which is why it went unnoticed. That is fixed at
+    source now, but the gates stay: a cleaner that rewrites a domain can always
+    rewrite it into something the planner will not take.
 
-    So: clean, then validate, and keep the cleaned copy only if it is at least
-    as valid as the original.
+    So: clean, then put the result through BOTH gates (the `pddl` grammar and
+    Fast Downward's own translator) and refuse the run if either rejects it.
+    There is deliberately no fallback to the uncleaned domain: the raw global
+    refined domain passes the grammar but fails FD's translator, so falling
+    back trades a loud failure for a silent one. See fd_translates().
     """
     sys.path.insert(0, str(HERE))
     from phase3.planner_wrapper import RandomWalkGenerator  # noqa: E402
-    from neurosymbolic.solver import assert_valid_domain  # noqa: E402
 
     try:
         from phase3.planner_wrapper import PlannerConfig
@@ -127,17 +129,62 @@ def fd_clean(src: Path, dst: Path) -> Path:
 
     raw = src.read_text()
     cleaned = gen._validate_pddl_for_fd(raw)
-    if assert_valid_domain(cleaned, source="run_bench.fd_clean").ok:
+    if grammar_ok(cleaned) and fd_translates(cleaned):
         dst.write_text(cleaned)
         return dst
-    if assert_valid_domain(raw, source="run_bench.raw").ok:
-        print(f"[setup] WARNING: FD cleaner made {src.name} invalid; "
-              f"using the uncleaned domain instead", flush=True)
-        return src
     raise SystemExit(
-        f"FATAL: {src} is invalid both before and after FD cleaning. "
-        f"Refusing to run, because the solver would silently report every "
-        f"scenario as NO_DOMAIN_PROVIDED.")
+        f"FATAL: the FD-cleaned form of {src} does not pass both gates "
+        f"(pddl grammar: {grammar_ok(cleaned)}, FD translator: "
+        f"{fd_translates(cleaned)}). Refusing to run. Falling back to the "
+        f"uncleaned domain is NOT an acceptable recovery: see fd_translates().")
+
+
+def grammar_ok(pddl_text: str) -> bool:
+    from neurosymbolic.solver import assert_valid_domain  # noqa: E402
+    return assert_valid_domain(pddl_text, source="run_bench.gate").ok
+
+
+def fd_translates(pddl_text: str) -> bool:
+    """Does Fast Downward's translator accept this domain?
+
+    THE TWO GATES DISAGREE, IN BOTH DIRECTIONS, AND BOTH ARE NEEDED.
+
+    * FD's tokenizer accepts any non-space token, so it accepts the illegal
+      `?_pad_0` that the `pddl` grammar rejects.
+    * The `pddl` grammar is a parse and nothing more: it accepts the raw global
+      refined domain, which FD then refuses to translate (exit 31,
+      "Undefined predicate"). Measured, on this machine:
+
+          raw sysadmin_refined.pddl          grammar PASS   FD exit 31
+          FD-cleaned, pads renamed legal     grammar PASS   FD exit 0
+
+    Checking only the grammar is what made the earlier fallback dangerous. The
+    solver does not bind Fast Downward's return code; it only looks for a
+    `sas_plan` file, so a translator abort and a genuinely unsolvable problem
+    both surface as `PLANNER_FOUND_NO_PLAN`, which the aggregator scores
+    Validate 1. An untranslatable domain therefore earns a Validate point on
+    every scenario and reads as "the repair is not expressible in the domain"
+    when the truth is "the domain never reached the planner". That is a worse
+    failure than the NO_DOMAIN_PROVIDED it replaced, because it is invisible.
+    """
+    import subprocess
+    import tempfile
+
+    probe = ("(define (problem fd-translate-probe)\n"
+             "  (:domain sysadmin)\n  (:objects)\n  (:init)\n  (:goal (and))\n)\n")
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td) / "domain.pddl"
+        p = Path(td) / "problem.pddl"
+        d.write_text(pddl_text)
+        p.write_text(probe)
+        try:
+            rc = subprocess.run(
+                [sys.executable, "/home/resbears/fast_downward/fast-downward.py",
+                 "--translate", str(d), str(p)],
+                capture_output=True, cwd=td, timeout=300).returncode
+        except Exception:
+            return False
+    return rc == 0
 
 
 # Set once in main() to whichever global domain actually validates.
