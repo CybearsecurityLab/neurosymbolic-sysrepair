@@ -185,12 +185,37 @@ def fd_translates(pddl_text: str) -> bool:
         p.write_text(probe)
         try:
             rc = subprocess.run(
-                [sys.executable, "/home/resbears/fast_downward/fast-downward.py",
+                [sys.executable, fast_downward(),
                  "--translate", str(d), str(p)],
                 capture_output=True, cwd=td, timeout=300).returncode
         except Exception:
             return False
     return rc == 0
+
+
+def fast_downward() -> str:
+    """Path to Fast Downward's driver.
+
+    Overridable with FAST_DOWNWARD because this runner is not confined to one
+    machine: the Windows suites run on a host with the Windows docker engine,
+    where nothing sits under /home/resbears. The default is this VM's checkout
+    so existing invocations are unchanged.
+
+    The planner version is part of the experiment. These results were produced
+    with Fast Downward 24.06+ at 824499f8f7b1d3f8c0260b2b8b0740ee815dcdca,
+    built `release`. A different revision is a different experiment, so a peer
+    reproducing these numbers must build that revision, not whatever `hg tip`
+    or `git clone` gives them today.
+    """
+    fd = os.environ.get("FAST_DOWNWARD", "/home/resbears/fast_downward/fast-downward.py")
+    if not Path(fd).exists():
+        raise SystemExit(
+            f"Fast Downward driver not found at {fd}.\n"
+            "Set FAST_DOWNWARD to the fast-downward.py of a build of revision\n"
+            "824499f8f7b1d3f8c0260b2b8b0740ee815dcdca (24.06+), which is the\n"
+            "revision these results were produced with."
+        )
+    return fd
 
 
 # Set once in main() to whichever global domain actually validates.
@@ -221,7 +246,7 @@ def run_one(suite: str, nn: str, domain: Path, mode: str, logdir: Path,
             mode=mode,
             scenarios=[f"{SUITES[suite]}/scenario-{nn}"],
             domain_path=str(domain),
-            fd_path="/home/resbears/fast_downward/fast-downward.py",
+            fd_path=fast_downward(),
             plan_timeout=plan_timeout,
             time_limit=time_limit,
         ),

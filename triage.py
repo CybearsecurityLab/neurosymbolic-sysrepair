@@ -33,10 +33,14 @@ from __future__ import annotations
 import argparse
 import csv
 import glob
+import os
 import sys
+from pathlib import Path
 from collections import Counter
 
-sys.path.insert(0, '/home/resbears/projects/sysrepair-bench/inspect_eval')
+sys.path.insert(0, os.environ.get(
+    'SYSREPAIR_INSPECT',
+    str(Path(__file__).resolve().parent.parent / 'sysrepair-bench' / 'inspect_eval')))
 import sysrepair_bench.task  # noqa: F401,E402  (registers the sandbox provider)
 from inspect_ai.log import read_eval_log  # noqa: E402
 
@@ -64,7 +68,8 @@ BUDGET = "BUDGET"                    # time or memory, not a capability statemen
 UNKNOWN = "UNINSTRUMENTED"
 
 
-def classify(completion: str, md: dict, oracle: str | None = None) -> tuple[str, str]:
+def classify(completion: str, md: dict, oracle: str | None = None,
+             limit: str | None = None) -> tuple[str, str]:
     """Return (verdict, detail).
 
     THE ORACLE IS CHECKED FIRST, AND IT OUTRANKS THE COMPLETION STRING.
@@ -108,6 +113,15 @@ def classify(completion: str, md: dict, oracle: str | None = None) -> tuple[str,
         if rc in (30, 31, 32, 33, 34, 35, 36, 37):
             return PIPELINE, f"planner refused our input ({name})"
         return UNKNOWN, name
+    if not completion:
+        # An episode killed by its wall-clock budget never reaches the
+        # completion assignment, so it arrives here with an empty string. That
+        # is a BUDGET outcome, not broken PDDL: scenario-21 had already planned
+        # (fd_returncode 0) and ran out of time during execution. Calling it a
+        # pipeline defect understates how much of the corpus is interpretable.
+        if limit == "time":
+            return BUDGET, "episode hit its wall-clock limit before finishing"
+        return PIPELINE, "episode ended with no completion and no limit recorded"
     return PIPELINE, f"unrecognised completion {completion!r}"
 
 
@@ -128,8 +142,10 @@ def main() -> int:
             comp = (s.output.completion if s.output else "") or ""
             md = s.metadata or {}
             sc = (s.scores or {}).get("dispatch_scorer")
+            lim = getattr(s, "limit", None)
             verdict, detail = classify(
-                comp, md, getattr(sc, "value", None) if sc else None)
+                comp, md, getattr(sc, "value", None) if sc else None,
+                getattr(lim, "type", None) if lim else None)
             rows.append({
                 "scenario": str(s.id),
                 "verdict": verdict,
