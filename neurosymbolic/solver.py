@@ -257,6 +257,55 @@ _ACTION_TEMPLATES: dict[str, str] = {
     "remove_file_capability": "setcap -r {0} 2>/dev/null || setcap -q -r {0}",
 }
 
+# osquery tables read at solve time when osqueryi is available. These mirror the
+# categories the offline domain-construction snapshot uses, so the lifted state
+# has the same shape whether it came from osquery or from the shell probes.
+_OSQUERY_QUERIES = {
+    "osq_packages": "SELECT name, version FROM deb_packages LIMIT 60",
+    "osq_services": "SELECT name, status FROM systemd_units WHERE active_state='active' LIMIT 30",
+    "osq_ports":    "SELECT DISTINCT port, protocol FROM listening_ports WHERE port != 0 LIMIT 30",
+    "osq_users":    "SELECT username, uid, shell FROM users LIMIT 40",
+}
+
+
+async def _ensure_osquery(sb, os_name: str, bash_timeout: int) -> tuple[bool, str]:
+    """Install osquery into the sandbox and confirm it answers a query.
+
+    Returns (available, detail). Never raises: a base that cannot host osquery
+    (musl, an image with no shell, Ubuntu 8.04's glibc 2.7 against osquery's
+    GLIBC_2.12 floor) must fall through to the shell probes rather than fail the
+    episode. That fallback is the normal path for 107 of the 297 scenarios,
+    measured across every base image the corpus builds from.
+
+    Gated by NEUROPLAN_INSTALL_OSQUERY so a run's substrate is a recorded
+    choice: results produced with osquery in the loop are not comparable with
+    results produced without it.
+    """
+    if os.environ.get("NEUROPLAN_INSTALL_OSQUERY", "1") != "1":
+        return False, "disabled by NEUROPLAN_INSTALL_OSQUERY"
+    if os_name == "windows":
+        # osquery ships an MSI for Windows; the Linux install script cannot run
+        # there. Left to the Windows host rather than half-attempted here.
+        return False, "windows: MSI path not attempted from this host"
+    probe = '/usr/bin/osqueryi --json "SELECT name FROM os_version LIMIT 1" 2>/dev/null'
+    try:
+        r = await sb.exec(_shell_exec_argv(os_name, probe), timeout=bash_timeout)
+        if r.returncode == 0 and '"name"' in (r.stdout or ""):
+            return True, "already present"
+    except Exception:
+        pass
+    try:
+        from common.container import osquery_install_sh
+        r = await sb.exec(_shell_exec_argv(os_name, osquery_install_sh()),
+                          timeout=max(bash_timeout, 600))
+        r2 = await sb.exec(_shell_exec_argv(os_name, probe), timeout=bash_timeout)
+        if r2.returncode == 0 and '"name"' in (r2.stdout or ""):
+            return True, "installed"
+        return False, ((r.stderr or r.stdout or "").strip()[-120:] or "install did not yield a working osqueryi")
+    except Exception as e:
+        return False, f"{type(e).__name__}: {str(e)[:100]}"
+
+
 _INTROSPECT_CMDS = {
     "os":         "cat /etc/os-release 2>/dev/null || cat /etc/issue",
     "packages":   "dpkg -l 2>/dev/null | awk 'NR>5{print $2}' | head -60",
@@ -567,8 +616,25 @@ _VALUE_GROUND_PROMPT = (
     "directive: if the evidence above shows the directive already set in an "
     "active file, use THAT file; otherwise use the default file>\", "
     '"service": "<the exact process name (as `pgrep -x` would match, e.g. '
-    "apache2, nginx, sshd, smbd, exim4) of the daemon that must be reloaded for "
-    "this edit to take effect on its live socket; empty if none>\"}}\n"
+    "apache2, nginx, sshd, smbd, exim4) of the daemon that must be RESTARTED for "
+    "this edit to take effect on its live socket; give one whenever a daemon "
+    "reads this file>\", "
+    '"prep": "<optional command to regenerate derived config before the restart '
+    "(e.g. update-exim4.conf, a2enmod ssl); empty if none>\"}}\n"
+    "If ONE directive line cannot achieve the target -- a scoped section "
+    "(<Directory>/<Files>/location{{}}/an INI [section]) or an order-sensitive "
+    "ACL line -- return instead of \"line\":\n"
+    '"block": ["<line 1>", "<line 2>", ...] (the full multi-line payload), and '
+    "optionally ONE of:\n"
+    '"insert_before": "<extended regex matching an EXISTING line the payload '
+    "must PRECEDE -- REQUIRED when the file has first-match semantics and a "
+    "broader existing rule would otherwise shadow the new one, e.g. squid's "
+    "http_access allow all>\",\n"
+    '"insert_in_section": "<extended regex matching the OPENING line of the '
+    "section the payload belongs inside (e.g. a server or virtual-host opening, "
+    "an INI section header like ^[[:space:]]*\\[global\\])>\".\n"
+    "Prefer the single \"line\" form whenever one line suffices. Use "
+    "[[:space:]] not \\s in regexes.\n"
     "The directive line must be valid for the application and version shown. "
     "The validate command must be that application's own checker. target_path "
     "must be one of the active files listed in the evidence, or the default file."
@@ -577,10 +643,13 @@ _VALUE_GROUND_PROMPT = (
 _EFFECTIVE_PROBE_PROMPT = (
     "A remediation must set directive '{key}' where the RUNNING daemon actually "
     "reads it. Applications on this host:\n{app_versions}\n\n"
-    "Give the application's OWN read-only command that prints the FILE PATHS of "
-    "every configuration file the running daemon loads or includes (so we can "
-    "locate which file sets the directive). It must emit real /etc/... file "
-    "paths, not merely a syntax check. Return STRICT JSON only: "
+    "Remediation context (identifies WHICH daemon and config this targets):\n"
+    "{vuln_brief}\n\n"
+    "Give THAT application's OWN read-only command that prints the FILE PATHS of "
+    "every configuration file the running daemon loads or includes (e.g. "
+    "`nginx -T`, `apache2ctl -t -D DUMP_INCLUDES`, `sshd -T`, `testparm -sv`), "
+    "so we can locate which file sets the directive. It must emit real /etc/... "
+    "file paths, not merely a syntax check. Return STRICT JSON only: "
     '{{"dump": "<the command>"}}.'
 )
 
@@ -622,15 +691,17 @@ def _looks_safe_validator(cmd: str) -> bool:
 
 
 def _directive_grep_pattern(key: str) -> str:
-    """Separator-tolerant ERE for a directive key so it matches both the
-    CamelCase (Apache/sshd `SSLProtocol`) and snake_case (nginx `ssl_protocols`)
-    on-disk spellings regardless of how Fast Downward cased the PDDL token."""
-    toks = [t for t in re.split(r"[-_]", key) if t]
-    return "[-_]?".join(re.escape(t) for t in toks) or re.escape(key)
+    """Separator-tolerant ERE for a directive key so it matches the CamelCase
+    (Apache/sshd `SSLProtocol`), snake_case (nginx `ssl_protocols`) AND
+    space-separated (samba `wide links`) on-disk spellings, regardless of which
+    separator Fast Downward's PDDL token used. Tokens may be joined on disk by a
+    space, hyphen, or underscore, so match any of them between tokens."""
+    toks = [t for t in re.split(r"[-_\s]+", key) if t]
+    return r"[-_[:space:]]?".join(re.escape(t) for t in toks) or re.escape(key)
 
 
 async def _effective_config_probe(key, app_versions, model, sb, os_name, bash_timeout,
-                                  dbg=None, scenario_map=None):
+                                  dbg=None, scenario_map=None, vuln_brief=""):
     """Locate the file the RUNNING daemon actually obeys for ``key``.
 
     Symmetric to the native-validator idea: the model supplies the application's
@@ -645,7 +716,8 @@ async def _effective_config_probe(key, app_versions, model, sb, os_name, bash_ti
     try:
         resp = await model.generate(
             input=[ChatMessageUser(content=_EFFECTIVE_PROBE_PROMPT.format(
-                key=key, app_versions=(app_versions or "(none)")[:1000]))],
+                key=key, app_versions=(app_versions or "(none)")[:1000],
+                vuln_brief=(vuln_brief or "(none)")[:800]))],
             config=GenerateConfig(temperature=0.0, max_tokens=4096))
     except Exception:
         return "", set()
@@ -731,18 +803,30 @@ def _config_edit_triple(action, mined_schema, scenario_map):
     """
     params = list(action.get("params", []) or [])
     name = action["name"]
+    # A PDDL object is often an LLM-INVENTED symbol (e.g. `nginx_default_cfg`)
+    # that `_resolve_config_path` cannot map to a real file, so it returns the
+    # symbol unchanged. Passing that non-file string downstream makes grounding
+    # silently no-op against a path that does not exist. Treat any non-absolute
+    # resolution as unknown (None) so `_ground_and_apply_edit`'s live-system
+    # locator finds the real config file from the running daemon instead.
+    def _abs_or_none(p):
+        return p if (isinstance(p, str) and p.startswith("/")) else None
     if name in ("edit_config_setting", "set_setting_no"):
         if len(params) < 2:
             return None
-        path = _resolve_config_path(params[0], scenario_map)
+        path = _abs_or_none(_resolve_config_path(params[0], scenario_map))
         key = params[1]
         value = params[3] if len(params) > 3 else (
             params[2] if len(params) > 2 else key)
         return path, key, value
-    # Mined operator: classify + map by its grounding tags.
+    # Mined operator: classify + map by its grounding tags. A config edit is
+    # signalled by a setting_key/value_token tag OR by the block-insertion verb
+    # (insert_directive_block), whose ops may only carry a config_path tag.
     grounding = (mined_schema or {}).get("grounding") or {}
     tags = set(grounding.values())
-    if not ({"setting_key", "value_token"} & tags):
+    verb = (mined_schema or {}).get("source_utility", "")
+    if not ({"setting_key", "value_token"} & tags) and \
+            verb != "insert_directive_block":
         return None  # not a config edit
     schema_params = (mined_schema or {}).get("parameters", [])
     path = key = value = None
@@ -751,7 +835,7 @@ def _config_edit_triple(action, mined_schema, scenario_map):
             break
         tag = grounding.get(sp.get("name"))
         if tag == "config_path" and path is None:
-            path = _resolve_config_path(params[i], scenario_map)
+            path = _abs_or_none(_resolve_config_path(params[i], scenario_map))
         elif tag == "setting_key" and key is None:
             key = params[i]
         elif tag == "value_token" and value is None:
@@ -762,9 +846,38 @@ def _config_edit_triple(action, mined_schema, scenario_map):
     return path, key, value
 
 
+def _directive_from_template(tmpl: str):
+    """Extract the config DIRECTIVE/line a mined operator's command_template
+    writes into a file, e.g. from
+      grep -q '...' {cfg} || echo 'location ~ /\\. { deny all; }' >> {cfg}
+    return `location ~ /\\. { deny all; }`. Picks the quoted payload of the
+    write verb (echo/printf/tee/cat<<<). Returns "" if none. General: the
+    content is the miner's OWN output, no app names in code."""
+    if not tmpl:
+        return ""
+    # A self-contained in-place editor (sed/awk/perl -i) IS the fix and runs as
+    # a whole command via the template path; do NOT extract a "directive" from
+    # its expression (that would apply the sed s/// string as a config block).
+    if re.search(r"\b(sed|awk|perl)\b.*(-i|s/|/[a-z]?')", tmpl):
+        return ""
+    # payload of a write verb: echo/printf 'X' ...   |  tee ... <<< 'X'
+    m = re.search(r"(?:echo|printf)\s+(?:-\S+\s+)*'([^']{3,})'", tmpl)
+    if not m:
+        m = re.search(r"<<<\s*'([^']{3,})'", tmpl)
+    if not m:
+        # any quoted string that looks like a directive (has a space or brace)
+        for q in re.findall(r"'([^']{3,})'", tmpl):
+            if " " in q or "{" in q or "=" in q:
+                if not q.strip().startswith("{"):  # skip placeholder-only
+                    return q.strip()
+        return ""
+    return m.group(1).strip()
+
+
 async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
                                  app_versions, vuln_brief,
-                                 model, sb, os_name, bash_timeout):
+                                 model, sb, os_name, bash_timeout,
+                                 mined_template=""):
     """Value-ground and apply a config edit given resolved (path, key, value).
 
     Asks the model for the literal directive line + the application's native
@@ -812,19 +925,137 @@ async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
     except Exception:
         current = ""
 
+    # Listening daemons: the process owning the vulnerable port is usually the
+    # one to restart. Fed to the prompt, and used as a deterministic fallback
+    # when the model does not name a service (fixes bind-address edits whose
+    # plan had no reload action).
+    try:
+        sr = await sb.exec(_shell_exec_argv(
+            os_name, "ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null"),
+            timeout=bash_timeout)
+        ss_out = (sr.stdout or "")[:800]
+    except Exception:
+        ss_out = ""
+    listening = ("Listening daemons (the process owning the vulnerable port is "
+                 "usually the one to restart):\n" + ss_out + "\n\n") if ss_out else ""
+
     # Effective-config introspection: find where the running daemon actually
     # obeys this directive (multi-file include graphs: apache vhosts, nginx
     # includes). The model may then target that file instead of the default.
     _probe_dbg: dict = {}
     effective, candidate_files = await _effective_config_probe(
         key, app_versions, model, sb, os_name, bash_timeout, _probe_dbg,
-        scenario_map=scenario_map)
+        scenario_map=scenario_map, vuln_brief=vuln_brief)
+    effective = listening + effective
 
     meta: dict = {"path": path, "key": key, "value_grounding_used": True,
                   "effective_probe_used": bool(candidate_files),
                   "candidate_files": len(candidate_files),
                   "probe_debug": _probe_dbg}
     last_err = ""
+
+    # Deterministic mined-directive path. A mined operator carries its OWN
+    # directive in its command_template (e.g. echo 'location ~ /\. { deny all; }'
+    # >> {cfg}). Applying that content directly -- into the file+context where it
+    # takes effect (a scoped `location` inside its `server {`; else the setting's
+    # section) -- is more reliable than re-deriving it through the LLM, which is
+    # non-deterministic and was silently no-opping mined block operators. Runs
+    # BEFORE the model loop; on success returns immediately. General: content is
+    # the miner's, file/context found from the live daemon's own config graph.
+    _directive = _directive_from_template(mined_template)
+    if _directive and candidate_files:
+        scoped = re.match(r"(location|<Directory|<Location|<Files)", _directive, re.I)
+        fl = " ".join(shlex.quote(f) for f in list(candidate_files)[:60])
+        tgt = ""
+        needle = (r"^[[:space:]]*(server[[:space:]]*\{|<VirtualHost|<Directory)"
+                  if scoped else
+                  r"^[[:space:]]*\[[A-Za-z0-9_.-]+\][[:space:]]*$")
+        try:
+            gr = await sb.exec(_shell_exec_argv(
+                os_name, f"grep -lE -- {shlex.quote(needle)} {fl} 2>/dev/null | head -1"),
+                timeout=bash_timeout)
+            hits = (gr.stdout or "").strip().splitlines()
+            if hits and hits[0] in candidate_files:
+                tgt = hits[0]
+        except Exception:
+            tgt = ""
+        # A scoped directive (nginx `location`, apache `<Directory>`) is INERT in
+        # the wrong file, and worse, applying it to an unrelated /etc file (e.g.
+        # nsswitch.conf) is a silent no-op remediation. If no candidate file holds
+        # the container, search the daemon's OWN config tree live (via its config
+        # dir), and NEVER fall back to an arbitrary file.
+        if not tgt and scoped:
+            try:
+                dirs = "/etc/nginx /etc/apache2 /etc/httpd /etc/lighttpd"
+                gr = await sb.exec(_shell_exec_argv(
+                    os_name, f"grep -rlE -- {shlex.quote(needle)} {dirs} 2>/dev/null | head -1"),
+                    timeout=bash_timeout)
+                h = (gr.stdout or "").strip().splitlines()
+                if h and h[0].startswith("/"):
+                    tgt = h[0]
+            except Exception:
+                pass
+        if not tgt and not scoped:
+            # a plain setting can land in any single-file candidate that exists
+            tgt = next(iter(candidate_files), "")
+        # scoped with no container file found -> do NOT guess; fall through to
+        # the LLM value-grounding rather than corrupting a random file.
+        if tgt:
+            import base64 as _b64
+            b64 = _b64.b64encode((_directive + "\n").encode()).decode()
+            qt = shlex.quote(tgt)
+            # Placement: a scoped block goes just inside `server {`; a plain INI
+            # setting (samba `wide links = no`, exim `dc_local_interfaces=...`)
+            # goes inside its section ([global]) with the stale key commented,
+            # NOT appended at EOF (inert / last-value-wins). The directive's key
+            # is the text before '=' (or the whole line for a bare directive).
+            anch = "server {" if scoped else "[global]"
+            comment_old = ""
+            if not scoped:
+                _dk = _directive.split("=", 1)[0].strip() if "=" in _directive else _directive.strip()
+                _pat = _directive_grep_pattern(_dk)
+                comment_old = (f"sed -i -E 's|^([[:space:]]*{_pat}[[:space:]].*)$|# \\1|I' "
+                               f"{qt} 2>/dev/null; ")
+            # derive the daemon to restart from listening-socket evidence
+            svc = ""
+            if ss_out:
+                procs = set(re.findall(r'"([\w.-]+)"', ss_out))
+                cand = [p for p in procs if _config_tokens(p) & (_config_tokens(tgt) or {"x"})]
+                if len(set(cand)) == 1:
+                    svc = re.sub(r"[^A-Za-z0-9_.-]", "", cand[0])[:40]
+                elif procs:
+                    svc = re.sub(r"[^A-Za-z0-9_.-]", "", sorted(procs)[0])[:40]
+            qsv = shlex.quote(svc) if svc else ""
+            reload_c = (
+                f"; {{ service {qsv} restart 2>/dev/null || systemctl restart {qsv} 2>/dev/null "
+                f"|| {{ p=$(pgrep -x {qsv}|head -1); [ -n \"$p\" ] && kill -HUP \"$p\"; }}; "
+                f"sleep 1; pgrep -x {qsv} >/dev/null || service {qsv} start 2>/dev/null "
+                f"|| /usr/sbin/{qsv} 2>/dev/null; }}") if svc else ""
+            apply = (
+                f"cp {qt} {qt}.neuroplan.bak 2>/dev/null; "
+                f"{comment_old}"
+                f"printf '%s' {shlex.quote(b64)} | base64 -d > /tmp/.np.md; "
+                f"if grep -qzF -- \"$(cat /tmp/.np.md)\" {qt} 2>/dev/null; then :; else "
+                # index() = LITERAL substring match, so a section header like
+                # [global] (a regex char-class) or `server {` matches verbatim;
+                # insert the block right after the first anchor line, else EOF.
+                f"ANCH={shlex.quote(anch)} awk 'BEGIN{{while((getline l<\"/tmp/.np.md\")>0)b=b l \"\\n\"}} "
+                "{ print } "
+                "!d && ENVIRON[\"ANCH\"]!=\"\" && index($0, ENVIRON[\"ANCH\"])>0 { printf \"%s\", b; d=1 } "
+                "END{ if(!d) printf \"%s\", b }' "
+                f"{qt} > /tmp/.np.mnew && cat /tmp/.np.mnew > {qt}; fi")
+            try:
+                await sb.exec(_shell_exec_argv(os_name, apply), timeout=bash_timeout)
+                # native validator (best-effort): nginx -t / apachectl -t via the daemon
+                if svc:
+                    await sb.exec(_shell_exec_argv(os_name, "true" + reload_c), timeout=bash_timeout)
+                meta.update({"mined_directive_applied": _directive[:120],
+                             "edit_path": tgt, "reload_service": svc,
+                             "deterministic_mined_path": True})
+                return apply + reload_c, meta
+            except Exception:
+                pass  # fall through to LLM value-grounding
+
     for attempt in range(3):
         prompt = _VALUE_GROUND_PROMPT.format(
             app_versions=(app_versions or "(none detected)")[:1200],
@@ -842,9 +1073,9 @@ async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
             meta["value_grounding_error"] = str(e)[:150]
             return None, meta
         obj = _extract_first_json(resp.completion or "")
-        if not obj or not obj.get("line"):
+        if not obj or not (obj.get("line") or obj.get("block")):
             continue
-        line = str(obj["line"]).strip()
+        line = str(obj.get("line") or "").strip()
         validate = str(obj.get("validate", "")).strip()
         # Retarget to the effective file only if the model named one the probe
         # verified as active (evidence-gated: never trust a bare string).
@@ -854,30 +1085,134 @@ async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
             # no default path and the probe named none the model trusts: skip
             continue
         qpe = shlex.quote(edit_path)
-        # Daemon to reload so a live-socket/live-HTTP oracle sees the change.
-        # Evidence-gated: only reload a name pgrep confirms is running.
+        # Daemon to restart so a live-socket/live-HTTP oracle sees the change.
+        # Evidence-gated to a running/known daemon. A full restart (not just HUP)
+        # is used because many directives (bind address, samba wide-links, squid
+        # ACLs) are only re-read on restart; we then ensure the daemon is back up
+        # so the availability oracle still passes. An optional model-supplied
+        # `prep` command (e.g. update-exim4.conf) regenerates derived config
+        # before the restart. All evidence-gated; no app names in code.
         svc = re.sub(r"[^A-Za-z0-9_.-]", "", str(obj.get("service", "")).strip())[:40]
+        # Deterministic fallback: if the model named no service, derive the
+        # owning daemon from the listening-socket introspection by token overlap
+        # with the edited path/key (e.g. /etc/mysql/... intersects mysqld via
+        # token 'mysql'). Unique match only; else leave empty.
+        if not svc and ss_out:
+            procs = set(re.findall(r'"([\w.-]+)"', ss_out)) | \
+                set(re.findall(r'/(\w[\w.-]+)\s*$', ss_out, re.M))
+            want = _config_tokens(str(edit_path)) | _config_tokens(str(key))
+            cand = [p for p in procs if _config_tokens(p) & want]
+            if len(set(cand)) == 1:
+                svc = re.sub(r"[^A-Za-z0-9_.-]", "", cand[0])[:40]
+        prep = str(obj.get("prep", "")).strip()
+        prep_cmd = (prep + "; ") if (prep and _looks_safe_validator(prep)) else ""
         reload_suffix = ""
         if svc:
             qsv = shlex.quote(svc)
             reload_suffix = (
-                f"; if pgrep -x {qsv} >/dev/null 2>&1; then "
-                f"pid=$(pgrep -x {qsv} | head -1); kill -HUP \"$pid\" 2>/dev/null; sleep 1; "
-                f"pgrep -x {qsv} >/dev/null 2>&1 || service {qsv} restart 2>/dev/null "
-                f"|| systemctl restart {qsv} 2>/dev/null || /usr/sbin/{qsv} 2>/dev/null; fi")
+                f"; {prep_cmd}"
+                f"service {qsv} restart 2>/dev/null || systemctl restart {qsv} 2>/dev/null "
+                f"|| {{ pid=$(pgrep -x {qsv} | head -1); [ -n \"$pid\" ] && kill -HUP \"$pid\" 2>/dev/null; }}; "
+                f"sleep 1; pgrep -x {qsv} >/dev/null 2>&1 || service {qsv} start 2>/dev/null "
+                f"|| /usr/sbin/{qsv} 2>/dev/null || /usr/sbin/{qsv} -D 2>/dev/null")
         meta["value_line"] = line
         meta["validator_cmd"] = validate
         meta["reload_service"] = svc
         meta["validator_attempts"] = attempt + 1
         meta["edit_path"] = edit_path
 
-        ql = line.replace("'", "'\\''")
-        pat = _directive_grep_pattern(key)
-        apply_cmd = (
-            f"cp {qpe} {qpe}.neuroplan.bak 2>/dev/null; "
-            f"sed -i -E 's|^([[:space:]]*{pat}[[:space:]].*)$|# \\1|I' {qpe} 2>/dev/null; "
-            f"printf '%s\\n' '{ql}' >> {qpe}"
-        )
+        blk = obj.get("block")
+        if isinstance(blk, list) and any(str(l).strip() for l in blk):
+            # Multi-line block / ordered-ACL insertion. Payload carried via
+            # base64 (no quoting hazards); idempotent (grep -qzF skips if already
+            # present); anchor via awk ENVIRON, inserting before/after the FIRST
+            # match, else appending at EOF (validator gate + rollback bound it).
+            import base64 as _b64
+            payload = "\n".join(str(l).rstrip() for l in blk[:60])
+            anchor = str(obj.get("insert_before") or obj.get("insert_in_section") or "").strip()[:160]
+            mode = ("before" if obj.get("insert_before")
+                    else "after" if obj.get("insert_in_section") else "append")
+            # A scoped/context directive is inert unless it lands inside its
+            # container: an nginx `location` must live in the file whose
+            # `server {` it belongs to (often an included site file, NOT the
+            # top-level nginx.conf); an apache `<Directory>`/`<Location>` inside
+            # a vhost. The model's target_path is a guess; deterministically
+            # RETARGET edit_path to the candidate file that actually contains the
+            # block's anchor (or, for a recognizably-scoped block with no useful
+            # anchor, a server/vhost container), so a correct plan is not wasted
+            # on the wrong file. Evidence-gated to candidate_files; a single-file
+            # config (e.g. squid.conf) simply finds no better target and stays.
+            first_ln = next((str(l).strip() for l in blk if str(l).strip()), "")
+            scoped = re.match(r"(location|<Directory|<Location|<Files)", first_ln, re.I)
+            if candidate_files:
+                fl = " ".join(shlex.quote(f) for f in list(candidate_files)[:60])
+                # (grep_expr, is_regex): the model's literal anchor first, then
+                # UNCOMMENTED container openers (a line-anchored ERE so a
+                # commented `#\tserver {` example does not win over the real one).
+                needles = [(anchor, False)] if anchor else []
+                if scoped:
+                    needles.append((r"^[[:space:]]*(server[[:space:]]*\{|<VirtualHost|<Directory)", True))
+                for needle, is_re in needles:
+                    flag = "-lE" if is_re else "-lF"
+                    try:
+                        gr = await sb.exec(_shell_exec_argv(
+                            os_name, f"grep {flag} -- {shlex.quote(needle)} {fl} 2>/dev/null | head -1"),
+                            timeout=bash_timeout)
+                        hit = (gr.stdout or "").strip().splitlines()
+                    except Exception:
+                        hit = []
+                    if hit and hit[0] in candidate_files:
+                        edit_path = hit[0]; qpe = shlex.quote(edit_path)
+                        meta["retargeted_to"] = edit_path
+                        # Scoped block with no useful anchor: place it just inside
+                        # the container opener (after `server {`) rather than EOF.
+                        if scoped and mode == "append":
+                            anchor, mode = "server {", "after"
+                        break
+            b64 = _b64.b64encode(payload.encode()).decode()
+            qanch = shlex.quote(anchor)
+            meta["value_block"] = [str(l) for l in blk[:8]]
+            meta["insert_mode"] = mode
+            apply_cmd = (
+                f"cp {qpe} {qpe}.neuroplan.bak 2>/dev/null; "
+                f"printf '%s' {shlex.quote(b64)} | base64 -d > /tmp/.np.block; "
+                f"if grep -qzF -- \"$(cat /tmp/.np.block)\" {qpe} 2>/dev/null; then :; else "
+                f"ANCH={qanch} MODE={mode} awk '"
+                "BEGIN{ while ((getline l < \"/tmp/.np.block\") > 0) b = b l \"\\n\" } "
+                "!d && ENVIRON[\"MODE\"]==\"before\" && ENVIRON[\"ANCH\"]!=\"\" && $0 ~ ENVIRON[\"ANCH\"] { printf \"%s\", b; d=1 } "
+                "{ print } "
+                "!d && ENVIRON[\"MODE\"]==\"after\" && ENVIRON[\"ANCH\"]!=\"\" && $0 ~ ENVIRON[\"ANCH\"] { printf \"%s\", b; d=1 } "
+                "END { if (!d) printf \"%s\", b }' "
+                f"{qpe} > /tmp/.np.new && cat /tmp/.np.new > {qpe}; fi"
+            )
+        else:
+            ql = line.replace("'", "'\\''")
+            pat = _directive_grep_pattern(key)
+            # Comment the old occurrence, then place the new line. A plain EOF
+            # append is WRONG for INI/section files: a global directive (samba
+            # `wide links`, appended after the last share section) is inert
+            # unless it sits in its section. If the file is section-structured
+            # ([global]/[PHP]/...), insert just after the target section header
+            # (model's `insert_in_section`, else `[global]`, else EOF); a file
+            # with NO sections keeps the EOF append. Same "land it in the right
+            # context" principle as the block path; general, no app names. Line
+            # carried via base64 + ENVIRON to avoid any nested-quote hazard.
+            import base64 as _b64
+            b64line = _b64.b64encode(line.encode()).decode()
+            sect = str(obj.get("insert_in_section") or "").strip() or "[global]"
+            qsect = shlex.quote(sect)
+            apply_cmd = (
+                f"cp {qpe} {qpe}.neuroplan.bak 2>/dev/null; "
+                f"sed -i -E 's|^([[:space:]]*{pat}[[:space:]].*)$|# \\1|I' {qpe} 2>/dev/null; "
+                f"printf '%s' {shlex.quote(b64line)} | base64 -d > /tmp/.np.line; "
+                f"if grep -qE '^[[:space:]]*\\[[A-Za-z0-9_.-]+\\][[:space:]]*$' {qpe} 2>/dev/null; then "
+                f"SECT={qsect} awk 'BEGIN{{ getline L < \"/tmp/.np.line\"; done=0 }} "
+                "{ print; t=$0; sub(/^[[:space:]]+/,\"\",t); sub(/[[:space:]]+$/,\"\",t); "
+                "if(!done && t==ENVIRON[\"SECT\"]){ print L; done=1 } } "
+                "END{ if(!done) print L }' "
+                f"{qpe} > /tmp/.np.ini && cat /tmp/.np.ini > {qpe}; "
+                f"else printf '%s\\n' '{ql}' >> {qpe}; fi"
+            )
         try:
             await sb.exec(_shell_exec_argv(os_name, apply_cmd), timeout=bash_timeout)
         except Exception:
@@ -918,10 +1253,190 @@ async def _ground_and_apply_edit(path, key, symbolic_value, scenario_map,
 # Fast Downward runner (blocking, run in executor)
 # ---------------------------------------------------------------------------
 
+def _block_symbols(domain_pddl: str, opener: str) -> set[str]:
+    """Leading symbols of every form inside a top-level domain block.
+
+    Balanced-paren scan so a block written on one line, or closed on its last
+    entry, is still found. A regex with a newline lookahead missed both.
+    """
+    i = domain_pddl.find(opener)
+    if i < 0:
+        return set()
+    depth = 0
+    for j in range(i, len(domain_pddl)):
+        if domain_pddl[j] == "(":
+            depth += 1
+        elif domain_pddl[j] == ")":
+            depth -= 1
+            if depth == 0:
+                block = domain_pddl[i:j + 1]
+                break
+    else:
+        return set()
+    names = {m.group(1) for m in re.finditer(r"\(([A-Za-z_][\w-]*)", block)}
+    names.discard(opener.lstrip("(:"))
+    return names
+
+
+def _declared_domain_types(domain_pddl: str) -> set[str]:
+    """Type names declared in the domain's (:types ...) block.
+
+    Parsed here rather than with `_extract_types`, which harvests bare words
+    and so also returns comment text: on the refined domain it reports 721
+    "types" including `Base`, `types` and `Filesystem`, which are words from
+    the section headers. That is harmless for a prompt summary and useless as
+    a validation gate, because it accepts almost anything.
+    """
+    m = re.search(r"\(:types\b(.*?)\n\s*\)", domain_pddl, re.S)
+    if not m:
+        return set()
+    body = re.sub(r";[^\n]*", " ", m.group(1))          # strip line comments
+    body = body.replace("-", " - ")
+    names = {tok for tok in re.findall(r"[A-Za-z_][\w-]*", body)}
+    names.discard("either")
+    names.add("object")
+    return {n.lower() for n in names}
+
+
+def _undeclared_problem_types(domain_pddl: str, problem_pddl: str) -> list[str]:
+    """Type names the problem's :objects block uses that the domain lacks.
+
+    The third face of the same failure. Fast Downward does not reject an
+    undeclared type at parse time; it crashes during grounding with
+    `KeyError` in `pddl_to_prolog.translate_typed_object` and exits 30, which
+    the solver reported as PLANNER_FOUND_NO_PLAN like everything else.
+
+    Measured on ccdc/scenario-01: given the FULL predicate vocabulary the model
+    wrote a problem whose predicates were all real, then declared
+    `yes no - value`. No type `value` exists in the domain, and the translator
+    died at "Generating Datalog program".
+    """
+    declared = _declared_domain_types(domain_pddl)
+    if not declared:
+        return []
+    om = re.search(r"\(:objects\b(.*?)\)\s*(?=\(:init)", problem_pddl, re.S)
+    if not om:
+        return []
+    body = re.sub(r";[^\n]*", " ", om.group(1))
+    used = re.findall(r"-\s*([A-Za-z_][\w-]*)", body)
+    missing: list[str] = []
+    for t in used:
+        if t.lower() in declared or t.lower() in {x.lower() for x in missing}:
+            continue
+        missing.append(t)
+    return missing
+
+
+def _undeclared_problem_predicates(domain_pddl: str, problem_pddl: str) -> list[str]:
+    """Predicate names the problem uses that the domain never declares.
+
+    The sibling of _declare_missing_objects, for the other half of the same
+    Fast Downward abort. FD exits 31 on "Undefined predicate" exactly as it
+    does on "Undefined object", and `assert_valid_problem` passes both: it
+    parses the problem, it does not check it against the domain's vocabulary.
+
+    An undeclared OBJECT is repaired deterministically below, because the
+    intended object is obvious from the atom that names it. An undeclared
+    PREDICATE cannot be repaired that way: inventing a declaration would let
+    the problem assert a fact no operator can ever read, and a goal on such a
+    fact is unreachable, so the run would still fail, just later and more
+    quietly. The caller instead reports the names back to the model and asks
+    for the problem again in the domain's own vocabulary.
+
+    Measured case: ccdc/scenario-01's generated problem opened its :init with
+    `(config_file sshd_config)`. No such predicate exists in the refined
+    domain. The problem validated, FD refused it, and the scenario was scored
+    as a planning failure.
+    """
+    # Balanced-paren extraction, not a regex with a newline lookahead. The
+    # regex form missed a block written compactly or closed on its last
+    # predicate line, and then the empty-set early return below turned that
+    # miss into a silent pass: exactly the malformed domains most worth
+    # catching were the ones waved through.
+    declared = {n.lower() for n in _block_symbols(domain_pddl, "(:predicates")}
+    if not declared:
+        return []
+    # Functions are NOT folded into the predicate set. Doing so let a problem
+    # use a function symbol as a predicate without being flagged.
+    functions = {n.lower() for n in _block_symbols(domain_pddl, "(:functions")}
+
+    structural = {"and", "or", "not", "when", "forall", "exists", "imply",
+                  "init", "goal", "objects", "="}
+    idx = problem_pddl.find("(:init")
+    body = problem_pddl[idx:] if idx >= 0 else ""
+    missing: list[str] = []
+    for atom in re.finditer(r"\(([A-Za-z_][\w-]*)", body):
+        name = atom.group(1)
+        low = name.lower()
+        if (low in structural or low in declared or low in functions
+                or low in {m.lower() for m in missing}):
+            continue
+        missing.append(name)
+    return missing
+
+
+def _declare_missing_objects(problem_pddl: str, domain_pddl: str) -> str:
+    """Declare in :objects any symbol used in :init/:goal but not declared.
+
+    Fast Downward's translator ABORTS with exit 31 ("Undefined object") when a
+    problem references an object it never declares (a frequent LLM omission: the
+    service symbol in `(service_running nginx)` left out of :objects). The parser
+    validator is more lenient and passes it, so the failure surfaces only as a
+    spurious NO_PLAN. This deterministically repairs the omission before FD:
+    infer each missing object's type from the predicate signature in the domain,
+    else `object`. General; no scenario/app specifics."""
+    pm = re.search(r"\(:predicates(.*?)\n\s*\)\s*\n", domain_pddl, re.S)
+    ptypes: dict[str, list[str]] = {}
+    if pm:
+        for m in re.finditer(r"\(([A-Za-z_][\w-]*)((?:\s+\?[\w-]+\s*-\s*[\w-]+)*)\s*\)",
+                             pm.group(1)):
+            ptypes[m.group(1)] = re.findall(r"\?[\w-]+\s*-\s*([\w-]+)", m.group(2))
+    om = re.search(r"\(:objects(.*?)\)\s*(?=\(:init)", problem_pddl, re.S)
+    declared = {d for d in re.findall(r"([A-Za-z_][\w-]*)", om.group(1))} if om else set()
+    idx = problem_pddl.find("(:init")
+    body = problem_pddl[idx:] if idx >= 0 else ""
+    used: dict[str, str] = {}
+    for atom in re.finditer(r"\(([A-Za-z_][\w-]*)((?:\s+[\w./-]+)*)\)", body):
+        pred, args = atom.group(1), atom.group(2).split()
+        if pred in ("and", "not", "init", "goal", "oneof", "when"):
+            continue
+        tys = ptypes.get(pred, [])
+        for i, a in enumerate(args):
+            if re.match(r"^[A-Za-z_][\w-]*$", a):
+                used.setdefault(a, tys[i] if i < len(tys) else "object")
+    missing = {o: t for o, t in used.items() if o not in declared}
+    if not missing:
+        return problem_pddl
+    decl = " ".join(f"{o} - {t}" for o, t in missing.items())
+    if om:
+        repl = f"(:objects{om.group(1).rstrip()}\n    {decl})"
+        return problem_pddl.replace(om.group(0), repl + "\n  ", 1)
+    # no :objects block at all -> insert one before :init
+    return problem_pddl[:idx] + f"(:objects\n    {decl})\n  " + problem_pddl[idx:]
+
+
 async def _run_fast_downward(
     domain_pddl: str, problem_pddl: str, fd_path: str, timeout: int,
+    diag: dict | None = None,
 ) -> list[dict]:
+    """Plan with Fast Downward. Optionally fill `diag` with why it did not.
+
+    WHY `diag` EXISTS. The subprocess result used to be discarded, so every
+    non-plan outcome collapsed into one bucket: a translator abort on a
+    malformed domain (exit 31), a proof that the problem is unsolvable (12),
+    and a search that exhausted its time (23) all produced an empty plan and
+    then `PLANNER_FOUND_NO_PLAN`. Those mean opposite things. "The domain
+    never parsed" is a defect in this pipeline; "no plan exists" is a claim
+    about the benchmark. Choosing between them per scenario is the whole
+    point of the failure triage, and it was not recoverable from the logs.
+
+    This RECORDS ONLY. The returned plan, the completion string, and every
+    scored value are unchanged; the diagnosis is read back from sample
+    metadata after the run.
+    """
     import asyncio
+
+    _diag = diag if diag is not None else {}
 
     def _fd_sync() -> list[dict]:
         with tempfile.TemporaryDirectory(prefix="neurosym_fd_") as tmpdir:
@@ -930,7 +1445,7 @@ async def _run_fast_downward(
             d.write_text(domain_pddl)
             p.write_text(problem_pddl)
             try:
-                subprocess.run(
+                res = subprocess.run(
                     ["python3", fd_path,
                      "--overall-time-limit", str(timeout),
                      str(d), str(p),
@@ -939,7 +1454,14 @@ async def _run_fast_downward(
                     timeout=timeout + 30, cwd=tmpdir,
                 )
             except subprocess.TimeoutExpired:
+                _diag.update(returncode=None, timed_out=True, stderr="")
                 return []
+            # Fast Downward reports translator errors on STDOUT, not stderr, so
+            # capturing stderr alone yields an empty string on exactly the
+            # failure this diagnostic exists to explain.
+            _diag.update(returncode=res.returncode, timed_out=False,
+                         stderr=(res.stderr or "")[-1500:],
+                         stdout_tail=(res.stdout or "")[-2500:])
             plan_files = sorted(Path(tmpdir).glob("sas_plan*"))
             if not plan_files:
                 return []
@@ -997,13 +1519,30 @@ async def _mine_operators_async(threat_text, sb, os_name, bash_timeout, llm,
         _, man = await _sh(f"man {present[0]} 2>/dev/null | col -bx 2>/dev/null | head -80")
         if len((man or "").strip()) < 40:
             _, man = await _sh(f"{present[0]} --help 2>&1 | head -40")
-        # 3. operator extraction (LLM off-thread)
-        op = await loop.run_in_executor(
-            None, _om.mine_operator, it, (man or "")[:2000], vocab, llm)
+        # 3. operator extraction (LLM off-thread), RETRY-UNTIL-VALID. A single
+        # temp>0 attempt intermittently emits an operator the soundness lint
+        # rejects (e.g. missing delete-effect, free var), which silently drops
+        # the scenario's remediation operator and makes the failure point move
+        # run-to-run. Retry a few times and keep the first lint-passing operator;
+        # this is the determinism half that lets the execution-grounding fixes
+        # actually take effect (the miner is the upstream reliability bottleneck).
+        op = None
+        ok = False
+        reason = "extraction-empty"
+        for _try in range(3):
+            cand = await loop.run_in_executor(
+                None, _om.mine_operator, it, (man or "")[:2000], vocab, llm)
+            if not cand:
+                reason = "extraction-empty"
+                continue
+            _ok, _reason = _om.lint_operator(cand)
+            if _ok:
+                op, ok, reason = cand, True, "ok"
+                break
+            op, reason = cand, _reason  # keep last for the reject record
         if not op:
             rejected.append((it.verb, "extraction-empty"))
             continue
-        ok, reason = _om.lint_operator(op)
         if not ok:
             rejected.append((op.get("name", it.verb), reason))
             continue
@@ -1048,16 +1587,88 @@ def neurosymbolic_solver(
         # Load PDDL domain (validate but DON'T bulk-paste into the LLM prompt;
         # the agent will navigate it via pddl_search/pddl_show_* tools).
         domain_pddl = ""
-        if domain_path and Path(domain_path).exists():
+        if domain_path:
+            if not Path(domain_path).exists():
+                raise RuntimeError(
+                    f"domain_path={domain_path!r} was supplied but does not "
+                    f"exist. Refusing to score this scenario as a planning "
+                    f"failure: see the note below.")
             domain_pddl = Path(domain_path).read_text()
             try:
                 # (assert_valid_domain imported at module top)
                 dval = assert_valid_domain(domain_pddl, source="solver.domain")
                 if not dval.ok:
+                    # A DOMAIN THE CALLER SUPPLIED AND WE CANNOT PARSE IS A
+                    # CONFIGURATION ERROR, NOT A RESULT.
+                    #
+                    # This used to set domain_pddl = "" and carry on. The run
+                    # then completed, terminated as NO_DOMAIN_PROVIDED, and was
+                    # handed to the same oracle as every other sample, so it
+                    # came out as a scored zero. A whole suite could be run
+                    # against an unparseable domain and produce a clean-looking
+                    # table of failures that said nothing about the planner.
+                    # That happened: the FD cleaner's `?_pad_0` output made the
+                    # global refined domain unparseable, and ccdc/scenario-01
+                    # scored 0.00/0.00/0.00 for that reason alone.
+                    #
+                    # Erroring the sample keeps it OUT of the denominator,
+                    # which is where a configuration error belongs.
                     state.metadata["domain_invalid"] = dval.detail or dval.error
-                    domain_pddl = ""  # don't ship a broken domain to FD
+                    raise RuntimeError(
+                        f"supplied domain {domain_path!r} does not parse: "
+                        f"{(dval.detail or dval.error or '')[:200]}")
+            except RuntimeError:
+                raise
             except Exception as e:
                 state.metadata["domain_validation_error"] = str(e)[:200]
+
+        # ── Make the domain deliver what the problem-generation prompt promises ──
+        #
+        # `_PROBLEM_GEN_SYSTEM` teaches the model `config_file`, `setting`,
+        # `setting_value_is`, `edit_config_setting` and `config_applied` by
+        # worked example. The model is not inventing those names, it is
+        # following instructions. Whether they resolve depends entirely on
+        # which domain is loaded:
+        #
+        #   pddl_output/phase3/sysadmin_refined*.pddl   built 2026-04-23
+        #   common/canonical_actions.py config family   added 2026-05-21
+        #
+        # so the default global domain predates the operator family the prompt
+        # is built around, declares none of those names, and Fast Downward
+        # refuses every problem written to the prompt's recipe with exit 31.
+        # The per-scenario domains have the family merged in and plan the same
+        # problem in milliseconds, which is why this was never seen on vulnhub.
+        #
+        # Measured on ccdc/scenario-01 with one problem text:
+        #   global domain                     FD exit 31, undefined predicate
+        #   pddl_ccdc_validate/ccdc-01        FD exit 0, 2-step plan
+        #   global domain + canonical merge   FD exit 0, the SAME 2-step plan
+        #
+        # The merge is idempotent, so a domain that already carries the family
+        # is unchanged. This is a repair to the domain, not to the prompt,
+        # because the canonical operators are part of NeuroPlan's declared
+        # action set either way.
+        if domain_pddl and os.environ.get("NEUROPLAN_DISABLE_CANONICAL") != "1":
+            try:
+                import tempfile as _tf
+                from common.canonical_actions import merge_canonical_into_domain
+                _cpath = Path(_tf.mkdtemp(prefix="neurosym_canon_")) / "sysadmin.pddl"
+                _cpath.write_text(domain_pddl)
+                _rep = merge_canonical_into_domain(str(_cpath))
+                _merged = _cpath.read_text()
+                _cv = assert_valid_domain(_merged, source="solver.canonical")
+                if _cv.ok:
+                    domain_pddl = _merged
+                    state.metadata["canonical_merge"] = {
+                        "types_added": _rep.get("types_added", []),
+                        "predicates_added": len(_rep.get("predicates_added", []) or []),
+                        "actions_added": len(_rep.get("actions_added", []) or []),
+                    }
+                else:
+                    state.metadata["canonical_merge_invalid"] = (
+                        _cv.detail or _cv.error or "")[:150]
+            except Exception as e:  # noqa: BLE001
+                state.metadata["canonical_merge_error"] = str(e)[:200]
 
         # Per-scenario config-path map from the Phase 1 introspection beside
         # the domain: lets the concretizer ground nested service configs
@@ -1068,7 +1679,19 @@ def neurosymbolic_solver(
 
         # ── Phase 1: Introspect ──
         sb = sandbox()
+        osq_ok, osq_detail = await _ensure_osquery(sb, os_name, bash_timeout)
+        state.metadata["osquery_available"] = osq_ok
+        state.metadata["osquery_detail"] = osq_detail
         sys_state: dict[str, str] = {}
+        if osq_ok:
+            for key, q in _OSQUERY_QUERIES.items():
+                try:
+                    r = await sb.exec(
+                        _shell_exec_argv(os_name, f'/usr/bin/osqueryi --json {shlex.quote(q)}'),
+                        timeout=bash_timeout)
+                    sys_state[key] = (r.stdout or "").strip() if r.returncode == 0 else ""
+                except TimeoutError:
+                    sys_state[key] = ""
         for key, cmd in _INTROSPECT_CMDS.items():
             try:
                 r = await sb.exec(_shell_exec_argv(os_name, cmd), timeout=bash_timeout)
@@ -1148,6 +1771,13 @@ def neurosymbolic_solver(
                     dv = assert_valid_domain(_new, source="solver.mined")
                     if dv.ok:
                         domain_pddl = _new
+                        if os.environ.get("NEUROPLAN_DUMP_MERGED"):
+                            try:
+                                _dd = Path(os.environ["NEUROPLAN_DUMP_MERGED"])
+                                _dd.mkdir(parents=True, exist_ok=True)
+                                (_dd / "merged_domain.pddl").write_text(_new)
+                            except Exception:
+                                pass
                         state.metadata["mined_operators"] = [
                             a["name"] for a in mined["actions"]]
                         state.metadata["_mined_action_schemas"] = mined["actions"]
@@ -1176,7 +1806,16 @@ def neurosymbolic_solver(
             # must use; nothing about defensibility changes.
             # ─────────────────────────────────────────────────────────────
             from .pddl_tools import _extract_types, _extract_predicates, _extract_actions
-            d_types = _extract_types(domain_pddl)
+            # _extract_types harvests bare words, so on the refined domain it
+            # returns 721 "types" that are mostly comment text (`Base`,
+            # `types`, `Filesystem` are section headers). The domain declares
+            # 16. Handing the model 705 non-types and then telling it to use
+            # only declared identifiers is why it invents plausible ones: on
+            # ccdc/scenario-01 it wrote `yes no - value` twice in a row, even
+            # after being told `value` is not a type, because it could not find
+            # the real one in the noise. Fast Downward does not reject an
+            # undeclared type at parse time; it crashes during grounding.
+            d_types = sorted(_declared_domain_types(domain_pddl)) or _extract_types(domain_pddl)
             d_pred_pairs = _extract_predicates(domain_pddl)  # [(name, full_signature), ...]
             d_actions_full = _extract_actions(domain_pddl)
             d_acts = sorted(d_actions_full.keys())
@@ -1184,10 +1823,27 @@ def neurosymbolic_solver(
             d_name = _m.group(1) if _m else "sysadmin"
             # Predicate signatures (not just names) — gives LLM the arity so
             # it doesn't emit (pred x y) when the domain expects (pred x).
-            pred_lines = [sig for _, sig in d_pred_pairs[:300]]
+            # HOW MUCH OF THE VOCABULARY THE MODEL IS ALLOWED TO SEE.
+            #
+            # The prompt says "USE ONLY these identifiers". The refined global
+            # domain declares 1974 predicates, so a cap of 300 shows the model
+            # about 15% of them and then holds it to the whole set. It fills
+            # the gaps with plausible inventions: on ccdc/scenario-01 it wrote
+            # `(config_file ...)` and `(setting_value_is ...)`, neither
+            # declared, while correctly using `config_applied`, which is. Fast
+            # Downward then refuses the problem (exit 31) and the scenario is
+            # scored as a planning failure.
+            #
+            # Configurable so the effect of the cap can be measured rather than
+            # argued about. 0 means no cap.
+            _cap = int(os.environ.get("NEUROPLAN_PROMPT_PRED_CAP", "300") or 0)
+            _shown = d_pred_pairs if _cap <= 0 else d_pred_pairs[:_cap]
+            pred_lines = [sig for _, sig in _shown]
             preds_str = "\n  ".join(pred_lines)
-            if len(d_pred_pairs) > 300:
-                preds_str += f"\n  ...(+{len(d_pred_pairs)-300} more)"
+            if len(_shown) < len(d_pred_pairs):
+                preds_str += f"\n  ...(+{len(d_pred_pairs)-len(_shown)} more)"
+            state.metadata["prompt_predicates_shown"] = len(_shown)
+            state.metadata["domain_predicates_total"] = len(d_pred_pairs)
             # Build action summaries showing :parameters, :precondition,
             # and :effect so the LLM can build a problem whose init
             # SATISFIES the precondition of an action that PRODUCES the
@@ -1292,12 +1948,62 @@ def neurosymbolic_solver(
                     domain_pddl, problem_pddl, source=f"solver.problem.attempt{attempt+1}",
                 )
                 if pval.ok:
-                    parser_error = ""
-                    break
+                    # THE GRAMMAR CHECK IS NOT ENOUGH. `assert_valid_problem`
+                    # parses; it does not check that the problem speaks the
+                    # domain's vocabulary. A problem whose :init asserts a
+                    # predicate the domain never declares parses cleanly, is
+                    # recorded as pddl_problem_valid=True, and is then refused
+                    # by Fast Downward's translator with exit 31, "Undefined
+                    # predicate". Because any missing sas_plan was reported as
+                    # PLANNER_FOUND_NO_PLAN, that landed in the logs as "the
+                    # domain cannot express this repair" and scored Validate 1.
+                    # Measured on ccdc/scenario-01: the model wrote
+                    # `(config_file sshd_config)`, no such predicate exists,
+                    # and the scenario scored a clean zero.
+                    #
+                    # The loop already feeds parse errors back to the model, so
+                    # the vocabulary mismatch goes through the same channel,
+                    # naming the offenders.
+                    bad_preds = _undeclared_problem_predicates(
+                        domain_pddl, problem_pddl)
+                    bad_types = _undeclared_problem_types(
+                        domain_pddl, problem_pddl)
+                    if not bad_preds and not bad_types:
+                        parser_error = ""
+                        break
+                    state.metadata["problem_undeclared_predicates"] = bad_preds
+                    state.metadata["problem_undeclared_types"] = bad_types
+                    parts = []
+                    if bad_preds:
+                        parts.append("predicates the domain does not declare: "
+                                     + ", ".join(bad_preds))
+                    if bad_types:
+                        legal = sorted(_declared_domain_types(domain_pddl))
+                        parts.append(
+                            "types the domain does not declare: "
+                            + ", ".join(bad_types)
+                            + ". The ONLY declared types are: "
+                            + ", ".join(legal)
+                            + ". Use one of those, or drop the object")
+                    parser_error = (
+                        "Your problem used identifiers the planner cannot "
+                        "resolve, so it refuses the problem. " + "; ".join(parts)
+                        + ". Rewrite the problem using ONLY identifiers from "
+                        "the domain vocabulary above. Do not invent names."
+                    )
+                    continue
                 parser_error = (pval.detail or pval.error or "unknown parse error")[:600]
 
             state.metadata["pddl_problem"] = problem_pddl[:2000]
             state.metadata["pddl_problem_valid"] = (parser_error == "")
+            if os.environ.get("NEUROPLAN_DUMP_MERGED") and problem_pddl:
+                try:
+                    _dd = Path(os.environ["NEUROPLAN_DUMP_MERGED"])
+                    _dd.mkdir(parents=True, exist_ok=True)
+                    (_dd / "gen_problem.pddl").write_text(problem_pddl)
+                    (_dd / "parser_error.txt").write_text(parser_error or "OK")
+                except Exception:
+                    pass
             if parser_error:
                 state.metadata["pddl_problem_error"] = parser_error
 
@@ -1305,13 +2011,36 @@ def neurosymbolic_solver(
             # Only invoke the planner if the problem actually parsed; else
             # the failure mode is "PROBLEM_GENERATION_FAILED", not "no plan".
             if problem_pddl and not parser_error and Path(fd_path).exists():
+                # Repair undeclared objects so FD's translator does not abort
+                # (exit 31) and spuriously report NO_PLAN on a solvable problem.
+                problem_pddl = _declare_missing_objects(problem_pddl, domain_pddl)
+                state.metadata["pddl_problem"] = problem_pddl[:2000]
+                fd_diag: dict = {}
                 plan_actions = await _run_fast_downward(
                     domain_pddl, problem_pddl, fd_path, plan_timeout,
+                    diag=fd_diag,
                 )
                 planner_ok = len(plan_actions) > 0
+                # Exit 31 means the translator refused the domain or problem,
+                # which is not the same event as "no plan exists" even though
+                # both end as PLANNER_FOUND_NO_PLAN. Recorded, not acted on.
+                state.metadata["fd_returncode"] = fd_diag.get("returncode")
+                state.metadata["fd_timed_out"] = fd_diag.get("timed_out")
+                state.metadata["fd_stderr"] = fd_diag.get("stderr", "")
+                state.metadata["fd_stdout_tail"] = fd_diag.get("stdout_tail", "")
 
         state.metadata["planner_succeeded"] = planner_ok
         state.metadata["plan_length"] = len(plan_actions)
+        # THE PLAN ITSELF IS THE ARTIFACT THE REVIEWABILITY CLAIM RESTS ON.
+        # Only its length was kept, so the released logs could not show the
+        # operator anything to inspect, and the claim that the artifact retains
+        # the Fast Downward plan was not true of any run. Persisting it is what
+        # makes the claim checkable: the ordered list of grounded operators, as
+        # the planner emitted it, before any reordering or lowering.
+        state.metadata["plan"] = [
+            {"name": a.get("name"), "params": list(a.get("params") or [])}
+            for a in plan_actions
+        ]
 
         # Map mined operator name -> its full schema (grounding + parameters +
         # command_template). _mined_tmpl_map (concretizer template preference)
@@ -1364,11 +2093,14 @@ def neurosymbolic_solver(
                         scenario_config_map)
                 if _cfg_triple is not None:
                     _p, _k, _v = _cfg_triple
+                    _mtmpl = (_mined_tmpl_map.get(action["name"], {}) or {}).get(
+                        "command_template", "")
                     applied, vmeta = await _ground_and_apply_edit(
                         _p, _k, _v, scenario_config_map,
                         sys_state.get("app_versions", ""),
                         (state.input_text or "")[:800],
                         model, sb, os_name, bash_timeout,
+                        mined_template=_mtmpl,
                     )
                     if applied:
                         executed += 1
@@ -1489,7 +2221,14 @@ def neurosymbolic_solver(
         if not (state.output and state.output.completion == "REMEDIATION_COMPLETE"):
             if not domain_pddl:
                 state.output.completion = "NO_DOMAIN_PROVIDED"
-            elif not problem_pddl:
+            elif not problem_pddl or not state.metadata.get("pddl_problem_valid", True):
+                # `not problem_pddl` alone was too narrow. When the generator
+                # emitted text that never validated, problem_pddl is non-empty
+                # but unusable, the planner block is skipped, and the episode
+                # was still reported as PLANNER_FOUND_NO_PLAN: a planner
+                # verdict on a scenario the planner never saw. `fd_returncode`
+                # is None in exactly this case, which is how triage.py tells
+                # the two apart.
                 state.output.completion = "PROBLEM_GENERATION_FAILED"
             elif not planner_ok:
                 state.output.completion = "PLANNER_FOUND_NO_PLAN"

@@ -281,3 +281,20 @@ class ScenarioContainerManager:
             )
         except Exception as e:
             return ExecResult(exit_code=1, stdout="", stderr=str(e))
+
+
+def osquery_install_sh() -> str:
+    """The osquery install script as a bare shell command, no Dockerfile wrapper.
+
+    Derived from `_osquery_layer` rather than copied, so the two cannot drift.
+    The Dockerfile layer bakes this into an image; the benchmark solver runs the
+    identical text inside an Inspect sandbox, which is a different code path to
+    the same substrate. A solver introspecting a different osquery from the one
+    the base-image audit measured would make that audit inapplicable to the run.
+
+    `__new__` skips `__init__`, which would otherwise open a Docker client this
+    caller does not need.
+    """
+    mgr = ScenarioContainerManager.__new__(ScenarioContainerManager)
+    layer = ScenarioContainerManager._osquery_layer(mgr)
+    return layer[len("RUN ("):layer.rindex(") || true")]
