@@ -64,6 +64,12 @@ SUITES = {
     "ccdc": "ccdc",
     "meta2": "meta2",
     "meta3/ubuntu": "meta3/ubuntu",
+    # The Windows halves of meta3 run only on a Windows Docker engine, which is
+    # mutually exclusive with the Linux engine on the same host. They are listed
+    # so the Windows machine can name them; they will simply find no scenarios
+    # to start on a Linux host.
+    "meta3/windows": "meta3/windows",
+    "meta3/windows-vm": "meta3/windows-vm",
     "vulnhub": "vulnhub",
     "hivestorm": "hivestorm",
     "meta4": "meta4",
