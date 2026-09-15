@@ -165,16 +165,33 @@ class ScenarioContainerManager:
         # reinstall every installed package so their man pages get written.
         # (coreutils ships no man pages on Ubuntu at all, so chmod/ls/cp etc.
         # remain --help-only there — that's normal Ubuntu behavior.)
+        # The reinstall-everything step below HANGS FOREVER on any image whose
+        # package set contains a service with a blocking postinst. Observed on
+        # ccdc-11: the list includes mysql-server, dpkg runs
+        # mysql-server.postinst, that starts a real mysqld against a temp socket
+        # and waits for readiness, and in a container with no init it never
+        # becomes ready. The pipeline parks in unix_stream_data_wait at 0% CPU
+        # on a docker exec that will never return, with no output and no error.
+        #
+        # Two guards, because either alone is insufficient:
+        #   policy-rc.d  stops invoke-rc.d starting daemons during configure
+        #   timeout      bounds the step regardless, since mysql-server.postinst
+        #                launches mysqld DIRECTLY rather than through invoke-rc.d
+        # A partial man-page restore is fine: mining reads whatever pages exist.
+        # An unbounded wait is not, because it looks identical to slow work.
         restore_manpages_layer = (
-            "RUN rm -f /etc/dpkg/dpkg.cfg.d/excludes && "
+            "RUN printf '#!/bin/sh\\nexit 101\\n' > /usr/sbin/policy-rc.d && "
+            "chmod +x /usr/sbin/policy-rc.d && "
+            "rm -f /etc/dpkg/dpkg.cfg.d/excludes && "
             "( dpkg-divert --list 2>/dev/null | grep -q '/usr/bin/man' && "
             "dpkg-divert --quiet --remove --rename /usr/bin/man || true ) && "
             "apt-get update -qq && "
-            f"apt-get install -y -qq {pkgs} >/dev/null 2>&1 || true && "
-            "apt-get install -y -qq --reinstall man-db manpages >/dev/null 2>&1 || true && "
-            "apt-get install -y -qq --reinstall "
+            f"DEBIAN_FRONTEND=noninteractive apt-get install -y -qq {pkgs} >/dev/null 2>&1 || true && "
+            "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --reinstall "
+            "man-db manpages >/dev/null 2>&1 || true && "
+            "timeout 600 env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --reinstall "
             "$(dpkg-query -W -f='${Package}\\n' 2>/dev/null | tr '\\n' ' ') "
-            ">/dev/null 2>&1 || true\n"
+            ">/dev/null 2>&1; rm -f /usr/sbin/policy-rc.d; true\n"
         )
 
         # Many upstream bases drop privileges in their own Dockerfile
