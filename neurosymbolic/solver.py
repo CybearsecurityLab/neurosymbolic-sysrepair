@@ -2186,6 +2186,16 @@ def neurosymbolic_solver(
                             bash_cmd = ""
 
                 if not bash_cmd:
+                    # The step is being DROPPED. Record it: a plan step that
+                    # never reaches the host is a lowering failure, and a silent
+                    # `continue` makes it indistinguishable from a step that ran
+                    # and did not help. Measured at 19% of steps on ccdc and 40%
+                    # on meta3/ubuntu, invisible in every artifact until the
+                    # transcript was read command by command.
+                    state.metadata.setdefault("lowering_failures", []).append({
+                        "action": action["name"],
+                        "params": action.get("params", []),
+                    })
                     continue
 
                 executed += 1
