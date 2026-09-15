@@ -17,7 +17,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Iterator
 
-import docker
+# `docker` is imported lazily in __init__, not here. osquery_install_sh() and
+# osquery_install_ps1() render a shell string and need no Docker client; a
+# module-level import makes them unusable from anything that is not already a
+# Docker host, which is exactly where they are most useful. The type hints
+# below are strings under `from __future__ import annotations`, so they do
+# not need the module at import time either.
 
 from common.scenarios import Scenario
 
@@ -47,6 +52,7 @@ class ScenarioContainerManager:
     DEFAULT_EXTRA_PKGS = "man-db manpages procps coreutils"
 
     def __init__(self, install_osquery: bool = False) -> None:
+        import docker  # lazy: see the note at the top of this module
         self.client = docker.from_env()
         self.install_osquery = install_osquery
         self._built: dict[str, str] = {}  # scenario.id -> image tag
