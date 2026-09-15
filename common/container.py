@@ -289,6 +289,58 @@ class ScenarioContainerManager:
             return ExecResult(exit_code=1, stdout="", stderr=str(e))
 
 
+def osquery_install_ps1() -> str:
+    """The osquery install as a bare PowerShell command, for WINDOWS sandboxes.
+
+    Derived from `_OSQUERY_MSI` rather than hardcoding a URL, so the Windows
+    path cannot drift to a different osquery release than the Linux one — the
+    same no-drift property `osquery_install_sh` gets from `_osquery_layer`.
+    There is no Dockerfile layer to derive from here: the Windows base images
+    bake in no osquery, so the sandbox install is the only path.
+
+    VERIFIED on a Windows Server Core ltsc2019 container (NISE-PC-001,
+    2026-09-15): MSI 19,984,384 bytes, msiexec exit 0, and
+    `osqueryi --json "SELECT name, version FROM os_version"` answered
+    {"name":"Microsoft ","version":"10.0.17763"}.
+
+    Three details that are load-bearing:
+
+    * `-PassThru` + a BOUNDED `WaitForExit`, never `-Wait`. PowerShell's `-Wait`
+      tracks descendants via a Job object and never returns while a spawned
+      service keeps running; an installer bootstrapper hits that and hangs
+      forever, reported only as a timeout. The same shape cost this project a
+      day on meta3/windows scenario-15.
+    * Exit codes 0 AND 3010 are both SUCCESS (3010 = success, reboot required).
+      A naive non-zero check would reject a working install.
+    * The download MUST follow redirects: pkg.osquery.io 301s to
+      pkg.osquerypackages.com, and a client that does not follow leaves a
+      0-byte file that msiexec then fails on for the wrong reason.
+    """
+    msi = ScenarioContainerManager._OSQUERY_MSI
+    return (
+        "$ErrorActionPreference='Stop'; "
+        "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; "
+        "$m=Join-Path $env:TEMP 'osquery.msi'; "
+        f"Invoke-WebRequest -Uri '{msi}' -OutFile $m -UseBasicParsing -TimeoutSec 600; "
+        "if ((Get-Item $m).Length -lt 1000000) { throw 'osquery MSI download too small' }; "
+        "$p=Start-Process msiexec.exe -ArgumentList '/i',$m,'/quiet','/norestart' -PassThru; "
+        "if (-not $p.WaitForExit(600000)) { throw 'msiexec did not exit within 10 minutes' }; "
+        "if ($p.ExitCode -notin @(0,3010)) { throw \"msiexec failed: $($p.ExitCode)\" }"
+    )
+
+
+def osquery_probe_ps1() -> str:
+    """PowerShell that makes osqueryi ANSWER, not merely exist.
+
+    Presence of the binary is not evidence it works; only a query is.
+    """
+    return (
+        "$e='C:\\Program Files\\osquery\\osqueryi.exe'; "
+        "if (-not (Test-Path $e)) { exit 1 }; "
+        "& $e --json \"SELECT name FROM os_version LIMIT 1\""
+    )
+
+
 def osquery_install_sh() -> str:
     """The osquery install script as a bare shell command, no Dockerfile wrapper.
 

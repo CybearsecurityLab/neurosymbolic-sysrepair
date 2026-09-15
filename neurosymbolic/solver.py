@@ -284,9 +284,32 @@ async def _ensure_osquery(sb, os_name: str, bash_timeout: int) -> tuple[bool, st
     if os.environ.get("NEUROPLAN_INSTALL_OSQUERY", "1") != "1":
         return False, "disabled by NEUROPLAN_INSTALL_OSQUERY"
     if os_name == "windows":
-        # osquery ships an MSI for Windows; the Linux install script cannot run
-        # there. Left to the Windows host rather than half-attempted here.
-        return False, "windows: MSI path not attempted from this host"
+        # Windows MSI path. Implemented and VERIFIED on a Server Core ltsc2019
+        # container (NISE-PC-001, 2026-09-15): msiexec exit 0 and osqueryi
+        # answered a real query. Mirrors the Linux branch below exactly —
+        # probe, install, RE-PROBE — because an install that reports success is
+        # not evidence the binary answers.
+        try:
+            from common.container import osquery_install_ps1, osquery_probe_ps1
+        except Exception as e:                      # never fail the episode
+            return False, f"windows: import failed: {type(e).__name__}"
+        probe_ps = osquery_probe_ps1()
+        try:
+            r = await sb.exec(_shell_exec_argv(os_name, probe_ps), timeout=bash_timeout)
+            if r.returncode == 0 and '"name"' in (r.stdout or ""):
+                return True, "already present"
+        except Exception:
+            pass
+        try:
+            r = await sb.exec(_shell_exec_argv(os_name, osquery_install_ps1()),
+                              timeout=max(bash_timeout, 900))
+            r2 = await sb.exec(_shell_exec_argv(os_name, probe_ps), timeout=bash_timeout)
+            if r2.returncode == 0 and '"name"' in (r2.stdout or ""):
+                return True, "installed (windows msi)"
+            return False, ((r.stderr or r.stdout or "").strip()[-120:]
+                           or "windows msi install did not yield a working osqueryi")
+        except Exception as e:
+            return False, f"windows: {type(e).__name__}: {str(e)[:100]}"
     probe = '/usr/bin/osqueryi --json "SELECT name FROM os_version LIMIT 1" 2>/dev/null'
     try:
         r = await sb.exec(_shell_exec_argv(os_name, probe), timeout=bash_timeout)
