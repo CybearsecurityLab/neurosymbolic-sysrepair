@@ -479,7 +479,8 @@ def _load_scenario_config_map(domain_path: str) -> dict[str, str]:
         state = json.loads(state_file.read_text())
     except Exception:
         return mapping
-    cfgs = (state.get("objects", {}) or {}).get("configuration_file", []) or []
+    objects = state.get("objects", {}) or {}
+    cfgs = objects.get("configuration_file", []) or []
     for obj in cfgs:
         props = obj.get("properties", {}) or {}
         path = props.get("path") or obj.get("original_name")
@@ -490,6 +491,27 @@ def _load_scenario_config_map(domain_path: str) -> dict[str, str]:
             if key:
                 mapping[key] = path
                 mapping[_normalize_setting_key(str(key))] = path
+
+    # Phase 1 also records users, groups, processes and ports, and mined
+    # templates reference them exactly as they reference config files. Keying
+    # only on configuration_file meant a parameter naming a user or a service
+    # could NEVER resolve and reached the shell as a literal identifier:
+    # measured on vulnhub, `mysql -e "REVOKE ... FROM 'webapp_user'"` ran with
+    # the PDDL token in place of the account name, on a scenario whose Phase 1
+    # had recorded 4 users. Config files resolve to a path; these resolve to
+    # their real name, which is what a command needs.
+    for kind in ("user", "group", "process", "port", "service"):
+        for obj in objects.get(kind, []) or []:
+            props = obj.get("properties", {}) or {}
+            real = (props.get("username") or props.get("name")
+                    or props.get("port") or obj.get("original_name"))
+            if real is None:
+                continue
+            real = str(real)
+            for key in (obj.get("name"), obj.get("original_name"), props.get("name")):
+                if key and str(key) not in mapping:
+                    mapping[str(key)] = real
+                    mapping[_normalize_setting_key(str(key))] = real
     return mapping
 
 
