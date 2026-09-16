@@ -486,8 +486,18 @@ def _load_scenario_config_map(domain_path: str) -> dict[str, str]:
         path = props.get("path") or obj.get("original_name")
         if not path:
             continue
-        for key in (obj.get("name"), obj.get("original_name"),
-                    props.get("filename"), path):
+        # Phase 1 names objects "configuration_file__etc_samba_smb_conf" but the
+        # PDDL problem refers to them as "etc_samba_smb_conf": the type prefix is
+        # dropped when the object is declared. Keying only on the Phase 1 name
+        # meant a DISCOVERED file still failed to resolve, and the identifier
+        # went to the shell as a literal filename.
+        keys = [obj.get("name"), obj.get("original_name"), props.get("filename"), path]
+        for k in list(keys):
+            if k and isinstance(k, str):
+                for pre in ("configuration_file__", "configuration_file_"):
+                    if k.startswith(pre):
+                        keys.append(k[len(pre):])
+        for key in keys:
             if key:
                 mapping[key] = path
                 mapping[_normalize_setting_key(str(key))] = path
@@ -508,7 +518,11 @@ def _load_scenario_config_map(domain_path: str) -> dict[str, str]:
             if real is None:
                 continue
             real = str(real)
-            for key in (obj.get("name"), obj.get("original_name"), props.get("name")):
+            ks = [obj.get("name"), obj.get("original_name"), props.get("name")]
+            for k in list(ks):
+                if k and isinstance(k, str) and k.startswith(f"{kind}_"):
+                    ks.append(k[len(kind) + 1:])
+            for key in ks:
                 if key and str(key) not in mapping:
                     mapping[str(key)] = real
                     mapping[_normalize_setting_key(str(key))] = real
