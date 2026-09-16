@@ -582,11 +582,43 @@ def _concretize_template(action: dict,
             # case-insensitively.
             if len(params) > 1:
                 params[1] = _normalize_setting_key(params[1])
+        # The miner REQUIRES named placeholders: operator_miner.py's lint rejects
+        # any command_template whose {placeholders} are not a subset of the
+        # operator's parameter names. Substituting positionally therefore raises
+        # KeyError on every mined template, which was caught below and returned
+        # None, so the step fell through to the LLM concretiser. Measured on the
+        # 30-scenario vulnhub run: 27 steps carried a template with placeholders
+        # and 25 of them did not execute it. The neuro-symbolic lowering the
+        # pipeline is built around had never run.
+        #
+        # Bind by NAME from the mined schema's parameter order, and keep the
+        # positional path for the static _ACTION_TEMPLATES, which use {0}/{1}.
         try:
+            names = [q.get("name") for q in ((mined or {}).get("parameters") or [])]
+            if names and len(names) >= len(params):
+                bound = {n: v for n, v in zip(names, params) if n}
+                return tmpl.format_map(_DefaultingMap(bound, params))
             return tmpl.format(*params)
-        except (IndexError, KeyError):
+        except (IndexError, KeyError, ValueError):
             pass
     return None
+
+
+class _DefaultingMap(dict):
+    """Named lookup first, then positional, so a template may mix {f} and {0}.
+
+    A missing key raises KeyError as usual, which the caller treats as "this
+    template does not apply" rather than substituting something wrong.
+    """
+
+    def __init__(self, named: dict, positional: list):
+        super().__init__(named)
+        self._pos = positional
+
+    def __missing__(self, key):
+        if isinstance(key, str) and key.isdigit():
+            return self._pos[int(key)]
+        raise KeyError(key)
 
 
 # ---------------------------------------------------------------------------
