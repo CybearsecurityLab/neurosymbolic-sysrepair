@@ -190,8 +190,24 @@ class ScenarioContainerManager:
             "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --reinstall "
             "man-db manpages >/dev/null 2>&1 || true && "
             "timeout 600 env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --reinstall "
-            "$(dpkg-query -W -f='${Package}\\n' 2>/dev/null | tr '\\n' ' ') "
-            ">/dev/null 2>&1; rm -f /usr/sbin/policy-rc.d; true\n"
+            "$(dpkg-query -W -f='${Package}\\n' 2>/dev/null | "
+            # Exclude packages whose postinst starts a daemon. Reinstalling
+            # them can never succeed in a container with no init: the postinst
+            # waits for a service that will never come up, so the transaction
+            # is killed by the timeout and dpkg is left interrupted, breaking
+            # EVERY later apt call including the osquery layer. Their man pages
+            # are not worth a broken package database.
+            "grep -vE '^(mysql|mariadb|postgresql|mongodb|redis|apache2|nginx|bind9|slapd|samba|dovecot|postfix|exim4)' | tr '\\n' ' ') "
+            ">/dev/null 2>&1; "
+            # The timeout above kills apt-get MID-TRANSACTION, which leaves
+            # dpkg interrupted: /var/lib/dpkg/updates full of journal files,
+            # packages unpacked but unconfigured, and EVERY later apt call
+            # failing. The osquery layer runs after this one and needs apt,
+            # so without this heal it fails silently behind its `|| true`
+            # and Phase 1 reports no osqueryi and produces empty state.
+            "dpkg --configure -a >/dev/null 2>&1 || true; "
+            "apt-get -y -f install >/dev/null 2>&1 || true; "
+            "rm -f /usr/sbin/policy-rc.d; true\n"
         )
 
         # Many upstream bases drop privileges in their own Dockerfile
