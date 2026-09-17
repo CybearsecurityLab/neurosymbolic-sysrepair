@@ -1527,9 +1527,25 @@ async def _run_fast_downward(
             # Fast Downward reports translator errors on STDOUT, not stderr, so
             # capturing stderr alone yields an empty string on exactly the
             # failure this diagnostic exists to explain.
+            # Keep the lines that EXPLAIN an unsolvable verdict, not just the
+            # tail. FD prints "No relaxed solution! Generating unsolvable
+            # task..." partway through translation, then a long run of
+            # statistics; a plain tail cuts the reason off and leaves only a
+            # benign stderr warning visible. That truncation caused a whole
+            # misdiagnosis: "Translator operators: 0" was read as "every
+            # operator was pruned by a type/predicate name clash" when it is
+            # actually FD's synthetic dummy task for an unreachable goal atom.
+            _stdout = res.stdout or ""
+            _why = [ln for ln in _stdout.splitlines()
+                    if any(k in ln for k in (
+                        "No relaxed solution", "Generating unsolvable task",
+                        "unsolvable", "Translator operators", "Translator facts",
+                        "goal can be simplified to FALSE", "Search stopped",
+                        "Solution found", "error", "Error"))]
             _diag.update(returncode=res.returncode, timed_out=False,
                          stderr=(res.stderr or "")[-1500:],
-                         stdout_tail=(res.stdout or "")[-2500:])
+                         stdout_tail=_stdout[-2500:],
+                         fd_reason="\n".join(_why[-12:]))
             plan_files = sorted(Path(tmpdir).glob("sas_plan*"))
             if not plan_files:
                 return []
@@ -2096,6 +2112,7 @@ def neurosymbolic_solver(
                 state.metadata["fd_timed_out"] = fd_diag.get("timed_out")
                 state.metadata["fd_stderr"] = fd_diag.get("stderr", "")
                 state.metadata["fd_stdout_tail"] = fd_diag.get("stdout_tail", "")
+                state.metadata["fd_reason"] = fd_diag.get("fd_reason", "")
 
         state.metadata["planner_succeeded"] = planner_ok
         state.metadata["plan_length"] = len(plan_actions)
