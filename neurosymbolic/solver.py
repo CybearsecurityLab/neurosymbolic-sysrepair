@@ -2121,6 +2121,12 @@ def neurosymbolic_solver(
                 # which is not the same event as "no plan exists" even though
                 # both end as PLANNER_FOUND_NO_PLAN. Recorded, not acted on.
                 state.metadata["fd_returncode"] = fd_diag.get("returncode")
+                try:
+                    from .goal_reachability import goal_reachability_report
+                except ImportError:
+                    from neurosymbolic.goal_reachability import goal_reachability_report
+                state.metadata["goal_reachability"] = goal_reachability_report(
+                    domain_pddl or "", problem_pddl or "")
                 state.metadata["fd_timed_out"] = fd_diag.get("timed_out")
                 state.metadata["fd_stderr"] = fd_diag.get("stderr", "")
                 state.metadata["fd_stdout_tail"] = fd_diag.get("stdout_tail", "")
