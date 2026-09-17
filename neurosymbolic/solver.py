@@ -94,14 +94,26 @@ Rules:
 - RUNTIME EFFECT VIA RELOAD. When the remediation edits a config file that a
   RUNNING service reads, the daemon must be reloaded for the change to take
   effect, or the live check fails. Force the reload one of two ways:
-  (a) PREFERRED, if the domain declares (config_applied ?svc): put
+  (a) PREFERRED, and MANDATORY whenever the domain declares (config_applied
+      ?svc) anywhere -- check the domain's predicate list before choosing a
+      branch, because using (b) while (a) applies is the common failure: put
       (config_applied <svc>) in the GOAL and NOT in :init, and keep
       (service_running <svc>) in BOTH :init and goal. Plan = edit-then-reload;
       the reload action requires only (service_running <svc>) and works on a
       bare-process daemon without systemd.
-  (b) FALLBACK, if the domain does NOT declare (config_applied): keep
-      (service_running <svc>) in the GOAL but OMIT it from :init, so the
-      planner must add a service action to re-establish it (run as a reload).
+  (b) FALLBACK, ONLY if the domain declares NO (config_applied ?svc) AND the
+      domain declares some action whose EFFECT adds (service_running <svc>) and
+      whose preconditions you can satisfy from :init. CHECK THIS BEFORE USING
+      (b): read the candidate action's :precondition and confirm every atom is
+      either in your :init or produced by another action you can reach. If no
+      such action exists, do NOT use (b): keep (service_running <svc>) in BOTH
+      :init and goal and accept an edit-only plan, which is strictly better
+      than an unreachable goal.
+      Omitting (service_running) when nothing can re-establish it makes the
+      goal unreachable and Fast Downward proves the task unsolvable, which
+      looks like "no plan exists" when the edit itself was perfectly available.
+      A reload action that itself REQUIRES (service_running) cannot re-establish
+      it: that is circular and does not count as a producer.
   NEVER leave (service_running <svc>) in both :init and goal with no reload
   path — that yields an edit-only plan that fails the live check.
 - systemd is optional: the reload path needs no (systemd_init_present). Only
