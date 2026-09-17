@@ -55,6 +55,32 @@ _VALID_GROUNDINGS = {
     "setting_key", "value_token", "account", "capability",
 }
 
+# The model reliably identifies the KIND of a parameter but names it with a
+# natural synonym ("setting" for "setting_key", "value" for "value_token",
+# "path"/"file" for a config path, etc). Rejecting those on a spelling
+# technicality silently drops otherwise-sound operators (e.g. the nginx
+# dotfile-deny block was lost to grounding-tag:{'setting'}). Canonicalize
+# synonyms to the fixed ontology before the lint validates them.
+_GROUNDING_ALIASES = {
+    "setting": "setting_key", "setting_name": "setting_key",
+    "directive": "setting_key", "key": "setting_key", "parameter": "setting_key",
+    "option": "setting_key", "block": "value_token", "value": "value_token",
+    "directive_block": "value_token", "content": "value_token",
+    "path": "config_path", "config": "config_path", "config_file": "config_path",
+    "conf_path": "config_path", "file_path": "config_path",
+    "file": "audited_file", "target_file": "audited_file", "audit_file": "audited_file",
+    "pkg": "package", "package_name": "package",
+    "svc": "service", "daemon": "service", "unit": "service", "service_name": "service",
+    "user": "account", "username": "account", "principal": "account", "uid": "account",
+    "db_user": "db_principal", "dbuser": "db_principal", "grantee": "db_principal",
+    "cap": "capability", "capabilities": "capability",
+}
+
+
+def _canonicalize_grounding(grounding: dict) -> dict:
+    return {p: _GROUNDING_ALIASES.get(str(g).strip().lower(), str(g).strip().lower())
+            for p, g in (grounding or {}).items()}
+
 
 @dataclass
 class RemediationIntent:
@@ -112,7 +138,14 @@ class _LLM:
     """Minimal OpenAI-compatible chat client for the two mining passes."""
 
     def __init__(self, model: str, base_url: str, api_key: str,
-                 temperature: float = 0.1, max_tokens: int = 4096):
+                 temperature: float = 0.1, max_tokens: int = 16000):
+        # MiniMax-M2.7 (and peers) are REASONING models: <think> tokens are
+        # billed against the SAME max_tokens budget as the answer. At 4096 the
+        # model routinely spends the whole budget reasoning and emits zero JSON
+        # (finish_reason='length', empty-after-</think>), silently dropping the
+        # operator. Give the answer real headroom and retry with a larger budget
+        # when the reply is truncated. This is why the miner produced no
+        # operators for the config/insert-block scenarios.
         from openai import OpenAI
         self._client = OpenAI(base_url=base_url, api_key=api_key or "vllm")
         self.model = model
@@ -120,16 +153,27 @@ class _LLM:
         self.max_tokens = max_tokens
 
     def json(self, system: str, user: str):
-        try:
-            r = self._client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "system", "content": system},
-                          {"role": "user", "content": user}],
-                temperature=self.temperature, max_tokens=self.max_tokens,
-            )
-            return _first_json(r.choices[0].message.content or "")
-        except Exception as e:  # noqa: BLE001
-            return {"_error": str(e)[:200]}
+        # Escalate the token budget on truncation: reasoning length is not known
+        # a priori, so a fixed cap can starve the JSON answer on verbose chains.
+        for budget in (self.max_tokens, self.max_tokens * 2):
+            try:
+                r = self._client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "system", "content": system},
+                              {"role": "user", "content": user}],
+                    temperature=self.temperature, max_tokens=budget,
+                )
+                choice = r.choices[0]
+                obj = _first_json(choice.message.content or "")
+                if obj is not None:
+                    return obj
+                # No parseable JSON. If we were cut off mid-generation, a bigger
+                # budget is the fix; otherwise a retry will not help.
+                if getattr(choice, "finish_reason", None) != "length":
+                    return None
+            except Exception as e:  # noqa: BLE001
+                return {"_error": str(e)[:200]}
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -262,8 +306,13 @@ def _op_prompt(intent: RemediationIntent, doc: str, vocabulary: list[str]) -> st
         '"preconditions": ["(<vulnerable_state_predicate> ?p)"], '
         '"effects": ["(<remediated_state_predicate> ?p)", '
         '"(not (<vulnerable_state_predicate> ?p))"], '
-        '"command_template": "<shell with {param} placeholders, NO literal '
-        'paths/names/values>", '
+        '"command_template": "<shell with {param} placeholders for the FILE '
+        'PATH and SERVICE only; but for a config-directive or block-insertion '
+        'operator you MUST write the CONCRETE remediation directive text '
+        'literally (taken from the threat report), e.g. '
+        '\\"grep -q \'location ~ /\\\\.\' {cfg} || echo \'location ~ /\\\\. { '
+        'deny all; }\' >> {cfg}\\" -- the directive CONTENT is the fix and must '
+        'be concrete; only the path/service are {params}>", '
         '"grounding": {"<param>": "<config_path|audited_file|package|service|'
         'db_principal|setting_key|value_token|account|capability>"}, '
         '"requires_root": true}\n'
@@ -272,14 +321,22 @@ def _op_prompt(intent: RemediationIntent, doc: str, vocabulary: list[str]) -> st
         "precondition. Template placeholders must be a subset of parameter "
         "names. Prefer a vocabulary predicate over a synonym. No prose. "
         "Only reference ?variables that are declared parameters (no free "
-        "variables). For a package reinstall/upgrade, prefix the command with "
+        "variables). CRITICAL: every argument inside a precondition/effect atom "
+        "MUST be a ?variable -- NEVER a literal or bare constant. Write "
+        "(setting_value_is ?k ?v), NEVER (setting_value_is dc_local_interfaces "
+        "'0.0.0.0') and NEVER (enabled yes). Concrete values (0.0.0.0, no, the "
+        "directive text) appear ONLY in command_template, never in the PDDL. "
+        "For a package reinstall/upgrade, prefix the command with "
         "'apt-get update && ' so a stale/absent package index does not make it "
         "a silent no-op.\n"
         "GROUNDING maps each PARAMETER NAME to a CATEGORY from the fixed set "
         "{config_path, audited_file, package, service, db_principal, "
         "setting_key, value_token, account, capability}. It is the KIND of "
-        "thing the parameter is, NOT a concrete value. Do NOT put real paths, "
-        "usernames, or values anywhere — those are grounded at runtime.\n"
+        "thing the parameter is, NOT a concrete value. Do NOT put real file "
+        "PATHS or SERVICE names inline (those are {params} grounded at runtime); "
+        "but the remediation DIRECTIVE TEXT itself (the config line/block being "
+        "written, the SQL REVOKE, etc.) MUST be concrete in the template -- it "
+        "is the fix, and it comes from the threat report, not from runtime.\n"
         'EXAMPLE (SUID file): {"name":"remove_suid_bit","parameters":'
         '[{"name":"f","type":"file"}],"preconditions":["(has_suid ?f)"],'
         '"effects":["(suid_removed ?f)","(not (has_suid ?f))"],'
@@ -300,12 +357,60 @@ def mine_operator(intent: RemediationIntent, doc: str, vocabulary: list[str],
         return None
     op["extraction_method"] = "mined"
     op["source_utility"] = op.get("source_utility", intent.verb)
+    # Canonicalize grounding-tag synonyms (setting->setting_key, value->value_token,
+    # path->config_path, ...) so a natural-language tag is not rejected by the lint.
+    if op.get("grounding"):
+        op["grounding"] = _canonicalize_grounding(op["grounding"])
+    # Infer a grounding tag for any parameter the model left ungrounded, from the
+    # parameter's declared TYPE. The lint rejects an operator if any param lacks a
+    # grounding ("param-missing-grounding"), which silently drops otherwise-sound
+    # config-edit operators (e.g. samba). The type carries the KIND already, so
+    # this is a mechanical completion, not a guess. General; no app specifics.
+    _TYPE_TO_GROUNDING = {
+        "file": "config_path", "service": "service", "package": "package",
+        "dbuser": "db_principal", "account": "account", "setting": "setting_key",
+        "value": "value_token", "capability": "capability", "object": "config_path",
+    }
+    grounding = op.get("grounding") or {}
+    for p in (op.get("parameters") or []):
+        nm = p.get("name") if isinstance(p, dict) else None
+        if nm and nm not in grounding:
+            grounding[nm] = _TYPE_TO_GROUNDING.get(
+                str(p.get("type", "")).lower(), "value_token")
+    op["grounding"] = grounding
     # Enforce `apt-get update &&` on package reinstall/upgrade commands: a stale
     # or absent package index silently makes apt a no-op (exit 0, nothing done).
     tmpl = op.get("command_template", "") or ""
     if intent.verb in ("reinstall_package", "upgrade_package") and \
             "apt-get" in tmpl and "apt-get update" not in tmpl:
         op["command_template"] = "apt-get update && " + tmpl
+    # State-pair completion: the model reliably emits the remediated-state
+    # POSITIVE effect but often forgets the paired DELETION of the vulnerable
+    # precondition, which the soundness lint (correctly) rejects
+    # ("effects-do-not-change-or-delete-vulnerable-precondition"). That drops an
+    # otherwise-sound operator and forces problem-gen to fall back to a fictional
+    # config edit. Mechanically complete the pair: if no effect deletes or
+    # supersedes a precondition, add (not <vulnerable precondition>). Only the
+    # vulnerable precondition is deleted -- benign CONTEXT preconditions
+    # (file_exists, service_running, ...) are never negated -- so the repair
+    # never removes a fact the operator still needs.
+    _CONTEXT = {"file_exists", "file_writable", "config_file", "service_exists",
+                "service_running", "service_installed", "package_installed",
+                "is_file", "exists", "readable", "writable", "present"}
+    pre = [p for p in (op.get("preconditions") or []) if isinstance(p, str) and p.strip()]
+    eff = [e for e in (op.get("effects") or []) if isinstance(e, str) and e.strip()]
+    neg_names = {_pred_name(e[e.lower().find("(not") + 4:])
+                 for e in eff if e.strip().lower().startswith("(not")}
+    pos_names = {_pred_name(e) for e in eff if not e.strip().lower().startswith("(not")}
+    pre_names = {_pred_name(p) for p in pre}
+    if not (pre_names & (neg_names | pos_names)):
+        # no precondition is deleted or superseded -> add (not <vuln pre>) for
+        # the first non-context precondition (the vulnerable-state atom).
+        for p in pre:
+            if _pred_name(p) and _pred_name(p) not in _CONTEXT:
+                eff.append(f"(not {p.strip()})")
+                op["effects"] = eff
+                break
     return op
 
 
@@ -332,6 +437,21 @@ def lint_operator(op: dict) -> tuple[bool, str]:
     eff = [e for e in (op.get("effects") or []) if e.strip()]
     if not pre or not eff:
         return False, "empty-pre-or-eff"
+    # Reject LITERAL arguments in predicate atoms. Concrete values belong ONLY in
+    # the command_template; a literal in a precondition/effect (e.g. quoted
+    # `'0.0.0.0'`, or a bare constant `yes` used as an object) produces invalid
+    # PDDL that FAILS the whole merged-domain validation -- discarding EVERY
+    # operator for that scenario (samba/exim/bind mined None for exactly this).
+    # Every atom argument must be a ?variable. General; protects the merge.
+    for atom in pre + eff:
+        inner = atom.strip()
+        if inner.lower().startswith("(not"):
+            inner = inner[inner.lower().find("(not") + 4:]
+        toks = re.findall(r"[^()\s]+", inner)  # [pred, arg1, arg2, ...]
+        for t in toks[1:]:
+            if t == "-" or t.startswith("?"):
+                continue
+            return False, f"literal-in-predicate:{t[:20]}"
     pos_eff = [e for e in eff if not e.strip().lower().startswith("(not")]
     neg_eff = [e for e in eff if e.strip().lower().startswith("(not")]
     if not pos_eff:
@@ -370,6 +490,26 @@ def lint_operator(op: dict) -> tuple[bool, str]:
     free = used_vars - {p for p in pnames if p}
     if free:
         return False, f"free-variable-not-a-param:{free}"
+
+    # (vi) no DEAD parameters. The mirror of (v): a parameter declared but used
+    # in no precondition and no effect still has to be bound for the operator to
+    # ground, so if the problem declares no object of that type the operator has
+    # ZERO groundings and its goal becomes unreachable. Fast Downward then emits
+    # a proof of unsolvability, which reads as "no valid plan exists" when a
+    # perfectly good plan does.
+    #
+    # Observed on ccdc-15: mined set_config_directive carried `?svc - service`,
+    # referenced nowhere, against a problem declaring no service object. Adding
+    # the object by hand yields the plan immediately. Also on
+    # vulnhub set_postgresql_listen_address_localhost, same shape.
+    #
+    # A parameter that names nothing the operator reasons about is not carrying
+    # meaning; dropping the operator is safer than emitting one that can never
+    # fire, because the planner cannot tell the difference between an operator
+    # with no groundings and one that does not exist.
+    dead = {p for p in pnames if p and p not in used_vars}
+    if dead:
+        return False, f"dead-parameter-unused-in-pre-and-eff:{dead}"
     return True, "ok"
 
 
